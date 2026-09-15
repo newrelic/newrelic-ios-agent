@@ -35,7 +35,7 @@ public class NewRelic: NSObject {
 
     @objc(logDebug:)
     public static func logDebug(_ message: String) {
-        NRLogger.log(NRLogLevelDebug.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: message, withAgentLogsOn: false)
+        NRLOG_DEBUG(message)
     }
 
     @objc(log:level:)
@@ -52,7 +52,7 @@ public class NewRelic: NSObject {
         case NRLogLevelAudit:
             NRLogger.log(NRLogLevelAudit.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: message, withAgentLogsOn: false)
         case NRLogLevelDebug:
-            NRLogger.log(NRLogLevelDebug.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: message, withAgentLogsOn: false)
+            NRLOG_DEBUG(message)
         default:
             break
         }
@@ -63,17 +63,17 @@ public class NewRelic: NSObject {
     public static func log(_ message: String, level: NRLogLevels, attributes: [AnyHashable: Any]?) {
         switch level {
         case NRLogLevelError:
-            NRLogger.log(NRLogLevelError.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: message, withAttributes: attributes)
+            NRLOG_ERROR_ATTRS(message, attributes)
         case NRLogLevelWarning:
-            NRLogger.log(NRLogLevelWarning.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: message, withAttributes: attributes)
+            NRLOG_WARNING_ATTRS(message, attributes)
         case NRLogLevelInfo:
-            NRLogger.log(NRLogLevelInfo.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: message, withAttributes: attributes)
+            NRLOG_INFO_ATTRS(message, attributes)
         case NRLogLevelVerbose:
-            NRLogger.log(NRLogLevelVerbose.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: message, withAttributes: attributes)
+            NRLOG_VERBOSE_ATTRS(message, attributes)
         case NRLogLevelAudit:
-            NRLogger.log(NRLogLevelAudit.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: message, withAttributes: attributes)
+            NRLOG_AUDIT_ATTRS(message, attributes)
         case NRLogLevelDebug:
-            NRLogger.log(NRLogLevelDebug.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: message, withAttributes: attributes)
+            NRLOG_DEBUG_ATTRS(message, attributes)
         default:
             break
         }
@@ -249,7 +249,7 @@ public class NewRelic: NSObject {
             return nil
         }
         if !NRMAFlags.shouldEnableInteractionTracing() {
-            NRLogger.log(NRLogLevelVerbose.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "\(#function) not executing; Interaction tracing is disabled.", withAgentLogsOn: true)
+            NRLOG_AGENT_VERBOSE("\(#function) not executing; Interaction tracing is disabled.")
             return nil
         }
         var result: String?
@@ -268,7 +268,7 @@ public class NewRelic: NSObject {
             return
         }
         if !NRMAFlags.shouldEnableInteractionTracing() {
-            NRLogger.log(NRLogLevelVerbose.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "\(#function) not executing; Interaction tracing is disabled.", withAgentLogsOn: true)
+            NRLOG_AGENT_VERBOSE("\(#function) not executing; Interaction tracing is disabled.")
             return
         }
         _ = NRExceptionCatcher.try({
@@ -292,7 +292,7 @@ public class NewRelic: NSObject {
         // Guard rather than implicitly unwrap: the ObjC implementation tolerated nil arguments,
         // so trapping on them would be a behaviour change in the opposite direction.
         guard let selector = selector, let object = object else {
-            NRLogger.log(NRLogLevelVerbose.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "\(#function) called with a nil selector or object; ignoring.", withAgentLogsOn: true)
+            NRLOG_AGENT_VERBOSE("\(#function) called with a nil selector or object; ignoring.")
             return
         }
         startTracingMethodNamed(NSStringFromSelector(selector), objectNamed: NSStringFromClass(type(of: object as AnyObject)), timer: timer, category: category)
@@ -305,14 +305,14 @@ public class NewRelic: NSObject {
             return
         }
         if !NRMAFlags.shouldEnableInteractionTracing() {
-            NRLogger.log(NRLogLevelVerbose.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "\(#function) not executing; Interaction tracing is disabled.", withAgentLogsOn: true)
+            NRLOG_AGENT_VERBOSE("\(#function) not executing; Interaction tracing is disabled.")
             return
         }
         // methodName is `_Null_unspecified` in the original ObjC declaration, so it arrives here
         // as an IUO. Guard explicitly rather than letting the unwrap below trap, matching the
         // ObjC implementation's tolerance of a nil name.
         guard let methodName = methodName else {
-            NRLogger.log(NRLogLevelVerbose.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "\(#function) called with a nil methodName; ignoring.", withAgentLogsOn: true)
+            NRLOG_AGENT_VERBOSE("\(#function) called with a nil methodName; ignoring.")
             return
         }
         // NewRelicInternalUtils.h isn't wrapped in NS_ASSUME_NONNULL, so cleanseString(forCollector:)
@@ -322,7 +322,7 @@ public class NewRelic: NSObject {
         // for the now-unwrapped `methodName` — same assumption the original ObjC made.
         let cleanSelectorString = NewRelicInternalUtils.cleanseString(forCollector: methodName)!
         if !NRMATraceController.isTracingActive() {
-            NRLogger.log(NRLogLevelVerbose.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "\(#function) attempted to start tracing method without active Interaction Trace", withAgentLogsOn: true)
+            NRLOG_AGENT_VERBOSE("\(#function) attempted to start tracing method without active Interaction Trace")
             return
         }
         NRMACustomTrace.startTracingMethod(NSSelectorFromString(cleanSelectorString), objectName: objectName, timer: timer, category: category)
@@ -343,11 +343,11 @@ public class NewRelic: NSObject {
         }
         timer.stop()
         if !NRMAFlags.shouldEnableInteractionTracing() {
-            NRLogger.log(NRLogLevelVerbose.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "\(#function) not executing; Interaction tracing is disabled.", withAgentLogsOn: true)
+            NRLOG_AGENT_VERBOSE("\(#function) not executing; Interaction tracing is disabled.")
             return
         }
         if !NRMATraceController.isTracingActive() {
-            NRLogger.log(NRLogLevelVerbose.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "\(#function) attempted to end tracing method without active Interaction Trace", withAgentLogsOn: true)
+            NRLOG_AGENT_VERBOSE("\(#function) attempted to end tracing method without active Interaction Trace")
             // kNRTraceAssociatedKey is a shared extern NSString* constant also used as the
             // objc_setAssociatedObject/objc_getAssociatedObject key by NRMATraceController.m
             // and NRMACustomTrace.m. Bridging it through NSString and taking its Unmanaged
@@ -580,7 +580,7 @@ public class NewRelic: NSObject {
         // is not lost.
         let newSession = previousUserId != nil && previousUserId != userId
 
-        NRLogger.log(NRLogLevelVerbose.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "setUserId: \(userId ?? "nil") and previousUserId: \(previousUserId ?? "nil") and will start newSession=\(newSession)", withAgentLogsOn: true)
+        NRLOG_AGENT_VERBOSE("setUserId: \(userId ?? "nil") and previousUserId: \(previousUserId ?? "nil") and will start newSession=\(newSession)")
 
         if newSession {
             // userId changed — end the current session and harvest its data under the
@@ -661,7 +661,7 @@ public class NewRelic: NSObject {
             return false
         }
         if !NRMAFlags.shouldEnableJSErrorEvents() {
-            NRLogger.log(NRLogLevelVerbose.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "JS Error reporting is disabled via feature flag. Cannot record JS error.", withAgentLogsOn: true)
+            NRLOG_AGENT_VERBOSE("JS Error reporting is disabled via feature flag. Cannot record JS error.")
             return false
         }
         #if os(iOS)
@@ -671,7 +671,7 @@ public class NewRelic: NSObject {
                                            isFatal: isFatal,
                                            additionalAttributes: additionalAttributes)
         #else
-        NRLogger.log(NRLogLevelError.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "JS Error reporting is only available on iOS. Cannot record JS error.", withAgentLogsOn: true)
+        NRLOG_AGENT_ERROR("JS Error reporting is only available on iOS. Cannot record JS error.")
         return false
         #endif
     }
@@ -744,7 +744,7 @@ public class NewRelic: NSObject {
     @objc(addSessionReplayMaskViewClass:)
     public static func addSessionReplayMaskViewClass(_ viewClassName: String) -> Bool {
         if viewClassName.isEmpty {
-            NRLogger.log(NRLogLevelError.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "addSessionReplayMaskViewClass: viewClassName must not be null or empty", withAgentLogsOn: true)
+            NRLOG_AGENT_ERROR("addSessionReplayMaskViewClass: viewClassName must not be null or empty")
             return false
         }
         return NRMAAgentConfiguration.addLocalMaskedClassName(viewClassName)
@@ -753,7 +753,7 @@ public class NewRelic: NSObject {
     @objc(addSessionReplayUnmaskViewClass:)
     public static func addSessionReplayUnmaskViewClass(_ viewClassName: String) -> Bool {
         if viewClassName.isEmpty {
-            NRLogger.log(NRLogLevelError.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "addSessionReplayUnmaskViewClass: viewClassName must not be null or empty", withAgentLogsOn: true)
+            NRLOG_AGENT_ERROR("addSessionReplayUnmaskViewClass: viewClassName must not be null or empty")
             return false
         }
         return NRMAAgentConfiguration.addLocalUnmaskedClassName(viewClassName)
@@ -762,7 +762,7 @@ public class NewRelic: NSObject {
     @objc(addSessionReplayMaskedAccessibilityIdentifier:)
     public static func addSessionReplayMaskedAccessibilityIdentifier(_ identifier: String) -> Bool {
         if identifier.isEmpty {
-            NRLogger.log(NRLogLevelError.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "addSessionReplayMaskedAccessibilityIdentifier: accessibilityIdentifier must not be null or empty", withAgentLogsOn: true)
+            NRLOG_AGENT_ERROR("addSessionReplayMaskedAccessibilityIdentifier: accessibilityIdentifier must not be null or empty")
             return false
         }
         return NRMAAgentConfiguration.addLocalMaskedAccessibilityIdentifier(identifier)
@@ -771,7 +771,7 @@ public class NewRelic: NSObject {
     @objc(addSessionReplayUnmaskedAccessibilityIdentifier:)
     public static func addSessionReplayUnmaskedAccessibilityIdentifier(_ identifier: String) -> Bool {
         if identifier.isEmpty {
-            NRLogger.log(NRLogLevelError.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "addSessionReplayUnmaskedAccessibilityIdentifier: accessibilityIdentifier must not be null or empty", withAgentLogsOn: true)
+            NRLOG_AGENT_ERROR("addSessionReplayUnmaskedAccessibilityIdentifier: accessibilityIdentifier must not be null or empty")
             return false
         }
         return NRMAAgentConfiguration.addLocalUnmaskedAccessibilityIdentifier(identifier)
