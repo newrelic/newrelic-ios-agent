@@ -6,8 +6,6 @@
 	<array>
 		<string>com.newrelic.NRApp.bitcode</string>
 	</array>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>
