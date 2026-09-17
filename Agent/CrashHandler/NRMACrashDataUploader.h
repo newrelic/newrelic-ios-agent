@@ -12,17 +12,15 @@
 // Maximum number of launch cycles before a crash report is abandoned.
 #define kNRMAMaxCrashUploadRetry 3
 
-@class NRMARetryingHTTPClient;
-
-@interface NRMACrashDataUploader : NRMAConnection
+@interface NRMACrashDataUploader : NRMAConnection <NSURLSessionTaskDelegate>
 {
     NSFileManager* _fileManager;
     NSString* _crashCollectorHost;
     BOOL _useSSL;
 }
 
-// Retrying HTTP client — exposed for test injection.
-@property(strong) NRMARetryingHTTPClient* httpClient;
+// Background URLSession — uploads survive app suspension. Exposed for test injection.
+@property(strong) NSURLSession* uploadSession;
 
 - (void) uploadCrashReports;
 

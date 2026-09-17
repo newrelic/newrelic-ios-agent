@@ -57,10 +57,8 @@ class MobileErrorsUploader: NSObject {
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest  = 60.0
         config.timeoutIntervalForResource = 120.0
-        self.httpClient = NRMARetryingHTTPClient(
-            session: URLSession(configuration: config),
-            retryPolicy: NRMARetryPolicy()
-        )
+        self.httpClient = NRMARetryingHTTPClient(sessionConfiguration: config,
+                                                retryPolicy: NRMARetryPolicy())
 
         super.init()
         NRLOG_AGENT_DEBUG("Mobile Errors Uploader initialized with URL: \(url)")
@@ -68,6 +66,10 @@ class MobileErrorsUploader: NSObject {
 
     func invalidate() {
         httpClient.invalidate()
+    }
+
+    func backgroundFlush() {
+        httpClient.backgroundFlush()
     }
 
     // MARK: - Public Methods

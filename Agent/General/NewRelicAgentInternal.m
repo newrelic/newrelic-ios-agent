@@ -952,6 +952,12 @@ static UIBackgroundTaskIdentifier background_task;
         [controller.harvestTimer stop];
     }
 
+    // Collapse any pending retry delays so in-flight uploads fire immediately
+    // before the OS suspends the process.
+    [NRMAHarvestController backgroundFlush];
+    [NRLogger backgroundFlush];
+    [_sessionReplay backgroundFlush];
+    [self.jsErrorController backgroundFlush];
 
     // Disable observers.
     [[NSNotificationCenter defaultCenter] removeObserver:self

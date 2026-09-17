@@ -106,6 +106,10 @@ public class JSErrorController: NSObject {
         uploader?.invalidate()
     }
 
+    @objc public func backgroundFlush() {
+        uploader?.backgroundFlush()
+    }
+
     // MARK: - Public Methods
 
     @objc public func recordJSError(_ name: String,

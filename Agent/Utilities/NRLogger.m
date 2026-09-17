@@ -171,6 +171,10 @@ withTimestamp:(NSNumber *) timestamp {
     [[NRLogger logger] enqueueLogUpload];
 }
 
++ (void)backgroundFlush {
+    [[NRLogger logger]->httpClient backgroundFlush];
+}
+
 + (NRLogLevels)stringToLevel:(NSString*)string {
     if ([ string isEqualToString:@"ERROR"]) {
         return NRLogLevelError;

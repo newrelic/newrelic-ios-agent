@@ -54,19 +54,19 @@ struct CaptureViewerView: View {
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 16) {
-                        Button("Verify All") {
-                            store.verifyAll { summary in
-                                verifySummary = summary
-                            }
+                    Button("Verify All") {
+                        store.verifyAll { summary in
+                            verifySummary = summary
                         }
-                        .disabled(listedCaptures.isEmpty)
-                        Button("Clear") {
-                            store.captures.removeAll()
-                            listedCaptures = []
-                        }
-                        .disabled(listedCaptures.isEmpty)
                     }
+                    .disabled(listedCaptures.isEmpty)
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Clear") {
+                        store.captures.removeAll()
+                        listedCaptures = []
+                    }
+                    .disabled(listedCaptures.isEmpty)
                 }
             }
             .alert("Verification Results", isPresented: .init(
@@ -87,6 +87,9 @@ struct CaptureViewerView: View {
         lines.append("\(s.passed) passed  ·  \(s.failed) failed")
         if s.duplicates > 0 {
             lines.append("\(s.duplicates) duplicate\(s.duplicates == 1 ? "" : "s") detected")
+        }
+        if s.failedResponses > 0 {
+            lines.append("\(s.failedResponses) excluded — server returned a failed response")
         }
         if s.unverified > 0 {
             lines.append("\(s.unverified) without a verifier (unknown endpoint)")
@@ -119,11 +122,28 @@ struct CaptureViewerView: View {
                 }
             ) {
                 HStack(alignment: .top, spacing: 10) {
-                    VerificationBadge(result: capture.verification)
-                        .padding(.top, 3)
+                    Group {
+                        if capture.hasFailedResponse {
+                            Color.clear.frame(width: 18, height: 18)
+                        } else {
+                            VerificationBadge(result: capture.verification)
+                        }
+                    }
+                    .padding(.top, 3)
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(capture.endpoint)
-                            .font(.system(.subheadline, design: .monospaced).weight(.semibold))
+                        HStack(spacing: 6) {
+                            Text(capture.endpoint)
+                                .font(.system(.subheadline, design: .monospaced).weight(.semibold))
+                            if capture.hasFailedResponse {
+                                Text("\(capture.responseStatusCode)")
+                                    .font(.system(.caption2, design: .monospaced).weight(.bold))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 5)
+                                    .padding(.vertical, 1)
+                                    .background(Color.red)
+                                    .cornerRadius(4)
+                            }
+                        }
                         Text(capture.timestamp, style: .time)
                             .font(.caption)
                             .foregroundColor(.secondary)
@@ -173,6 +193,11 @@ struct CaptureDetailView: View {
                     }
                     Divider()
                 }
+
+                ResponseSection(statusCode: capture.responseStatusCode,
+                                headers: capture.responseHeaders,
+                                responseBody: capture.responseBody)
+                Divider()
 
                 if !capture.queryParams.isEmpty {
                     QueryParamsSection(endpoint: capture.endpoint, queryParams: capture.queryParams)
@@ -276,6 +301,57 @@ struct VerificationSection: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Server response disclosure
+
+private struct ResponseSection: View {
+    let statusCode: Int
+    let headers: [String: String]
+    let responseBody: String
+    @State private var expanded = true
+
+    private var isSuccess: Bool { (200...299).contains(statusCode) }
+
+    var body: some View {
+        DisclosureGroup(isExpanded: $expanded) {
+            VStack(alignment: .leading, spacing: 6) {
+                if !headers.isEmpty {
+                    ForEach(headers.sorted(by: { $0.key < $1.key }), id: \.key) { key, value in
+                        HStack(alignment: .top, spacing: 4) {
+                            Text(key)
+                                .font(.system(.caption2, design: .monospaced))
+                                .foregroundColor(.secondary)
+                                .frame(width: 130, alignment: .leading)
+                            Text(value)
+                                .font(.system(.caption2, design: .monospaced))
+                                .foregroundColor(.primary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                    Divider().padding(.vertical, 2)
+                }
+                if !responseBody.isEmpty {
+                    Text(responseBody)
+                        .font(.system(.caption2, design: .monospaced))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(.top, 6)
+            .padding(.bottom, 4)
+        } label: {
+            HStack(spacing: 6) {
+                Text("\(statusCode)")
+                    .font(.caption.weight(.bold))
+                    .foregroundColor(isSuccess ? .green : .red)
+                Text("Server Response")
+                    .font(.caption.weight(.semibold))
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 8)
     }
 }
 
@@ -588,6 +664,8 @@ private struct InjectErrorSheet: View {
     @State private var selectedEndpoint = StatusInjection.Endpoint.all
     @State private var count       = 1
     @State private var unlimited   = false
+    @State private var isRandom    = false
+    @State private var randomChancePercent: Double = 50
 
     var body: some View {
         NavigationView {
@@ -605,17 +683,28 @@ private struct InjectErrorSheet: View {
                 Section("Endpoint") {
                     Picker("Endpoint", selection: $selectedEndpoint) {
                         ForEach(StatusInjection.Endpoint.allCases) { ep in
-                            Text(ep.rawValue).tag(ep)
+                            Text(ep.displayName).tag(ep)
                         }
                     }
                     .pickerStyle(.inline)
                     .labelsHidden()
                 }
 
-                Section("Repeat") {
-                    Toggle("Unlimited", isOn: $unlimited)
-                    if !unlimited {
-                        Stepper("Count: \(count)", value: $count, in: 1...100)
+                Section("Mode") {
+                    Toggle("Randomize (chance per request)", isOn: $isRandom)
+                }
+
+                if isRandom {
+                    Section("Chance") {
+                        Stepper("Inject error \(Int(randomChancePercent))% of the time",
+                                value: $randomChancePercent, in: 10...90, step: 10)
+                    }
+                } else {
+                    Section("Repeat") {
+                        Toggle("Unlimited", isOn: $unlimited)
+                        if !unlimited {
+                            Stepper("Count: \(count)", value: $count, in: 1...100)
+                        }
                     }
                 }
 
@@ -643,7 +732,8 @@ private struct InjectErrorSheet: View {
                             override: selectedPreset,
                             endpoint: selectedEndpoint,
                             remaining: count,
-                            unlimited: unlimited
+                            unlimited: unlimited,
+                            randomChance: isRandom ? randomChancePercent / 100 : nil
                         )
                         dismiss()
                     }

@@ -66,11 +66,9 @@ static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
         cfg.HTTPMaximumConnectionsPerHost = (NSInteger)kNRMAHexMaxInFlight;
         cfg.timeoutIntervalForRequest     = kNRMAHexRequestTimeout;
         cfg.timeoutIntervalForResource    = kNRMAHexResourceTimeout;
-        cfg.waitsForConnectivity          = NO;
 
-        NSURLSession* session = [NSURLSession sessionWithConfiguration:cfg];
-        self.httpClient = [[NRMARetryingHTTPClient alloc] initWithSession:session
-                                                              retryPolicy:[NRMARetryPolicy new]];
+        self.httpClient = [[NRMARetryingHTTPClient alloc] initWithSessionConfiguration:cfg
+                                                                           retryPolicy:[NRMARetryPolicy new]];
     }
     return self;
 }

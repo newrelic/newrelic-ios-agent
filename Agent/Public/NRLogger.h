@@ -208,6 +208,8 @@ withTimestamp:(NSNumber *)timestamp;
  */
 + (NRLogLevels) logLevels;
 
++ (void)backgroundFlush;
+
 @end
 
 

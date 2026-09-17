@@ -443,6 +443,11 @@ static NSObject* NRMAHarvestControllerAccessorLock;
         [harvester setMaxOfflineStorageSize:size];
     }
 }
+
++ (void) backgroundFlush {
+    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+    [[controller harvester] backgroundFlush];
+}
 @end
 
 #ifdef __cplusplus

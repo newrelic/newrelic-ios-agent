@@ -85,8 +85,7 @@ public class NRMARetryPolicy: NSObject {
     /// Returns the seconds to wait before retry attempt N (0-indexed).
     ///
     /// - Returns 0 when `isBackground` is true — background tasks must not delay.
-    /// - For 429, honours the parsed `retryAfterSeconds` value when present,
-    ///   capped at `maxRetryDelay`.
+    /// - For 429, honours the parsed `retryAfterSeconds` value when present.
     /// - Otherwise uses exponential backoff: initialRetryDelay × 2^attempt, capped.
     @objc(delayForAttempt:statusCode:retryAfterSeconds:isBackground:)
     public func delay(forAttempt attempt: Int,
@@ -95,7 +94,7 @@ public class NRMARetryPolicy: NSObject {
                       isBackground: Bool) -> TimeInterval {
         guard !isBackground else { return 0 }
         if statusCode == 429 && retryAfterSeconds > 0 {
-            return min(retryAfterSeconds, maxRetryDelay)
+            return retryAfterSeconds
         }
         let d = initialRetryDelay * pow(2.0, Double(attempt))
         return min(d, maxRetryDelay)

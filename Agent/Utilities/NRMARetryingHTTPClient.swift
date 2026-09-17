@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Network
 @_implementationOnly import NewRelicPrivate
 
 // Completion type used by all upload methods.
@@ -43,18 +44,25 @@ public class NRMARetryingHTTPClient: NSObject {
 
     // MARK: - Init
 
-    /// Designated initialiser. Pass a custom `URLSession` to control timeout,
-    /// max connections per host, etc. Pass a custom `retryPolicy` for tests.
-    @objc public init(session: URLSession, retryPolicy: NRMARetryPolicy) {
-        self.session  = session
+    /// Designated initialiser.
+    @objc public init(sessionConfiguration: URLSessionConfiguration, retryPolicy: NRMARetryPolicy) {
         self.retryPolicy = retryPolicy
         super.init()
+        // Deliver completion handlers at userInitiated QoS to match the harvest thread.
+        // delegateQueue:nil would create an internal utility-QoS queue, causing a
+        // priority inversion when the harvest thread blocks on the semaphore in
+        // NRMAHarvesterConnection.send: waiting for a lower-priority signal.
+        let delegateQueue = OperationQueue()
+        delegateQueue.qualityOfService = .userInitiated
+        delegateQueue.maxConcurrentOperationCount = 1
+        delegateQueue.name = "com.newrelic.retrying-http-client.delegate"
+        self.session = URLSession(configuration: sessionConfiguration, delegate: nil, delegateQueue: delegateQueue)
+        startPathMonitor()
     }
 
-    /// Convenience init with sensible defaults (standard `URLSession`, fresh policy).
+    /// Convenience init with sensible defaults (default session config, fresh policy).
     @objc public convenience override init() {
-        self.init(session: URLSession(configuration: .default),
-                  retryPolicy: NRMARetryPolicy())
+        self.init(sessionConfiguration: .default, retryPolicy: NRMARetryPolicy())
     }
 
     // MARK: - Upload API
@@ -67,7 +75,7 @@ public class NRMARetryingHTTPClient: NSObject {
                        endpoint: String,
                        completion: @escaping NRMAUploadCompletion) {
         scheduleAttempt(request: request, body: .data(data), endpoint: endpoint,
-                        attempt: 0, offlinePollCount: 0, completion: completion)
+                        attempt: 0, completion: completion)
     }
 
     /// Uploads the file at `fileURL` to `request`, retrying on transient failures.
@@ -78,23 +86,41 @@ public class NRMARetryingHTTPClient: NSObject {
                        endpoint: String,
                        completion: @escaping NRMAUploadCompletion) {
         scheduleAttempt(request: request, body: .file(fileURL), endpoint: endpoint,
-                        attempt: 0, offlinePollCount: 0, completion: completion)
+                        attempt: 0, completion: completion)
+    }
+
+    /// Collapses any pending retry delay and fires the retry immediately.
+    /// Called on app background or when `NWPathMonitor` reports network restoration.
+    @objc public func backgroundFlush() {
+        retryLock.lock()
+        retryGeneration += 1
+        let work = pendingWork
+        pendingWork = nil
+        retryLock.unlock()
+        if let work = work {
+            queue.async { work() }
+        }
     }
 
     /// Cancels all in-flight tasks and invalidates the underlying `URLSession`.
     /// The client must not be used after this call.
     @objc public func invalidate() {
+        pathMonitor.cancel()
         session.invalidateAndCancel()
     }
 
     // MARK: - Private state
 
-    private let session: URLSession
+    private var session: URLSession!
     private let queue = DispatchQueue(label: "com.newrelic.retrying-http-client", qos: .utility)
+    private let pathMonitor = NWPathMonitor()
 
-    // Offline polling: retry every 5 s, up to 60 s (12 polls) before consuming an attempt.
-    private static let offlinePollInterval: TimeInterval = 5
-    private static let maxOfflinePolls = 12
+    // Generation counter for cancellable retry delays.
+    // Incrementing the generation in backgroundFlush() orphans the pending asyncAfter,
+    // and the immediately-dispatched work block runs instead.
+    private let retryLock = NSLock()
+    private var retryGeneration = 0
+    private var pendingWork: (() -> Void)?
 
     // MARK: - Upload body
 
@@ -103,32 +129,48 @@ public class NRMARetryingHTTPClient: NSObject {
         case file(URL)
     }
 
+    // MARK: - Path monitor
+
+    private func startPathMonitor() {
+        pathMonitor.pathUpdateHandler = { [weak self] path in
+            if path.status == .satisfied {
+                self?.backgroundFlush()
+            }
+        }
+        pathMonitor.start(queue: DispatchQueue(label: "com.newrelic.path-monitor", qos: .utility))
+    }
+
     // MARK: - Core retry loop
 
     private func scheduleAttempt(request: URLRequest,
                                   body: Body,
                                   endpoint: String,
                                   attempt: Int,
-                                  offlinePollCount: Int,
                                   completion: @escaping NRMAUploadCompletion) {
-        let task: URLSessionUploadTask
-        // Handle the result directly on the URLSession callback thread rather than
-        // hopping to the internal queue. URLSession calls back at an appropriate
-        // priority; adding a fixed-QoS hop here causes a priority inversion when a
-        // higher-priority thread (e.g. the harvest thread at User-initiated QoS) is
-        // blocked on a semaphore waiting for this completion to fire.
-        // The internal `queue` is still used only for asyncAfter retry delays, where
-        // no thread is blocked on it.
+        // Pre-flight connectivity check — only when offline storage is enabled.
+        // Failing fast lets NRMAOfflineStorage write the payload to disk via the
+        // normal error-response path. Without the flag there is nothing to persist,
+        // so we let the request proceed and fail naturally.
+        if NRMAFlags.shouldEnableOfflineStorage() && pathMonitor.currentPath.status != .satisfied {
+            NRMASupportMetricHelper.enqueueHarvestRetryNetworkSuspendedMetric(endpoint)
+            NRLOG_AGENT_DEBUG("HTTP Client: offline, failing immediately — \(endpoint)")
+            completion(nil, nil, NSError(domain: NSURLErrorDomain,
+                                         code: NSURLErrorNotConnectedToInternet,
+                                         userInfo: nil))
+            return
+        }
+
         let handler: (Data?, URLResponse?, Error?) -> Void = { [weak self] data, response, error in
             self?.handleResult(data: data, response: response, error: error,
                                request: request, body: body, endpoint: endpoint,
-                               attempt: attempt, offlinePollCount: offlinePollCount,
-                               completion: completion)
+                               attempt: attempt, completion: completion)
         }
+        let task: URLSessionUploadTask
         switch body {
-        case .data(let d):    task = session.uploadTask(with: request, from: d, completionHandler: handler)
-        case .file(let url):  task = session.uploadTask(with: request, fromFile: url, completionHandler: handler)
+        case .data(let d):   task = session.uploadTask(with: request, from: d, completionHandler: handler)
+        case .file(let url): task = session.uploadTask(with: request, fromFile: url, completionHandler: handler)
         }
+        task.taskDescription = endpoint
         task.resume()
     }
 
@@ -139,7 +181,6 @@ public class NRMARetryingHTTPClient: NSObject {
                                body: Body,
                                endpoint: String,
                                attempt: Int,
-                               offlinePollCount: Int,
                                completion: @escaping NRMAUploadCompletion) {
         let http   = response as? HTTPURLResponse
         let status = http?.statusCode ?? 0
@@ -149,26 +190,14 @@ public class NRMARetryingHTTPClient: NSObject {
         let maxRetries   = retryPolicy.maxRetries(isBackground: isBackground)
         let reason       = retryPolicy.retryReason(forError: nsErr, statusCode: status)
 
-        // ── Terminal: success or a non-retryable HTTP error ──────────────────
+        // ── Terminal: success or a non-retryable error ────────────────────────
         if reason == .none {
             emitOutcomeMetrics(endpoint: endpoint, attempt: attempt, status: status, error: nsErr)
             completion(data, http, error)
             return
         }
 
-        // ── Offline: poll for connectivity before consuming an attempt ────────
-        if reason == .networkOffline && offlinePollCount < Self.maxOfflinePolls {
-            NRMASupportMetricHelper.enqueueHarvestRetryNetworkSuspendedMetric(endpoint)
-            NRLOG_AGENT_DEBUG("HTTP Client: no internet — suspending \(endpoint) (poll \(offlinePollCount + 1)/\(Self.maxOfflinePolls))")
-            queue.asyncAfter(deadline: .now() + Self.offlinePollInterval) { [weak self] in
-                self?.scheduleAttempt(request: request, body: body, endpoint: endpoint,
-                                      attempt: attempt, offlinePollCount: offlinePollCount + 1,
-                                      completion: completion)
-            }
-            return
-        }
-
-        // ── Retries exhausted (includes offline-poll timeout) ─────────────────
+        // ── Retries exhausted ─────────────────────────────────────────────────
         if attempt >= maxRetries {
             NRMASupportMetricHelper.enqueueHarvestRetryFailedMetric(endpoint)
             NRMASupportMetricHelper.enqueueHarvestFailedUploadMetric(endpoint)
@@ -182,12 +211,32 @@ public class NRMARetryingHTTPClient: NSObject {
                                        retryAfterSeconds: retryAfter, isBackground: isBackground)
         let next = attempt + 1
 
-        NRLOG_AGENT_DEBUG("HTTP Client: retrying \(endpoint) (attempt \(next)/\(maxRetries)) after \(delay)s. status=\(status)")
+        NRLOG_AGENT_DEBUG("HTTP Client: retrying \(endpoint) (attempt \(next)/\(maxRetries)) after \(delay)s. reason=\(reason.rawValue) status=\(status)")
+
+        scheduleRetry(delay: delay) { [weak self] in
+            self?.scheduleAttempt(request: request, body: body, endpoint: endpoint,
+                                  attempt: next, completion: completion)
+        }
+    }
+
+    // Schedules `work` after `delay`, but allows `backgroundFlush()` to collapse
+    // the delay by incrementing the generation counter before `delay` expires.
+    private func scheduleRetry(delay: TimeInterval, work: @escaping () -> Void) {
+        retryLock.lock()
+        retryGeneration += 1
+        let gen = retryGeneration
+        pendingWork = work
+        retryLock.unlock()
 
         queue.asyncAfter(deadline: .now() + delay) { [weak self] in
-            self?.scheduleAttempt(request: request, body: body, endpoint: endpoint,
-                                  attempt: next, offlinePollCount: 0,
-                                  completion: completion)
+            guard let self = self else { return }
+            self.retryLock.lock()
+            let current = self.retryGeneration
+            let w = self.pendingWork
+            if current == gen { self.pendingWork = nil }
+            self.retryLock.unlock()
+            guard current == gen, let w = w else { return }
+            w()
         }
     }
 
@@ -230,10 +279,7 @@ public class NRMARetryingHTTPClient: NSObject {
 
     private func isAppInBackground() -> Bool {
         guard let agent = NewRelicAgentInternal.sharedInstance() else { return false }
-        #if os(watchOS)
         return agent.currentApplicationState == .background
-        #else
-        return agent.currentApplicationState == .background
-        #endif
     }
 }
+

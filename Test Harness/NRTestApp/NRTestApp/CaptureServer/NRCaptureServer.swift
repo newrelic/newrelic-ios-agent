@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - ResponseOverride
 
-struct ResponseOverride: Equatable, Hashable {
+struct ResponseOverride: Equatable, Hashable, Codable {
     let statusCode: Int
     let headers: [String: String]
 
@@ -44,8 +44,8 @@ struct ResponseOverride: Equatable, Hashable {
 
 // MARK: - StatusInjection
 
-struct StatusInjection {
-    enum Endpoint: String, CaseIterable, Identifiable {
+struct StatusInjection: Codable {
+    enum Endpoint: String, CaseIterable, Identifiable, Codable {
         case all     = "All"
         case connect = "/connect"
         case data    = "/data"
@@ -53,8 +53,16 @@ struct StatusInjection {
         case blobs   = "/mobile/blobs"
         case logs    = "/mobile/logs"
         case errors  = "/mobile/errors"
+        // Crash reports upload once, at the very start of the *next* app launch — arming this
+        // takes effect on that next cold launch rather than the current run. Persisted separately
+        // so it survives the relaunch; see NRCaptureServer's crash-injection persistence.
+        case crash   = "/mobile_crash"
 
         var id: String { rawValue }
+
+        var displayName: String {
+            self == .crash ? "Crash (next launch)" : rawValue
+        }
 
         func matches(_ requestEndpoint: String) -> Bool {
             switch self {
@@ -68,8 +76,16 @@ struct StatusInjection {
 
     var override: ResponseOverride
     var endpoint: Endpoint
-    var remaining: Int   // ignored when unlimited == true
+    var remaining: Int   // ignored when unlimited == true or randomChance != nil
     var unlimited: Bool
+    // Only used when endpoint == .all: how many shots each concrete endpoint category
+    // (e.g. "/connect", "/data", "/mobile/blobs") has already been served, so "All" injects
+    // into every endpoint independently instead of being exhausted by whichever arrives first.
+    var consumedPerCategory: [String: Int] = [:]
+    // When set (0...1), each matching request independently rolls this chance of getting the
+    // error instead of a normal response — a flaky-network simulation that stays armed until
+    // manually disarmed, rather than a fixed number of shots.
+    var randomChance: Double? = nil
 
     var statusCode: Int { override.statusCode }
 
@@ -78,8 +94,11 @@ struct StatusInjection {
     }
 
     var label: String {
+        if let chance = randomChance {
+            return "\(override.label)  ~\(Int(chance * 100))%  \(endpoint.displayName)"
+        }
         let count = unlimited ? "∞" : "×\(remaining)"
-        return "\(override.label)  \(count)  \(endpoint.rawValue)"
+        return "\(override.label)  \(count)  \(endpoint.displayName)"
     }
 }
 
@@ -90,9 +109,34 @@ final class NRCaptureServer: ObservableObject {
     static let port: UInt16 = 8080
 
     @Published var captures: [CapturedRequest] = []
-    @Published var injection: StatusInjection? = nil
+    // Crash injections are persisted (see didSet) so they survive the relaunch that's needed
+    // to actually exercise the one-shot crash upload; other endpoints are in-memory only.
+    @Published var injection: StatusInjection? = nil {
+        didSet { persistCrashInjectionIfNeeded(oldValue: oldValue) }
+    }
     /// True when the connect response config differs from the default.
     @Published var connectConfigMutated: Bool = false
+
+    private static let crashInjectionDefaultsKey = "NRCaptureServer.crashInjection"
+
+    private func persistCrashInjectionIfNeeded(oldValue: StatusInjection?) {
+        let defaults = UserDefaults.standard
+        if let inj = injection, inj.endpoint == .crash {
+            if let data = try? JSONEncoder().encode(inj) {
+                defaults.set(data, forKey: Self.crashInjectionDefaultsKey)
+            }
+        } else if oldValue?.endpoint == .crash {
+            defaults.removeObject(forKey: Self.crashInjectionDefaultsKey)
+        }
+    }
+
+    /// Restores a crash injection armed on a previous launch, before `start()` registers routes
+    /// and before the agent's crash uploader (which fires very early) can post to /mobile_crash.
+    private func loadPersistedCrashInjection() {
+        guard let data = UserDefaults.standard.data(forKey: Self.crashInjectionDefaultsKey),
+              let inj = try? JSONDecoder().decode(StatusInjection.self, from: data) else { return }
+        injection = inj
+    }
 
     /// Applies `config` as the connect response and queues a 409 on /data so the agent
     /// reconnects and picks up the new settings on its next harvest cycle.
@@ -120,24 +164,63 @@ final class NRCaptureServer: ObservableObject {
     }
 
     /// Atomically consumes one shot of the active injection if it matches `endpoint`.
-    /// Returns the HttpResponse to send, or nil if no injection applies.
+    /// Returns the override to serve, or nil if no injection applies.
+    /// When armed for "All", each concrete endpoint category is tracked and given its own
+    /// shots rather than the whole injection being exhausted by whichever endpoint arrives first.
+    /// When armed with a random chance, every matching request independently rolls that chance
+    /// instead of consuming a fixed number of shots.
     /// Safe to call from any background thread.
-    func consumeInjection(for endpoint: String) -> HttpResponse? {
-        var response: HttpResponse? = nil
+    func consumeInjection(for endpoint: String) -> ResponseOverride? {
+        var response: ResponseOverride? = nil
         DispatchQueue.main.sync {
             guard var inj = injection, inj.matches(endpoint) else { return }
-            response = inj.override.httpResponse()
-            guard !inj.unlimited else { return }
-            inj.remaining -= 1
-            injection = inj.remaining > 0 ? inj : nil
+
+            // The crash endpoint only fires once, at the very start of the *next* app launch
+            // (before this UI can arm anything for the current run) — "All" (deterministic or
+            // random) can never actually affect it, so leave it out rather than pretend it's
+            // covered. Use the dedicated "Crash (next launch)" endpoint option to test it.
+            if inj.endpoint == .all && endpoint == StatusInjection.Endpoint.crash.rawValue { return }
+
+            if let chance = inj.randomChance {
+                guard Double.random(in: 0..<1) < chance else { return }
+                response = inj.override
+                return
+            }
+
+            guard inj.endpoint == .all else {
+                response = inj.override
+                guard !inj.unlimited else { return }
+                inj.remaining -= 1
+                injection = inj.remaining > 0 ? inj : nil
+                return
+            }
+
+            let key = Self.injectionCategory(for: endpoint)
+            let used = inj.consumedPerCategory[key] ?? 0
+            guard inj.unlimited || used < inj.remaining else { return }
+            response = inj.override
+            if !inj.unlimited {
+                inj.consumedPerCategory[key] = used + 1
+            }
+            injection = inj
         }
         return response
+    }
+
+    /// Buckets a concrete request path (which may carry a version, e.g. "/mobile/v5/connect")
+    /// into the same category regardless of version, matching StatusInjection.Endpoint's own matching.
+    private static func injectionCategory(for requestEndpoint: String) -> String {
+        if requestEndpoint.hasSuffix("/connect") { return "/connect" }
+        if requestEndpoint.hasSuffix("/data") { return "/data" }
+        return requestEndpoint
     }
 
     private let server = HttpServer()
     @Published private(set) var connectConfig: ConnectConfig = .default
 
-    private init() {}
+    private init() {
+        loadPersistedCrashInjection()
+    }
 
     func start() {
         // connectConfig is a typed ConnectConfig stored property.
@@ -149,17 +232,26 @@ final class NRCaptureServer: ObservableObject {
             // set via setConnectConfig() is always what a successful connect returns.
             var configSnapshot: ConnectConfig = .default
             DispatchQueue.main.sync { configSnapshot = self?.connectConfig ?? .default }
-            let injected = self?.consumeInjection(for: ep)
+            if let override = self?.consumeInjection(for: ep) {
+                self?.capture(request, endpoint: ep,
+                              responseStatus: override.statusCode, responseHeaders: override.headers, responseBody: "")
+                return override.httpResponse()
+            }
+            let dict = configSnapshot.toServerDict()
             // Store the served config only for successful (non-injected) connects.
-            self?.capture(request, endpoint: ep,
-                          serverResponse: injected == nil ? configSnapshot : nil)
-            return injected ?? .ok(.json(configSnapshot.toServerDict() as AnyObject))
+            self?.capture(request, endpoint: ep, serverResponse: configSnapshot,
+                          responseStatus: 200, responseBody: NRCaptureServer.prettyJSONString(dict))
+            return .ok(.json(dict as AnyObject))
         }
 
         server.POST["/mobile/:version/data"] = { [weak self] request in
             let ep = "/mobile/\(request.params[":version"] ?? "v?")/data"
-            self?.capture(request, endpoint: ep)
-            if let injected = self?.consumeInjection(for: ep) { return injected }
+            if let override = self?.consumeInjection(for: ep) {
+                self?.capture(request, endpoint: ep,
+                              responseStatus: override.statusCode, responseHeaders: override.headers, responseBody: "")
+                return override.httpResponse()
+            }
+            self?.capture(request, endpoint: ep, responseStatus: 200, responseBody: "{}")
             return .ok(.json([:] as AnyObject))
         }
 
@@ -169,8 +261,12 @@ final class NRCaptureServer: ObservableObject {
         for path in ["/mobile/f", "/mobile/blobs", "/mobile/errors", "/mobile/logs"] {
             let ep = path
             server.POST[path] = { [weak self] request in
-                self?.capture(request, endpoint: ep)
-                if let injected = self?.consumeInjection(for: ep) { return injected }
+                if let override = self?.consumeInjection(for: ep) {
+                    self?.capture(request, endpoint: ep,
+                                  responseStatus: override.statusCode, responseHeaders: override.headers, responseBody: "")
+                    return override.httpResponse()
+                }
+                self?.capture(request, endpoint: ep, responseStatus: 200, responseBody: "{}")
                 return .ok(.json([:] as AnyObject))
             }
         }
@@ -178,8 +274,12 @@ final class NRCaptureServer: ObservableObject {
         // Single-segment catch-all: crash reports (/mobile_crash), anything else
         server.POST["/:path"] = { [weak self] request in
             let ep = "/\(request.params[":path"] ?? "unknown")"
-            self?.capture(request, endpoint: ep)
-            if let injected = self?.consumeInjection(for: ep) { return injected }
+            if let override = self?.consumeInjection(for: ep) {
+                self?.capture(request, endpoint: ep,
+                              responseStatus: override.statusCode, responseHeaders: override.headers, responseBody: "")
+                return override.httpResponse()
+            }
+            self?.capture(request, endpoint: ep, responseStatus: 200, responseBody: "{}")
             return .ok(.json([:] as AnyObject))
         }
 
@@ -201,6 +301,7 @@ final class NRCaptureServer: ObservableObject {
         let failed: Int
         let duplicates: Int
         let unverified: Int
+        let failedResponses: Int
     }
 
     func verifyAll(completion: ((VerifySummary) -> Void)? = nil) {
@@ -220,7 +321,9 @@ final class NRCaptureServer: ObservableObject {
 
             for capture in snapshot.reversed() {
                 // Connect payloads are structurally identical across sessions — skip duplicate detection.
-                guard !capture.endpoint.hasSuffix("/connect") else {
+                // A failed-response upload is expected to be retried with the same body, so don't
+                // let it seed the "seen" set — otherwise the legitimate retry reads as a duplicate.
+                guard !capture.endpoint.hasSuffix("/connect"), !capture.hasFailedResponse else {
                     isDuplicate[capture.id] = false
                     continue
                 }
@@ -248,6 +351,12 @@ final class NRCaptureServer: ObservableObject {
 
             let updated = snapshot.map { capture -> CapturedRequest in
                 var c = capture
+                // The server rejected this upload — there's nothing meaningful to verify
+                // about a payload the agent will resend, so leave it unverified.
+                guard !capture.hasFailedResponse else {
+                    c.verification = nil
+                    return c
+                }
                 let payloadChecks = verify(data: capture.decodedBody, endpoint: capture.endpoint, queryParams: capture.queryParams, headers: capture.headers)?.checks ?? []
                 let configChecks  = self.configBehaviorChecks(capture: capture, config: configAtCapture[capture.id])
                 let detail: String?
@@ -271,15 +380,17 @@ final class NRCaptureServer: ObservableObject {
                 return c
             }
 
-            let duplicateCount = isDuplicate.values.filter { $0 }.count
+            let duplicateCount     = isDuplicate.values.filter { $0 }.count
+            let failedResponseCount = updated.filter { $0.hasFailedResponse }.count
             let passedCount  = updated.filter { $0.verification?.passed == true }.count
             let failedCount  = updated.filter { $0.verification?.passed == false }.count
-            let unverified   = updated.filter { $0.verification == nil }.count
+            let unverified   = updated.filter { $0.verification == nil && !$0.hasFailedResponse }.count
             let summary = VerifySummary(total: updated.count,
                                         passed: passedCount,
                                         failed: failedCount,
                                         duplicates: duplicateCount,
-                                        unverified: unverified)
+                                        unverified: unverified,
+                                        failedResponses: failedResponseCount)
 
             DispatchQueue.main.async {
                 self.captures = updated
@@ -315,7 +426,8 @@ final class NRCaptureServer: ObservableObject {
         return checks
     }
 
-    private func capture(_ request: HttpRequest, endpoint: String, serverResponse: ConnectConfig? = nil) {
+    private func capture(_ request: HttpRequest, endpoint: String, serverResponse: ConnectConfig? = nil,
+                          responseStatus: Int, responseHeaders: [String: String] = [:], responseBody: String) {
         let bodyData = Data(request.body)
         let isGzip = request.headers["content-encoding"] == "gzip"
         let decoded = isGzip ? bodyData.gunzipped() ?? bodyData : bodyData
@@ -335,13 +447,22 @@ final class NRCaptureServer: ObservableObject {
             headers: request.headers,
             queryParams: request.queryParams,
             decodedBody: decoded,
-            prettyJSON: prettyJSON
+            prettyJSON: prettyJSON,
+            responseStatusCode: responseStatus,
+            responseHeaders: responseHeaders,
+            responseBody: responseBody
         )
         captured.serverConnectResponse = serverResponse
 
         DispatchQueue.main.async { [weak self] in
             self?.captures.insert(captured, at: 0)
         }
+    }
+
+    private static func prettyJSONString(_ obj: Any) -> String {
+        guard let data = try? JSONSerialization.data(withJSONObject: obj, options: [.prettyPrinted]),
+              let str = String(data: data, encoding: .utf8) else { return "{}" }
+        return str
     }
 }
 

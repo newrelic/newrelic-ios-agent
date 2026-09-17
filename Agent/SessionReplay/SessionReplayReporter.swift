@@ -50,6 +50,10 @@ public class SessionReplayReporter: NSObject {
         }
     }
 
+    func backgroundFlush() {
+        httpClient.backgroundFlush()
+    }
+
     func enqueueSessionReplayUpload(upload: SessionReplayData) {
         uploadQueue.async {
             self.sessionReplayFramesUploadArray.append(upload)
