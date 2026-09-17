@@ -72,7 +72,6 @@ struct ChartsView: View {
                 viewModel.loadData()
             }
         }
-        .NRMobileView(name: "ChartsView")
 
     }
 

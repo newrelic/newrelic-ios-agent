@@ -44,6 +44,13 @@ enum NewRelicConfig {
            let explicit = Mode(rawValue: raw.lowercased()) {
             return explicit
         }
+        // Also honored as a launch argument (`-NR_MODE capture`), which Foundation parses into
+        // UserDefaults. Needed because tooling that launches the app via `simctl` rather than a
+        // scheme can pass launch arguments but not environment variables.
+        if let raw = UserDefaults.standard.string(forKey: "NR_MODE"),
+           let explicit = Mode(rawValue: raw.lowercased()) {
+            return explicit
+        }
         return applicationToken.isEmpty ? .capture : .live
     }
 
@@ -94,7 +101,9 @@ enum NewRelicConfig {
             // Automatic UIKit + SwiftUI view tracking. Gates every .NRMobileView* modifier.
             NRMAFeatureFlags.NRFeatureFlag_AutomaticMobileViews,
             // The manual NewRelic.setCurrentView(_:attributes:) API, used by the Saved tab.
-            NRMAFeatureFlags.NRFeatureFlag_ManualMobileViews
+            //NRMAFeatureFlags.NRFeatureFlag_ManualMobileViews
+            NRMAFeatureFlags.NRFeatureFlag_AutomaticSwiftUIViews,
+
         ])
     }
 }

@@ -49,7 +49,8 @@ static NSString* __deviceIdentifierReplacement = NULL;
                               NRFeatureFlag_DistributedTracing |
                               NRFeatureFlag_AppStartMetrics |
                               NRFeatureFlag_JSErrorEvents |
-                              NRFeatureFlag_AutomaticMobileViews;
+                              NRFeatureFlag_AutomaticMobileViews|
+                              NRFeatureFlag_AutomaticSwiftUIViews;
                               // NRFeatureFlag_AutomaticMobileViews and NRFeatureFlag_ManualMobileViews
                               // are disabled by default; opt in via enableFeatures:.
 

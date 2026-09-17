@@ -64,8 +64,13 @@ internal enum SwiftUIScreenResolver {
     /// Bounds for locating the root view inside the hosting controller. Deliberately tiny: on
     /// iOS 27 the root view sits two hops away (controller → `host` → the `AnyView`), and every
     /// hop beyond that is SwiftUI bookkeeping.
-    private static let rootSearchMaxDepth = 3
-    private static let rootSearchMaxNodes = 64
+    private static let rootSearchMaxDepth = 4
+    private static let rootSearchMaxNodes = 128
+
+    /// Bounds for the route/tag fallback, which cannot prune to the view chain (a route is not a
+    /// view) and so must be bounded by brute force instead.
+    private static let routeSearchMaxDepth = 10
+    private static let routeSearchMaxNodes = 512
 
     // MARK: - Is this a SwiftUI host?
 
@@ -138,10 +143,99 @@ internal enum SwiftUIScreenResolver {
         // explicit name and custom attributes this resolver cannot know, so reporting the host
         // as well would double-count the screen.
         if outcome.isExplicitlyInstrumented { return nil }
-        guard let qualified = outcome.qualifiedTypeName else { return nil }
 
-        return SwiftUIScreenIdentity(viewName: simpleName(from: qualified),
-                                     viewClass: qualified)
+        // Preferred: the app's own view type, stored in the content chain.
+        if let qualified = outcome.qualifiedTypeName {
+            return identity(forQualifiedName: qualified)
+        }
+
+        // Next: the type a lazy wrapper will build, read from its generic parameters. This is the
+        // only identity available for a `navigationDestination(for:)` destination or a `.popover`
+        // body, neither of which stores its view.
+        if let destination = outcome.lazyDestinationTypeName {
+            return identity(forQualifiedName: destination)
+        }
+
+        // Fallback: the route or tab tag that identifies this screen.
+        //
+        // Needed because in real SwiftUI apps the screen's view struct frequently is not stored
+        // anywhere in the host's graph, so the preferred path above finds nothing:
+        //
+        //   * a `navigationDestination(for:)` host holds a `ParameterizedLazyView` plus the route
+        //     value -- the destination view has not been built yet and does not exist,
+        //   * a tab host holds only the tab's tag enum,
+        //   * a screen whose body *is* a NavigationStack puts the stack's inner content in the
+        //     host, leaving the enclosing type absent entirely.
+        //
+        // The type name of the lazy destination is deliberately not parsed instead: it is commonly
+        // `_ConditionalContent<ScreenA, ScreenB>`, which cannot say which branch is on screen,
+        // whereas the route case can.
+        return routeIdentity(from: root)
+    }
+
+    // MARK: - Route / tag identity
+
+    /// Names a screen after the shallowest app-module enum reachable from its content -- a
+    /// navigation route or a tab tag.
+    ///
+    /// Only the *case* is used, never associated values: naming a screen
+    /// `TestRoute.listing(id: "L-1006")` would mint a fresh `viewName` per listing and make every
+    /// aggregate over view name meaningless. `TestRoute.listing` is one name for one screen.
+    private static func routeIdentity(from root: Any) -> SwiftUIScreenIdentity? {
+        var queue: [(value: Any, depth: Int)] = [(root, 0)]
+        var visited = 0
+
+        // Two candidates rather than "first match wins". This scan cannot prune to the view chain,
+        // so it walks SwiftUI's own bookkeeping and reaches foreign enums in quantity; taking the
+        // first acceptable one made the winner an accident of traversal order. The app's own module
+        // is the better identity, so a linked package's enum is held only as a fallback.
+        var fromOtherModule: String?
+
+        while !queue.isEmpty {
+            let (value, depth) = queue.removeFirst()
+            visited += 1
+            if visited > routeSearchMaxNodes { break }
+
+            let mirror = Mirror(reflecting: value)
+            let qualified = String(reflecting: type(of: value))
+
+            if mirror.displayStyle == .enum,
+               isAppModuleType(qualified),
+               let caseName = enumCaseName(of: value, mirror: mirror) {
+                // Synthesised so it reads like any other qualified type name, which lets
+                // `simpleName` strip the module exactly as it does for a view type.
+                let qualifiedCase = qualified + "." + caseName
+
+                if isMainBundleModuleType(qualified) {
+                    // Nothing can outrank the app's own module, so stop here.
+                    return identity(forQualifiedName: qualifiedCase)
+                }
+                if fromOtherModule == nil { fromOtherModule = qualifiedCase }
+            }
+
+            guard depth < routeSearchMaxDepth else { continue }
+            for child in mirror.children {
+                queue.append((child.value, depth + 1))
+            }
+        }
+
+        guard let fallback = fromOtherModule else { return nil }
+        return identity(forQualifiedName: fallback)
+    }
+
+    /// The case name of an enum value, with any associated values discarded.
+    ///
+    /// Two shapes to handle: a case *with* associated values reflects as a single child labelled
+    /// with the case name, while a case without them has no children at all and is only readable
+    /// from its description. The description is truncated at the first "(" so an associated value
+    /// can never survive even if the labelled path is unavailable.
+    private static func enumCaseName(of value: Any, mirror: Mirror) -> String? {
+        if let label = mirror.children.first?.label, !label.isEmpty {
+            return label
+        }
+        let described = String(describing: value)
+        let name = described.prefix { $0 != "(" }
+        return name.isEmpty ? nil : String(name)
     }
 
     // MARK: - Reflection
@@ -150,10 +244,23 @@ internal enum SwiftUIScreenResolver {
     ///
     /// Found by shallow breadth-first search for the first value that is actually a `View`, rather
     /// than by reading a named property: on iOS 27 `UIHostingController` has no `rootView` stored
-    /// property at all. Its root view hangs off a `host: _UIHostingView<Content>`, and that name
-    /// is an implementation detail that has changed before. What does not change is that the root
-    /// view conforms to `View` while the ~25 sibling properties (bridges, trackers, sizing
-    /// options) do not, so conformance is the more durable signal.
+    /// property at all, and the name of the one it does have (`host`) is an implementation detail
+    /// that has changed before.
+    ///
+    /// Two things this has to get right, both learned from a real app reporting nothing at all:
+    ///
+    ///  1. **Inherited storage.** Every erasing idiom produces a *subclass* --
+    ///     `NavigationStackHostingController`, `TabHostingController`,
+    ///     `PresentationHostingController` -- and `Mirror.children` exposes only the immediate
+    ///     class's stored properties. The root view lives on `UIHostingController`, so without
+    ///     walking `superclassMirror` it is invisible and every SwiftUI screen resolves to nothing.
+    ///     Plain `UIHostingController` worked, which is why unit tests over it passed while a whole
+    ///     app stayed silent.
+    ///  2. **Nil optionals that claim to be views.** SwiftUI declares
+    ///     `extension Optional: View where Wrapped: View`, so `Optional<AnyView>.none` satisfies
+    ///     `value is any View`. `NavigationStackHostingController` declares exactly such a property
+    ///     (`pendingContent`, normally nil) and breadth-first search reaches it *before* the
+    ///     inherited root view -- so it was selected, and resolution stopped at an empty box.
     private static func rootViewValue(of controller: UIViewController) -> Any? {
         var queue: [(value: Any, depth: Int)] = [(controller, 0)]
         var visited = 0
@@ -163,18 +270,38 @@ internal enum SwiftUIScreenResolver {
             visited += 1
             if visited > rootSearchMaxNodes { return nil }
 
-            if depth > 0, value is any View { return value }
+            let mirror = Mirror(reflecting: value)
+
+            // An empty optional is a nil optional. Rejected here rather than unwrapped because a
+            // nil `Optional<some View>` is indistinguishable from a real view by conformance alone.
+            if depth > 0, value is any View, !isNilOptional(mirror) { return value }
             guard depth < rootSearchMaxDepth else { continue }
 
-            for child in Mirror(reflecting: value).children {
+            for child in mirror.children {
                 queue.append((child.value, depth + 1))
+            }
+            // Inherited stored properties, which `children` omits. This is where the root view of
+            // every SwiftUI-private hosting subclass actually lives.
+            var superclass = mirror.superclassMirror
+            while let superMirror = superclass {
+                for child in superMirror.children {
+                    queue.append((child.value, depth + 1))
+                }
+                superclass = superMirror.superclassMirror
             }
         }
         return nil
     }
 
+    private static func isNilOptional(_ mirror: Mirror) -> Bool {
+        mirror.displayStyle == .optional && mirror.children.isEmpty
+    }
+
     private struct ContentTypeOutcome {
         var qualifiedTypeName: String?
+        /// The type a lazy wrapper would build. Held separately from `qualifiedTypeName` so a real
+        /// stored app view always outranks a type read out of a generic parameter.
+        var lazyDestinationTypeName: String?
         var isExplicitlyInstrumented = false
     }
 
@@ -217,9 +344,17 @@ internal enum SwiftUIScreenResolver {
                 return outcome
             }
 
-            // Breadth-first, so the shallowest app type wins. A screen that embeds another
-            // screen as a child should report as itself, not as its child.
-            if outcome.qualifiedTypeName == nil, isAppViewType(qualified, value: value) {
+            // A lazy wrapper is checked before the app-view test and instead of it. It is never
+            // itself the screen -- naming it would report "LazyView<MyApp.Detail>" -- and the type
+            // it builds is only in its generic parameters, so this is the one place that type can
+            // be recovered at all.
+            if let destination = lazyDestinationTypeName(from: qualified) {
+                if outcome.lazyDestinationTypeName == nil {
+                    outcome.lazyDestinationTypeName = destination
+                }
+            } else if outcome.qualifiedTypeName == nil, isAppViewType(qualified, value: value) {
+                // Breadth-first, so the shallowest app type wins. A screen that embeds another
+                // screen as a child should report as itself, not as its child.
                 outcome.qualifiedTypeName = qualified
             }
 
@@ -249,6 +384,131 @@ internal enum SwiftUIScreenResolver {
         return own.components(separatedBy: ".").first ?? "NewRelic"
     }()
 
+    /// Modules that ship with the platform, and so can never contain one of the app's screens.
+    ///
+    /// This list is what stands between the route/tag fallback and nonsense names. The gate used to
+    /// deny only SwiftUI, Swift and the agent, which let `__C` -- the namespace for declarations
+    /// imported from C and Objective-C -- straight through. A TabView tab's content lives in
+    /// SwiftUI's attribute graph where reflection cannot reach it, so the route scan kept walking
+    /// past it and named every tab in the app after the first foreign enum it happened to reach:
+    /// `__C.CoreSystem.CoreSystem`. Every tab shared one wrong name.
+    ///
+    /// A denylist rather than an allowlist because the app's own screens legitimately live in any
+    /// module name at all, including Swift packages and frameworks.
+    private static let systemModules: Set<String> = [
+        "__C", "Swift", "SwiftUI", "SwiftUICore", "AttributeGraph",
+        "Foundation", "CoreFoundation", "ObjectiveC", "Darwin", "Dispatch", "os",
+        "_Concurrency", "_StringProcessing", "Observation", "Combine",
+        "UIKit", "QuartzCore", "CoreGraphics", "CoreText", "CoreImage",
+        "CoreData", "CoreLocation", "CoreMedia", "AVFoundation", "MapKit", "WebKit",
+        "Photos", "PhotosUI", "StoreKit", "SwiftData", "Charts", "Network", "Security",
+        "CloudKit", "UserNotifications", "Metal", "MetalKit", "SpriteKit", "SceneKit",
+    ]
+
+    /// True when a qualified type name belongs to the app rather than to the platform or the agent.
+    internal static func isAppModuleType(_ qualifiedName: String) -> Bool {
+        guard let module = moduleName(of: qualifiedName) else { return false }
+        return !systemModules.contains(module) && module != agentModule
+    }
+
+    /// True when a type belongs to the app's *own* module, as opposed to a package or framework it
+    /// links. Used to break ties in the route scan: both are acceptable, the app's own is better.
+    internal static func isMainBundleModuleType(_ qualifiedName: String) -> Bool {
+        guard let module = moduleName(of: qualifiedName),
+              let mainModule = mainBundleModule else { return false }
+        return module == mainModule
+    }
+
+    private static func moduleName(of qualifiedName: String) -> String? {
+        guard qualifiedName.contains(".") else { return nil }
+        guard let module = qualifiedName.components(separatedBy: ".").first,
+              !module.isEmpty else { return nil }
+        return module
+    }
+
+    /// Agent types that wrap customer content for Session Replay. Rejected by name as well as by
+    /// module so a build that compiles the agent's sources into the app module is still covered.
+    private static func isAgentWrapperType(_ qualifiedName: String) -> Bool {
+        qualifiedName.contains("MaskedContainerView")
+            || qualifiedName.contains("NRConditionalMaskView")
+            || qualifiedName.contains("NRMaskedViewRepresentable")
+    }
+
+    /// The module the app itself was compiled into, derived from the main bundle's executable
+    /// name the way Swift derives a module name from a product name.
+    ///
+    /// Settable so tests do not depend on whichever bundle is `main` in a test runner. Used only
+    /// as a *preference* between candidate routes, never as a requirement -- a modularised app
+    /// keeps its screens in packages and frameworks, and those must still resolve.
+    internal static var mainBundleModule: String? = defaultMainBundleModule()
+
+    private static func defaultMainBundleModule() -> String? {
+        guard let executable = Bundle.main.executableURL?.deletingPathExtension().lastPathComponent,
+              !executable.isEmpty else { return nil }
+        return String(executable.map { ($0.isLetter || $0.isNumber) ? $0 : "_" })
+    }
+
+    /// SwiftUI wrappers that build their content lazily. Matched by simple name because they are
+    /// private types whose module path has changed between releases.
+    private static let lazyDestinationWrappers: Set<String> = ["LazyView", "ParameterizedLazyView"]
+
+    /// The app view type a lazy wrapper *would* build, read out of its generic parameters.
+    ///
+    /// Needed because a lazy wrapper stores a closure, not a view: `LazyView` holds `() -> Content`
+    /// and `ParameterizedLazyView` holds `(Route) -> Content`. Reflection cannot see through a
+    /// closure, so a `navigationDestination(for:)` destination and a `.popover` body are present in
+    /// the graph only as a *type argument*. A walk of NRTestApp found three screens visibly on
+    /// screen and completely unreported for this reason.
+    ///
+    /// Matched on the *leading* type name rather than by substring: a
+    /// `ModifiedContent<ParameterizedLazyView<Route, Screen>, SomeModifier>` also contains the
+    /// wrapper's name, and its own last type argument is the modifier -- so a substring match would
+    /// name every such screen after a SwiftUI modifier.
+    internal static func lazyDestinationTypeName(from qualifiedName: String) -> String? {
+        guard let open = qualifiedName.firstIndex(of: "<"), qualifiedName.hasSuffix(">") else {
+            return nil
+        }
+
+        let head = String(qualifiedName[qualifiedName.startIndex..<open])
+        let wrapper = head.components(separatedBy: ".").last ?? head
+        guard lazyDestinationWrappers.contains(wrapper) else { return nil }
+
+        let inner = String(qualifiedName[qualifiedName.index(after: open)..<qualifiedName.index(before: qualifiedName.endIndex)])
+        guard let last = topLevelTypeArguments(of: inner).last else { return nil }
+
+        let candidate = last.trimmingCharacters(in: .whitespaces)
+
+        // `_ConditionalContent<A, B>` is what a destination closure containing an `if` compiles to.
+        // It names both branches and cannot say which is on screen, so naming it would attribute
+        // every visit to whichever branch was written first.
+        guard !candidate.contains("_ConditionalContent") else { return nil }
+        guard isAppModuleType(candidate), !isAgentWrapperType(candidate) else { return nil }
+
+        return candidate
+    }
+
+    /// Splits a generic argument list at top-level commas only. A route that is itself generic --
+    /// `ParameterizedLazyView<Dictionary<String, Int>, Screen>` -- carries commas of its own, and
+    /// splitting on all of them would truncate the destination.
+    private static func topLevelTypeArguments(of arguments: String) -> [String] {
+        var result: [String] = []
+        var depth = 0
+        var current = ""
+
+        for character in arguments {
+            switch character {
+            case "<": depth += 1; current.append(character)
+            case ">": depth -= 1; current.append(character)
+            case "," where depth == 0:
+                result.append(current)
+                current = ""
+            default: current.append(character)
+            }
+        }
+        if !current.isEmpty { result.append(current) }
+        return result
+    }
+
     private static func isExplicitInstrumentationMarker(_ qualifiedName: String) -> Bool {
         qualifiedName.contains("NRMobileViewModifier")
     }
@@ -261,20 +521,13 @@ internal enum SwiftUIScreenResolver {
     private static func isAppViewType(_ qualifiedName: String, value: Any) -> Bool {
         guard value is any View else { return false }
 
-        guard let module = qualifiedName.components(separatedBy: ".").first,
-              !module.isEmpty,
-              // Unqualified names are runtime-internal types, never an app's view.
-              qualifiedName.contains(".") else { return false }
-
-        if module == "SwiftUI" || module == "Swift" || module == agentModule { return false }
+        guard isAppModuleType(qualifiedName) else { return false }
 
         // Agent types wrap customer content for Session Replay (MaskedContainerView,
         // NRConditionalMaskView) and the probe found them inside real host class names. The
         // module check above catches them in a normal build; the name check also catches a
         // build where the agent's sources are compiled into the app module directly.
-        if qualifiedName.contains("MaskedContainerView")
-            || qualifiedName.contains("NRConditionalMaskView")
-            || qualifiedName.contains("NRMaskedViewRepresentable") { return false }
+        if isAgentWrapperType(qualifiedName) { return false }
 
         return true
     }
@@ -314,18 +567,33 @@ internal enum SwiftUIScreenResolver {
     /// private or function scope.
     ///
     /// A `private struct SettingsRow: View` inside an app reflects as
-    /// "MyApp.(unknown context at $10945b7b4).SettingsRow". Left in place that address would
-    /// become part of `viewName` -- and it differs per build, so one screen would fan out into a
-    /// new view name every release.
+    /// "MyApp.(unknown context at $10945b7b4).SettingsRow". The address differs per build, so left
+    /// in place one screen fans out into a new identity every release.
+    ///
+    /// Applied to `viewClass` as well as `viewName`, which it previously was not: a private sheet
+    /// body was observed reporting a stable viewName of "SheetDetailView" alongside a viewClass of
+    /// "NRTestApp.(unknown context at $103c6ce48).SheetDetailView", making viewClass useless for
+    /// grouping. IDD §6.1 wants viewClass to be the stable qualified type name.
+    ///
+    /// Removes every such segment wherever it appears rather than only a leading one, because the
+    /// module prefix is still attached when this runs over a qualified name.
     private static func stripCompilerContexts(from name: String) -> String {
         guard name.contains("(unknown context") else { return name }
 
         var result = name
-        while result.hasPrefix("(") {
-            guard let close = result.range(of: ")."), close.lowerBound >= result.startIndex else { break }
-            result = String(result[close.upperBound...])
+        while let start = result.range(of: "(unknown context at "),
+              let close = result.range(of: ").", range: start.upperBound..<result.endIndex) {
+            result.replaceSubrange(start.lowerBound..<close.upperBound, with: "")
         }
         return result
+    }
+
+    /// The two names for one resolved type, so every path that mints an identity applies the same
+    /// normalisation. Previously each call site built the struct itself and only `viewName` was
+    /// normalised.
+    private static func identity(forQualifiedName qualifiedName: String) -> SwiftUIScreenIdentity {
+        SwiftUIScreenIdentity(viewName: simpleName(from: qualifiedName),
+                              viewClass: stripCompilerContexts(from: qualifiedName))
     }
 }
 

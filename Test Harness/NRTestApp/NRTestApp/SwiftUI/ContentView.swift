@@ -6,114 +6,74 @@ struct SwiftUIContentView: View {
 
             NavigationView {
                 List {
-                    NRMobileNavigationLink(name: "MaskingView") {
+                    NavigationLink {
                         MaskingView()
                     } label: {
                         NRConditionalMaskView(maskApplicationText: false) {
                             Text("Masking")
                         }
                     }
-                    NRMobileNavigationLink(name: "ButtonsView") {
-                        ButtonsView()
-                    } label: {
+                    NavigationLink(destination: ButtonsView()) {
                         Text("Buttons")
                     }
                     NavigationLink(destination: CoreDataView()) {
                         Text("Core Data")
                     }
-                    NRMobileNavigationLink(name: "TextFieldsView") {
-                        TextFieldsView()
-                    } label: {
+                    NavigationLink(destination: TextFieldsView()) {
                         Text("Text Fields")
                     }
-                    NRMobileNavigationLink(name: "SimpleScrollView") {
-                        SimpleScrollView()
-                    } label: {
+                    NavigationLink(destination: SimpleScrollView()) {
                         Text("Diff Scroll View")
                     }
-                    NRMobileNavigationLink(name: "PickersView") {
-                        PickersView()
-                    } label: {
+                    NavigationLink(destination: PickersView()) {
                         Text("Pickers")
                     }
-                    NRMobileNavigationLink(name: "TogglesView") {
-                        TogglesView()
-                    } label: {
+                    NavigationLink(destination: TogglesView()) {
                         Text("Toggles")
                     }
-                    NRMobileNavigationLink(name: "SlidersView") {
-                        SlidersView()
-                    } label: {
+                    NavigationLink(destination: SlidersView()) {
                         Text("Sliders")
                     }
-                    NRMobileNavigationLink(name: "SteppersView") {
-                        SteppersView()
-                    } label: {
+                    NavigationLink(destination: SteppersView()) {
                         Text("Steppers")
                     }
-                    NRMobileNavigationLink(name: "DatePickersView") {
-                        DatePickersView()
-                    } label: {
+                    NavigationLink(destination: DatePickersView()) {
                         Text("Date Pickers")
                     }
-                    NRMobileNavigationLink(name: "ProgressViewsView") {
-                        ProgressViewsView()
-                    } label: {
+                    NavigationLink(destination: ProgressViewsView()) {
                         Text("Progress Views")
                     }
-                    NRMobileNavigationLink(name: "SegmentedControlsView") {
-                        SegmentedControlsView()
-                    } label: {
+                    NavigationLink(destination: SegmentedControlsView()) {
                         Text("Segmented Controls")
                     }
-                    NRMobileNavigationLink(name: "ListsView") {
-                        ListsView()
-                    } label: {
+                    NavigationLink(destination: ListsView()) {
                         Text("Lists")
                     }
-                    NRMobileNavigationLink(name: "ScrollViewsView") {
-                        ScrollViewsView()
-                    } label: {
+                    NavigationLink(destination: ScrollViewsView()) {
                         Text("Scroll Views")
                     }
-                    NRMobileNavigationLink(name: "StacksView") {
-                        StacksView()
-                    } label: {
+                    NavigationLink(destination: StacksView()) {
                         Text("Stacks")
                     }
-                    NRMobileNavigationLink(name: "GridsView") {
-                        GridsView()
-                    } label: {
+                    NavigationLink(destination: GridsView()) {
                         Text("Grids")
                     }
-                    NRMobileNavigationLink(name: "ShapesView") {
-                        ShapesView()
-                    } label: {
+                    NavigationLink(destination: ShapesView()) {
                         Text("Shapes")
                     }
-                    NRMobileNavigationLink(name: "DrawingsView") {
-                        DrawingsView()
-                    } label: {
+                    NavigationLink(destination: DrawingsView()) {
                         Text("Canvas Drawings")
                     }
-                    NRMobileNavigationLink(name: "InfiniteImageCollectionView") {
-                        InfiniteImageCollectionView()
-                    } label: {
+                    NavigationLink(destination: InfiniteImageCollectionView()) {
                         Text("Infinite Images")
                     }
-                    NRMobileNavigationLink(name: "SocialMediaFeedView") {
-                        SocialMediaFeedView()
-                    } label: {
+                    NavigationLink(destination: SocialMediaFeedView()) {
                         Text("Social Media Feed")
                     }
-                    NRMobileNavigationLink(name: "AttributedTextView") {
-                        AttributedTextView()
-                    } label: {
+                    NavigationLink(destination: AttributedTextView()) {
                         Text("Attributed Text")
                     }
-                    NRMobileNavigationLink(name: "TintedSymbolsView") {
-                        TintedSymbolsView()
-                    } label: {
+                    NavigationLink(destination: TintedSymbolsView()) {
                         Text("Tinted SF Symbols")
                     }
                     NavigationLink(destination: ModalsDemoView()) {
@@ -135,9 +95,7 @@ struct SwiftUIContentView: View {
                         Text("MobileView · Views × Interactions (startsInteraction)")
                     }
                     if #available(iOS 16.0, *) {
-                        NRMobileNavigationLink(name: "NavigationStackView") {
-                            NavigationStackView()
-                        } label: {
+                        NavigationLink(destination: NavigationStackView()) {
                             Text("NavigationStack")
                         }
                     }
@@ -159,7 +117,6 @@ struct SwiftUIContentView: View {
             }
             .navigationViewStyle(.stack)
             .NRTrackView(name: "SwiftUIContentView")
-            .NRMobileView(name: "SwiftUIContentView")
         }
     }
 }

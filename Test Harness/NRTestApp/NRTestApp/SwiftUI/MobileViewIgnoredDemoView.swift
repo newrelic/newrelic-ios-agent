@@ -50,6 +50,7 @@ struct MobileViewIgnoredDemoView: View {
                             .frame(maxWidth: .infinity)
                             .background(Color.green.opacity(0.15))
                             .cornerRadius(8)
+                        // internal child view test
                             .NRMobileView(name: "MobileViewIgnoredDemo.Child")
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -58,7 +59,8 @@ struct MobileViewIgnoredDemoView: View {
             .padding()
         }
         .navigationBarTitle("Ignored", displayMode: .inline)
-        .NRMobileView(name: "MobileViewIgnoredDemoView",
+        // CUSTOM IGNORED VIEW FROM AUTOMATICALLY MOBILE VIEW.
+        .NRMobileView(//name: "MobileViewIgnoredDemoView",
                       ignored: ignoreOuter)
     }
 }

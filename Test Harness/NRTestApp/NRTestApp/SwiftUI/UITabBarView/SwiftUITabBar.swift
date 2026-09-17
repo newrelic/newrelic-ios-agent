@@ -97,11 +97,6 @@ struct SwiftUITabBar: View {
                 notificationBadgeCount = nil
             }
         }
-        .NRMobileView(name: "SwiftUITabBar")
-        .NRMobileTabTracking(selection: $selectedTab) { tag in
-            let tabNames = ["Dashboard", "Form", "Charts", "Alerts", "Profile", "Media", "Settings"]
-            return tag < tabNames.count ? tabNames[tag] : "Tab(\(tag))"
-        }
     }
 
     private func configureCustomTabBarAppearance() {
@@ -190,7 +185,6 @@ struct NotificationsPlaceholderView: View {
                 }
             }
         }
-        .NRMobileView(name: "NotificationsPlaceholderView")
 
     }
 }
@@ -230,8 +224,6 @@ struct ProfilePlaceholderView: View {
                 }
                 .padding()
             }
-            .NRMobileView(name: "ProfilePlaceholderView")
-
         }
     }
 }
@@ -294,6 +286,5 @@ struct MediaPlaceholderView: View {
                 }
             }
         }
-        .NRMobileView(name: "MediaPlaceholderView")
     }
 }

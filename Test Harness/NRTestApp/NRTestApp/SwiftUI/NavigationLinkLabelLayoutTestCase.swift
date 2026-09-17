@@ -211,7 +211,6 @@ struct NavigationLinkLabelLayoutTestCase: View {
                 "testCase": "NavigationLinkLabelLayout"
             ])
         }
-        .NRMobileView(name: "NavigationLinkLabelLayoutTestCase")
     }
 }
 

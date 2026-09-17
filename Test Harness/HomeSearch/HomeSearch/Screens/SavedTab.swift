@@ -56,8 +56,8 @@ struct SavedTab: View {
                 content
             }
             .navigationTitle("Saved")
-            .NRMobileView(name: ViewName.saved.rawValue)
-            .NRMobileDestination(for: SavedRoute.self, name: { $0.viewName }) { route in
+            //.NRMobileView(name: ViewName.saved.rawValue)
+            .navigationDestination(for: SavedRoute.self) { route in
                 switch route {
                 case .listing(let id):
                     // Reached from Saved rather than Search, so this exercises the `restarted`

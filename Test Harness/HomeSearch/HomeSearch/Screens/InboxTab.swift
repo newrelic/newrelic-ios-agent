@@ -41,16 +41,8 @@ struct InboxTab: View {
                 }
             }
             .navigationTitle("Inbox")
-            .NRMobileView(name: ViewName.inbox.rawValue)
-            // The name closure resolves the thread and names the view after the correspondent, so
-            // this one destination declaration produces four distinct view names.
-            .NRMobileDestination(for: InboxRoute.self, name: { route in
-                switch route {
-                case .thread(let id):
-                    let correspondent = store.thread(id)?.correspondent ?? "Unknown"
-                    return ViewName.messageThread(with: correspondent)
-                }
-            }) { route in
+//            .NRMobileView(name: ViewName.inbox.rawValue)
+            .navigationDestination(for: InboxRoute.self) { route in
                 switch route {
                 case .thread(let id):
                     MessageThreadScreen(threadID: id)

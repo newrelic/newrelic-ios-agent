@@ -17,6 +17,5 @@ struct MapViewSwiftUI: View {
         Map(coordinateRegion: $region)
             .navigationTitle("Map (SwiftUI)")
             .NRTrackView(name: "MapViewSwiftUI")
-            .NRMobileView(name: "MapViewSwiftUI")
     }
 }

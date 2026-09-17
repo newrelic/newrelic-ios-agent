@@ -26,7 +26,6 @@ struct SocialMediaFeedView: View {
         .onAppear {
             viewModel.loadInitialPosts()
         }
-        .NRMobileView(name: "SocialMediaFeedView")
     }
 }
 

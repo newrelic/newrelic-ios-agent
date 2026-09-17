@@ -2,12 +2,8 @@
 //  ProfileTab.swift
 //  HomeSearch
 //
-//  Account and settings. Uses `NRMobileNavigationLink` for its rows — the wrapper around the
-//  destination-and-label form of NavigationLink, for pushes that carry no route value.
-//
-//  Both value-based navigation (Search, Saved, Inbox) and link-based navigation (here) are in the
-//  app on purpose, since they take different paths through SwiftUI and there is no reason to assume
-//  they report identically.
+//  Account and settings. Plain SwiftUI navigation: value-based `NavigationLink`s over
+//  `ProfileRoute`, resolved by a single `.navigationDestination(for:)` on the stack.
 //
 
 import SwiftUI
@@ -50,30 +46,19 @@ struct ProfileTab: View {
                 }
 
                 Section("Settings") {
-                    NRMobileNavigationLink(name: ViewName.notificationSettings.rawValue) {
-                        NotificationSettingsScreen()
-                    } label: {
+                    NavigationLink(value: ProfileRoute.notificationSettings) {
                         Label("Notifications", systemImage: "bell")
                     }
 
-                    NRMobileNavigationLink(name: ViewName.searchPreferences.rawValue) {
-                        SearchPreferencesScreen()
-                    } label: {
+                    NavigationLink(value: ProfileRoute.searchPreferences) {
                         Label("Search preferences", systemImage: "slider.horizontal.3")
                     }
                 }
 
                 Section {
-                    // Deliberately a plain NavigationLink, not NRMobileNavigationLink.
-                    //
-                    // NRMobileNavigationLink always attaches a *reporting* .NRMobileView to its
-                    // destination, so wrapping Debug Info in one would emit an event no matter what
-                    // the destination itself asks for — the `ignored: true` inside DebugInfoScreen
-                    // would be overridden by the link. Opting a screen out means not naming it at
-                    // the presentation site and letting the screen declare the opt-out itself.
-                    NavigationLink {
-                        DebugInfoScreen()
-                    } label: {
+                    // Debug Info declares its own opt-out inside DebugInfoScreen, so nothing at the
+                    // presentation site names it.
+                    NavigationLink(value: ProfileRoute.debugInfo) {
                         Label("Debug info", systemImage: "ladybug")
                     }
                 } footer: {
@@ -81,7 +66,17 @@ struct ProfileTab: View {
                 }
             }
             .navigationTitle("Profile")
-            .NRMobileView(name: ViewName.profile.rawValue)
+            //.NRMobileView(name: ViewName.profile.rawValue)
+            .navigationDestination(for: ProfileRoute.self) { route in
+                switch route {
+                case .notificationSettings:
+                    NotificationSettingsScreen()
+                case .searchPreferences:
+                    SearchPreferencesScreen()
+                case .debugInfo:
+                    DebugInfoScreen()
+                }
+            }
         }
     }
 

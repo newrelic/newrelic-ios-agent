@@ -96,7 +96,6 @@ struct DrawingsView: View {
         }
         .background(Color(red: 240/255, green: 245/255, blue: 250/255))
         .navigationBarTitle("Canvas Drawings", displayMode: .inline)
-        .NRMobileView(name: "DrawingsView")
     }
 
     // Helper function to create a star path

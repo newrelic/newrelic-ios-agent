@@ -246,201 +246,202 @@ public extension SwiftUI.View {
             ignored:           ignored
         ))
     }
-    
-    // NavigationStack / NavigationLink + navigationDestination(for:)
-    @available(iOS 16.0, tvOS 16.0, watchOS 9.0, *)
-    func NRMobileDestination<D: Hashable, C: View>(
-        for data: D.Type,
-        name: @escaping (D) -> String = { String(describing: $0) },
-        @ViewBuilder destination: @escaping (D) -> C
-    ) -> some View {
-        return navigationDestination(for: D.self) { value in
-            destination(value).NRMobileView(name: name(value))
-        }
-        
-    }
-    
-    // sheet(isPresented:)
-    func NRMobileSheet<C: View>(
-        isPresented: Binding<Bool>,
-        name: String,
-        onDismiss: (() -> Void)? = nil,
-        @ViewBuilder content: @escaping () -> C
-    ) -> some View {
-        sheet(isPresented: isPresented, onDismiss: onDismiss) {
-            content().NRMobileView(name: name)
-        }
-    }
-    
-    // sheet(item:)
-    func NRMobileSheet<Item: Identifiable, C: View>(
-        item: Binding<Item?>,
-        name: @escaping (Item) -> String = { String(describing: $0) },
-        onDismiss: (() -> Void)? = nil,
-        @ViewBuilder content: @escaping (Item) -> C
-    ) -> some View {
-        sheet(item: item, onDismiss: onDismiss) { value in
-            content(value).NRMobileView(name: name(value))
-        }
-    }
-    
-    // Same shape for .fullScreenCover and .popover
-    func NRMobileFullScreenCover<C: View>(
-        isPresented: Binding<Bool>, name: String,
-        onDismiss: (() -> Void)? = nil,
-        @ViewBuilder content: @escaping () -> C
-    ) -> some View {
-        fullScreenCover(isPresented: isPresented, onDismiss: onDismiss) {
-            content().NRMobileView(name: name)
-        }
-    }
-    #if os(iOS) || targetEnvironment(macCatalyst)
-    func NRMobilePopover<C: View>(
-        isPresented: Binding<Bool>, name: String,
-        attachmentAnchor: PopoverAttachmentAnchor = .rect(.bounds),
-        arrowEdge: Edge = .top,
-        @ViewBuilder content: @escaping () -> C
-    ) -> some View {
-        popover(isPresented: isPresented, attachmentAnchor: attachmentAnchor) {
-            content().NRMobileView(name: name)
-        }
-    }
-    #endif
 }
-
-// NavigationLink helper (value-less destination form).
-// Uses the pre-iOS 16 NavigationLink(destination:label:) initializer so the
-// wrapper is usable anywhere NavigationLink is, not just in iOS 16 stacks.
-@available(iOS 13, tvOS 13, *)
-public struct NRMobileNavigationLink<Label: View, Destination: View>: View {
-    let name: String
-    @ViewBuilder let destination: () -> Destination
-    @ViewBuilder let label: () -> Label
-
-    public init(
-        name: String,
-        @ViewBuilder destination: @escaping () -> Destination,
-        @ViewBuilder label: @escaping () -> Label
-    ) {
-        self.name = name
-        self.destination = destination
-        self.label = label
-    }
-
-    public var body: some View {
-        NavigationLink(destination: destination().NRMobileView(name: name)) {
-            label()
-        }
-    }
-}
-
-// TabView tracking
-@available(iOS 15, tvOS 15, *)
-public extension SwiftUI.View {
-    func NRMobileTabTracking<Tag: Hashable>(
-        selection: Binding<Tag>,
-        name: @escaping (Tag) -> String = { String(describing: $0) }
-    ) -> some View {
-        modifier(NRMobileTabTrackingModifier(selection: selection, name: name))
-    }
-}
-
-@available(iOS 15, tvOS 15, *)
-private struct NRMobileTabTrackingModifier<Tag: Hashable>: ViewModifier {
-    @Binding var selection: Tag
-    let name: (Tag) -> String
-
-    /// The tab currently reported as selected. Needed to close it out when the selection moves on --
-    /// without it a tab has an appear event and never a disappear, so its time on screen is
-    /// unknowable.
-    @State private var openTabName: String?
-    @State private var openTabInstance: String?
-    /// Monotonic seconds, from `NRMAViewContext.monotonicNow()`.
-    @State private var openTabSince: Double?
-
-    /// Tabs selected at least once, so re-selecting one reports restarted: true the way every other
-    /// producer does.
-    @State private var seenTabs: Set<String> = []
-
-    func body(content: Content) -> some View {
-        content
-            .task(id: selection) {
-                // Master switch: don't track tab switches while AutomaticMobileViews is disabled.
-                guard NRMobileViewGate.isFeatureEnabled else { return }
-
-                // Reported as soon as the selection changes. There is no settling delay: flicking
-                // through tabs to reach a distant one records every tab passed through, because the
-                // agent no longer decides which selections were "real" on the customer's behalf.
-                let now = NRMAViewContext.monotonicNow()
-                let id = UUID().uuidString
-                let viewName = name(selection)
-                let restarted = seenTabs.contains(viewName)
-
-                // Make the tab current *before* closing the previous one. Two reasons: the new tab
-                // then lands on top of the visible stack, so the outgoing tab is buried by the time it
-                // is removed and cannot synthesize a phantom re-appearance; and previousViewAttributes
-                // below resolves to the tab just left, which is what makes tab-to-tab navigation
-                // visible at all. Previously this modifier never touched the context, so every tab
-                // event had no previousView and read as a fresh session entry point.
-                // loadStartTime is nil: selecting a tab constructs nothing, so there is no
-                // construction start to time. That withholds the timeToInitialDisplay baseline for
-                // tab switches and makes marks on a tab measure from the appear instant.
-                NRMAViewContext.sharedInstance().transition(
-                    toView: viewName,
-                    instanceId: id,
-                    appearTime: now,
-                    loadStartTime: nil,
-                    platform: "SwiftUI")
-
-                // No loadTime: selecting a tab constructs nothing measurable here. Omitted rather
-                // than zeroed so it does not drag load-time aggregates toward 0; the reason is
-                // recorded so the omission is diagnosable.
-                MobileViewRecord(viewName: viewName,
-                                 viewClass: String(describing: Tag.self),
-                                 instanceId: id,
-                                 platform: .swiftUI,
-                                 phase: .appeared,
-                                 referrer: .fromContext,
-                                 load: .unavailable(.noConstructionObserved),
-                                 restarted: restarted,
-                                 navigationKind: "tab").emit()
-
-                closeOpenTab(at: now)
-
-                openTabName     = viewName
-                openTabInstance = id
-                openTabSince    = now
-                seenTabs.insert(viewName)
-            }
-            // The whole TabView going away must still close the tab that was open, or the last tab of
-            // every session silently loses its timeVisible.
-            .onDisappear {
-                guard NRMobileViewGate.isFeatureEnabled else { return }
-                closeOpenTab(at: NRMAViewContext.monotonicNow())
-                openTabName     = nil
-                openTabInstance = nil
-                openTabSince    = nil
-            }
-    }
-
-    /// Emits the disappear half for whichever tab is currently open.
-    private func closeOpenTab(at when: Double) {
-        guard let priorName = openTabName,
-              let priorId = openTabInstance,
-              let priorSince = openTabSince else { return }
-
-        let timeVisibleMs = NRMAViewContext.millisecondsBetween(priorSince, and: when)
-
-        MobileViewRecord(viewName: priorName,
-                         viewClass: String(describing: Tag.self),
-                         instanceId: priorId,
-                         platform: .swiftUI,
-                         phase: .disappeared,
-                         timeVisibleMs: timeVisibleMs,
-                         navigationKind: "tab").emit()
-
-        NRMAViewContext.sharedInstance().viewDidDisappearNamed(priorName, instanceId: priorId)
-    }
-}
-
+//
+//    // NavigationStack / NavigationLink + navigationDestination(for:)
+//    @available(iOS 16.0, tvOS 16.0, watchOS 9.0, *)
+//    func NRMobileDestination<D: Hashable, C: View>(
+//        for data: D.Type,
+//        name: @escaping (D) -> String = { String(describing: $0) },
+//        @ViewBuilder destination: @escaping (D) -> C
+//    ) -> some View {
+//        return navigationDestination(for: D.self) { value in
+//            destination(value).NRMobileView(name: name(value))
+//        }
+//        
+//    }
+//    
+//    // sheet(isPresented:)
+//    func NRMobileSheet<C: View>(
+//        isPresented: Binding<Bool>,
+//        name: String,
+//        onDismiss: (() -> Void)? = nil,
+//        @ViewBuilder content: @escaping () -> C
+//    ) -> some View {
+//        sheet(isPresented: isPresented, onDismiss: onDismiss) {
+//            content().NRMobileView(name: name)
+//        }
+//    }
+//    
+//    // sheet(item:)
+//    func NRMobileSheet<Item: Identifiable, C: View>(
+//        item: Binding<Item?>,
+//        name: @escaping (Item) -> String = { String(describing: $0) },
+//        onDismiss: (() -> Void)? = nil,
+//        @ViewBuilder content: @escaping (Item) -> C
+//    ) -> some View {
+//        sheet(item: item, onDismiss: onDismiss) { value in
+//            content(value).NRMobileView(name: name(value))
+//        }
+//    }
+//    
+//    // Same shape for .fullScreenCover and .popover
+//    func NRMobileFullScreenCover<C: View>(
+//        isPresented: Binding<Bool>, name: String,
+//        onDismiss: (() -> Void)? = nil,
+//        @ViewBuilder content: @escaping () -> C
+//    ) -> some View {
+//        fullScreenCover(isPresented: isPresented, onDismiss: onDismiss) {
+//            content().NRMobileView(name: name)
+//        }
+//    }
+//    #if os(iOS) || targetEnvironment(macCatalyst)
+//    func NRMobilePopover<C: View>(
+//        isPresented: Binding<Bool>, name: String,
+//        attachmentAnchor: PopoverAttachmentAnchor = .rect(.bounds),
+//        arrowEdge: Edge = .top,
+//        @ViewBuilder content: @escaping () -> C
+//    ) -> some View {
+//        popover(isPresented: isPresented, attachmentAnchor: attachmentAnchor) {
+//            content().NRMobileView(name: name)
+//        }
+//    }
+//    #endif
+//}
+//
+//// NavigationLink helper (value-less destination form).
+//// Uses the pre-iOS 16 NavigationLink(destination:label:) initializer so the
+//// wrapper is usable anywhere NavigationLink is, not just in iOS 16 stacks.
+//@available(iOS 13, tvOS 13, *)
+//public struct NRMobileNavigationLink<Label: View, Destination: View>: View {
+//    let name: String
+//    @ViewBuilder let destination: () -> Destination
+//    @ViewBuilder let label: () -> Label
+//
+//    public init(
+//        name: String,
+//        @ViewBuilder destination: @escaping () -> Destination,
+//        @ViewBuilder label: @escaping () -> Label
+//    ) {
+//        self.name = name
+//        self.destination = destination
+//        self.label = label
+//    }
+//
+//    public var body: some View {
+//        NavigationLink(destination: destination().NRMobileView(name: name)) {
+//            label()
+//        }
+//    }
+//}
+//
+//// TabView tracking
+//@available(iOS 15, tvOS 15, *)
+//public extension SwiftUI.View {
+//    func NRMobileTabTracking<Tag: Hashable>(
+//        selection: Binding<Tag>,
+//        name: @escaping (Tag) -> String = { String(describing: $0) }
+//    ) -> some View {
+//        modifier(NRMobileTabTrackingModifier(selection: selection, name: name))
+//    }
+//}
+//
+//@available(iOS 15, tvOS 15, *)
+//private struct NRMobileTabTrackingModifier<Tag: Hashable>: ViewModifier {
+//    @Binding var selection: Tag
+//    let name: (Tag) -> String
+//
+//    /// The tab currently reported as selected. Needed to close it out when the selection moves on --
+//    /// without it a tab has an appear event and never a disappear, so its time on screen is
+//    /// unknowable.
+//    @State private var openTabName: String?
+//    @State private var openTabInstance: String?
+//    /// Monotonic seconds, from `NRMAViewContext.monotonicNow()`.
+//    @State private var openTabSince: Double?
+//
+//    /// Tabs selected at least once, so re-selecting one reports restarted: true the way every other
+//    /// producer does.
+//    @State private var seenTabs: Set<String> = []
+//
+//    func body(content: Content) -> some View {
+//        content
+//            .task(id: selection) {
+//                // Master switch: don't track tab switches while AutomaticMobileViews is disabled.
+//                guard NRMobileViewGate.isFeatureEnabled else { return }
+//
+//                // Reported as soon as the selection changes. There is no settling delay: flicking
+//                // through tabs to reach a distant one records every tab passed through, because the
+//                // agent no longer decides which selections were "real" on the customer's behalf.
+//                let now = NRMAViewContext.monotonicNow()
+//                let id = UUID().uuidString
+//                let viewName = name(selection)
+//                let restarted = seenTabs.contains(viewName)
+//
+//                // Make the tab current *before* closing the previous one. Two reasons: the new tab
+//                // then lands on top of the visible stack, so the outgoing tab is buried by the time it
+//                // is removed and cannot synthesize a phantom re-appearance; and previousViewAttributes
+//                // below resolves to the tab just left, which is what makes tab-to-tab navigation
+//                // visible at all. Previously this modifier never touched the context, so every tab
+//                // event had no previousView and read as a fresh session entry point.
+//                // loadStartTime is nil: selecting a tab constructs nothing, so there is no
+//                // construction start to time. That withholds the timeToInitialDisplay baseline for
+//                // tab switches and makes marks on a tab measure from the appear instant.
+//                NRMAViewContext.sharedInstance().transition(
+//                    toView: viewName,
+//                    instanceId: id,
+//                    appearTime: now,
+//                    loadStartTime: nil,
+//                    platform: "SwiftUI")
+//
+//                // No loadTime: selecting a tab constructs nothing measurable here. Omitted rather
+//                // than zeroed so it does not drag load-time aggregates toward 0; the reason is
+//                // recorded so the omission is diagnosable.
+//                MobileViewRecord(viewName: viewName,
+//                                 viewClass: String(describing: Tag.self),
+//                                 instanceId: id,
+//                                 platform: .swiftUI,
+//                                 phase: .appeared,
+//                                 referrer: .fromContext,
+//                                 load: .unavailable(.noConstructionObserved),
+//                                 restarted: restarted,
+//                                 navigationKind: "tab").emit()
+//
+//                closeOpenTab(at: now)
+//
+//                openTabName     = viewName
+//                openTabInstance = id
+//                openTabSince    = now
+//                seenTabs.insert(viewName)
+//            }
+//            // The whole TabView going away must still close the tab that was open, or the last tab of
+//            // every session silently loses its timeVisible.
+//            .onDisappear {
+//                guard NRMobileViewGate.isFeatureEnabled else { return }
+//                closeOpenTab(at: NRMAViewContext.monotonicNow())
+//                openTabName     = nil
+//                openTabInstance = nil
+//                openTabSince    = nil
+//            }
+//    }
+//
+//    /// Emits the disappear half for whichever tab is currently open.
+//    private func closeOpenTab(at when: Double) {
+//        guard let priorName = openTabName,
+//              let priorId = openTabInstance,
+//              let priorSince = openTabSince else { return }
+//
+//        let timeVisibleMs = NRMAViewContext.millisecondsBetween(priorSince, and: when)
+//
+//        MobileViewRecord(viewName: priorName,
+//                         viewClass: String(describing: Tag.self),
+//                         instanceId: priorId,
+//                         platform: .swiftUI,
+//                         phase: .disappeared,
+//                         timeVisibleMs: timeVisibleMs,
+//                         navigationKind: "tab").emit()
+//
+//        NRMAViewContext.sharedInstance().viewDidDisappearNamed(priorName, instanceId: priorId)
+//    }
+//}
+//
 #endif

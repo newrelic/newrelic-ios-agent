@@ -45,14 +45,13 @@ struct SearchTab: View {
                         filterButton
                     }
                 }
-                // Search is one of the two screens that opens an interaction trace.
-                .NRMobileView(name: ViewName.search.rawValue)
                 // Filters is a sheet, so it reports as its own view with Search as its referrer.
-                .NRMobileSheet(isPresented: $showingFilters, name: ViewName.filters.rawValue) {
+                .sheet(isPresented: $showingFilters) { //name: ViewName.filters.rawValue) {
                     FilterSheetScreen()
                 }
-                // One destination declaration for the whole stack; the route supplies the name.
-                .NRMobileDestination(for: SearchRoute.self, name: { $0.viewName }) { route in
+//                // One destination declaration for the whole stack; the route supplies the name.
+                .navigationDestination(for: SearchRoute.self)
+                                     { route in
                     switch route {
                     case .listing(let id):
                         ListingDetailScreen(listingID: id) { listingID in

@@ -38,6 +38,5 @@ struct RootTabView: View {
                 .tag(AppTab.profile)
         }
         // Names come from the AppTab enum, which reads them from ViewName — no literals here.
-        .NRMobileTabTracking(selection: $selectedTab) { tab in tab.viewName }
     }
 }

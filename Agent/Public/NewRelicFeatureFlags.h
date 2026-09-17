@@ -126,5 +126,5 @@ typedef NS_OPTIONS(unsigned long long, NRMAFeatureFlags){
     // AutomaticMobileViews because it resolves screen names by reflecting into SwiftUI's runtime
     // representation, so it carries a different risk profile from the UIKit swizzle and needs to
     // be switchable on its own.
-    NRFeatureFlag_AutomaticSwiftUIViews                 = 1 << 27, // Disabled by default
+    NRFeatureFlag_AutomaticSwiftUIViews                 = 1 << 27, // Enabled by default
 };

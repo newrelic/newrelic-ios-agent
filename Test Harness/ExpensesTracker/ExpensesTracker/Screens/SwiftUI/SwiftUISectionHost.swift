@@ -59,16 +59,12 @@ struct SwiftUISectionView: View {
                 onClose: onClose,
                 onAdd: { isAddingExpense = true }
             )
-            // Reported here rather than on the NavigationStack: the stack is a container, the list is the
-            // screen, and naming the container would attribute the detail screen's push to it.
-            .NRMobileView(name: ViewName.swiftUIExpenseList.rawValue,
-                         attributes: ["section": "swiftui", "expense_count": expenses.count])
-            .NRMobileDestination(for: ExpenseItem.self,
-                                name: { _ in ViewName.swiftUIExpenseDetail.rawValue }) { expense in
+           
+            .navigationDestination(for: ExpenseItem.self
+                                ) { expense in
                 ExpenseDetailScreen(expense: expense)
             }
-            .NRMobileSheet(isPresented: $isAddingExpense,
-                          name: ViewName.swiftUIAddExpense.rawValue) {
+            .sheet(isPresented: $isAddingExpense) {
                 AddExpenseScreen { newExpense in
                     // Compose inserted at index 0 so the newest entry appeared first.
                     expenses.insert(newExpense, at: 0)

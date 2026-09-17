@@ -2,10 +2,10 @@
 //  ModalsDemoView.swift
 //  NRTestApp
 //
-//  Exercises the MobileViews POC sheet / fullScreenCover / popover wrappers
-//  (NRMobileSheet, NRMobileFullScreenCover, NRMobilePopover) so we can verify
-//  that presenting modal content emits MobileView events tagged with the
-//  view name we pass in.
+//  Exercises modal presentation. The fullScreenCover and popover go through the MobileViews POC
+//  wrappers (NRMobileFullScreenCover, NRMobilePopover), which tag the presented content with the
+//  view name we pass in; the two sheets use plain `.sheet`, so anything they report has to come
+//  from automatic instrumentation.
 //
 //  Two levels of nesting to keep straight. Each *modal* reports as a view in its own right with
 //  "ModalsDemoView" as its referrer, and dismissing it should make ModalsDemoView current again.
@@ -32,39 +32,33 @@ struct ModalsDemoView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            header.NRMobileView(name: Component.header.rawValue,
-                                attributes: Component.attributes)
+            header
+            sheetTriggers
+                
+            coverTrigger
+                
 
-            sheetTriggers.NRMobileView(name: Component.sheetTriggers.rawValue,
-                                       attributes: Component.attributes)
+            popoverTrigger
 
-            coverTrigger.NRMobileView(name: Component.coverTrigger.rawValue,
-                                      attributes: Component.attributes)
-
-            popoverTrigger.NRMobileView(name: Component.popoverTrigger.rawValue,
-                                        attributes: Component.attributes)
 
             Spacer()
         }
         .padding()
         .navigationTitle("Modals")
-        .NRMobileSheet(isPresented: $showSheet, name: "ModalsDemo.Sheet") {
+        .sheet(isPresented: $showSheet) {
             SheetDetailView(title: "Sheet (isPresented)") { showSheet = false }
         }
-        .NRMobileSheet(item: $selectedDetail,
-                       name: { "ModalsDemo.Sheet.\($0.title)" }) { item in
+        .sheet(item: $selectedDetail) { item in
             SheetDetailView(title: item.title) { selectedDetail = nil }
         }
-        .NRMobileFullScreenCover(isPresented: $showFullScreenCover,
-                                 name: "ModalsDemo.FullScreenCover") {
+        .fullScreenCover(isPresented: $showFullScreenCover) {
             FullScreenDetailView { showFullScreenCover = false }
         }
-        .NRMobilePopover(isPresented: $showPopover,
-                         name: "ModalsDemo.Popover") {
+        .popover(isPresented: $showPopover) {
+                        
             PopoverDetailView { showPopover = false }
         }
         .NRTrackView(name: Self.screenName)
-        .NRMobileView(name: Self.screenName)
     }
 
     // MARK: - Component-level views

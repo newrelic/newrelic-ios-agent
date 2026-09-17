@@ -222,7 +222,7 @@ final class HomeViewController: InstrumentedViewController {
             guard reportingUnderlyingTab else { return }
             // Dismissed without choosing anything, so the tab underneath becomes current again — its
             // viewDidAppear will not fire a second time.
-            (self?.tabs.selectedViewController as? InstrumentedViewController)?.reportView()
+         //   (self?.tabs.selectedViewController as? InstrumentedViewController)?.reportView()
         }
     }
 

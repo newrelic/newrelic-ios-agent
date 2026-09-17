@@ -80,6 +80,7 @@ NSArray<NSString *> * const NRMAExcludedViewClassPrefixes(void) {
             @"UIKitNavigationController",
             @"_UICursorAccessoryViewController",
             @"NotifyingMulticolumnSplitViewController",
+            @"_UIContextMenu"
         ];
     });
     return prefixes;

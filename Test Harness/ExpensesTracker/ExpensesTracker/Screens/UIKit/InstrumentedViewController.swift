@@ -69,7 +69,7 @@ class InstrumentedViewController: UIViewController {
         super.viewDidAppear(animated)
 
         if reportsViewOnAppear {
-            reportView()
+            //reportView()
         }
         NewRelic.logDebug("\(viewName.rawValue): viewDidAppear")
 

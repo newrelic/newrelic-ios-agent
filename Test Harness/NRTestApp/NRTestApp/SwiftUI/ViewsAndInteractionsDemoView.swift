@@ -33,32 +33,23 @@ struct ViewsAndInteractionsDemoView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                intro.NRMobileView(name: Component.intro.rawValue,
-                                   attributes: Component.attributes)
+                intro
+                    
+                forwardReadout
 
-                forwardReadout.NRMobileView(name: Component.forwardReadout.rawValue,
-                                            attributes: Component.attributes)
+                reverseReadout
 
-                reverseReadout.NRMobileView(name: Component.reverseReadout.rawValue,
-                                            attributes: Component.attributes)
-
-                actions.NRMobileView(name: Component.actions.rawValue,
-                                     attributes: Component.attributes)
+                actions
 
                 if !log.isEmpty {
-                    // Appears only once something has been logged, so its component MobileView is
-                    // emitted mid-visit — after the screen's interaction has usually completed. Its
-                    // load segment therefore lands on whatever interaction is open at that moment,
-                    // or nowhere. The event still carries componentOf, so a component's absence from
-                    // the screen's breakdown does not mean it was never shown.
-                    callLog.NRMobileView(name: Component.callLog.rawValue,
-                                         attributes: Component.attributes)
+    
+                    callLog
+                       
                 }
             }
             .padding()
         }
         .navigationTitle("Views × Interactions")
-        .NRMobileView(name: Self.screenName)
         .onAppear(perform: refresh)
         .task {
             // Poll while the screen is up so the id can be seen appearing and then clearing when the

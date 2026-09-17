@@ -105,7 +105,6 @@ struct FormView: View {
                 NewRelic.recordBreadcrumb("FormView appeared")
             }
         }
-        .NRMobileView(name: "FormView")
 
     }
 

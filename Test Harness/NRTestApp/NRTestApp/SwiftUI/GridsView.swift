@@ -30,7 +30,6 @@ struct GridsView: View {
             .padding()
         }
         .NRTrackView(name: "GridsView")
-        .NRMobileView(name: "GridsView")
     }
 }
 

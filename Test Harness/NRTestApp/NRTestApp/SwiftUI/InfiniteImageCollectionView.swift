@@ -61,7 +61,6 @@ struct InfiniteImageCollectionView: View {
             .padding()
         }
         .navigationTitle("Infinite Images")
-        .NRMobileView(name: "Infinite Images")
         .onAppear {
             viewModel.loadInitialImages()
         }

@@ -43,9 +43,9 @@ class InfiniteImageCollectionViewController: UIViewController {
     private static let appendTimingBudget = 8
     private var appendTimingsRecorded = 0
     
-    @objc func nrMobileViewName() -> String? {
-        "Infinite Images View Controller"
-    }
+//    @objc func nrMobileViewName() -> String? {
+//        "Infinite Images View Controller"
+//    }
     
     // Sample image URLs
     private let imageURLs = [

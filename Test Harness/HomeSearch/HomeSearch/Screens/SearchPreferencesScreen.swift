@@ -2,7 +2,7 @@
 //  SearchPreferencesScreen.swift
 //  HomeSearch
 //
-//  Pushed from Profile by NRMobileNavigationLink, which supplies the name.
+//  Pushed from Profile by a value-based NavigationLink over ProfileRoute.
 //
 
 import SwiftUI

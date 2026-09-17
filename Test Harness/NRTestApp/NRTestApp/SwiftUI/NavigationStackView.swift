@@ -118,24 +118,18 @@ struct NavigationStackView: View {
                 }
             }
             // ── navigationDestination modifiers ──────────────────────────────
-            // Each handles a distinct Hashable type in the path. NRMobileDestination
-            // wraps navigationDestination(for:) so each pushed value's destination
-            // emits a MobileView event tagged with the value-derived name.
-            .NRMobileDestination(for: NavItem.self,
-                                 name: { "NavItemDetailView(\($0.title))" }) { item in
+            // Each handles a distinct Hashable type in the path.
+            .navigationDestination(for: NavItem.self) { item in
                 NavItemDetailView(item: item, path: $path)
             }
-            .NRMobileDestination(for: NavSubItem.self,
-                                 name: { "NavSubItemDetailView(\($0.parentTitle)/\($0.id))" }) { sub in
+            .navigationDestination(for: NavSubItem.self) { sub in
                 NavSubItemDetailView(sub: sub, path: $path)
             }
-            .NRMobileDestination(for: NavLeafItem.self,
-                                 name: { "NavLeafView(\($0.label))" }) { leaf in
+            .navigationDestination(for: NavLeafItem.self) { leaf in
                 NavLeafView(leaf: leaf, path: $path)
             }
         }
         .NRTrackView(name: "NavigationStackView")
-        .NRMobileView(name: "NavigationStackView")
 
     }
 }

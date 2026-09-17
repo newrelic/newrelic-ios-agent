@@ -52,19 +52,24 @@ struct ListingDetailScreen: View {
     private func content(for listing: Listing) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                heroPhoto(for: listing).NRMobileView(name: Component.heroPhoto.rawValue,
-                                                     attributes: Component.attributes)
-                header(for: listing).NRMobileView(name: Component.header.rawValue,
-                                                  attributes: Component.attributes)
+                heroPhoto(for: listing)
+                    //.NRMobileView(name: Component.heroPhoto.rawValue,
+                    //                                 attributes: Component.attributes)
+                header(for: listing)
+                    //.NRMobileView(name: Component.header.rawValue,
+                    //                              attributes: Component.attributes)
                 Divider()
-                facts(for: listing).NRMobileView(name: Component.facts.rawValue,
-                                                 attributes: Component.attributes)
+                facts(for: listing)
+                    //.NRMobileView(name: Component.facts.rawValue,
+                    //                             attributes: Component.attributes)
                 Divider()
-                summary(for: listing).NRMobileView(name: Component.summary.rawValue,
-                                                   attributes: Component.attributes)
+                summary(for: listing)
+                    //.NRMobileView(name: Component.summary.rawValue,
+                      //                             attributes: Component.attributes)
                 Divider()
-                agentCard(for: listing).NRMobileView(name: Component.agentCard.rawValue,
-                                                     attributes: Component.attributes)
+                agentCard(for: listing)
+                    //.NRMobileView(name: Component.agentCard.rawValue,
+                    //                                 attributes: Component.attributes)
             }
             .padding(.bottom, 32)
         }
@@ -83,24 +88,24 @@ struct ListingDetailScreen: View {
         }
         // The second of the two screens that open an interaction trace, and the one where custom
         // attributes are attached to the MobileView event.
-        .NRMobileView(
-            name: ViewName.listingDetail.rawValue,
-            attributes: listing.mobileViewAttributes
-        )
+//        .NRMobileView(
+//            name: ViewName.listingDetail.rawValue,
+//            attributes: listing.mobileViewAttributes
+//        )
         // Item-driven sheet: the name closure receives the item, so it could vary per agent. It
         // deliberately does not — see the cardinality note in ViewName.
-        .NRMobileSheet(item: $contactTarget, name: { _ in ViewName.contactAgent.rawValue }) { target in
-            ContactAgentScreen(listing: target) {
-                contactTarget = nil
-                onTourRequested(target.id)
-            }
-        }
-        .NRMobileFullScreenCover(isPresented: $showingGallery,
-                                 name: ViewName.photoGallery.rawValue) {
+//        .NRMobileSheet(item: $contactTarget, name: { _ in ViewName.contactAgent.rawValue }) { target in
+//            ContactAgentScreen(listing: target) {
+//                contactTarget = nil
+//                onTourRequested(target.id)
+//            }
+//        }
+        .fullScreenCover(isPresented: $showingGallery) {
+                           //      name: ViewName.photoGallery.rawValue) {
             PhotoGalleryScreen(listing: listing)
         }
-        .NRMobilePopover(isPresented: $showingMortgageCalculator,
-                         name: ViewName.mortgageCalculator.rawValue) {
+        .popover(isPresented: $showingMortgageCalculator) {
+                        // name: ViewName.mortgageCalculator.rawValue) {
             MortgageCalculatorScreen(listing: listing)
         }
     }

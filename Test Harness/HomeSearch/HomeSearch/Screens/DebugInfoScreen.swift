@@ -84,8 +84,8 @@ struct DebugInfoScreen: View {
         }
         .navigationTitle("Debug info")
         .navigationBarTitleDisplayMode(.inline)
-        // The opt-out. Nothing here should reach the data.
-        .NRMobileView(name: ViewName.debugInfo.rawValue, ignored: true)
+        .NRMobileView(ignored: true)
+
     }
 
     private var collectorDescription: String {

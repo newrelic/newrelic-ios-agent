@@ -23,7 +23,6 @@ struct ListsView: View {
             }
             .navigationBarTitle("Lists")
             .NRTrackView(name: "ListsView")
-            .NRMobileView(name: "ListsView")
         }
         .navigationViewStyle(.stack)
     }

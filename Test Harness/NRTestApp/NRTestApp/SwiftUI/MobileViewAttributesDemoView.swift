@@ -69,8 +69,9 @@ struct MobileViewAttributesDemoView: View {
             .padding()
         }
         .navigationBarTitle("Custom Attrs", displayMode: .inline)
-        .NRMobileView(name: "MobileViewAttributesDemoView",
-                      attributes: customAttrs)
+        // CUSTOM ATTRIBUTE OVERRIDE WHILE GETTIN NAME MobileViewAttributesDemoView automatically.
+        .NRMobileView(
+            attributes: customAttrs)
     }
 
     private func attrRow(_ key: String, _ value: String) -> some View {

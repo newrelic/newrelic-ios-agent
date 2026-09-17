@@ -33,7 +33,6 @@ struct DatePickersView: View {
         }
         .navigationTitle("Date Pickers")
         .NRTrackView(name: "DatePickersView")
-        .NRMobileView(name: "DatePickersView")
     }
     
     private func formattedDate(_ date: Date) -> String {

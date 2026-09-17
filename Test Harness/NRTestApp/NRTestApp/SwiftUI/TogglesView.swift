@@ -97,7 +97,6 @@ struct TogglesView: View {
             }
         }
         .NRTrackView(name: "TogglesView")
-        .NRMobileView(name: "TogglesView")
     }
 }
 
