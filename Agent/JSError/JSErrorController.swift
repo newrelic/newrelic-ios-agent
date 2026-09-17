@@ -321,6 +321,7 @@ public class JSErrorController: NSObject {
 
         // Send to uploader
         uploader.sendPayload(payload,
+                           platform: platform,
                            sessionId: sessionId,
                            entityGuid: configuration.entity_guid,
                            accountId: NSNumber(value: configuration.account_id),
