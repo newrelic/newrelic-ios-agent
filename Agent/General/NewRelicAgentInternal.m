@@ -985,9 +985,10 @@ static UIBackgroundTaskIdentifier background_task;
     // before the OS suspends the process.
     [NRMAHarvestController backgroundFlush];
     [NRLogger backgroundFlush];
+#if TARGET_OS_IOS
     [_sessionReplay backgroundFlush];
     [self.jsErrorController backgroundFlush];
-
+#endif
     // Disable observers.
     [[NSNotificationCenter defaultCenter] removeObserver:self
                                                     name:kNRCarrierNameDidUpdateNotification
