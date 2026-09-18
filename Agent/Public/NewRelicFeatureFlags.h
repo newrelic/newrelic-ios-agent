@@ -79,6 +79,20 @@
  
  - NRFeatureFlag_OfflineStorage
     Enabled by default. Enable (default) or disable flag to enable the storage of offline payloads.
+
+ - NRFeatureFlag_AutomaticViews
+    Disabled by default. Enables automatic capture of MobileView events for UIViewController lifecycle
+    (viewDidLoad → viewDidAppear → viewDidDisappear) and SwiftUI onAppear/onDisappear.
+    Each visible appearance of a view emits one MobileView event, when the view ceases to be visible,
+    with viewClass, viewName, viewInstanceId, previousView (referrer), loadTime (ms), and
+    timeVisible (ms) attributes.
+
+ - NRFeatureFlag_ManualViews
+    Disabled by default. Enables the manual [NewRelic setCurrentView:attributes:] API for recording
+    custom view lifecycles — e.g. renaming views for business reasons, or naming React Native screens
+    that would otherwise collapse to a single generic host controller. Independent of
+    NRFeatureFlag_AutomaticViews; enabling either flag activates the breadcrumb/MobileView referrer
+    attributes (currentView, previousView).
 */
 
 
@@ -106,5 +120,12 @@ typedef NS_OPTIONS(unsigned long long, NRMAFeatureFlags){
     NRFeatureFlag_OfflineStorage                        = 1 << 21, // Disabled by default
     NRFeatureFlag_BackgroundReporting                   = 1 << 22, // Disabled by default
     NRFeatureFlag_AutoCollectLogs                       = 1 << 23, // Disabled by default
-    NRFeatureFlag_JSErrorEvents                         = 1 << 24  // Enabled by default
+    NRFeatureFlag_JSErrorEvents                         = 1 << 24, // Enabled by default
+    NRFeatureFlag_AutomaticMobileViews                  = 1 << 25, // Enabled by default
+    NRFeatureFlag_ManualMobileViews                     = 1 << 26, // Disabled by default
+    // Automatic SwiftUI screen tracking, with no `.NRMobileView(...)` in the app. Separate from
+    // AutomaticMobileViews because it resolves screen names by reflecting into SwiftUI's runtime
+    // representation, so it carries a different risk profile from the UIKit swizzle and needs to
+    // be switchable on its own.
+    NRFeatureFlag_AutomaticSwiftUIViews                 = 1 << 27, // Enabled by default
 };

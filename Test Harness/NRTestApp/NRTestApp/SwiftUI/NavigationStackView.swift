@@ -130,6 +130,7 @@ struct NavigationStackView: View {
             }
         }
         .NRTrackView(name: "NavigationStackView")
+
     }
 }
 
