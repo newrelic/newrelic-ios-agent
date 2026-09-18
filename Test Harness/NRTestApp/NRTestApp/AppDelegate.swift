@@ -114,6 +114,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NewRelic.logVerbose("NewRelic.start was called.")
 
         runCoreDataCrashReproIfRequested()
+        runHexOOMReproIfRequested()
 
         return true
     }

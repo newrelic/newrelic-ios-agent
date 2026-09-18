@@ -103,6 +103,10 @@ static NRMAURLTransformer* urlTransformer;
 @property(nonatomic, strong) NRMAAppInstallMetricGenerator* appInstallMetricGenerator;
 @property(nonatomic, strong) NRMAAppUpgradeMetricGenerator* appUpgradeMetricGenerator;
 
+#if TARGET_OS_IOS
+@property(atomic, strong, nullable) JSErrorController* jsErrorController;
+#endif
+
 - (void) applicationWillEnterForeground;
 #if !TARGET_OS_WATCH
 - (void) applicationWillEnterForeground:(UIApplication*)application;
@@ -784,6 +788,31 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     }
 #endif
 }
+
+#if TARGET_OS_IOS
+- (BOOL) recordJavascriptErrorWithName:(NSString*)name
+                               message:(NSString*)message
+                            stackTrace:(NSString*)stackTrace
+                               isFatal:(BOOL)isFatal
+                  additionalAttributes:(NSDictionary* _Nullable)additionalAttributes {
+    JSErrorController* controller = self.jsErrorController;
+
+    if (controller == nil) {
+        NRLOG_AGENT_ERROR(@"JS Error Controller is not initialized. Cannot record JS error.");
+        return NO;
+    }
+
+    [self sessionReplayOnError:nil];
+
+    [controller recordJSError:name
+                     message:message
+                  stackTrace:stackTrace
+                     isFatal:isFatal
+        additionalAttributes:additionalAttributes];
+
+    return YES;
+}
+#endif
 
 static const NSString *kNRMA_BGFG_MUTEX = @"com.newrelic.bgfg.mutex";
 static const NSString *kNRMA_APPLICATION_WILL_TERMINATE =
