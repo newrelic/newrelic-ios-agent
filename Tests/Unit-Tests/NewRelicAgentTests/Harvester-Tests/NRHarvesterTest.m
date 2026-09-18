@@ -15,6 +15,7 @@
 #import "NewRelicAgent+Development.h"
 #import "NRMAHarvestController.h"
 #import "NRMAAppToken.h"
+#import <NewRelic/NewRelic-Swift.h>
 
 @interface NSBundle (AHHHH)
 + (NSBundle*) NRMA__mainBundle;
@@ -86,7 +87,7 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
     [harvester setAgentConfiguration:agentConfig];
     
     id mockNSURLSession = [self makeMockURLSession];
-    harvester.connection.harvestSession = mockNSURLSession;
+    harvester.connection.httpClient = mockNSURLSession;
 
     harvestAwareHelper = [[NRMAHarvestAwareHelper alloc] init];
     [harvester addHarvestAwareObject:harvestAwareHelper];
@@ -152,49 +153,39 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
     return config;
 }
 
+// Despite the name, this returns a mocked NRMARetryingHTTPClient (assign it to
+// connection.httpClient) — NRMAHarvesterConnection delegates all uploads to that
+// client rather than owning an NSURLSession directly.
 - (id) makeMockURLSession {
-    __block NSURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://staging-mobile-collector.newrelic.com"] statusCode:200 HTTPVersion:@"1.1" headerFields:nil];
+    NSHTTPURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://staging-mobile-collector.newrelic.com"] statusCode:200 HTTPVersion:@"1.1" headerFields:nil];
     NRMAHarvesterConfiguration* config = [self makeHarvestConfig];
-        
+
     NSData *data = [NSJSONSerialization dataWithJSONObject:[config asDictionary] options:NSJSONWritingPrettyPrinted error:nil];
-    
-    id mockNSURLSession = [OCMockObject mockForClass:NSURLSession.class];
-    [[[mockNSURLSession stub] classMethod] andReturn:mockNSURLSession];
 
-    id mockUploadTask = [OCMockObject mockForClass:NSURLSessionUploadTask.class];
+    id mockHTTPClient = [OCMockObject mockForClass:NRMARetryingHTTPClient.class];
 
-    __block void (^completionHandler)(NSData*, NSURLResponse*, NSError*);
+    [[[mockHTTPClient stub] andDo:^(NSInvocation *invoke) {
+        void (^completion)(NSData*, NSHTTPURLResponse*, NSError*);
+        [invoke getArgument:&completion atIndex:5];
+        completion(data, bresponse, nil);
+    }] uploadRequest:OCMOCK_ANY data:OCMOCK_ANY endpoint:OCMOCK_ANY completion:OCMOCK_ANY];
 
-    [[[[mockNSURLSession stub] andReturn:mockUploadTask] andDo:^(NSInvocation * invoke) {
-        [invoke getArgument:&completionHandler atIndex:4];
-    }] uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY completionHandler:OCMOCK_ANY];
-
-    [[[mockUploadTask stub] andDo:^(NSInvocation *invoke) {
-        completionHandler(data, bresponse, nil);
-    }] resume];
-    
-    return mockNSURLSession;
+    return mockHTTPClient;
 }
 
+// See makeMockURLSession — also returns a mocked NRMARetryingHTTPClient.
 - (id) makeMockURLSessionResponseError:(NSError*) error statusCode:(NSInteger)statusCode {
-    __block NSURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://staging-mobile-collector.newrelic.com"] statusCode:statusCode HTTPVersion:@"1.1" headerFields:nil];
-    
-    id mockNSURLSession = [OCMockObject mockForClass:NSURLSession.class];
-    [[[mockNSURLSession stub] classMethod] andReturn:mockNSURLSession];
+    NSHTTPURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://staging-mobile-collector.newrelic.com"] statusCode:statusCode HTTPVersion:@"1.1" headerFields:nil];
 
-    id mockUploadTask = [OCMockObject mockForClass:NSURLSessionUploadTask.class];
+    id mockHTTPClient = [OCMockObject mockForClass:NRMARetryingHTTPClient.class];
 
-    __block void (^completionHandler)(NSData*, NSURLResponse*, NSError*);
+    [[[mockHTTPClient stub] andDo:^(NSInvocation *invoke) {
+        void (^completion)(NSData*, NSHTTPURLResponse*, NSError*);
+        [invoke getArgument:&completion atIndex:5];
+        completion([@"DISABLE_NEW_RELIC" dataUsingEncoding:NSUTF8StringEncoding], bresponse, error);
+    }] uploadRequest:OCMOCK_ANY data:OCMOCK_ANY endpoint:OCMOCK_ANY completion:OCMOCK_ANY];
 
-    [[[[mockNSURLSession stub] andReturn:mockUploadTask] andDo:^(NSInvocation * invoke) {
-        [invoke getArgument:&completionHandler atIndex:4];
-    }] uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY completionHandler:OCMOCK_ANY];
-
-    [[[mockUploadTask stub] andDo:^(NSInvocation *invoke) {
-        completionHandler([@"DISABLE_NEW_RELIC" dataUsingEncoding:NSUTF8StringEncoding], bresponse, error);
-    }] resume];
-    
-    return mockNSURLSession;
+    return mockHTTPClient;
 }
 
 - (void) testHarvestConfiguration
@@ -431,7 +422,7 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
     NRMAHarvester* newHarvester = [[NRMAHarvester alloc] init];
     id mockNSURLSession = [self makeMockURLSession];
     
-    newHarvester.connection.harvestSession = mockNSURLSession;
+    newHarvester.connection.httpClient = mockNSURLSession;
     
     id dataMock = [OCMockObject partialMockForObject:[newHarvester harvestData]];
     [[dataMock expect] clear];
@@ -474,7 +465,7 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
     
     NRMAHarvester *newHarvester = [[NRMAHarvester alloc] init];
     
-    newHarvester.connection.harvestSession = mockNSURLSession;
+    newHarvester.connection.httpClient = mockNSURLSession;
     [newHarvester setAgentConfiguration:agentConfig];
 
     id harvesterMock = [OCMockObject partialMockForObject:newHarvester];
@@ -504,7 +495,7 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
 
     NRMAHarvester* newHarvester = [[NRMAHarvester alloc] init];
     id mockNSURLSession = [self makeMockURLSessionResponseError:[[NSError alloc] initWithDomain:@"" code:NSURLErrorNotConnectedToInternet userInfo:nil] statusCode:200];
-    newHarvester.connection.harvestSession = mockNSURLSession;
+    newHarvester.connection.httpClient = mockNSURLSession;
 
     id mockHarvester = [OCMockObject partialMockForObject:newHarvester];
     [[[mockHarvester stub] andReturn:[NRMAHarvesterConfiguration new]] harvesterConfiguration];
@@ -538,7 +529,7 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
     XCTAssertTrue(offlineData.count > 0);
 
     mockNSURLSession = [self makeMockURLSession];
-    newHarvester.connection.harvestSession = mockNSURLSession;
+    newHarvester.connection.httpClient = mockNSURLSession;
 
     [mockHarvester connected];
 
@@ -557,7 +548,7 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
 
     NRMAHarvester* newHarvester = [[NRMAHarvester alloc] init];
     id mockNSURLSession = [self makeMockURLSessionResponseError:[[NSError alloc] initWithDomain:@"" code:NSURLErrorNotConnectedToInternet userInfo:nil] statusCode:200];
-    newHarvester.connection.harvestSession = mockNSURLSession;
+    newHarvester.connection.httpClient = mockNSURLSession;
 
     id mockHarvester = [OCMockObject partialMockForObject:newHarvester];
     [[[mockHarvester stub] andReturn:[NRMAHarvesterConfiguration new]] harvesterConfiguration];
@@ -591,7 +582,7 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
     XCTAssertTrue(offlineData.count == 0);
 
     mockNSURLSession = [self makeMockURLSession];
-    newHarvester.connection.harvestSession = mockNSURLSession;
+    newHarvester.connection.httpClient = mockNSURLSession;
 
     [mockHarvester connected];
 
@@ -731,7 +722,7 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
     [aHarvester setAgentConfiguration:agentConfig];
     id mockNSURLSession = [self makeMockURLSession];
     
-    aHarvester.connection.harvestSession = mockNSURLSession;
+    aHarvester.connection.httpClient = mockNSURLSession;
 
     // ensure there is no lingering harvest configuration
     XCTAssertNil([aHarvester fetchHarvestConfiguration]);
@@ -781,7 +772,7 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
 - (void) testUninitializedToDisabled
 {
     id mockNSURLSession = [self makeMockURLSessionResponseError:[NSError errorWithDomain:@"" code:403 userInfo:@{@"Error reason": @"Invalid Input"}] statusCode:403];
-    harvester.connection.harvestSession = mockNSURLSession;
+    harvester.connection.httpClient = mockNSURLSession;
 
    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_UNINITIALIZED, @"expected uninitizlized");
    [harvester execute];

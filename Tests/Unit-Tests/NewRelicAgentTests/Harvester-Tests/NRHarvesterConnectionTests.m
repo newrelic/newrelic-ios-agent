@@ -16,6 +16,7 @@
 #import "NRMAMeasurementEngine.h"
 #import "NRMAFakeDataHelper.h"
 #import "NRMASupportMetricHelper.h"
+#import <NewRelic/NewRelic-Swift.h>
 
 @implementation NRMAHarvesterConnectionTests
 
@@ -72,24 +73,16 @@
 }
 
 - (void) testSend {
-    __block NSURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://mobile-collector.newrelic.com"] statusCode:404 HTTPVersion:@"1.1" headerFields:nil];
-    id mockNSURLSession = [OCMockObject mockForClass:NSURLSession.class];
-    [[[mockNSURLSession stub] classMethod] andReturn:mockNSURLSession];
-    
-    connection.harvestSession = mockNSURLSession;
-    
-    id mockUploadTask = [OCMockObject mockForClass:NSURLSessionUploadTask.class];
+    NSHTTPURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://mobile-collector.newrelic.com"] statusCode:404 HTTPVersion:@"1.1" headerFields:nil];
+    id mockHTTPClient = [OCMockObject mockForClass:NRMARetryingHTTPClient.class];
+    connection.httpClient = mockHTTPClient;
 
-    __block void (^completionHandler)(NSData*, NSURLResponse*, NSError*);
-    
-    [[[[mockNSURLSession stub] andReturn:mockUploadTask] andDo:^(NSInvocation * invoke) {
-        [invoke getArgument:&completionHandler atIndex:4];
-    }] uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY completionHandler:OCMOCK_ANY];
-    
-    [[[mockUploadTask stub] andDo:^(NSInvocation *invoke) {
-        completionHandler(nil, bresponse, nil);
-    }] resume];
-    
+    [[[mockHTTPClient stub] andDo:^(NSInvocation *invoke) {
+        void (^completion)(NSData*, NSHTTPURLResponse*, NSError*);
+        [invoke getArgument:&completion atIndex:5];
+        completion(nil, bresponse, nil);
+    }] uploadRequest:OCMOCK_ANY data:OCMOCK_ANY endpoint:OCMOCK_ANY completion:OCMOCK_ANY];
+
     connection.serverTimestamp = 1234;
     connection.collectorHost = @"mobile-collector.newrelic.com";
 
@@ -104,8 +97,7 @@
     XCTAssertTrue([response isError], @"");
     XCTAssertTrue(response.statusCode == NOT_FOUND, @"");
 
-    [mockUploadTask stopMocking];
-    [mockNSURLSession stopMocking];
+    [mockHTTPClient stopMocking];
 }
 
 - (void) testMaxPayloadSizeLimitSendConnect {
@@ -185,23 +177,15 @@
 
 - (void) testSendDisabledAppToken {
     // Set up stub for /data endpoint.
-    __block NSURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://staging-mobile-collector.newrelic.com"] statusCode:UNAUTHORIZED HTTPVersion:@"1.1" headerFields:nil];
-    id mockNSURLSession = [OCMockObject mockForClass:NSURLSession.class];
-    [[[mockNSURLSession stub] classMethod] andReturn:mockNSURLSession];
+    NSHTTPURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://staging-mobile-collector.newrelic.com"] statusCode:UNAUTHORIZED HTTPVersion:@"1.1" headerFields:nil];
+    id mockHTTPClient = [OCMockObject mockForClass:NRMARetryingHTTPClient.class];
+    connection.httpClient = mockHTTPClient;
 
-    connection.harvestSession = mockNSURLSession;
-
-    id mockUploadTask = [OCMockObject mockForClass:NSURLSessionUploadTask.class];
-
-    __block void (^completionHandler)(NSData*, NSURLResponse*, NSError*);
-
-    [[[[mockNSURLSession stub] andReturn:mockUploadTask] andDo:^(NSInvocation * invoke) {
-        [invoke getArgument:&completionHandler atIndex:4];
-    }] uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY completionHandler:OCMOCK_ANY];
-
-    [[[mockUploadTask stub] andDo:^(NSInvocation *invoke) {
-        completionHandler([NSData data], bresponse, nil);
-    }] resume];
+    [[[mockHTTPClient stub] andDo:^(NSInvocation *invoke) {
+        void (^completion)(NSData*, NSHTTPURLResponse*, NSError*);
+        [invoke getArgument:&completion atIndex:5];
+        completion([NSData data], bresponse, nil);
+    }] uploadRequest:OCMOCK_ANY data:OCMOCK_ANY endpoint:OCMOCK_ANY completion:OCMOCK_ANY];
     // End set up stub for /data endpoint.
 
     connection.applicationToken = @"disabled-app-token";
@@ -221,23 +205,15 @@
 - (void) testSendEnabledAppToken {
 
     // Set up stub for /data endpoint.
-    __block NSURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://staging-mobile-collector.newrelic.com"] statusCode:200 HTTPVersion:@"1.1" headerFields:nil];
-    id mockNSURLSession = [OCMockObject mockForClass:NSURLSession.class];
-    [[[mockNSURLSession stub] classMethod] andReturn:mockNSURLSession];
+    NSHTTPURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://staging-mobile-collector.newrelic.com"] statusCode:200 HTTPVersion:@"1.1" headerFields:nil];
+    id mockHTTPClient = [OCMockObject mockForClass:NRMARetryingHTTPClient.class];
+    connection.httpClient = mockHTTPClient;
 
-    connection.harvestSession = mockNSURLSession;
-
-    id mockUploadTask = [OCMockObject mockForClass:NSURLSessionUploadTask.class];
-
-    __block void (^completionHandler)(NSData*, NSURLResponse*, NSError*);
-
-    [[[[mockNSURLSession stub] andReturn:mockUploadTask] andDo:^(NSInvocation * invoke) {
-        [invoke getArgument:&completionHandler atIndex:4];
-    }] uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY completionHandler:OCMOCK_ANY];
-
-    [[[mockUploadTask stub] andDo:^(NSInvocation *invoke) {
-        completionHandler([NSData data], bresponse, nil);
-    }] resume];
+    [[[mockHTTPClient stub] andDo:^(NSInvocation *invoke) {
+        void (^completion)(NSData*, NSHTTPURLResponse*, NSError*);
+        [invoke getArgument:&completion atIndex:5];
+        completion([NSData data], bresponse, nil);
+    }] uploadRequest:OCMOCK_ANY data:OCMOCK_ANY endpoint:OCMOCK_ANY completion:OCMOCK_ANY];
     // End set up stub for /data endpoint.
 
     connection.connectionInformation = [self createConnectionInformationWithOsName:[NewRelicInternalUtils osName] platform:NRMAPlatform_Native];
@@ -246,7 +222,7 @@
     connection.useSSL = YES;
     connection.serverTimestamp = 1234;
 
-    
+
     NRMAHarvestResponse* response= [connection sendConnect];
     XCTAssertNotNil(response, @"");
     
@@ -283,25 +259,17 @@
     connection.applicationToken = @"app-token";
 
     // Set up stub for /data endpoint.
-    __block NSURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://staging-mobile-collector.newrelic.com"] statusCode:200 HTTPVersion:@"1.1" headerFields:nil];
-    id mockNSURLSession = [OCMockObject mockForClass:NSURLSession.class];
-    [[[mockNSURLSession stub] classMethod] andReturn:mockNSURLSession];
+    NSHTTPURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://staging-mobile-collector.newrelic.com"] statusCode:200 HTTPVersion:@"1.1" headerFields:nil];
+    id mockHTTPClient = [OCMockObject mockForClass:NRMARetryingHTTPClient.class];
+    connection.httpClient = mockHTTPClient;
 
-    connection.harvestSession = mockNSURLSession;
-
-    id mockUploadTask = [OCMockObject mockForClass:NSURLSessionUploadTask.class];
-
-    __block void (^completionHandler)(NSData*, NSURLResponse*, NSError*);
-
-    [[[[mockNSURLSession stub] andReturn:mockUploadTask] andDo:^(NSInvocation * invoke) {
-        [invoke getArgument:&completionHandler atIndex:4];
-    }] uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY completionHandler:OCMOCK_ANY];
-
-    [[[mockUploadTask stub] andDo:^(NSInvocation *invoke) {
-        completionHandler([NSData data], bresponse, nil);
-    }] resume];
+    [[[mockHTTPClient stub] andDo:^(NSInvocation *invoke) {
+        void (^completion)(NSData*, NSHTTPURLResponse*, NSError*);
+        [invoke getArgument:&completion atIndex:5];
+        completion([NSData data], bresponse, nil);
+    }] uploadRequest:OCMOCK_ANY data:OCMOCK_ANY endpoint:OCMOCK_ANY completion:OCMOCK_ANY];
     // End set up stub for /data endpoint.
-    
+
     connection.connectionInformation = [self createConnectionInformationWithOsName:[NewRelicInternalUtils osName] platform:NRMAPlatform_Native];
     connection.collectorHost = KNRMA_TEST_COLLECTOR_HOST;
     connection.applicationToken = @"app-token";
