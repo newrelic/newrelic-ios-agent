@@ -7,6 +7,7 @@ struct CaptureViewerView: View {
     @State private var detailVisible = false
     @State private var showingInjectSheet = false
     @State private var showingConfigSheet = false
+    @State private var showingPreviousLaunchSheet = false
 
     var body: some View {
         NavigationView {
@@ -51,6 +52,14 @@ struct CaptureViewerView: View {
                         .sheet(isPresented: $showingConfigSheet) {
                             ConnectConfigSheet()
                         }
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button { showingPreviousLaunchSheet = true } label: {
+                        Image(systemName: "clock.arrow.circlepath")
+                    }
+                    .sheet(isPresented: $showingPreviousLaunchSheet) {
+                        PreviousLaunchSheet(captures: store.previousLaunchCaptures)
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -248,6 +257,132 @@ struct CaptureDetailView: View {
                 .foregroundColor(.secondary)
         }
         .padding(.top, 12)
+    }
+}
+
+// MARK: - Previous launch history
+
+/// Shows the last requests captured on the prior launch (persisted to disk since `captures`
+/// itself starts empty every launch) — read-only, no verification or live updates.
+private struct PreviousLaunchSheet: View {
+    let captures: [PersistedCapture]
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationView {
+            Group {
+                if captures.isEmpty {
+                    VStack(spacing: 16) {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.system(size: 56))
+                            .foregroundColor(.secondary)
+                        Text("No requests captured on the previous launch")
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 40)
+                    }
+                } else {
+                    List(captures) { capture in
+                        NavigationLink(destination: PreviousLaunchDetailView(capture: capture)) {
+                            HStack(alignment: .top, spacing: 10) {
+                                VStack(alignment: .leading, spacing: 3) {
+                                    HStack(spacing: 6) {
+                                        Text(capture.endpoint)
+                                            .font(.system(.subheadline, design: .monospaced).weight(.semibold))
+                                        if capture.hasFailedResponse {
+                                            Text("\(capture.responseStatusCode)")
+                                                .font(.system(.caption2, design: .monospaced).weight(.bold))
+                                                .foregroundColor(.white)
+                                                .padding(.horizontal, 5)
+                                                .padding(.vertical, 1)
+                                                .background(Color.red)
+                                                .cornerRadius(4)
+                                        }
+                                    }
+                                    Text(capture.timestamp, style: .time)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Text(capture.summary)
+                                        .font(.system(.caption2, design: .monospaced))
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(2)
+                                }
+                            }
+                            .padding(.vertical, 2)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Previous Launch")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+    }
+}
+
+private struct PreviousLaunchDetailView: View {
+    let capture: PersistedCapture
+    @State private var copied = false
+
+    private var bodyLines: [String] { capture.prettyJSON.components(separatedBy: "\n") }
+    private var queryParams: [(String, String)] {
+        capture.queryParams.compactMap { pair in
+            guard pair.count == 2 else { return nil }
+            return (pair[0], pair[1])
+        }
+    }
+
+    var body: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Label(capture.endpoint, systemImage: "network")
+                        .font(.system(.subheadline, design: .monospaced))
+                        .foregroundColor(.accentColor)
+                    Text(capture.timestamp.formatted(date: .abbreviated, time: .complete))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal)
+                .padding(.top, 12)
+                .padding(.bottom, 12)
+                Divider()
+
+                ResponseSection(statusCode: capture.responseStatusCode,
+                                headers: capture.responseHeaders,
+                                responseBody: capture.responseBody)
+                Divider()
+
+                if !queryParams.isEmpty {
+                    QueryParamsSection(endpoint: capture.endpoint, queryParams: queryParams)
+                    Divider()
+                }
+
+                ForEach(Array(bodyLines.enumerated()), id: \.offset) { index, line in
+                    Text(verbatim: line.isEmpty ? " " : line)
+                        .font(.system(.caption, design: .monospaced))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal)
+                        .padding(.top, index == 0 ? 12 : 0)
+                }
+                Color.clear.frame(height: 12)
+            }
+        }
+        .navigationTitle(capture.endpoint.components(separatedBy: "/").last ?? "")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(copied ? "Copied!" : "Copy") {
+                    UIPasteboard.general.string = capture.prettyJSON
+                    copied = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) { copied = false }
+                }
+            }
+        }
     }
 }
 

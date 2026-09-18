@@ -161,9 +161,16 @@ public class NRMARetryingHTTPClient: NSObject {
         }
 
         let handler: (Data?, URLResponse?, Error?) -> Void = { [weak self] data, response, error in
-            self?.handleResult(data: data, response: response, error: error,
-                               request: request, body: body, endpoint: endpoint,
-                               attempt: attempt, completion: completion)
+            guard let self = self else {
+                let cancelError = (error as NSError?) ?? NSError(domain: NSURLErrorDomain,
+                                                                  code: NSURLErrorCancelled,
+                                                                  userInfo: nil)
+                completion(data, response as? HTTPURLResponse, cancelError)
+                return
+            }
+            self.handleResult(data: data, response: response, error: error,
+                              request: request, body: body, endpoint: endpoint,
+                              attempt: attempt, completion: completion)
         }
         let task: URLSessionUploadTask
         switch body {

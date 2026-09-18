@@ -30,3 +30,35 @@ struct CapturedRequest: Identifiable {
         queryParams.first(where: { $0.0 == name })?.1
     }
 }
+
+/// A Codable snapshot of a `CapturedRequest`, persisted to disk so the last few requests from
+/// the previous launch can still be inspected after relaunching (`captures` itself is in-memory
+/// only and starts empty every launch). Tuples aren't Codable, so query params are stored as
+/// [key, value] pairs instead of `(String, String)`; verification isn't persisted since it's only
+/// meaningful against the live, in-memory capture list.
+struct PersistedCapture: Identifiable, Codable {
+    let id: UUID
+    let timestamp: Date
+    let endpoint: String
+    let headers: [String: String]
+    let queryParams: [[String]]
+    let prettyJSON: String
+    let responseStatusCode: Int
+    let responseHeaders: [String: String]
+    let responseBody: String
+
+    init(_ capture: CapturedRequest) {
+        id = capture.id
+        timestamp = capture.timestamp
+        endpoint = capture.endpoint
+        headers = capture.headers
+        queryParams = capture.queryParams.map { [$0.0, $0.1] }
+        prettyJSON = capture.prettyJSON
+        responseStatusCode = capture.responseStatusCode
+        responseHeaders = capture.responseHeaders
+        responseBody = capture.responseBody
+    }
+
+    var summary: String { String(prettyJSON.prefix(150)) }
+    var hasFailedResponse: Bool { !(200...299).contains(responseStatusCode) }
+}

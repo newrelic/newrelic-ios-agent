@@ -108,7 +108,14 @@ final class NRCaptureServer: ObservableObject {
     static let shared = NRCaptureServer()
     static let port: UInt16 = 8080
 
-    @Published var captures: [CapturedRequest] = []
+    // Persisted to disk (see didSet) so the last few requests from *this* launch are still
+    // visible after relaunching, once they become "the previous launch"'s history.
+    @Published var captures: [CapturedRequest] = [] {
+        didSet { persistRecentCaptures() }
+    }
+    /// The last `previousLaunchCaptureLimit` requests captured on the prior launch, loaded once
+    /// at startup before this run's own captures start overwriting the persisted file.
+    @Published private(set) var previousLaunchCaptures: [PersistedCapture] = []
     // Crash injections are persisted (see didSet) so they survive the relaunch that's needed
     // to actually exercise the one-shot crash upload; other endpoints are in-memory only.
     @Published var injection: StatusInjection? = nil {
@@ -118,6 +125,25 @@ final class NRCaptureServer: ObservableObject {
     @Published var connectConfigMutated: Bool = false
 
     private static let crashInjectionDefaultsKey = "NRCaptureServer.crashInjection"
+    private static let previousLaunchCaptureLimit = 10
+    // A file rather than UserDefaults: captured payloads (e.g. session replay blobs) can be
+    // large, and UserDefaults' plist backing isn't meant for that much data.
+    private static let previousLaunchCapturesFileURL: URL = {
+        let dir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+        return dir.appendingPathComponent("NRCaptureServer_previousLaunchCaptures.json")
+    }()
+
+    private func persistRecentCaptures() {
+        let recent = captures.prefix(Self.previousLaunchCaptureLimit).map(PersistedCapture.init)
+        guard let data = try? JSONEncoder().encode(Array(recent)) else { return }
+        try? data.write(to: Self.previousLaunchCapturesFileURL, options: .atomic)
+    }
+
+    private static func loadPersistedCaptures() -> [PersistedCapture] {
+        guard let data = try? Data(contentsOf: previousLaunchCapturesFileURL),
+              let decoded = try? JSONDecoder().decode([PersistedCapture].self, from: data) else { return [] }
+        return decoded
+    }
 
     private func persistCrashInjectionIfNeeded(oldValue: StatusInjection?) {
         let defaults = UserDefaults.standard
@@ -219,6 +245,7 @@ final class NRCaptureServer: ObservableObject {
     @Published private(set) var connectConfig: ConnectConfig = .default
 
     private init() {
+        previousLaunchCaptures = Self.loadPersistedCaptures()
         loadPersistedCrashInjection()
     }
 
