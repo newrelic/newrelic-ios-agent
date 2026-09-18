@@ -20,14 +20,28 @@ static NSString* const kNRMAVendorIDStore   = @"com.newrelic.vendorID";
 
 @implementation NRMAUDIDManager
 
+static NSString *_cachedVendorId = nil;
+
 + (NSString*) deviceIdentifier {
-//    return ![NRMAFlags shouldReplaceDeviceIdentifier] ? [UIDevice currentDevice].identifierForVendor.UUIDString : [NRMAFlags replacementDeviceIdentifier];
+    if ([NRMAFlags shouldReplaceDeviceIdentifier]) {
+        return [NRMAFlags replacementDeviceIdentifier];
+    }
+    @synchronized(NRMAUDIDManager.class) {
+        if (!_cachedVendorId) {
 #if !TARGET_OS_WATCH
-    NSString* vendorId = [UIDevice currentDevice].identifierForVendor.UUIDString;
-#elif TARGET_OS_WATCH
-    NSString* vendorId = [WKInterfaceDevice currentDevice].identifierForVendor.UUIDString;
+            _cachedVendorId = [UIDevice currentDevice].identifierForVendor.UUIDString;
+#else
+            _cachedVendorId = [WKInterfaceDevice currentDevice].identifierForVendor.UUIDString;
 #endif
-    return ![NRMAFlags shouldReplaceDeviceIdentifier] ? vendorId : [NRMAFlags replacementDeviceIdentifier];
+        }
+        return _cachedVendorId;
+    }
+}
+
++ (void) resetCachedDeviceIdentifier {
+    @synchronized(NRMAUDIDManager.class) {
+        _cachedVendorId = nil;
+    }
 }
 
 + (NSString*) UDID {

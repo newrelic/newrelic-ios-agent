@@ -15,12 +15,18 @@
 #import "NRMASupportMetricHelper.h"
 #import "NRMAAgentConfiguration.h"
 
-#define kNRMAOfflineStorageCurrentSizeKey @"com.newrelic.offlineStorageCurrentSize"
+// Default time-to-live for persisted offline payloads: 7 days, in seconds.
+// Aligned with the shortest applicable New Relic data-retention window (Session Replay ~8 days).
+#define kNRMADefaultOfflineStorageTTLSeconds (7 * 24 * 60 * 60)
+
+// Shared across all endpoints so the TTL can be configured globally, mirroring the
+// Android agent's static offlineStorageTTL.
+static NSTimeInterval __NRMA__offlineStorageTTLSeconds = kNRMADefaultOfflineStorageTTLSeconds;
 
 @implementation NRMAOfflineStorage {
     NSUInteger maxOfflineStorageSizeBytes;
+    NSString* _name;
 }
-static NSString* _name;
 
 - (id)initWithEndpoint:(NSString*) name {
     self = [super init];
@@ -44,24 +50,28 @@ static NSString* _name;
 - (BOOL) persistDataToDisk:(NSData*) data {
     @synchronized (self) {
         [self createDirectory];
-        
-        NSUInteger currentOfflineStorageSize = [[NSUserDefaults standardUserDefaults] integerForKey:kNRMAOfflineStorageCurrentSizeKey];
-        currentOfflineStorageSize += data.length;
-        if(currentOfflineStorageSize > maxOfflineStorageSizeBytes){
-            NRLOG_AGENT_WARNING(@"Not saving to offline storage because max storage size has been reached.");
-            return NO;
+
+        NSUInteger currentOfflineStorageSize = [self currentOfflineStorageSize];
+        if (currentOfflineStorageSize + data.length > maxOfflineStorageSizeBytes) {
+            // Over the cap: evict the oldest payloads (LRU) to make room for the incoming data
+            // rather than dropping the current harvest in favor of stale data.
+            [self evictOldestFilesToFit:data.length];
+            currentOfflineStorageSize = [self currentOfflineStorageSize];
+            if (currentOfflineStorageSize + data.length > maxOfflineStorageSizeBytes) {
+                NRLOG_AGENT_WARNING(@"Not saving to offline storage because max storage size has been reached.");
+                return NO;
+            }
         }
-        
+
         NSError *error = nil;
         if (data) {
             if ([data writeToFile:[self newOfflineFilePath] options:NSDataWritingAtomic error:&error]) {
-                [[NSUserDefaults standardUserDefaults] setInteger:currentOfflineStorageSize forKey:kNRMAOfflineStorageCurrentSizeKey]; // If we successfully save the data save the new current total size
-                NRLOG_AGENT_VERBOSE(@"Successfully persisted failed upload data to disk for offline storage. Current offline storage: %lu", (unsigned long)currentOfflineStorageSize);
+                NRLOG_AGENT_VERBOSE(@"Successfully persisted failed upload data to disk for offline storage. Current offline storage: %lu", (unsigned long)(currentOfflineStorageSize + data.length));
                 return YES;
             }
         }
         NRLOG_AGENT_ERROR(@"Failed to persist data to disk %@", error.description);
-        
+
         return NO;
     }
 }
@@ -69,13 +79,27 @@ static NSString* _name;
 - (NSArray<NSData *> *) getAllOfflineData:(BOOL) clear {
     @synchronized (self) {
         NSMutableArray<NSData *> *combinedPosts = [NSMutableArray array];
-        
-        NSArray* dirs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[self offlineDirectoryPath]
+
+        NSString* directoryPath = [self offlineDirectoryPath];
+        NSArray* dirs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:directoryPath
                                                                             error:NULL];
+        NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow:-[NRMAOfflineStorage offlineStorageTTL]];
         [dirs enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
             NSString *filename = (NSString *)obj;
-            NSData * data = [NSData dataWithContentsOfFile:[NSString stringWithFormat:@"%@/%@",[self offlineDirectoryPath],filename]];
-            
+            NSString *filePath = [NSString stringWithFormat:@"%@/%@",directoryPath,filename];
+
+            // Drop payloads older than the TTL: once past the backend retention window they
+            // produce no value when re-uploaded, so delete them instead of replaying forever.
+            NSDictionary *attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:NULL];
+            NSDate *modificationDate = attributes[NSFileModificationDate];
+            if (modificationDate && [modificationDate compare:expiryDate] == NSOrderedAscending) {
+                NRLOG_AGENT_DEBUG(@"Deleting expired offline storage file: %@", filename);
+                [self removeOfflineFileAtPath:filePath];
+                return;
+            }
+
+            NSData * data = [NSData dataWithContentsOfFile:filePath];
+
             if (data) {
                 NRLOG_AGENT_DEBUG(@"Offline storage to be uploaded from %@", filename);
                 [combinedPosts addObject:data];
@@ -83,11 +107,11 @@ static NSString* _name;
                 NRLOG_AGENT_DEBUG(@"Failed to read offline storage file: %@", filename);
             }
         }];
-        
+
         if(clear){
             [self clearAllOfflineFiles];
         }
-        
+
         return [combinedPosts copy];
     }
 }
@@ -99,7 +123,6 @@ static NSString* _name;
     
     NSError* error;
     if ([[NSFileManager defaultManager] removeItemAtPath:[self offlineDirectoryPath] error:&error]) {
-        [[NSUserDefaults standardUserDefaults] setInteger:0 forKey:kNRMAOfflineStorageCurrentSizeKey];
         return true;
     }
     NRLOG_AGENT_ERROR(@"Failed to clear offline storage: %@", error);
@@ -113,7 +136,6 @@ static NSString* _name;
     
     NSError* error;
     if ([[NSFileManager defaultManager] removeItemAtPath:[NRMAOfflineStorage allOfflineDirectorysPath] error:&error]) {
-        [[NSUserDefaults standardUserDefaults] setInteger:0 forKey:kNRMAOfflineStorageCurrentSizeKey];
         return true;
     }
     NRLOG_AGENT_ERROR(@"Failed to clear offline storage: %@", error);
@@ -129,15 +151,101 @@ static NSString* _name;
 }
 
 - (NSString*) newOfflineFilePath {
+    // Append millisecond precision and a UUID so rapid successive persists never collide.
+    // The replay loop in sendOfflineStorage re-persists every payload back-to-back while the
+    // device is still offline; with a second-resolution name those writes landed on the same
+    // path and silently overwrote each other, dropping all but the last buffered payload.
+    // Eviction and TTL order by file modification date, not by name, so the extra suffix is
+    // purely for uniqueness and doesn't affect ordering.
     NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
-    [dateFormatter setDateFormat:@"yyyy-MM-dd-HH-mm-ss"];
+    [dateFormatter setDateFormat:@"yyyy-MM-dd-HH-mm-ss-SSS"];
     NSString *date = [dateFormatter stringFromDate:[NSDate date]];
+    NSString *unique = [[NSUUID UUID] UUIDString];
 
-    return [NSString stringWithFormat:@"%@/%@%@",[self offlineDirectoryPath],date,@".txt"];
+    return [NSString stringWithFormat:@"%@/%@-%@%@",[self offlineDirectoryPath],date,unique,@".txt"];
 }
 
 - (void) setMaxOfflineStorageSize:(NSUInteger) megabytes {
     maxOfflineStorageSizeBytes = megabytes * 1000000; // Convert MB to bytes (1 MB = 1,000,000 bytes)
+}
+
+// Computes this store's current on-disk size (in bytes) by summing the sizes of the files
+// in its own offline directory. Computed on demand rather than cached in a shared counter:
+// a cached total drifts when same-second filename collisions overwrite files, and a counter
+// shared across stores is corrupted when one store's clear zeroes the other's accounting.
+// Reading the directory keeps the size correct from both angles and per-store isolated.
+- (NSUInteger) currentOfflineStorageSize {
+    NSString* directoryPath = [self offlineDirectoryPath];
+    NSArray* filenames = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:directoryPath error:NULL];
+    NSUInteger totalSize = 0;
+    for (NSString* filename in filenames) {
+        NSString* filePath = [NSString stringWithFormat:@"%@/%@", directoryPath, filename];
+        NSDictionary* attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:NULL];
+        if (attributes) {
+            totalSize += [attributes[NSFileSize] unsignedIntegerValue];
+        }
+    }
+    return totalSize;
+}
+
+// Evicts the oldest persisted payloads (least-recently-modified first) until the incoming
+// data of length incomingDataLength would fit under the max storage size, or until there
+// is nothing left to evict.
+- (void) evictOldestFilesToFit:(NSUInteger) incomingDataLength {
+    NSString* directoryPath = [self offlineDirectoryPath];
+    NSArray* filenames = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:directoryPath error:NULL];
+    if (filenames.count == 0) {
+        return;
+    }
+
+    // Collect each file's path, modification date and size, then sort oldest first.
+    NSMutableArray<NSDictionary*>* fileInfos = [NSMutableArray array];
+    for (NSString* filename in filenames) {
+        NSString* filePath = [NSString stringWithFormat:@"%@/%@", directoryPath, filename];
+        NSDictionary* attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:NULL];
+        if (!attributes) {
+            continue;
+        }
+        [fileInfos addObject:@{@"path" : filePath,
+                               @"date" : attributes[NSFileModificationDate] ?: [NSDate distantPast],
+                               @"size" : @([attributes[NSFileSize] unsignedIntegerValue])}];
+    }
+    [fileInfos sortUsingComparator:^NSComparisonResult(NSDictionary* a, NSDictionary* b) {
+        return [a[@"date"] compare:b[@"date"]];
+    }];
+
+    // Track the running size locally as we delete, subtracting each evicted file's size, to
+    // avoid re-scanning the whole directory on every iteration.
+    NSUInteger currentOfflineStorageSize = [self currentOfflineStorageSize];
+    for (NSDictionary* info in fileInfos) {
+        if (currentOfflineStorageSize + incomingDataLength <= maxOfflineStorageSizeBytes) {
+            break;
+        }
+        NRLOG_AGENT_VERBOSE(@"Evicting oldest offline storage file to make room: %@", info[@"path"]);
+        NSUInteger size = [info[@"size"] unsignedIntegerValue];
+        [self removeOfflineFileAtPath:info[@"path"]];
+        currentOfflineStorageSize = (currentOfflineStorageSize > size) ? (currentOfflineStorageSize - size) : 0;
+    }
+}
+
+// Removes a single offline file from disk.
+- (void) removeOfflineFileAtPath:(NSString*) filePath {
+    NSError* error = nil;
+    if (![[NSFileManager defaultManager] removeItemAtPath:filePath error:&error]) {
+        NRLOG_AGENT_ERROR(@"Failed to remove offline storage file %@: %@", filePath, error.description);
+    }
+}
+
++ (NSTimeInterval) defaultOfflineStorageTTL {
+    return kNRMADefaultOfflineStorageTTLSeconds;
+}
+
++ (NSTimeInterval) offlineStorageTTL {
+    return __NRMA__offlineStorageTTLSeconds;
+}
+
++ (void) setOfflineStorageTTL:(NSTimeInterval) seconds {
+    __NRMA__offlineStorageTTLSeconds = seconds;
 }
 
 + (BOOL)checkErrorToPersist:(NSError*) error {

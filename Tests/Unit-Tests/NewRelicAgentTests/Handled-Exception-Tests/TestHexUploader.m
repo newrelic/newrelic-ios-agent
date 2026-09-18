@@ -21,8 +21,13 @@
 #import "NRMASupportMetricHelper.h"
 
 @interface NRMAHexUploader ()
-- (void) handledErroredRequest:(NSURLRequest*)request;
-
+- (void) handledErroredTask:(NSURLSessionTask*)task payload:(id)payload;
+@property(strong) NSURLSession* session;
+@property(strong) NSMutableArray* pendingPayloads;
+@property(assign) NSUInteger inFlightCount;
+// Keyed by @(task.taskIdentifier); values are NRMAHexPayload (private to
+// NRMAHexUploader.m), accessed here via KVC.
+@property(strong) NSMutableDictionary* payloadByTaskId;
 @end
 
 @interface TestHexUploader : NRMAAgentTestBase {
@@ -73,19 +78,37 @@
 
 - (void) testHandledNetworkError {
     id mockUploader = [OCMockObject partialMockForObject:self.hexUploader];
-    [[mockUploader expect] handledErroredRequest:OCMOCK_ANY];
+    [[mockUploader expect] handledErroredTask:OCMOCK_ANY payload:OCMOCK_ANY];
+
+    // A >= 400 response is recorded against the in-flight payload, but the
+    // terminal retry/abandon decision is made in didCompleteWithError so it
+    // happens exactly once per attempt. Register a payload under the task's
+    // identifier so the response/completion handlers can find it.
+    NSURLRequest* request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://localhost/f"]];
+    id payload = [NSClassFromString(@"NRMAHexPayload") new];
+    [payload setValue:[@"x" dataUsingEncoding:NSUTF8StringEncoding] forKey:@"data"];
+
+    id mockTask = [OCMockObject niceMockForClass:[NSURLSessionDataTask class]];
+    [[[mockTask stub] andReturn:request] originalRequest];
+    // The nice mock returns 0 for the unstubbed -taskIdentifier; register the
+    // payload under that same identifier so lookups resolve to it.
+    @synchronized(self.hexUploader.payloadByTaskId) {
+        self.hexUploader.payloadByTaskId[@(0)] = payload;
+    }
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnonnull"
-    NSHTTPURLResponse* response = [[NSHTTPURLResponse alloc] initWithURL:nil
+    NSHTTPURLResponse* response = [[NSHTTPURLResponse alloc] initWithURL:request
                                                               statusCode:400
                                                              HTTPVersion:@"1.1"
                                                             headerFields:nil];
 
     [mockUploader URLSession:nil
-                    dataTask:nil
+                    dataTask:mockTask
           didReceiveResponse:response
            completionHandler:^(NSURLSessionResponseDisposition d){}];
+    // Completion of the task is where the recorded HTTP error is acted on.
+    [mockUploader URLSession:nil task:mockTask didCompleteWithError:nil];
 #pragma clang diagnostic pop
 
     XCTAssertNoThrow([mockUploader verify]);
@@ -95,7 +118,7 @@
 
 - (void) testNoRetryOnSuccess {
     id mockUploader = [OCMockObject partialMockForObject:self.hexUploader];
-    [[mockUploader expect] handledErroredRequest:OCMOCK_ANY];
+    [[mockUploader expect] handledErroredTask:OCMOCK_ANY payload:OCMOCK_ANY];
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnonnull"
@@ -118,7 +141,7 @@
 
 - (void) testRetryOnFailure {
     id mockUploader = [OCMockObject partialMockForObject:self.hexUploader];
-    [[mockUploader expect] handledErroredRequest:OCMOCK_ANY];
+    [[mockUploader expect] handledErroredTask:OCMOCK_ANY payload:OCMOCK_ANY];
 
     NSError* error = [NSError errorWithDomain:(NSString*)kCFErrorDomainCFNetwork
                                          code:kCFURLErrorDNSLookupFailed
@@ -136,7 +159,7 @@
 
 - (void) testSuccessSupportMetric {
     id mockUploader = [OCMockObject partialMockForObject:self.hexUploader];
-    [[mockUploader expect] handledErroredRequest:OCMOCK_ANY];
+    [[mockUploader expect] handledErroredTask:OCMOCK_ANY payload:OCMOCK_ANY];
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnonnull"
@@ -172,7 +195,7 @@
 
     self.hexUploader.applicationToken = @"IMTHETOKENNOW";
     id mockUploader = [OCMockObject partialMockForObject:self.hexUploader];
-    [[mockUploader expect] handledErroredRequest:OCMOCK_ANY];
+    [[mockUploader expect] handledErroredTask:OCMOCK_ANY payload:OCMOCK_ANY];
     
     XCTAssertThrows([mockUploader verify]);
 
@@ -196,8 +219,111 @@
     }
     
     XCTAssertEqualObjects(foundMeasurement.name, fullMetricName, @"Name is not generated properly.");
-    
+
     [mockUploader stopMocking];
 }
+
+// Regression: previously sendData: nil'd the HTTPBody on the request before
+// passing it to uploadTaskWithRequest:fromData:, then the retry path tried
+// to read HTTPBody back and POSTed an empty body — burning sockets + FDs.
+// Now the payload is tracked in a parallel dictionary so retries can resend
+// the original bytes; the request itself MUST stay body-less because
+// NSURLSessionUploadTask warns + strips when a request has both a body and
+// `fromData:` bytes.
+- (void) testRetryPreservesPayload {
+    self.hexUploader.applicationToken = @"TOKEN";
+    self.hexUploader.applicationVersion = @"1.0";
+
+    const char* payload = "hello-world-handled-exception-bytes";
+    NSData* data = [NSData dataWithBytes:payload length:strlen(payload)];
+
+    [self.hexUploader sendData:data];
+
+    // Bookkeeping is synchronous: by the time sendData: returns, the upload
+    // has been launched and its payload recorded. The task may already have
+    // failed under the simulator (no listener), but the dict entry persists
+    // for the duration of any retry chain — so it must be present here. The
+    // dictionary is now keyed by @(task.taskIdentifier), and the original
+    // bytes live on the tracked NRMAHexPayload's `data` property.
+    NSDictionary* snapshot = nil;
+    @synchronized(self.hexUploader.payloadByTaskId) {
+        snapshot = [self.hexUploader.payloadByTaskId copy];
+    }
+    XCTAssertGreaterThanOrEqual(snapshot.count, (NSUInteger)1,
+                                @"payload must be tracked for retry");
+
+    BOOL foundOriginalLength = NO;
+    for (NSNumber* key in snapshot) {
+        NSData* trackedData = [snapshot[key] valueForKey:@"data"];
+        if (trackedData.length == data.length) {
+            foundOriginalLength = YES;
+        }
+    }
+    XCTAssertTrue(foundOriginalLength,
+                  @"a tracked payload must match the original byte length");
+
+    [self.hexUploader invalidate];
+}
+
+// Regression: a create-after-invalidate race previously raised
+// NSGenericException "Task created in a session that has been invalidated".
+// NRMAHexUploader creates upload tasks on a background delegate queue
+// (delegateQueue:nil) while the C++ ~HexUploadPublisher() dtor calls -invalidate;
+// if invalidate won the race, the next -[NSURLSession uploadTaskWithRequest:fromData:]
+// threw and crashed the app. After invalidate, sendData: must not throw and must
+// preserve the report (shouldRemove=NO) for a later attempt.
+- (void) testSendAfterInvalidateDoesNotThrowAndPreservesReport {
+    NRMAHexUploader* uploader = [[NRMAHexUploader alloc] initWithHost:@"http://localhost/f"];
+    uploader.applicationToken = @"TOKEN";
+    uploader.applicationVersion = @"1.0";
+
+    // Invalidate first, then attempt an upload — the crash scenario.
+    [uploader invalidate];
+
+    const char* bytes = "handled-exception-bytes";
+    NSData* data = [NSData dataWithBytes:bytes length:strlen(bytes)];
+
+    __block BOOL completionCalled = NO;
+    __block BOOL shouldRemoveVal = YES;
+
+    XCTAssertNoThrow(([uploader sendData:data
+                                reportId:@"/tmp/nr-hex-report"
+                              completion:^(BOOL shouldRemove) {
+        completionCalled = YES;
+        shouldRemoveVal = shouldRemove;
+    }]),
+        @"creating an upload task after invalidate must not raise NSGenericException");
+
+    // Draining is synchronous, so the outcome is known by the time sendData: returns.
+    XCTAssertTrue(completionCalled,
+                  @"completion must fire so the store learns the upload outcome");
+    XCTAssertFalse(shouldRemoveVal,
+                   @"an upload skipped due to invalidation must keep the report for a later attempt");
+}
+
+//// Concurrency cap: more sendData: calls than kNRMAHexMaxInFlight (=4) must
+//// queue the overflow on pendingPayloads instead of submitting them all at
+//// once. Without this, a 200-deep backlog would spawn 200 sockets on cold
+//// start and exhaust the per-process FD limit.
+//- (void) testConcurrencyCap {
+//    self.hexUploader.applicationToken = @"TOKEN";
+//
+//    for (int i = 0; i < 10; i++) {
+//        const char* payload = "x";
+//        NSData* data = [NSData dataWithBytes:payload length:1];
+//        [self.hexUploader sendData:data];
+//    }
+//
+//    // 4 in-flight, 6 pending.
+//    XCTAssertLessThanOrEqual(self.hexUploader.inFlightCount, (NSUInteger)4,
+//                             @"in-flight count must never exceed cap");
+//    XCTAssertGreaterThan(self.hexUploader.pendingPayloads.count, (NSUInteger)0,
+//                         @"overflow must be queued, not dropped silently");
+//    XCTAssertEqual(self.hexUploader.inFlightCount + self.hexUploader.pendingPayloads.count,
+//                   (NSUInteger)10,
+//                   @"all submitted payloads accounted for");
+//
+//    [self.hexUploader invalidate];
+//}
 
 @end

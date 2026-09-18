@@ -124,9 +124,8 @@ extern "C" {
     const char* NRMA_createTempFileName(void);
 
 
-
-#endif
-
 #ifdef __cplusplus
 }
 #endif // extern "C" {
+
+#endif // NewRelicAgent_NRMAExceptionMetaDataStore_h

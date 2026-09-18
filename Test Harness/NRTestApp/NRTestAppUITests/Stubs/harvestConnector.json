@@ -10,10 +10,10 @@
     "activity_trace_max_size": 65535,
     "activity_trace_min_utilization": 0.3,
     "at_capture": [1, []],
-    "data_token": [601332269, 601332279],
-    "cross_process_id": "VRUBUVdQCwECUlg=",
-    "encoding_key": "d67afc830dab717fd163bfcb0b8b88423e9a1a3b",
+    "data_token": [111111111, 222222222],
+    "cross_process_id": "AAAAAAAAAAAAAAAAAAAAAA==",
+    "encoding_key": "0000000000000000000000000000000000000000",
     "account_id": "1",
-    "application_id": "601332269"
+    "application_id": "1"
 }
 

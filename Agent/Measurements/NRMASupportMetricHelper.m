@@ -108,6 +108,17 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
     }
 }
 
++ (void) enqueueRateLimitBackoffMetric:(NSTimeInterval)backoffSeconds {
+    NSString* metricString = [NSString stringWithFormat:kNRMARateLimitBackoffMetricFormatString, [NewRelicInternalUtils osName], kPlatformPlaceholder];
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:metricString
+                                                              value:[NSNumber numberWithDouble:backoffSeconds]
+                                                              scope:@""
+                                                    produceUnscoped:YES
+                                                    additionalValue:nil]];
+    }
+}
+
 + (void) enqueueMaxBufferTimeConfiguration:(unsigned int)seconds {
     NSString* nativePlatform = [NewRelicInternalUtils osName];
 
@@ -277,6 +288,78 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
 }
 
 // End JS Error
+
+// KMP Detection (Kotlin Multiplatform)
++ (void) enqueueKMMDetectionMetric {
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAKMMDetectionMetric
+                                                              value:@1
+                                                              scope:@""
+                                                    produceUnscoped:YES
+                                                    additionalValue:nil]];
+    }
+}
+
+// End KMP Detection
+
+// Events (queue lifecycle) supportability metrics -- Android parity (NR-478730)
++ (void) enqueueEventAddedMetric {
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAEventAddedMetric
+                                                              value:@1
+                                                              scope:nil]];
+    }
+}
+
++ (void) enqueueEventOverflowMetric {
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAEventOverflowMetric
+                                                              value:@1
+                                                              scope:nil]];
+    }
+}
+
++ (void) enqueueEventEvictedMetric {
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAEventEvictedMetric
+                                                              value:@1
+                                                              scope:nil]];
+    }
+}
+
++ (void) enqueueEventQueueSizeExceededMetric {
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAEventQueueSizeExceededMetric
+                                                              value:@1
+                                                              scope:nil]];
+    }
+}
+
++ (void) enqueueEventQueueTimeExceededMetric {
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAEventQueueTimeExceededMetric
+                                                              value:@1
+                                                              scope:nil]];
+    }
+}
+
++ (void) enqueueEventRecordedMetric:(NSUInteger)recorded evicted:(NSUInteger)evicted {
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAEventRecordedMetric
+                                                              value:[NSNumber numberWithUnsignedInteger:recorded]
+                                                              scope:@""
+                                                    produceUnscoped:YES
+                                                    additionalValue:[NSNumber numberWithUnsignedInteger:evicted]]];
+    }
+}
+
++ (void) enqueueEventSizeUncompressedMetric:(long)size {
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAEventSizeUncompressedMetric
+                                                              value:[NSNumber numberWithLong:size]
+                                                              scope:nil]];
+    }
+}
 
 + (void) processDeferredMetrics {
     // Handle any deferred app start metrics

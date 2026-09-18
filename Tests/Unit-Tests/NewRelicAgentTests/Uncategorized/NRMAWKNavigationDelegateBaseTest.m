@@ -16,6 +16,9 @@
 #import "NRMeasurementConsumerHelper.h"
 #import "NRMAMeasurements.h"
 #import "NRMAHTTPTransactionMeasurement.h"
+#import "NRMAWebViewSupportability.h"
+#import "NRMANamedValueMeasurement.h"
+#import "NRConstants.h"
 
 @interface NRMATaskQueue (tests)
 + (void) clear;
@@ -25,6 +28,14 @@
 @end
 
 @interface NRMAWKNavigationDelegateWithOldDelegateFunction : NSObject <WKNavigationDelegate>
+@end
+
+// Implements the optional webViewWebContentProcessDidTerminate: callback. Used to
+// reproduce the crash that occurs when WebKit caches respondsToSelector: == YES while
+// this delegate is alive, the delegate is then deallocated (the proxy holds it weakly),
+// and WebKit later fires the cached callback against the orphaned proxy.
+@interface NRMAWKNavigationDelegateWithTerminateFunction : NSObject <WKNavigationDelegate>
+@property(nonatomic) BOOL didTerminateCalled;
 @end
 
 @interface NRWKNavigationDelegateBase ()
@@ -116,14 +127,14 @@
     
     NRMAWKFakeNavigationAction *testAction = [[NRMAWKFakeNavigationAction alloc] initWith:url];
     
-    [self.webView.navigationDelegate webView:self.webView decidePolicyForNavigationAction:testAction decisionHandler:^(WKNavigationActionPolicy policy){
+    [self.webView.navigationDelegate webView:self.webView decidePolicyForNavigationAction:(WKNavigationAction *)testAction decisionHandler:^(WKNavigationActionPolicy policy){
         [testAction decisionHandler:policy];
     }];
     
     XCTAssertEqual(testAction.receivedPolicy, WKNavigationActionPolicyAllow);
     
     if (@available(iOS 13.0, *)) {
-        [self.webView.navigationDelegate webView:self.webView decidePolicyForNavigationAction:testAction preferences:[[WKWebpagePreferences alloc] init] decisionHandler:^(WKNavigationActionPolicy policy, WKWebpagePreferences* preference){
+        [self.webView.navigationDelegate webView:self.webView decidePolicyForNavigationAction:(WKNavigationAction *)testAction preferences:[[WKWebpagePreferences alloc] init] decisionHandler:^(WKNavigationActionPolicy policy, WKWebpagePreferences* preference){
             [testAction decisionHandler:policy];
         }];
         XCTAssertEqual(testAction.receivedPolicy, WKNavigationActionPolicyAllow);
@@ -148,7 +159,7 @@
     
     NRMAWKFakeNavigationResponse *testResponse = [[NRMAWKFakeNavigationResponse alloc] initWith:url];
     
-    [self.webView.navigationDelegate webView:self.webView decidePolicyForNavigationResponse:testResponse decisionHandler:^(WKNavigationResponsePolicy policy){
+    [self.webView.navigationDelegate webView:self.webView decidePolicyForNavigationResponse:(WKNavigationResponse *)testResponse decisionHandler:^(WKNavigationResponsePolicy policy){
         [testResponse decisionHandler:policy];
     }];;
     
@@ -160,14 +171,14 @@
     
     NRMAWKFakeNavigationAction *testAction = [[NRMAWKFakeNavigationAction alloc] initWith:url];
     
-    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction decidePolicyForNavigationAction:testAction decisionHandler:^(WKNavigationActionPolicy policy){
+    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction decidePolicyForNavigationAction:(WKNavigationAction *)testAction decisionHandler:^(WKNavigationActionPolicy policy){
         [testAction decisionHandler:policy];
     }];
     
     XCTAssertEqual(testAction.receivedPolicy, WKNavigationActionPolicyAllow);
     
     if (@available(iOS 13.0, *)) {
-        [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction decidePolicyForNavigationAction:testAction preferences:[[WKWebpagePreferences alloc] init] decisionHandler:^(WKNavigationActionPolicy policy, WKWebpagePreferences* preference){
+        [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction decidePolicyForNavigationAction:(WKNavigationAction *)testAction preferences:[[WKWebpagePreferences alloc] init] decisionHandler:^(WKNavigationActionPolicy policy, WKWebpagePreferences* preference){
             [testAction decisionHandler:policy];
         }];
         XCTAssertEqual(testAction.receivedPolicy, WKNavigationActionPolicyAllow);
@@ -180,7 +191,7 @@
     NRMAWKFakeNavigationAction *testAction = [[NRMAWKFakeNavigationAction alloc] initWith:url];
     
     if (@available(iOS 13.0, *)) {
-        [self.webViewWithOldDelegateFunction.navigationDelegate webView:self.webViewWithOldDelegateFunction decidePolicyForNavigationAction:testAction preferences:[[WKWebpagePreferences alloc] init] decisionHandler:^(WKNavigationActionPolicy policy, WKWebpagePreferences* preference){
+        [self.webViewWithOldDelegateFunction.navigationDelegate webView:self.webViewWithOldDelegateFunction decidePolicyForNavigationAction:(WKNavigationAction *)testAction preferences:[[WKWebpagePreferences alloc] init] decisionHandler:^(WKNavigationActionPolicy policy, WKWebpagePreferences* preference){
             [testAction decisionHandler:policy];
         }];
         XCTAssertEqual(testAction.receivedPolicy, WKNavigationActionPolicyCancel);
@@ -205,11 +216,46 @@
     
     NRMAWKFakeNavigationResponse *testResponse = [[NRMAWKFakeNavigationResponse alloc] initWith:url];
     
-    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction decidePolicyForNavigationResponse:testResponse decisionHandler:^(WKNavigationResponsePolicy policy){
+    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction decidePolicyForNavigationResponse:(WKNavigationResponse *)testResponse decisionHandler:^(WKNavigationResponsePolicy policy){
         [testResponse decisionHandler:policy];
     }];;
     
     XCTAssertEqual(testResponse.receivedPolicy, WKNavigationResponsePolicyAllow);
+}
+
+// Reproduces NR-414430 / the 7.7.0 crash:
+// "-[NRMAWKWebViewNavigationDelegate webViewWebContentProcessDidTerminate:]: unrecognized selector".
+// WebKit caches respondsToSelector: == YES while the real delegate is alive, the real
+// delegate is later deallocated (the proxy holds it weakly), and WebKit fires the cached
+// callback against the orphaned proxy. The proxy must absorb the message, not crash.
+- (void) testWebContentProcessDidTerminateAfterRealDelegateDeallocated {
+    NRMAWKWebViewNavigationDelegate* proxy;
+    @autoreleasepool {
+        NRMAWKNavigationDelegateWithTerminateFunction* realDelegate = [[NRMAWKNavigationDelegateWithTerminateFunction alloc] init];
+        proxy = [[NRMAWKWebViewNavigationDelegate alloc] initWithOriginalDelegate:realDelegate];
+        // WebKit caches this == YES at delegate-assignment time, while realDelegate is alive.
+        XCTAssertTrue([proxy respondsToSelector:@selector(webViewWebContentProcessDidTerminate:)]);
+        realDelegate = nil;
+    }
+
+    // The weak realDelegate has now been zeroed by the deallocation above.
+    XCTAssertNil(proxy.realDelegate);
+
+    // WebKit fires the cached callback. With the bug this throws an unrecognized-selector
+    // NSInvalidArgumentException via the message-forwarding fall-through.
+    id<WKNavigationDelegate> nav = (id<WKNavigationDelegate>)proxy;
+    XCTAssertNoThrow([nav webViewWebContentProcessDidTerminate:self.webView]);
+}
+
+// Guards the happy path: while the real delegate is alive, an optional callback that only
+// the real delegate implements must still be forwarded to it.
+- (void) testWebContentProcessDidTerminateForwardsToLiveDelegate {
+    NRMAWKNavigationDelegateWithTerminateFunction* realDelegate = [[NRMAWKNavigationDelegateWithTerminateFunction alloc] init];
+    NRMAWKWebViewNavigationDelegate* proxy = [[NRMAWKWebViewNavigationDelegate alloc] initWithOriginalDelegate:realDelegate];
+
+    id<WKNavigationDelegate> nav = (id<WKNavigationDelegate>)proxy;
+    XCTAssertNoThrow([nav webViewWebContentProcessDidTerminate:self.webView]);
+    XCTAssertTrue(realDelegate.didTerminateCalled);
 }
 
 - (void)testWebViewLoadTimeMetric {
@@ -323,6 +369,116 @@
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
 {
     decisionHandler(WKNavigationActionPolicyCancel);
+}
+
+@end
+
+@implementation NRMAWKNavigationDelegateWithTerminateFunction
+#pragma mark Delegate Functions
+
+- (void)webViewWebContentProcessDidTerminate:(WKWebView *)webView {
+    self.didTerminateCalled = YES;
+}
+
+@end
+
+// ---------------------------------------------------------------------------
+#pragma mark - NRMAWebViewBrowserAgentDetectionTests
+
+@interface NRMAWebViewBrowserAgentDetectionTests : XCTestCase
+@property (strong) NRMAMeasurementConsumerHelper *helper;
+@end
+
+@implementation NRMAWebViewBrowserAgentDetectionTests
+
+- (void)setUp {
+    [super setUp];
+    [NRMATaskQueue clear];
+    self.helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
+    [NRMAMeasurements initializeMeasurements];
+    [NRMAMeasurements addMeasurementConsumer:self.helper];
+}
+
+- (void)tearDown {
+    [NRMAMeasurements removeMeasurementConsumer:self.helper];
+    self.helper = nil;
+    [NRMAMeasurements shutdown];
+    [super tearDown];
+}
+
+- (void)testDetectionRecordsMetricWhenBrowserAgentPresent {
+    WKWebView *webView = [[WKWebView alloc] init];
+    [webView loadHTMLString:@"<script>window.newrelic = {}</script>" baseURL:nil];
+
+    NSDate *loadDeadline = [NSDate dateWithTimeIntervalSinceNow:5.0];
+    while (webView.isLoading && [NSDate.date compare:loadDeadline] == NSOrderedAscending) {
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+    }
+    XCTAssertFalse(webView.isLoading, @"WebView timed out while loading");
+
+    [NRMAWebViewSupportability startBrowserAgentDetection:webView];
+
+    // Poll until the specific browser agent metric arrives (ignore other NRMANamedValueMeasurements
+    // such as memory/CPU produced by NRMANamedValueProducer while the run loop spins).
+    NSDate *detectDeadline = [NSDate dateWithTimeIntervalSinceNow:5.0];
+    NRMANamedValueMeasurement *found = nil;
+    while (!found && [NSDate.date compare:detectDeadline] == NSOrderedAscending) {
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+        [NRMATaskQueue synchronousDequeue];
+        for (NRMANamedValueMeasurement *m in self.helper.consumedMeasurements) {
+            if ([m.name isEqualToString:kNRMAWebViewBrowserAgentDetectedMetric]) {
+                found = m;
+                break;
+            }
+        }
+    }
+
+    XCTAssertNotNil(found, @"Browser agent detection metric should be recorded");
+    XCTAssertEqualObjects(found.name, kNRMAWebViewBrowserAgentDetectedMetric);
+}
+
+- (void)testDetectionDoesNotRecordMetricWhenBrowserAgentAbsent {
+    // Use an unloaded WKWebView — it has no JavaScript context that could define
+    // window.newrelic, eliminating the unreliable page-load wait and any chance of
+    // picking up injected scripts.  evaluateJavaScript: on an unloaded WebView either
+    // errors immediately (our handler returns early) or evaluates to false; neither
+    // path records the metric.
+    WKWebView *webView = [[WKWebView alloc] init];
+
+    [NRMAWebViewSupportability startBrowserAgentDetection:webView];
+
+    // Spin long enough for all 8 polling attempts to exhaust (8 × 250 ms = 2 s).
+    NSDate *pollDeadline = [NSDate dateWithTimeIntervalSinceNow:2.5];
+    while ([NSDate.date compare:pollDeadline] == NSOrderedAscending) {
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+        [NRMATaskQueue synchronousDequeue];
+    }
+
+    BOOL browserAgentMetricRecorded = NO;
+    for (NRMANamedValueMeasurement *m in self.helper.consumedMeasurements) {
+        if ([m.name isEqualToString:kNRMAWebViewBrowserAgentDetectedMetric]) {
+            browserAgentMetricRecorded = YES;
+            break;
+        }
+    }
+    XCTAssertFalse(browserAgentMetricRecorded, @"Browser agent detection metric should not be recorded when browser agent is absent");
+}
+
+- (void)testDetectionDoesNotRetainWebView {
+    __weak WKWebView *weakRef = nil;
+
+    @autoreleasepool {
+        WKWebView *webView = [[WKWebView alloc] init];
+        weakRef = webView;
+        [NRMAWebViewSupportability startBrowserAgentDetection:webView];
+        // webView's only strong owner goes out of scope here
+    }
+
+    // Spin the run loop to let any in-flight dispatch_after blocks fire and release.
+    // The blocks capture weakWebView weakly, so they cannot keep the WKWebView alive.
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.3]];
+
+    XCTAssertNil(weakRef, @"Detection polling must not hold a strong reference to WKWebView");
 }
 
 @end

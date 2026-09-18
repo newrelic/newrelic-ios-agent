@@ -29,6 +29,10 @@ class MobileErrorsUploader: NSObject {
     private let uploadTimers = NSMutableDictionary()
     private let uploadTimersLock = NSLock()
 
+    // Callbacks for upload completion
+    var onUploadSuccess: (() -> Void)?
+    var onUploadFailed: (() -> Void)?
+
     // MARK: - Initialization
 
     init?(host: String, applicationToken: String, appVersion: String, useSSL: Bool) {
@@ -82,6 +86,7 @@ class MobileErrorsUploader: NSObject {
     // MARK: - Public Methods
 
     func sendPayload(_ payload: [String: Any],
+                     platform: String,
                      sessionId: String?,
                      entityGuid: String?,
                      accountId: NSNumber?,
@@ -109,7 +114,7 @@ class MobileErrorsUploader: NSObject {
         // Add required query parameters
         urlComponents.queryItems = [
             URLQueryItem(name: "protocol_version", value: "1"),
-            URLQueryItem(name: "platform", value: "reactnative")
+            URLQueryItem(name: "platform", value: platform)
         ]
 
         guard let url = urlComponents.url else {
@@ -262,6 +267,9 @@ class MobileErrorsUploader: NSObject {
     private func handleSuccessfulRequest(_ request: URLRequest) {
         NRLOG_AGENT_DEBUG("Mobile Errors Uploader: Upload completed successfully")
         removeFromRetryTracker(request)
+
+        // Notify success callback
+        onUploadSuccess?()
     }
 
     private func handleFailedRequest(_ request: URLRequest, error: Error?) {
@@ -283,6 +291,9 @@ class MobileErrorsUploader: NSObject {
         } else {
             NRLOG_AGENT_DEBUG("Mobile Errors Uploader: Max retries reached, discarding request")
             removeFromRetryTracker(request)
+
+            // Notify failure callback
+            onUploadFailed?()
         }
     }
 
@@ -305,10 +316,11 @@ class MobileErrorsUploader: NSObject {
             recordUploadTime(for: request)
             handleSuccessfulRequest(request)
         } else if statusCode == 408 {
-            // Timeout
+            // Timeout - don't retry
             NRMASupportMetricHelper.enqueueJSErrorUploadTimeoutMetric()
             NRLOG_AGENT_DEBUG("Mobile Errors Uploader: Request timeout (\(statusCode))")
             removeFromRetryTracker(request)
+            onUploadFailed?()
         } else if statusCode == 429 {
             // Throttled
             NRMASupportMetricHelper.enqueueJSErrorUploadThrottledMetric()
@@ -319,6 +331,7 @@ class MobileErrorsUploader: NSObject {
             NRMASupportMetricHelper.enqueueJSErrorFailedUploadMetric()
             NRLOG_AGENT_DEBUG("Mobile Errors Uploader: Client error (\(statusCode)), not retrying")
             removeFromRetryTracker(request)
+            onUploadFailed?()
         } else if statusCode >= 500 && statusCode < 600 {
             // Server error - retry
             NRMASupportMetricHelper.enqueueJSErrorFailedUploadMetric()
@@ -374,6 +387,7 @@ extension MobileErrorsUploader: URLSessionDelegate, URLSessionDataDelegate {
             if nsError.code == NSURLErrorCancelled {
                 NRLOG_AGENT_DEBUG("Mobile Errors Uploader: Upload was cancelled")
                 removeFromRetryTracker(request)
+                onUploadFailed?()
                 return
             }
 

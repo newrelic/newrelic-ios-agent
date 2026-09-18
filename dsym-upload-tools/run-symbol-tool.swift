@@ -25,6 +25,16 @@
 //  /bin/sh "${SCRIPT}" "APP_TOKEN" --debug
 // ```
 //
+// Optional: pass "-appVersion" to set the reported app version (X-NewRelic-App-Version) explicitly.
+// Use this when MARKETING_VERSION is unset or empty (e.g. apps versioned with agvtool, or
+// multi-target apps that set GENERATE_INFOPLIST_FILE = YES). App version precedence:
+//   -appVersion arg  >  NEWRELIC_APP_VERSION env  >  MARKETING_VERSION env  >  default.
+//
+// ```
+//  SCRIPT=`/usr/bin/find "${SRCROOT}/../.." -name run-symbol-tool | head -n 1`
+//  /bin/sh "${SCRIPT}" "APP_TOKEN" -appVersion "7.8.2"
+// ```
+//
 // DSYM_UPLOAD_URL - define this environment variable above run script to override the New Relic server hostname
 //
 // - Due to limitations with Swift scripting run-symbol-tool.swift is one file.
@@ -83,17 +93,36 @@ func start() {
     }
 
     guard CommandLine.arguments.count > 1 else {
-        // Must contain at least one argument: $APP_TOKEN. (--debug is optional)
-        print("Invalid Usage: Ex: Swift: run-symbol-tool.swift $APP_TOKEN [--debug]")
+        // Must contain at least one argument: $APP_TOKEN. (--debug and -appVersion are optional)
+        print("Invalid Usage: Ex: Swift: run-symbol-tool.swift $APP_TOKEN [--debug] [-appVersion <version>]")
         exit(1)
     }
     let apiKey = CommandLine.arguments[1]
     
-    if CommandLine.arguments.count == 3 {
-        let debugFlag = CommandLine.arguments[2]
-        if debugFlag == "--debug" {
+    // Optional CLI app-version override (e.g. -appVersion 7.8.2). Takes precedence over MARKETING_VERSION.
+    // NR-417639: agvtool / multi-target apps often leave MARKETING_VERSION unset or empty.
+    var appVersionOverride: String? = nil
+
+    // Parse the remaining optional arguments in an order-independent way so that --debug and
+    // -appVersion can appear in any order (and future flags can be added without breaking parsing).
+    let arguments = CommandLine.arguments
+    var argIndex = 2
+    while argIndex < arguments.count {
+        let arg = arguments[argIndex]
+        switch arg {
+        case "--debug":
             debug = true
+        case "-appVersion", "--appVersion", "--app-version":
+            guard argIndex + 1 < arguments.count else {
+                print("New Relic: Invalid Usage: \(arg) requires a value, e.g. -appVersion 7.8.2. Exiting.")
+                exit(1)
+            }
+            argIndex += 1
+            appVersionOverride = arguments[argIndex].trimmingCharacters(in: .whitespacesAndNewlines)
+        default:
+            print("New Relic: Ignoring unrecognized argument: \(arg)")
         }
+        argIndex += 1
     }
 
 // Start Configure Env Vars //
@@ -106,7 +135,23 @@ func start() {
     symbolUploadDataPostKey = environment["NEWRELIC_SYMBOL_POST_KEY"] ?? "upload"
     dsymUploadDataPostKey   = environment["NEWRELIC_DSYM_POST_KEY"] ?? "dsym"
 
-    appVersionNumber = environment["MARKETING_VERSION"] ?? "1.2.3"
+    // App-version precedence: -appVersion arg > NEWRELIC_APP_VERSION env > MARKETING_VERSION env > default.
+    // Each source is treated as unresolved when empty so a present-but-empty MARKETING_VERSION
+    // no longer produces an empty X-NewRelic-App-Version header. (NR-417639)
+    if let overrideVersion = appVersionOverride, !overrideVersion.isEmpty {
+        appVersionNumber = overrideVersion
+        print("New Relic: Using app version \(appVersionNumber) (source: -appVersion argument)")
+    } else if let envAppVersion = environment["NEWRELIC_APP_VERSION"], !envAppVersion.isEmpty {
+        appVersionNumber = envAppVersion
+        print("New Relic: Using app version \(appVersionNumber) (source: NEWRELIC_APP_VERSION)")
+    } else if let marketingVersion = environment["MARKETING_VERSION"], !marketingVersion.isEmpty {
+        appVersionNumber = marketingVersion
+        print("New Relic: Using app version \(appVersionNumber) (source: MARKETING_VERSION)")
+    } else {
+        // No usable app version was found. Symbols would otherwise be tagged with a placeholder
+        // that will not match real builds, so warn loudly instead of failing silently. (NR-417639)
+        print("New Relic: WARNING - No app version found (MARKETING_VERSION is unset/empty and no -appVersion argument was provided). Using placeholder \"\(appVersionNumber)\"; uploaded symbol maps may not match your build's version. Pass -appVersion <version> or set MARKETING_VERSION / NEWRELIC_APP_VERSION.")
+    }
 // End Configure Env Vars //
 
 

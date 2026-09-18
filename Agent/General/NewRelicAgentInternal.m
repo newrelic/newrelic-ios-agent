@@ -101,6 +101,10 @@ static NRMAURLTransformer* urlTransformer;
 @property(nonatomic, strong) NRMAAppInstallMetricGenerator* appInstallMetricGenerator;
 @property(nonatomic, strong) NRMAAppUpgradeMetricGenerator* appUpgradeMetricGenerator;
 
+#if TARGET_OS_IOS
+@property(atomic, strong, nullable) JSErrorController* jsErrorController;
+#endif
+
 - (void) applicationWillEnterForeground;
 #if !TARGET_OS_WATCH
 - (void) applicationWillEnterForeground:(UIApplication*)application;
@@ -616,7 +620,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         self.jsErrorController = [[JSErrorController alloc] initWithAnalyticsController:self.analyticsController
                                                                         sessionStartTime:self.appSessionStartDate
                                                                       agentConfiguration:self.agentConfiguration
-                                                                                platform:@"reactnative"
+                                                                                platform:kNRMAPlatformString_ReactNative
                                                                                sessionId:[self currentSessionId]
                                                                       attributeValidator:[[NRMAAttributeValidator alloc] init]];
 
@@ -683,13 +687,13 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 }
 
 - (void) checkAndHandleSessionTimeout {
-    // Check for session timeout using SessionDurationManager
     if ([[NRMASessionDurationManager shared] hasSessionExceeded]) {
-        NSTimeInterval elapsed = [[NRMASessionDurationManager shared] currentSessionDuration];
-        NSTimeInterval maxDuration = [[NRMASessionDurationManager shared] maxSessionDuration];
-        NRLOG_AGENT_INFO(@"HarvestTimer: Session duration reached limit (%.0f seconds / %.0f max). Triggering session restart.", elapsed, maxDuration);
+        // Poke the clock so the next few harvests don't re-enqueue while this is pending.
         [[NRMASessionDurationManager shared] updateSessionStartTime:[NSDate date]];
-        [self handle4HourSessionRestart];
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            if (self->_isShutdown) { return; }
+            @synchronized(kNRMA_BGFG_MUTEX) { [self handle4HourSessionRestart]; }
+        });
     }
 }
 
@@ -776,6 +780,31 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     }
 #endif
 }
+
+#if TARGET_OS_IOS
+- (BOOL) recordJavascriptErrorWithName:(NSString*)name
+                               message:(NSString*)message
+                            stackTrace:(NSString*)stackTrace
+                               isFatal:(BOOL)isFatal
+                  additionalAttributes:(NSDictionary* _Nullable)additionalAttributes {
+    JSErrorController* controller = self.jsErrorController;
+
+    if (controller == nil) {
+        NRLOG_AGENT_ERROR(@"JS Error Controller is not initialized. Cannot record JS error.");
+        return NO;
+    }
+
+    [self sessionReplayOnError:nil];
+
+    [controller recordJSError:name
+                     message:message
+                  stackTrace:stackTrace
+                     isFatal:isFatal
+        additionalAttributes:additionalAttributes];
+
+    return YES;
+}
+#endif
 
 static const NSString *kNRMA_BGFG_MUTEX = @"com.newrelic.bgfg.mutex";
 static const NSString *kNRMA_APPLICATION_WILL_TERMINATE =
@@ -872,6 +901,22 @@ static const NSString *kNRMA_APPLICATION_WILL_TERMINATE =
     // Update session duration manager with new session start time for 4-hour session timeout
     [[NRMASessionDurationManager shared] updateSessionStartTime:self.appSessionStartDate];
     [self onSessionStart];
+}
+
+- (void) startNewSessionForUserId:(NSString* _Nullable)userId {
+    @synchronized(kNRMA_BGFG_MUTEX) {
+        [self.analyticsController newSession];
+        [self sessionReplayEndSession];
+        [NewRelicAgentInternal harvestNow];
+        [self sessionStartInitialization];
+        if (userId) {
+            [self.analyticsController setSessionAttribute:kNRMA_Attrib_userId
+                                                    value:userId
+                                               persistent:YES];
+        } else {
+            [self.analyticsController removeSessionAttributeNamed:kNRMA_Attrib_userId];
+        }
+    }
 }
 
 - (void) handle4HourSessionRestart {
@@ -1246,6 +1291,12 @@ void applicationDidEnterBackgroundCF(void) {
         [NRMAMeasurements drain];
 
         // * PERFORM FINAL SUPPORTABILITY METRIC SEND *//
+
+        // Emit a supportability metric recording events successfully queued vs. evicted
+        // for this agent run, matching the Android agent's session-end summary metric.
+        NSUInteger eventsRecorded = [[NewRelicAgentInternal sharedInstance].analyticsController getEventsRecordedCount];
+        NSUInteger eventsEvicted = [[NewRelicAgentInternal sharedInstance].analyticsController getEventsEvictedCount];
+        [NRMASupportMetricHelper enqueueEventRecordedMetric:eventsRecorded evicted:eventsEvicted];
 
         // If the agent is connected, it should have no problem performing an adhoc harvest right now containing Shutdown support metric.
         [NRMASupportMetricHelper enqueueStopAgentMetric];

@@ -33,6 +33,24 @@ namespace NewRelic {
         return success;
     }
 
+    EventAddResult AnalyticsController::addEventWithMetrics(std::shared_ptr <AnalyticEvent> event) {
+        EventAddResult result;
+        try {
+            result = _eventManager.addEvent(event);
+        } catch (...) {
+            LLOG_ERROR("Unable to add event.");
+        }
+        return result;
+    }
+
+    unsigned int AnalyticsController::getEventsRecordedCount() const {
+        return _eventManager.getEventsRecordedCount();
+    }
+
+    unsigned int AnalyticsController::getEventsEvictedCount() const {
+        return _eventManager.getEventsEvictedCount();
+    }
+
     unsigned long long int AnalyticsController::getCurrentTime_ms() { //throws std::logic_error
         long long epoch_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::system_clock().now().time_since_epoch()).count();
@@ -162,6 +180,10 @@ namespace NewRelic {
         return _eventManager.didReachMaxQueueTime(getCurrentTime_ms()); //throws std::logic_error
     }
 
+    bool AnalyticsController::didExceedMaxEventBufferTime() {
+        return _eventManager.didExceedMaxQueueTime(getCurrentTime_ms());
+    }
+
     bool AnalyticsController::addSessionEndAttribute() {
         try {
             unsigned long long current_time_ms = AnalyticsController::getCurrentTime_ms(); //throws std::logic_error
@@ -180,7 +202,7 @@ namespace NewRelic {
             LLOG_VERBOSE("Unable to add \"session end\" attribute: %s", e.what());
             return false;
         } catch (std::logic_error &e) {
-            LLOG_VERBOSE(e.what());
+            LLOG_VERBOSE("%s", e.what());
             return false;
         } catch (...) {
             LLOG_VERBOSE("Unknown exception occurred.");
@@ -287,7 +309,7 @@ namespace NewRelic {
 
         } catch (std::logic_error &e) {
             //adding log under verbose as this is an internal agent method, and wont be called by customers.
-            LLOG_VERBOSE(e.what());
+            LLOG_VERBOSE("%s", e.what());
             return false;
         } catch (...) {
             LLOG_VERBOSE("Unknown exception occurred.");

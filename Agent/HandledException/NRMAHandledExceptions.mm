@@ -17,6 +17,7 @@
 #import "NRMAHarvestController.h"
 #import "NRMAAppToken.h"
 #include <execinfo.h>
+#include <exception>
 #import "NRMAFlags.h"
 #include <Analytics/AnalyticsController.hpp>
 #import "NRMABool.h"
@@ -34,6 +35,19 @@
 
 const NSString* kHexBackupStoreFolder = @"hexbkup/";
 
+// The unguarded bodies of the three public record* entry points. Every public
+// entry point wraps its counterpart here in the crash boundary below; nothing
+// else should call these directly.
+@interface NRMAHandledExceptions (CrashBoundary)
+- (void) nrma_recordErrorUnguarded:(NSError* _Nonnull)error
+                        attributes:(NSDictionary* _Nullable)attributes
+                         callstack:(void* _Nonnull * _Nonnull)callstack
+                            length:(int)length;
+- (void) nrma_recordHandledExceptionUnguarded:(NSException*)exception
+                                   attributes:(NSDictionary*)attributes;
+- (void) nrma_recordHandledExceptionWithStackTraceUnguarded:(NSDictionary*)exceptionDictionary;
+@end
+
 @implementation NRMAHandledExceptions {
     NewRelic::Hex::HexController* _controller;
     std::shared_ptr<NewRelic::AnalyticsController> _analytics;
@@ -44,6 +58,12 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 
     NRMAAnalytics *analyticsParent;
     id<AttributeValidatorProtocol> _attributeValidator;
+
+    // Single-flight guard for processAndPublishPersistedReports. Without it,
+    // every harvest tick that sees the network reachable can spawn a fresh
+    // backlog flush even while the previous one is still draining — under
+    // low-bandwidth that races and creates duplicate uploads + FD pressure.
+    BOOL _persistFlushInFlight;
 }
 
 - (void) dealloc {
@@ -144,24 +164,27 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 }
 
 - (void) onHarvest {
-    if([NRMAFlags shouldEnableOfflineStorage]) {
-        NRMAReachability* r = [NewRelicInternalUtils reachability];
-        @synchronized(r) {
+    // Always upload handled exceptions from the on-disk store. Reports are persisted
+    // by HexController::submit on the record path, and the persisted-report flush
+    // deletes each report only once its upload is confirmed (see
+    // HexStore::markUploaded). This keeps unconfirmed reports on disk across
+    // launches / termination, and does not depend on the offline-storage flag —
+    // a report is never destroyed before we know it was uploaded.
+    NRMAReachability* r = [NewRelicInternalUtils reachability];
+    @synchronized(r) {
 #if TARGET_OS_WATCH
-            NRMANetworkStatus status = [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostHexURL]]];
+        NRMANetworkStatus status = [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostHexURL]]];
 #else
-            NRMANetworkStatus status = [r currentReachabilityStatus];
+        NRMANetworkStatus status = [r currentReachabilityStatus];
 #endif
-            if (status != NotReachable) {
-                [self processAndPublishPersistedReports]; // When using offline we always want to send from persisted because the keyContext doesn't persist.
-                _controller->resetKeyContext();
-                _publisher->retry();
-            }
+        if (status != NotReachable) {
+            [self processAndPublishPersistedReports];
+            // The in-memory keyContext is only a transient mirror of what submit()
+            // already persisted to disk; reset it so reports are uploaded from disk
+            // (the source of truth) without double-sending.
+            _controller->resetKeyContext();
+            _publisher->retry();
         }
-    } else {
-        _controller->publish();
-        _store->clear();
-        _publisher->retry();
     }
 }
 
@@ -192,12 +215,86 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
     }
 }
 
+// MARK: - Crash boundary
+//
+// Everything under the record* entry points is C++ that allocates: createReport(),
+// the attribute maps, and the flatbuffer serialization inside HexStore::store().
+// When the device is low on memory any of those allocations can throw
+// std::bad_alloc, and a malformed report makes HexReport::finalize() throw
+// std::invalid_argument. None of it used to be caught, so the throw unwound
+// straight out through this Objective-C frame with no handler above it —
+// std::terminate -> __cxa_call_terminate -> the host app is killed.
+//
+// Instrumentation must never be able to kill the app it is watching. Guarding
+// here rather than inside HexController::submit() is deliberate: the throw can
+// originate in createReport() and in the attribute plumbing, both of which run
+// before submit() is reached. On failure the report is dropped and we return.
+//
+// Only C++ exceptions are absorbed. Objective-C exceptions are re-thrown, because
+// they mean API misuse rather than a resource failure — the canonical case is an
+// NSError whose localizedDescription is not a string, where -UTF8String raises
+// NSInvalidArgumentException. Swallowing that would hide a caller's bug, and
+// TestHandledExceptionController asserts it still propagates. The explicit
+// catch (id) is required: in Objective-C++ a bare catch (...) also catches @throw.
+//
+// See GitHub issue #884 / NR-614312.
+
 - (void) recordError:(NSError * _Nonnull)error
           attributes:(NSDictionary* _Nullable)attributes
 {
+    // Capture the backtrace in the public entry point, not in the unguarded
+    // body. -createThreadVector:length: discards a fixed number of leading
+    // agent frames (kNRMARecordErrorAgentFrames), so the capture point has to
+    // sit at a fixed depth below the customer's call site.
     void* callstack[1024];
-    int frames = backtrace(callstack,1024);
+    int frames = backtrace(callstack, 1024);
 
+    try {
+        [self nrma_recordErrorUnguarded:error
+                             attributes:attributes
+                              callstack:callstack
+                                 length:frames];
+    } catch (id objcException) {
+        @throw objcException;   // API misuse — not ours to swallow
+    } catch (const std::exception& e) {
+        NRLOG_AGENT_ERROR(@"Dropped handled error report for domain \"%@\": %s", error.domain, e.what());
+    } catch (...) {
+        NRLOG_AGENT_ERROR(@"Dropped handled error report for domain \"%@\": unknown C++ exception", error.domain);
+    }
+}
+
+- (void) recordHandledException:(NSException*)exception
+                     attributes:(NSDictionary*)attributes
+{
+    try {
+        [self nrma_recordHandledExceptionUnguarded:exception attributes:attributes];
+    } catch (id objcException) {
+        @throw objcException;   // API misuse — not ours to swallow
+    } catch (const std::exception& e) {
+        NRLOG_AGENT_ERROR(@"Dropped handled exception report \"%@\": %s", exception.name, e.what());
+    } catch (...) {
+        NRLOG_AGENT_ERROR(@"Dropped handled exception report \"%@\": unknown C++ exception", exception.name);
+    }
+}
+
+- (void) recordHandledExceptionWithStackTrace:(NSDictionary*)exceptionDictionary
+{
+    try {
+        [self nrma_recordHandledExceptionWithStackTraceUnguarded:exceptionDictionary];
+    } catch (id objcException) {
+        @throw objcException;   // API misuse — not ours to swallow
+    } catch (const std::exception& e) {
+        NRLOG_AGENT_ERROR(@"Dropped handled exception report with stack trace: %s", e.what());
+    } catch (...) {
+        NRLOG_AGENT_ERROR(@"Dropped handled exception report with stack trace: unknown C++ exception");
+    }
+}
+
+- (void) nrma_recordErrorUnguarded:(NSError * _Nonnull)error
+                        attributes:(NSDictionary* _Nullable)attributes
+                         callstack:(void* _Nonnull * _Nonnull)callstack
+                            length:(int)frames
+{
     if([NRMAFlags shouldEnableNewEventSystem]){
         auto resultMap = [self getSessionAttributesResultMap];
 
@@ -244,8 +341,8 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
     }
 }
 
-- (void) recordHandledException:(NSException*)exception
-                     attributes:(NSDictionary*)attributes {
+- (void) nrma_recordHandledExceptionUnguarded:(NSException*)exception
+                                   attributes:(NSDictionary*)attributes {
     if (exception == nil) {
         NRLOG_AGENT_ERROR(@"Ignoring nil exception.");
         return;
@@ -312,11 +409,17 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
                       attributes:nil];
 }
 
+// Leading frames to discard from a backtrace() captured in
+// -recordError:attributes:: [0] is -recordError:attributes: itself and [1] is
+// the +[NewRelic recordError:...] class method above it. The customer's call
+// site is frame [2]. Callers must capture the backtrace at exactly that depth.
+static const int kNRMARecordErrorAgentFrames = 2;
+
 - (std::vector<std::shared_ptr<NewRelic::Hex::Report::Thread>>) createThreadVector:(void**)stack length:(int)length {
     std::vector<std::shared_ptr<NewRelic::Hex::Report::Thread>> threadVector;
     std::vector<NewRelic::Hex::Report::Frame> frameVector;
 
-    for(int i = 2; i < length; i++) {
+    for(int i = kNRMARecordErrorAgentFrames; i < length; i++) {
         frameVector.push_back(NewRelic::Hex::Report::Frame(" ", (uint64_t)stack[i]));
     }
     threadVector.push_back(std::make_shared<NewRelic::Hex::Report::Thread>(frameVector));
@@ -336,12 +439,26 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 }
 
 - (void) processAndPublishPersistedReports {
+    @synchronized(self) {
+        if (_persistFlushInFlight) return;
+        _persistFlushInFlight = YES;
+    }
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-        _persistenceManager->retrieveAndPublishReports();
+        @try {
+            _persistenceManager->retrieveAndPublishReports();
+        }
+        @catch (NSException* ex) {
+            NRLOG_AGENT_ERROR(@"persisted-report flush threw: %@", ex);
+        }
+        @finally {
+            @synchronized(self) {
+                _persistFlushInFlight = NO;
+            }
+        }
     });
 }
 
-- (void) recordHandledExceptionWithStackTrace:(NSDictionary*)exceptionDictionary {
+- (void) nrma_recordHandledExceptionWithStackTraceUnguarded:(NSDictionary*)exceptionDictionary {
 
     NSString* eName = exceptionDictionary[@"name"];
     NSString* eReason = exceptionDictionary[@"reason"];

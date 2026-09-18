@@ -10,7 +10,7 @@
 
 #pragma mark NRMAWKFakeNavigationAction
 
-@interface NRMAWKFakeNavigationAction : WKNavigationAction
+@interface NRMAWKFakeNavigationAction : NSObject
 @property(strong) NSURLRequest* urlRequest;
 @property WKNavigationActionPolicy receivedPolicy;
 
@@ -20,7 +20,7 @@
 
 #pragma mark NRMAWKFakeNavigationResponse
 
-@interface NRMAWKFakeNavigationResponse : WKNavigationResponse
+@interface NRMAWKFakeNavigationResponse : NSObject
 @property(strong) NSURLRequest* urlRequest;
 @property WKNavigationResponsePolicy receivedPolicy;
 
@@ -31,9 +31,9 @@
 
 #pragma mark NRMAWKFakeURLAuthenticationChallenge
 
-@interface NRMAWKFakeURLAuthenticationChallenge : NSURLAuthenticationChallenge
+@interface NRMAWKFakeURLAuthenticationChallenge : NSObject
 @property(strong) NSURLRequest* urlRequest;
-@property NSURLCredential* credential;
+@property(strong) NSURLCredential* credential;
 @property NSURLSessionAuthChallengeDisposition authenticationChallengeDisposition;
 
 - (instancetype)initWith:(NSURLRequest*) request;

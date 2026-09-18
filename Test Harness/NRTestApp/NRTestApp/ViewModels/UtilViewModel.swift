@@ -23,8 +23,13 @@ class UtilViewModel {
     var badAttribute = false
     var attributes = ""
     var events = 0 
+    var count: Int = 0
 
     var uniqueInteractionTraceIdentifier: String? =  nil
+
+    var isUserIdCyclingActive = false
+    private let cycleUserIds: [String?] = ["user_1", "user_2", "user_3", "testID", "Bob", nil]
+    private var cycleUserIdIndex = 0
 
     let taskProcessor = TaskProcessor()
     let taskProcessor2 = TaskProcessorNoDidRcvResp()
@@ -58,11 +63,18 @@ class UtilViewModel {
         options.append(UtilOption(title: "Set UserID to Bob", handler: { [self] in changeUserID2()}))
         options.append(UtilOption(title: "Set UserID to null", handler: { [self] in changeUserIDToNil()}))
 
+        options.append(UtilOption(title: "Start Random UserId Cycling", handler: { [self] in startUserIdCycling()}))
+        options.append(UtilOption(title: "Stop Random UserId Cycling", handler: { [self] in stopUserIdCycling()}))
+
         options.append(UtilOption(title: "Make 100 events", handler: { [self] in make100Events()}))
         options.append(UtilOption(title: "Start Interaction Trace", handler: { [self] in startInteractionTrace()}))
         options.append(UtilOption(title: "End Interaction Trace", handler: { [self] in stopInteractionTrace()}))
         options.append(UtilOption(title: "Notice Network Request", handler: { [self] in noticeNWRequest()}))
         options.append(UtilOption(title: "Notice Network Failure", handler: { [self] in noticeFailedNWRequest()}))
+        
+        // NR-323614 — NSArray/NSDictionary values must be rejected as attribute values.
+        options.append(UtilOption(title: "Try Collection Session Attributes", handler: { [self] in setCollectionSessionAttributes()}))
+        options.append(UtilOption(title: "Try Collection Event Attributes", handler: { [self] in setCollectionEventAttributes()}))
 
         options.append(UtilOption(title: "Test System Logs", handler: { [self] in testSystemLogs()}))
         options.append(UtilOption(title: "Notice Network Request w headers/params", handler: { [self] in 
@@ -108,8 +120,8 @@ class UtilViewModel {
         do {
             try errorMethod()
         } catch {
-            NewRelic.recordError(error)
-            
+            NewRelic.recordError(error, attributes: ["id": count])
+            count += 1
         }
     }
     
@@ -126,6 +138,30 @@ class UtilViewModel {
 
     func changeUserIDToNil() {
         NewRelic.setUserId(nil)
+    }
+
+    func startUserIdCycling() {
+        guard !isUserIdCyclingActive else { return }
+        isUserIdCyclingActive = true
+        scheduleNextUserIdChange()
+    }
+
+    func stopUserIdCycling() {
+        isUserIdCyclingActive = false
+    }
+
+    private func scheduleNextUserIdChange() {
+        let delay = Double.random(in: 5...30)
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+            guard let self, self.isUserIdCyclingActive else { return }
+            let userId = self.cycleUserIds[self.cycleUserIdIndex % self.cycleUserIds.count]
+            NewRelic.setUserId(userId)
+            if let userId {
+                NewRelic.recordBreadcrumb(userId, attributes: ["cycleUserIdIndex": self.cycleUserIdIndex])
+            }
+            self.cycleUserIdIndex += 1
+            self.scheduleNextUserIdChange()
+        }
     }
 
     func makeValidBreadcrumb() {
@@ -388,6 +424,51 @@ class UtilViewModel {
         URLCache.shared.removeAllCachedResponses()
         self.fetchTypeCache.removeAllCachedResponses()
         NewRelic.logInfo("[FetchTypeTest] cleared URLCache.shared and fetchTypeCache")
+    }
+    
+    private var collectionAttributeValues: [(label: String, value: Any)] {
+        let nsArray: NSArray = NSArray(array: ["one", "two"])
+        let nsMutableArray = NSMutableArray(array: ["one", "two"])
+        let nsDictionary: NSDictionary = NSDictionary(dictionary: ["key": "value"])
+        let nsMutableDictionary = NSMutableDictionary(dictionary: ["key": "value"])
+
+        return [
+            ("NSArray", nsArray),
+            ("NSMutableArray", nsMutableArray),
+            ("NSDictionary", nsDictionary),
+            ("NSMutableDictionary", nsMutableDictionary),
+            ("SwiftArray_bridgedToNSArray", ["one", "two"]),
+            ("SwiftDictionary_bridgedToNSDictionary", ["key": "value"]),
+        ]
+    }
+
+    func setCollectionSessionAttributes() {
+        for sample in collectionAttributeValues {
+            let name = "collectionUserAttr_\(sample.label)"
+            _ = NewRelic.setAttribute(name, value: sample.value)
+        }
+
+        // Control case: a valid value must still be accepted after the rejected ones.
+        _ = NewRelic.setAttribute("collectionUserAttr_validString", value: "good attribute")
+    }
+
+    func setCollectionEventAttributes() {
+        for sample in collectionAttributeValues {
+            let eventAttributes: [String: Any] = [
+                "collectionSessionAttr": sample.value,
+                "validSessionAttr": "good attribute"
+            ]
+
+            _ = NewRelic.recordCustomEvent("CollectionAttributeTest",
+                                                            attributes: eventAttributes)
+            _ = NewRelic.recordBreadcrumb("CollectionAttributeTest",
+                                                                attributes: eventAttributes)
+            do {
+                try errorMethod()
+            } catch {
+                NewRelic.recordError(error, attributes: eventAttributes)
+            }
+        }
     }
 }
 

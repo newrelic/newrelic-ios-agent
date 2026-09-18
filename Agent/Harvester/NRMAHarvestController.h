@@ -20,7 +20,9 @@
 
 @interface NRMAHarvestController : NSObject
 
-+ (NRMAHarvestController* _Nullable) harvestController;
+// NS_SWIFT_NAME is required: this method's name matches the class name, so Swift's importer would
+// otherwise treat it as a factory and map it to init(), returning a new instance, not the singleton.
++ (NRMAHarvestController* _Nullable) harvestController NS_SWIFT_NAME(shared());
 
 + (void) setPeriod:(long long)period;
 
@@ -37,6 +39,10 @@
 - (NRMAHarvestTimer* _Nullable) harvestTimer;
 
 - (void) deinitialize;
+
+/// Whether the harvest buffer has room for another activity trace: `retained < at_capture max`.
+/// The buffer is cleared on a successful harvest, so a failing or rate-limited harvest keeps it full.
++ (BOOL) shouldCollectTraces;
 
 + (BOOL) shouldNotCollectTraces;
 

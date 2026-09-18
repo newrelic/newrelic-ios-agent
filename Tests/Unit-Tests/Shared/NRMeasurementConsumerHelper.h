@@ -9,6 +9,9 @@
 #import "NRMeasurementConsumerHelper.h"
 
 @interface NRMAMeasurementConsumerHelper : NRMAMeasurementConsumer
-@property(nonatomic,strong) id result;
-@property(nonatomic,strong) NSMutableArray<id>* consumedMeasurements;
+// `result` is written from the background NRMATaskQueue dispatch queue (via
+// consumeMeasurement:) while tests busy-wait on it from the test thread. It must
+// be atomic so the concurrent read/write doesn't over-release and crash (EXC_BAD_ACCESS).
+@property(atomic,strong) id result;
+@property(atomic,strong) NSMutableArray<id>* consumedMeasurements;
 @end

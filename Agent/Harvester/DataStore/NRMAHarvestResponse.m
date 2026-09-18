@@ -25,6 +25,7 @@ static const NSString* kDISABLE_STRING = @"DISABLE_NEW_RELIC";
         case INVALID_AGENT_ID:
         case UNSUPPORTED_MEDIA_TYPE:
         case CONFIGURATION_UPDATE:
+        case TOO_MANY_REQUESTS:
             return self.statusCode;
             break;
         default:
@@ -48,5 +49,58 @@ static const NSString* kDISABLE_STRING = @"DISABLE_NEW_RELIC";
     return ![self isError];
 }
 
+- (BOOL) isRateLimited
+{
+    return self.statusCode == TOO_MANY_REQUESTS;
+}
+
+- (void) parseRetryAfterFromHeaders:(NSDictionary*)headers
+{
+    self.retryAfterSeconds = 0;
+    if (![headers isKindOfClass:[NSDictionary class]]) {
+        return;
+    }
+
+    // Header field names are case-insensitive, but allHeaderFields preserves the
+    // server's casing, so search for the value rather than assuming a key.
+    NSString* value = nil;
+    for (id key in headers) {
+        if ([key isKindOfClass:[NSString class]] && [(NSString*)key caseInsensitiveCompare:@"Retry-After"] == NSOrderedSame) {
+            id rawValue = headers[key];
+            if ([rawValue isKindOfClass:[NSString class]]) {
+                value = rawValue;
+            }
+            break;
+        }
+    }
+
+    value = [value stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+    if (value.length == 0) {
+        return;
+    }
+
+    // Retry-After is either delta-seconds (a non-negative integer) or an HTTP-date.
+    NSScanner* scanner = [NSScanner scannerWithString:value];
+    NSInteger seconds = 0;
+    if ([scanner scanInteger:&seconds] && [scanner isAtEnd]) {
+        self.retryAfterSeconds = seconds > 0 ? (NSTimeInterval)seconds : 0;
+        return;
+    }
+
+    static NSDateFormatter* httpDateFormatter = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        httpDateFormatter = [[NSDateFormatter alloc] init];
+        httpDateFormatter.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"];
+        httpDateFormatter.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"GMT"];
+        httpDateFormatter.dateFormat = @"EEE, dd MMM yyyy HH:mm:ss 'GMT'";
+    });
+
+    NSDate* retryDate = [httpDateFormatter dateFromString:value];
+    if (retryDate != nil) {
+        NSTimeInterval delta = [retryDate timeIntervalSinceNow];
+        self.retryAfterSeconds = delta > 0 ? delta : 0;
+    }
+}
 
 @end

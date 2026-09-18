@@ -102,10 +102,14 @@ export SOURCEMAP_PATH="${DERIVED_FILE_DIR}/custom-bundle.map"
 ```
 
 #### SOURCEMAP_UPLOAD_URL
-Override the New Relic Symbol Ingest API endpoint (for EU regions or testing).
+Override the New Relic Symbol Ingest API endpoint (for testing or overriding auto-detection). Region is normally auto-detected from the app token's prefix (`eu01x...` -> EU, `jp01x...` -> JP, no prefix -> US).
 
 ```bash
-export SOURCEMAP_UPLOAD_URL="https://symbol-ingest-api.eu01.nr-data.net"
+export SOURCEMAP_UPLOAD_URL="https://symbol-ingest-api.service.eu.newrelic.com"
+```
+
+```bash
+export SOURCEMAP_UPLOAD_URL="https://symbol-ingest-api.service.jp.newrelic.com"
 ```
 
 ## How It Works
@@ -139,6 +143,24 @@ Compressed size: 12.67MB (85.2% reduction)
 ✅ Source map uploaded successfully!
 ```
 
+### Oversized Source Maps (Telemetry Fallback)
+
+If the source map is still over the 200MB limit, the file is **not** uploaded at all —
+uploading would fail regardless of compression. Instead, the script sends a lightweight
+`x-telemetry-data` header (Base64-encoded JSON with the sourcemap and JS bundle sizes)
+with no file body, so New Relic can track the attempt. This does not fail the build:
+
+```
+New Relic: Source map exceeds 200MB limit. Sending telemetry data instead of the file.
+New Relic: Telemetry data sent (server returned 400).
+New Relic: New Relic currently supports source map files up to 200MB. The source map for this build exceeds that limit.
+New Relic: JavaScript errors for this build will not be symbolicated.
+```
+
+A non-2xx response to the telemetry request (e.g. 400) is expected, since no source map
+file is attached — the header is the payload, not the file. This mirrors the New Relic
+Android agent's handling of oversized React Native source maps.
+
 ## Uploaded Metadata
 
 The following data is sent with each source map upload:
@@ -147,12 +169,12 @@ The following data is sent with each source map upload:
 |-------|-------------|---------|
 | `sourcemap` | The source map file | `main.jsbundle.map` |
 | `jsBundleId` | Unique identifier for this build (CFBundleShortVersionString) | `1.2.3` |
-| `appVersionId` | App marketing version (CFBundleShortVersionString) | `1.2.3` |
+| `appVersion` | App marketing version (CFBundleShortVersionString) | `1.2.3` |
 | `sourcemapName` | Name of the source map | `main.jsbundle.map` |
 
 ### JS Bundle ID
 
-The `jsBundleId` and `appVersionId` are both set to your app's `CFBundleShortVersionString` from `Info.plist`. This ensures that source maps are correctly matched to error reports from your React Native app.
+The `jsBundleId` and `appVersion` are both set to your app's `CFBundleShortVersionString` from `Info.plist`. This ensures that source maps are correctly matched to error reports from your React Native app.
 
 **Important:** When recording JavaScript errors in your React Native app, pass the same version string as the `jsAppVersion` parameter to `NewRelic.recordJavascriptError()`.
 
@@ -167,7 +189,7 @@ The upload script provides detailed error messages for all API responses:
 
 **Common causes:**
 - Source map version must be 3 (not version 1 or 2)
-- Missing required fields (`jsBundleId`, `appVersionId`, `sourcemapName`)
+- Missing required fields (`jsBundleId`, `appVersion`, `sourcemapName`)
 - Invalid JSON format in the source map file
 - ZIP file contains no valid files or multiple files
 - Invalid file extension (must be `.map`, `.js.map`, `.json`, or `.zip`)
@@ -212,6 +234,12 @@ The upload script provides detailed error messages for all API responses:
 **Meaning:** Source map file exceeds 200MB limit (even after compression)
 
 **Error message:** `"Sourcemap file is too large"`
+
+**Note:** If the *raw, uncompressed* source map already exceeds 200MB, the script now
+skips the upload entirely and sends telemetry metadata instead — see
+[Oversized Source Maps](#oversized-source-maps-telemetry-fallback) above. A 413 from the
+server itself would only occur if a compressed file just under the raw limit is still
+rejected server-side.
 
 **The script automatically:**
 - Compresses files over 50MB to `.zip` format

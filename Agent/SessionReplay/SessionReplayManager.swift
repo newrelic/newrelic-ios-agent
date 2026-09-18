@@ -21,11 +21,11 @@ public class SessionReplayManager: NSObject {
     
     public var harvestPeriod: Int64 = 60
     private var harvestseconds = 0
-    public var sessionReplayTimer: Timer?
+    private var sessionReplayTimer: DispatchSourceTimer?
     
     private let url: NSString
     
-    private let sessionReplayQueue = DispatchQueue(label: "com.newrelic.sessionReplayQueue", attributes: .concurrent)
+    private let sessionReplayQueue = DispatchQueue(label: "com.newrelic.sessionReplayQueue")
     private static let queueKey = DispatchSpecificKey<String>()
     
     private var isManuallyRecording: Bool = false
@@ -47,6 +47,11 @@ public class SessionReplayManager: NSObject {
         
         self.sessionReplay.delegate = self
         self.sessionReplayMode = .off
+    }
+    
+    deinit {
+        sessionReplayTimer?.cancel()
+        sessionReplayTimer = nil
     }
     
     // ERROR MODE
@@ -114,10 +119,11 @@ public class SessionReplayManager: NSObject {
             self.isManuallyRecording = fromManual
             
             NRLOG_AGENT_DEBUG("Session replay harvest timer starting with a period of \(harvestPeriod) s")
-            self.sessionReplayTimer = Timer(timeInterval: 1.0, target: self, selector: #selector(self.sessionReplayTick), userInfo: nil, repeats: true)
-            
-            RunLoop.current.add(self.sessionReplayTimer!, forMode: .default)
-            RunLoop.current.run()
+            let timer = DispatchSource.makeTimerSource(flags: [], queue: sessionReplayQueue)
+            timer.schedule(deadline: .now() + 1.0, repeating: 1.0)
+            timer.setEventHandler { [weak self] in self?.sessionReplayTick() }
+            timer.resume()
+            self.sessionReplayTimer = timer
         }
     }
     
@@ -129,7 +135,7 @@ public class SessionReplayManager: NSObject {
             }
             
             sessionReplay.stop()
-            sessionReplayTimer?.invalidate()
+            sessionReplayTimer?.cancel()
             sessionReplayTimer = nil
             
            // NRLOG_AGENT_DEBUG("Session replay has shut down and is no longer running.")
@@ -145,7 +151,7 @@ public class SessionReplayManager: NSObject {
     }
     
     @objc public func isRunning() -> Bool {
-        return self.sessionReplayTimer != nil && self.sessionReplayTimer!.isValid
+        return sessionReplayTimer != nil
     }
     
     // This function is to handle a session change created by a change in userId
@@ -224,10 +230,13 @@ public class SessionReplayManager: NSObject {
     
     @objc public func harvest() {
         // sync is required here or session replay upload fails.
-        sessionReplayQueue.sync { [weak self] in
-            guard let self = self else { return }
-            
-            self.harvestSessionReplayFramesAndTouches()
+        // When called from sessionReplayTick (already on the queue), run inline to avoid deadlock.
+        if DispatchQueue.getSpecific(key: SessionReplayManager.queueKey) != nil {
+            harvestSessionReplayFramesAndTouches()
+        } else {
+            sessionReplayQueue.sync { [weak self] in
+                self?.harvestSessionReplayFramesAndTouches()
+            }
         }
     }
     
@@ -248,58 +257,132 @@ public class SessionReplayManager: NSObject {
         }
         
         let frames = self.sessionReplay.getSessionReplayFrames()
-        let touches = self.sessionReplay.getSessionReplayTouches()
-        
-        if frames.isEmpty && touches.isEmpty {
-            NRLOG_AGENT_DEBUG("No session replay frames or touches to harvest.")
+
+        // A chunk with no frames has no viewport/DOM to establish Meta from, so any
+        // touches captured during this window would upload as a touches-only,
+        // completely meta-less payload (see NR-601844 -- confirmed via a real repro
+        // where a session ended, via a rapid setUserId change, before its first frame
+        // had finished capturing). Bail out WITHOUT calling getSessionReplayTouches()
+        // -- that call clears the touch capture's buffer as a side effect, so calling
+        // it here would silently discard these touches instead of leaving them to be
+        // picked up once a frame actually exists, on the next harvest.
+        guard !frames.isEmpty else {
+            NRLOG_AGENT_DEBUG("No session replay frames to harvest yet; any touches captured so far are left for the next harvest.")
             return
         }
-        
-        var container: [AnyRRWebEvent] = frames.map(AnyRRWebEvent.init)
-        container.append(contentsOf: touches.map(AnyRRWebEvent.init))
-        container.sort { (lhs: AnyRRWebEvent, rhs: AnyRRWebEvent) -> Bool in
-            lhs.base.timestamp < rhs.base.timestamp
-        }
-        
-        let firstTimestamp = TimeInterval(container.first?.base.timestamp ?? 0)
-        let lastTimestamp  = TimeInterval(container.last?.base.timestamp ?? 0)
-        
-        guard let upload = self.createReplayUpload(container: container,
-                                                   firstTimestamp: firstTimestamp,
-                                                   lastTimestamp: lastTimestamp) else {
+
+        let touches = self.sessionReplay.getSessionReplayTouches()
+
+        let boxedFrames = frames.map(AnyRRWebEvent.init)
+        let boxedTouches = touches.map(AnyRRWebEvent.init)
+
+        guard let upload = buildReplayUpload(frames: boxedFrames, touches: boxedTouches) else {
             return
         }
         self.sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
-        
-        self.sessionReplay.isFirstChunk = false
 
+        self.sessionReplay.isFirstChunk = false
     }
-    
-    private func createReplayUpload(container: [AnyRRWebEvent], firstTimestamp: TimeInterval, lastTimestamp: TimeInterval) -> SessionReplayData? {
+
+    /// Merges and sorts frame/touch events into upload order. Extracted out of
+    /// buildReplayUpload() so the real merge+sort logic -- where the "First
+    /// event didn't include meta" defect lived -- is directly testable on its
+    /// own, without needing a resolvable harvester configuration (required
+    /// further down the pipeline to build the actual upload URL).
+    ///
+    /// `frames` is never empty-first: NRMASessionReplay.getSessionReplayFrames()
+    /// always leads with a Meta event (screen size starts at .zero, so the
+    /// first real frame always triggers one), and that leading frame is
+    /// always followed by a FullSnapshot -- getSessionReplayFrames() resets
+    /// its processor's lastFullFrame to nil before processing its first raw
+    /// frame, which forces a full snapshot for it. Touches are captured on an
+    /// independent timeline (UIApplication event swizzling) and can be
+    /// timestamped at or before either of those leading events, so a plain
+    /// timestamp sort across both lists could displace either:
+    ///   - Meta must be first so the rrweb player can initialize the
+    ///     viewport/document (otherwise: "First event didn't include meta").
+    ///   - The FullSnapshot right after it establishes the DOM node IDs that
+    ///     later incremental/touch events reference, so it can't be sorted
+    ///     after a touch either -- confirmed via a real repro where a touch
+    ///     sorted ahead of it (raw frames [meta, fullSnapshot, ...] became
+    ///     [meta, touch, touch, fullSnapshot, ...] after a naive merge).
+    /// So both leading events are anchored at the front, in order; everything
+    /// else (the rest of frames + all touches) is sorted normally by
+    /// timestamp after them.
+    func mergeAndSortReplayEvents(frames: [AnyRRWebEvent], touches: [AnyRRWebEvent]) -> [AnyRRWebEvent] {
+        guard let leadingMeta = frames.first else {
+            return touches.sorted { (lhs: AnyRRWebEvent, rhs: AnyRRWebEvent) -> Bool in
+                lhs.base.timestamp < rhs.base.timestamp
+            }
+        }
+
+        var leadingEvents = [leadingMeta]
+        var rest = Array(frames.dropFirst())
+        if let leadingSnapshot = rest.first, leadingSnapshot.base.type == .fullSnapshot {
+            leadingEvents.append(leadingSnapshot)
+            rest.removeFirst()
+        }
+
+        rest.append(contentsOf: touches)
+        rest.sort { (lhs: AnyRRWebEvent, rhs: AnyRRWebEvent) -> Bool in
+            lhs.base.timestamp < rhs.base.timestamp
+        }
+
+        return leadingEvents + rest
+    }
+
+    /// Merges/sorts/encodes a chunk from already-boxed events, returning the
+    /// resulting upload (or nil if there was nothing to send). Extracted out of
+    /// harvestSessionReplayFramesAndTouches() so the real merge+sort+encode path
+    /// is directly testable with synthetic events, without needing to dispatch
+    /// (or mock) an actual upload -- this is still the real production logic,
+    /// called above with genuinely captured frames/touches.
+    func buildReplayUpload(frames: [AnyRRWebEvent], touches: [AnyRRWebEvent]) -> SessionReplayData? {
+        let container = mergeAndSortReplayEvents(frames: frames, touches: touches)
+
+        let firstTimestamp = TimeInterval(container.first?.base.timestamp ?? 0)
+        let lastTimestamp  = TimeInterval(container.last?.base.timestamp ?? 0)
+
+        return self.createReplayUpload(container: container,
+                                        firstTimestamp: firstTimestamp,
+                                        lastTimestamp: lastTimestamp)
+    }
+
+    /// Encodes and gzips a merged/sorted event container to the exact bytes
+    /// that would be uploaded, plus the pre-gzip size (needed for the upload
+    /// URL's metadata). Extracted out of createReplayUpload() so the real
+    /// encode+gzip path is directly testable without needing a resolvable
+    /// harvester configuration, which createReplayUpload() separately
+    /// requires (via uploadURL()) to build the final upload URL.
+    func encodeReplayPayload(container: [AnyRRWebEvent]) -> (data: Data, uncompressedSize: Int)? {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .withoutEscapingSlashes
-        
-        // Encode container to JSON
+
         var jsonData: Data
         do {
             jsonData = try encoder.encode(container)
-//            if let jsonString = String(data: jsonData, encoding: .utf8) {
-//                NRLOG_AGENT_DEBUG(jsonString)
-//            }
         } catch {
             NRLOG_AGENT_DEBUG("Failed to encode session replay events to JSON: \(error)")
             return nil
         }
-        
+
         let uncompressedDataSize = jsonData.count
-        
+
         do {
             let gzippedData = try jsonData.gzipped()
             jsonData = gzippedData
         } catch {
             NRLOG_AGENT_DEBUG("Failed to gzip session replay data: \(error.localizedDescription)")
         }
-        
+
+        return (jsonData, uncompressedDataSize)
+    }
+
+    private func createReplayUpload(container: [AnyRRWebEvent], firstTimestamp: TimeInterval, lastTimestamp: TimeInterval) -> SessionReplayData? {
+        guard let (jsonData, uncompressedDataSize) = encodeReplayPayload(container: container) else {
+            return nil
+        }
+
         // Construct upload URL
         guard let url = sessionReplayReporter.uploadURL(
             uncompressedDataSize: uncompressedDataSize,
@@ -311,9 +394,7 @@ public class SessionReplayManager: NSObject {
             NRLOG_AGENT_DEBUG("Failed to construct upload URL for session replay.")
             return nil
         }
-        
-        // NRLOG_AGENT_DEBUG(url.absoluteString)
-        
+
         return SessionReplayData(sessionReplayFramesData: jsonData, url: url)
     }
     

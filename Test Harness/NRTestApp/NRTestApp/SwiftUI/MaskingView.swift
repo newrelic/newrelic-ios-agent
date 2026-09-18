@@ -8,10 +8,15 @@
 import SwiftUI
 
 struct MaskingView: View {
+    // Each TextField gets its own backing state so typing in one field never
+    // updates another. (Previously several fields shared maskedInput/unmaskedInput/
+    // deepMasked, which caused duplicated values across unrelated rows.)
     @State private var maskedInput: String = ""
     @State private var unmaskedInput: String = ""
-    @State private var deepMasked: String = ""
-    @State private var deepUnmasked: String = ""
+    @State private var implicitMaskedInput: String = ""
+    @State private var childUnmaskedInput: String = ""
+    @State private var maskedInsideUnmaskedInput: String = ""
+    @State private var deepMaskedInput: String = ""
 
     var body: some View {
         ScrollView {
@@ -45,7 +50,7 @@ struct MaskingView: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Text("Child Label A")
                             Text("Child Label B")
-                            TextField("Implicit masked inheritance?", text: $maskedInput)
+                            TextField("Implicit masked inheritance?", text: $implicitMaskedInput)
                                 .textFieldStyle(.roundedBorder)
                         }
                         .padding()
@@ -63,7 +68,7 @@ struct MaskingView: View {
                         NRConditionalMaskView(maskApplicationText: false, maskUserInputText: false, maskAllUserTouches: false) {
                             
                             Text("Explicit Unmasked Override")
-                            TextField("Child unmasked override", text: $unmaskedInput)
+                            TextField("Child unmasked override", text: $childUnmaskedInput)
                                 .textFieldStyle(.roundedBorder)
                         }
                     }
@@ -80,7 +85,7 @@ struct MaskingView: View {
                         NRConditionalMaskView(maskApplicationText: true, maskUserInputText: true, maskAllUserTouches: true) {
                             
                             Text("Child Masked Explicit")
-                            TextField("Masked inside unmasked parent", text: $deepMasked)
+                            TextField("Masked inside unmasked parent", text: $maskedInsideUnmaskedInput)
                                 .textFieldStyle(.roundedBorder)
                         }
                         Text("Sibling Unmasked (inherits parent)")
@@ -106,7 +111,7 @@ struct MaskingView: View {
                                     Text("Level 3 Explicit Masked")
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text("Level 4 inherits masked ancestor")
-                                        TextField("Deep masked field", text: $deepMasked)
+                                        TextField("Deep masked field", text: $deepMaskedInput)
                                             .textFieldStyle(.roundedBorder)
                                     }
                                     .padding(6)

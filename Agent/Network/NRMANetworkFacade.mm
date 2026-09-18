@@ -255,10 +255,10 @@
         if ([NRMANetworkFacade statusCode:response] >= NRMA_HTTP_STATUS_CODE_ERROR_THRESHOLD) {
             if([NRMAFlags shouldEnableNewEventSystem]){
                 if(traceHeaders) {
-                    if(retrievedPayload == nil) {
-                        retrievedPayload = [NRMAHTTPUtilities generateNRMAPayload];
-                    }
-                    [NRMANetworkFacade configureNRMAPayloadWithTraceHeaders:retrievedPayload traceHeaders:traceHeaders];
+                    // NR-586680: the trace context was supplied by a cross-platform
+                    // caller (e.g. the Flutter agent), which owns the distributed
+                    // trace. Do not attach a native NRMAPayload to the event.
+                    retrievedPayload = nil;
                 }
 
                 NRMANetworkResponseData* errResponseData = [[NRMANetworkResponseData alloc] initWithHttpError:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds] networkErrorMessage:nil encodedResponseBody:[NRMANetworkFacade responseBodyForEvents:responseData] appDataHeader:[NRMANetworkFacade getAppDataHeader:response]];
@@ -270,10 +270,9 @@
             } else {
                 std::unique_ptr<NewRelic::Connectivity::Payload> retrievedPayload = [NRMAHTTPUtilities retrievePayload:request];
                 if(traceHeaders) {
-                    if(retrievedPayload == nullptr) {
-                        retrievedPayload = NewRelic::Connectivity::Facade::getInstance().newPayload();
-                    }
-                    [NRMANetworkFacade configureCppPayloadWithTraceHeaders:retrievedPayload traceHeaders:traceHeaders];
+                    // NR-586680: caller (e.g. Flutter) owns the distributed trace;
+                    // suppress the native payload so no DT context is attached.
+                    retrievedPayload = nullptr;
                 }
 
                 NRMANetworkResponseData* errResponseData = [[NRMANetworkResponseData alloc] initWithHttpError:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds] networkErrorMessage:nil encodedResponseBody:[NRMANetworkFacade responseBodyForEvents:responseData] appDataHeader:[NRMANetworkFacade getAppDataHeader:response]];
@@ -287,10 +286,10 @@
         } else {
             if([NRMAFlags shouldEnableNewEventSystem]){
                 if(traceHeaders) {
-                    if(retrievedPayload == nil) {
-                        retrievedPayload = [NRMAHTTPUtilities generateNRMAPayload];
-                    }
-                    [NRMANetworkFacade configureNRMAPayloadWithTraceHeaders:retrievedPayload traceHeaders:traceHeaders];
+                    // NR-586680: the trace context was supplied by a cross-platform
+                    // caller (e.g. the Flutter agent), which owns the distributed
+                    // trace. Do not attach a native NRMAPayload to the event.
+                    retrievedPayload = nil;
                 }
 
                 NRMANetworkResponseData* okResponseData = [[NRMANetworkResponseData alloc] initWithSuccessfulResponse:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds]];
@@ -302,10 +301,9 @@
             } else {
                 std::unique_ptr<NewRelic::Connectivity::Payload> retrievedPayload = [NRMAHTTPUtilities retrievePayload:request];
                 if(traceHeaders) {
-                    if(retrievedPayload == nullptr) {
-                        retrievedPayload = NewRelic::Connectivity::Facade::getInstance().newPayload();
-                    }
-                    [NRMANetworkFacade configureCppPayloadWithTraceHeaders:retrievedPayload traceHeaders:traceHeaders];
+                    // NR-586680: caller (e.g. Flutter) owns the distributed trace;
+                    // suppress the native payload so no DT context is attached.
+                    retrievedPayload = nullptr;
                 }
 
                 NRMANetworkResponseData* okResponseData = [[NRMANetworkResponseData alloc] initWithSuccessfulResponse:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds]];

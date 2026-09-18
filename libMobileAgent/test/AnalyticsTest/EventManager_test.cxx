@@ -287,6 +287,38 @@ TEST_F(EventManagerTest, testBadSerializedEvent) {
     ASSERT_THROW(manager.newEvent(strs2), std::runtime_error);
 }
 
+// Regression: an empty attribute name in a serialized event used to spin the
+// deserializer forever. istream::get(streambuf&, delim) sets failbit (not
+// eofbit) when the very next character already is the delimiter, so the loop
+// in EventDeserializer::deserializeUserActionEvent / deserializeMobileEvent
+// — which checked only !is.eof() — never terminated. The fix added a
+// !is.fail() guard. Without that guard these tests will hang until CI kills
+// the run.
+TEST_F(EventManagerTest, testDeserializeDoesNotSpinOnEmptyAttributeNameUserAction) {
+    EventManager manager{store};
+
+    // "MobileUserAction" routes to deserializeUserActionEvent. After ts and
+    // elapsed are consumed, the remaining "\t" is exactly the trap: zero
+    // chars extracted, failbit-only state, !is.eof() stays true.
+    std::stringstream strs;
+    strs << "MobileUserAction\t1\t1\t\t";
+
+    ASSERT_NO_THROW(manager.newEvent(strs));
+}
+
+TEST_F(EventManagerTest, testDeserializeDoesNotSpinOnEmptyAttributeNameMobileEvent) {
+    EventManager manager{store};
+
+    // Same trap as above, routed through deserializeMobileEvent instead of
+    // deserializeUserActionEvent. Mobile / Interaction / name / ts / elapsed
+    // is the well-formed prefix; the trailing "\t" leaves the per-attribute
+    // loop staring at a delimiter with non-EOF state.
+    std::stringstream strs;
+    strs << "Mobile\tInteraction\tn\t1\t1\t\t";
+
+    ASSERT_NO_THROW(manager.newEvent(strs));
+}
+
 TEST_F(EventManagerTest, testEmptyDoesNotResetTimestamp) {
     EventManager manager{store};
 
@@ -335,6 +367,66 @@ TEST_F(EventManagerTest, testResetTimestampResetsTimestamp) {
 
     // Timestamp should be reset
     ASSERT_FALSE(manager.didReachMaxQueueTime(2000));
+}
+
+TEST_F(EventManagerTest, testAddEventIncrementsRecordedCount) {
+    EventManager manager{store};
+    auto event = manager.newCustomMobileEvent("custom", epoch_time_ms, 1, validator);
+
+    auto result = manager.addEvent(event);
+
+    ASSERT_TRUE(result.added);
+    ASSERT_FALSE(result.overflowed);
+    ASSERT_FALSE(result.evicted);
+    ASSERT_TRUE(result);  // operator bool()
+    ASSERT_EQ(1, manager.getEventsRecordedCount());
+    ASSERT_EQ(0, manager.getEventsEvictedCount());
+}
+
+TEST_F(EventManagerTest, testOverflowEvictsAndIncrementsEvictedCount) {
+    EventManager manager{store};
+    manager.setMaxBufferSize(1);
+
+    auto first = manager.newCustomMobileEvent("custom", epoch_time_ms - 1000, 1, validator);
+    auto firstResult = manager.addEvent(first);
+    ASSERT_TRUE(firstResult.added);
+    ASSERT_FALSE(firstResult.overflowed);
+
+    auto second = manager.newCustomMobileEvent("custom 2", epoch_time_ms, 1, validator);
+    auto secondResult = manager.addEvent(second);
+
+    // total_attempted_inserts == 1 at this point, so getRemovalIndex() == rand() % 1 == 0,
+    // deterministically evicting the only resident event.
+    ASSERT_TRUE(secondResult.added);
+    ASSERT_TRUE(secondResult.overflowed);
+    ASSERT_TRUE(secondResult.evicted);
+    ASSERT_EQ(2, manager.getEventsRecordedCount());
+    ASSERT_EQ(1, manager.getEventsEvictedCount());
+}
+
+TEST_F(EventManagerTest, testOutOfBoundsRemovalIndexDropsIncomingEvent) {
+    MockEventManager manager{store};
+    manager.setMaxBufferSize(1);
+
+    auto first = manager.newCustomMobileEvent("custom", epoch_time_ms - 1000, 1, validator);
+    manager.addEvent(first);
+
+    EXPECT_CALL(manager, getRemovalIndex())
+            .WillOnce(Return(100)); // out of bounds -> incoming event should be dropped
+
+    auto second = manager.newCustomMobileEvent("custom 2", epoch_time_ms, 1, validator);
+    auto result = manager.addEvent(second);
+
+    ASSERT_FALSE(result.added);
+    ASSERT_TRUE(result.overflowed);
+    ASSERT_TRUE(result.evicted);
+    ASSERT_FALSE(result); // operator bool() reflects "added", not "evicted"
+    ASSERT_EQ(1, manager.getEventsRecordedCount());
+    ASSERT_EQ(1, manager.getEventsEvictedCount());
+
+    auto json = manager.toJSON();
+    ASSERT_EQ(1, json->size());
+    ASSERT_EQ(((*json)[0]["name"]).as_string(), "custom"); // original event survives
 }
 } // namespace NewRelic
 

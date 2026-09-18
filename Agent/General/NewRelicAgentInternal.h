@@ -32,19 +32,12 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#if TARGET_OS_IOS
-@class JSErrorController;
-#endif
-
 // Defines the internal agent api.
 @interface NewRelicAgentInternal : NSObject
 
 @property (nonatomic, readonly, assign) BOOL enabled;
 @property(atomic, strong, nullable) NRMAAnalytics* analyticsController;
 @property(atomic, strong, nullable) NRMAHandledExceptions* handledExceptionsController;
-#if TARGET_OS_IOS
-@property(atomic, strong, nullable) JSErrorController* jsErrorController;
-#endif
 @property(atomic, strong, nullable) NRMAUserActionFacade* gestureFacade;
 @property(atomic, strong, nullable) NSString* userId;
 @property(assign) double sampleSeed;
@@ -82,9 +75,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void) applicationWillEnterForeground;
 - (void) sessionStartInitialization;
+- (void) startNewSessionForUserId:(NSString* _Nullable)userId;
 + (NewRelicAgentInternal* _Nullable) sharedInstance;
 
-- (NSString*) currentSessionId;
+- (NSString* _Nullable) currentSessionId;
 
 // Returns whether or not we should be collecting HTTP errors. Exposed for ASI support.
 - (BOOL) collectNetworkErrors;
@@ -109,6 +103,15 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL) isSessionReplayErrorSampled;
 
 - (BOOL) isSessionReplayEnabled;
+
+#if TARGET_OS_IOS
+// JS ERROR SECTION
+- (BOOL) recordJavascriptErrorWithName:(NSString*)name
+                               message:(NSString*)message
+                            stackTrace:(NSString*)stackTrace
+                               isFatal:(BOOL)isFatal
+                  additionalAttributes:(NSDictionary* _Nullable)additionalAttributes;
+#endif
 
 // SESSION REPLAY SECTION Methods to manage masked elements for SessionReplay
 

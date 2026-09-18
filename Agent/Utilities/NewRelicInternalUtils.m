@@ -34,6 +34,8 @@
 #import <UIKit/UIKit.h>
 
 #import <mach/mach.h>
+#import <dlfcn.h>
+#import <mach-o/dyld.h>
 
 #ifdef NRMA_REACHABILITY_DEBUG
 #import "NRMADEBUG_Reachability.h"
@@ -560,6 +562,15 @@ static NSString* __mach_model;
 }
 
 + (NSString*) deviceModelViaSysCtrl {
+#if TARGET_OS_SIMULATOR
+    // On the simulator, hw.machine returns the host architecture (e.g. x86_64 or arm64)
+    // rather than a device model identifier, which ingest cannot map to a real device.
+    // Use the simulated device's model identifier (e.g. iPhone15,2) instead.
+    NSString* simulatorModel = [[[NSProcessInfo processInfo] environment] objectForKey:@"SIMULATOR_MODEL_IDENTIFIER"];
+    if ([simulatorModel length]) {
+        return [@"simulator-" stringByAppendingString:simulatorModel];
+    }
+#endif
     size_t size;
     NSString* model = nil;
     if (sysctlbyname("hw.machine", NULL, &size, NULL, 0) == 0) {
@@ -687,6 +698,62 @@ static NSString* __mach_model;
     NSDictionary<NSString *, NSString *> *environment = [processInfo environment];
     NSString *simulator = [environment objectForKey:@"SIMULATOR_DEVICE_NAME"];
     return simulator != nil;
+}
+
+// NR-588325: This function can cause issues with demangledName on other hybrid platforms
++ (BOOL) detectKMPFrameworks {
+    // Scan runtime for Kotlin/Native framework classes
+    // Kotlin frameworks register classes with names like "{FrameworkName}Kotlin{ClassName}"
+    // Common examples: SharedKotlinEnum, MyFrameworkKotlinArray, KotlinBase, etc.
+
+    // Get the count of registered classes
+    int expectedCount = objc_getClassList(NULL, 0);
+    if (expectedCount <= 0) {
+        NRLOG_AGENT_DEBUG(@"No classes registered in runtime");
+        return NO;
+    }
+
+    // Guard against unreasonably large counts (safety check for integer overflow)
+    if (expectedCount > 100000) {
+        NRLOG_AGENT_ERROR(@"Unexpectedly large class count: %d", expectedCount);
+        return NO;
+    }
+
+    // Allocate buffer for class list with extra space for race condition
+    // (new classes could be registered between the two calls)
+    int bufferSize = expectedCount + 128;
+    Class *classes = (Class *)malloc(sizeof(Class) * bufferSize);
+    if (classes == NULL) {
+        NRLOG_AGENT_ERROR(@"Failed to allocate memory for class list");
+        return NO;
+    }
+
+    // Get all registered classes
+    int actualCount = objc_getClassList(classes, bufferSize);
+
+    // Safety check: ensure we don't iterate beyond our buffer
+    int safeCount = (actualCount < bufferSize) ? actualCount : bufferSize;
+
+    for (int i = 0; i < safeCount; i++) {
+        const char *className = class_getName(classes[i]);
+        if (className != NULL) {
+            NSString *classNameStr = [NSString stringWithUTF8String:className];
+
+            // Extra safety: verify string conversion succeeded
+            if (classNameStr != nil) {
+                // Check if class name contains "Kotlin" or starts with "KotlinBase"
+                if ([classNameStr containsString:@"Kotlin"] || [classNameStr hasPrefix:@"KotlinBase"]) {
+                    NRLOG_AGENT_DEBUG(@"Detected KMP via Kotlin class: %@", classNameStr);
+                    free(classes);
+                    return YES;
+                }
+            }
+        }
+    }
+
+    free(classes);
+    NRLOG_AGENT_DEBUG(@"No KMP frameworks detected after scanning %d classes", safeCount);
+    return NO;
 }
 
 @end

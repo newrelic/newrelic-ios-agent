@@ -108,15 +108,29 @@
 }
 
 - (void) consumeMeasurements:(NSDictionary *)measurements {
-    for (NSNumber* key in [measurements allKeys]) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wstrict-selector-match"
-
-        for (NRMAMeasurement* measurement in [[measurements objectForKey:key] allObjects]) {
+    if (![measurements isKindOfClass:[NSDictionary class]]) {
+        return;
+    }
+    for (NSNumber* key in [measurements allKeys]) {
+        id value = [measurements objectForKey:key];
+        if (![value respondsToSelector:@selector(allObjects)]) {
+            continue;
+        }
+        // Defense-in-depth: snapshot inside a guard so a set mutated mid-enumeration on
+        // another thread is skipped rather than crashing on a freed element.
+        NSArray* snapshot = nil;
+        @try {
+            snapshot = [value allObjects];
+        } @catch (NSException* exception) {
+            continue;
+        }
+        for (NRMAMeasurement* measurement in snapshot) {
             [self consumeMeasurement:measurement];
         }
     }
-#pragma clang diagonstic pop
+#pragma clang diagnostic pop
 }
 
 - (NSString*) description

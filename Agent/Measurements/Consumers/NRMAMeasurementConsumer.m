@@ -31,8 +31,24 @@
 {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wstrict-selector-match"
-    for (NSNumber* key in measurements.allKeys){
-        for (NRMAMeasurement* measurement in [[measurements objectForKey:key] allObjects]) {
+    if (![measurements isKindOfClass:[NSDictionary class]]) {
+        return;
+    }
+    for (NSNumber* key in [measurements allKeys]){
+        id value = [measurements objectForKey:key];
+        if (![value respondsToSelector:@selector(allObjects)]) {
+            continue;
+        }
+        // Defense-in-depth: snapshot inside a guard. Callers now hand us detached sets
+        // (see NRMAMeasurementProducer/NRMAMeasurementPool), but if a set is ever mutated
+        // mid-enumeration we skip it instead of crashing on a freed element.
+        NSArray* snapshot = nil;
+        @try {
+            snapshot = [value allObjects];
+        } @catch (NSException* exception) {
+            continue;
+        }
+        for (NRMAMeasurement* measurement in snapshot) {
             [self consumeMeasurement:measurement];
         }
     }

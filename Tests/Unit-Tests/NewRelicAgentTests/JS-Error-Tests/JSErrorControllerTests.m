@@ -15,6 +15,15 @@
 // Import Swift classes from main NewRelic module (same as NewRelicAgentInternal.m does)
 #import <NewRelic/NewRelic-Swift.h>
 
+#import <OCMock/OCMock.h>
+#import "NewRelic.h"
+#import "NewRelicAgentInternal.h"
+#import "NRMAFlags.h"
+
+@interface NewRelicAgentInternal (JSErrorFacadeTesting)
+@property(atomic, strong, nullable) JSErrorController* jsErrorController;
+@end
+
 @interface JSErrorControllerTests : XCTestCase
 @end
 
@@ -443,7 +452,7 @@
     XCTAssertNotNil(wireFormat[@"errorId"], @"errorId should be present");
     XCTAssertEqualObjects(wireFormat[@"errorMessage"], @"Cannot read property 'x' of null", @"errorMessage should contain message");
     XCTAssertEqualObjects(wireFormat[@"errorName"], @"TypeError", @"errorName should contain error name");
-    XCTAssertEqualObjects(wireFormat[@"isFatalError"], @"true", @"isFatalError should be true");
+    XCTAssertTrue(wireFormat[@"isFatalError"], @"isFatalError should be true");
     XCTAssertNotNil(wireFormat[@"timestamp"], @"timestamp should be present");
     XCTAssertNotNil(wireFormat[@"threads"], @"threads should be present");
 
@@ -611,6 +620,61 @@
     }
 
     return controller;
+}
+
+#pragma mark - Public API facade: +[NewRelic recordJavascriptError:...]
+
+- (void) testRecordJavascriptErrorReturnsNOWhenControllerNotInitialized {
+    XCTAssertTrue([NRMAFlags shouldEnableJSErrorEvents],
+                  @"precondition: JS error events must be enabled, or this would return NO for the wrong reason");
+
+    id mockInternals = [OCMockObject mockForClass:[NewRelicAgentInternal class]];
+    NewRelicAgentInternal* instance = [[NewRelicAgentInternal alloc] init];
+    [[[[mockInternals stub] classMethod] andReturn:instance] sharedInstance];
+
+    XCTAssertNil(instance.jsErrorController,
+                 @"precondition: a freshly -init'd agent has not built a JS error controller yet");
+
+    XCTAssertFalse([NewRelic recordJavascriptError:@"TypeError"
+                                           message:@"message"
+                                        stackTrace:@"stack"
+                                           isFatal:NO
+                              additionalAttributes:nil],
+                   @"should report failure when the JS error controller was never initialized");
+
+    [mockInternals stopMocking];
+}
+
+- (void) testRecordJavascriptErrorRoutesToControllerVerbatimAndReturnsYES {
+    XCTAssertTrue([NRMAFlags shouldEnableJSErrorEvents], @"precondition: JS error events enabled");
+
+    id mockInternals = [OCMockObject mockForClass:[NewRelicAgentInternal class]];
+    NewRelicAgentInternal* instance = [[NewRelicAgentInternal alloc] init];
+    [[[[mockInternals stub] classMethod] andReturn:instance] sharedInstance];
+
+    NSDictionary* attributes = @{@"screen": @"HomeScreen"};
+
+    id mockController = [OCMockObject niceMockForClass:[JSErrorController class]];
+    [[mockController expect] recordJSError:@"TypeError"
+                                  message:@"message"
+                               stackTrace:@"stack"
+                                  isFatal:YES
+                     additionalAttributes:attributes];
+
+    instance.jsErrorController = mockController;
+
+    XCTAssertTrue([NewRelic recordJavascriptError:@"TypeError"
+                                          message:@"message"
+                                       stackTrace:@"stack"
+                                          isFatal:YES
+                             additionalAttributes:attributes],
+                  @"should report success once a controller is installed");
+
+    XCTAssertNoThrow([mockController verify],
+                     @"the error should have been routed to the controller with its arguments unchanged");
+
+    [mockController stopMocking];
+    [mockInternals stopMocking];
 }
 
 @end

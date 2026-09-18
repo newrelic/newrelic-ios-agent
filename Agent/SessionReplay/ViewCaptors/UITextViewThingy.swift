@@ -38,12 +38,18 @@ class UITextViewThingy: SessionReplayViewThingy {
         self.viewDetails = viewDetails
 
         if view.isSecureTextEntry {
+            // Secure entry is always masked, regardless of masking mode or overrides.
             self.isMasked = true
         }
         else if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
         }
-        else if let maskUserInputText = viewDetails.maskUserInputText {
+        // A per-view UNMASK override (e.g. NRConditionalMaskView(maskUserInputText: false))
+        // is only honored in Custom masking mode. Under the Default strategy the agent
+        // masks everything and unmask overrides are dropped, so the text content of an
+        // input control stays masked. NR-566XXX.
+        else if let maskUserInputText = ViewDetails.honoringDefaultStrategy(viewDetails.maskUserInputText,
+                                                                            isDefaultMode: ViewDetails.currentMaskingModeIsDefault()) {
             self.isMasked = maskUserInputText
         }
         else {

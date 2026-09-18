@@ -29,6 +29,13 @@
 //  /bin/sh "${SCRIPT}" "YOUR_INGEST_API_KEY" "YOUR_APP_TOKEN" --debug
 // ```
 //
+// Region:
+// The upload host is derived from the app token's region prefix:
+//   US (no prefix)  -> https://symbol-ingest-api.service.newrelic.com
+//   EU (eu01x...)   -> https://symbol-ingest-api.service.eu.newrelic.com
+//   JP (jp01x...)   -> https://symbol-ingest-api.service.jp.newrelic.com
+// Setting SOURCEMAP_UPLOAD_URL overrides the auto-detected host.
+//
 // Environment Variables (optional):
 // SOURCEMAP_UPLOAD_URL - Override the New Relic server hostname
 // SOURCEMAP_PATH - Override the default source map location (${DERIVED_FILE_DIR}/main.jsbundle.map)
@@ -37,7 +44,7 @@
 // START of Script upload-react-native-sourcemap.swift
 import Foundation
 
-let defaultURL = "https://symbol-ingest-api.newrelic.com"
+let defaultURL = "https://symbol-ingest-api.service.newrelic.com"
 let fileManager = FileManager.default
 let environment = ProcessInfo.processInfo.environment
 // Set to true for additional debug info in the upload_sourcemap_results.log file.
@@ -45,6 +52,7 @@ var debug = false
 
 var sourcemapEndpointPath = "v1/react-native/sourcemaps"
 var sourcemapUploadDataPostKey = "sourcemap"
+let telemetryDataHeader = "x-telemetry-data"
 
 // Maximum file size: 200MB
 let maxFileSizeBytes: UInt64 = 209715200
@@ -101,7 +109,16 @@ func start() {
     }
 
     // Configure Environment Variables
-    var url = environment["SOURCEMAP_UPLOAD_URL"] ?? defaultURL
+    // SOURCEMAP_UPLOAD_URL (if set) takes precedence; otherwise derive from the app token's region prefix (EU/JP).
+    var url: String
+    if let override = environment["SOURCEMAP_UPLOAD_URL"] {
+        url = override
+    } else if let regionAwareURL = regionAwareURL(forAppToken: appToken) {
+        url = regionAwareURL
+        print("New Relic: Using region-aware URL: \(url)")
+    } else {
+        url = defaultURL
+    }
     sourcemapEndpointPath = environment["NEWRELIC_SOURCEMAP_ENDPOINT"] ?? "v1/react-native/sourcemaps"
 
     // Determine source map path
@@ -127,17 +144,13 @@ func start() {
     print("New Relic: Found source map at: \(sourcemapPath)")
 
     // Check file size
+    var sourcemapFileSize: UInt64 = 0
     do {
         let attributes = try fileManager.attributesOfItem(atPath: sourcemapPath)
         if let fileSize = attributes[.size] as? UInt64 {
+            sourcemapFileSize = fileSize
             let fileSizeMB = Double(fileSize) / 1024.0 / 1024.0
             print("New Relic: Source map size: \(String(format: "%.2f", fileSizeMB))MB")
-
-            if fileSize > maxFileSizeBytes {
-                print("Error: Source map exceeds 200MB limit")
-                print("Consider enabling minification or using code splitting")
-                exit(1)
-            }
         }
     } catch {
         print("Warning: Could not determine file size: \(error)")
@@ -167,7 +180,7 @@ func start() {
         exit(1)
     }
 
-    // jsBundleId is the same as appVersionId (CFBundleShortVersionString)
+    // jsBundleId is the same as appVersion (CFBundleShortVersionString)
     let jsBundleId = appVersion
 
     let sourcemapName = "main.jsbundle.map"
@@ -182,6 +195,23 @@ func start() {
 
     // Upload source map
     let uploadURL = "\(url)/\(sourcemapEndpointPath)"
+
+    // If the source map exceeds the 200MB limit, skip the upload entirely and send
+    // telemetry metadata instead, rather than failing the build. Mirrors the Android
+    // agent's oversized-source-map handling (ReactNativeSourceMap.sendTelemetryOnly).
+    if sourcemapFileSize > maxFileSizeBytes {
+        sendTelemetryOnly(
+            apiKey: apiKey,
+            appToken: appToken,
+            url: uploadURL,
+            jsBundleId: jsBundleId,
+            appVersion: appVersion,
+            sourcemapName: sourcemapName,
+            sourcemapSize: sourcemapFileSize
+        )
+        exit(0)
+    }
+
     print("New Relic: Uploading to: \(uploadURL)")
 
     do {
@@ -191,7 +221,7 @@ func start() {
             url: uploadURL,
             sourcemapPath: sourcemapPath,
             jsBundleId: jsBundleId,
-            appVersionId: appVersion,
+            appVersion: appVersion,
             sourcemapName: sourcemapName
         )
         print("New Relic: ✓ Source map uploaded successfully!")
@@ -210,7 +240,7 @@ func uploadSourceMap(
     url: String,
     sourcemapPath: String,
     jsBundleId: String,
-    appVersionId: String,
+    appVersion: String,
     sourcemapName: String
 ) throws {
 
@@ -231,7 +261,7 @@ func uploadSourceMap(
     // Add text fields
     let textFields = [
         "jsBundleId": jsBundleId,
-        "appVersionId": appVersionId,
+        "appVersion": appVersion,
         "sourcemapName": sourcemapName
     ]
 
@@ -365,6 +395,14 @@ func uploadSourceMap(
             errorMessage = json["message"] as? String ?? json["errorMessage"] as? String
         }
 
+        // 409 means a source map for this jsBundleId has already been stored -- this is
+        // expected/harmless (e.g. a rebuild without a version bump), not a failure.
+        // Matches the Android agent's HTTP_CONFLICT handling.
+        if httpStatusCode == 409 {
+            print("New Relic: A source map for this build (jsBundleId: \(jsBundleId)) has already been stored.")
+            return
+        }
+
         guard (200...299).contains(httpStatusCode) else {
             print("Error: Source map upload failed (HTTP \(httpStatusCode))")
 
@@ -376,7 +414,7 @@ func uploadSourceMap(
                 }
                 print("Common causes:")
                 print("  • Source map version must be 3")
-                print("  • Missing required fields (jsBundleId, appVersionId, sourcemapName)")
+                print("  • Missing required fields (jsBundleId, appVersion, sourcemapName)")
                 print("  • Invalid JSON format")
                 print("  • ZIP file issues (no valid files, multiple files, or invalid extension)")
 
@@ -456,7 +494,7 @@ func uploadSourceMap(
             if let jsBundleId = metadata["JSBundleId"] as? String {
                 print("  JS Bundle ID: \(jsBundleId)")
             }
-            if let appVersion = metadata["appVersionId"] as? String {
+            if let appVersion = metadata["appVersion"] as? String {
                 print("  App Version: \(appVersion)")
             }
             if let createdAt = metadata["createdAt"] as? String {
@@ -473,6 +511,122 @@ func uploadSourceMap(
     if let error = uploadError {
         throw error
     }
+}
+
+// Sends telemetry metadata instead of the actual source map when the map exceeds the
+// 200MB limit. No file body is included -- the x-telemetry-data header (Base64-encoded
+// JSON) is the payload. A non-2xx response is expected (there's no file for the server
+// to validate) and is logged, not treated as a failure -- this function never throws,
+// mirroring the Android agent's non-fatal telemetry send (ReactNativeSourceMap.sendTelemetryOnly).
+func sendTelemetryOnly(
+    apiKey: String,
+    appToken: String,
+    url: String,
+    jsBundleId: String,
+    appVersion: String,
+    sourcemapName: String,
+    sourcemapSize: UInt64
+) {
+    print("New Relic: Source map exceeds 200MB limit. Sending telemetry data instead of the file.")
+
+    let bundlePath = "\(environment["BUILT_PRODUCTS_DIR"] ?? "")/main.jsbundle"
+    var bundleSize: UInt64 = 0
+    if let attributes = try? fileManager.attributesOfItem(atPath: bundlePath),
+       let size = attributes[.size] as? UInt64 {
+        bundleSize = size
+    }
+    let bundleName = sourcemapName.replacingOccurrences(of: ".map", with: "")
+
+    let telemetryJSON = "{\"bundler\":\"metro\",\"bundles\":[{\"name\":\"\(bundleName)\",\"size\":\(bundleSize)}],"
+        + "\"sourcemaps\":[{\"name\":\"\(sourcemapName)\",\"size\":\(sourcemapSize)}]}"
+    let encodedTelemetry = Data(telemetryJSON.utf8).base64EncodedString()
+
+    if debug {
+        print("========== Telemetry JSON = \(telemetryJSON)")
+    }
+
+    guard let telemetryURL = URL(string: url) else {
+        print("Warning: Could not build telemetry request URL (non-critical).")
+        print("New Relic: JavaScript errors for this build will not be symbolicated.")
+        return
+    }
+
+    let boundary = "Boundary-\(UUID().uuidString)"
+    var request = URLRequest(url: telemetryURL)
+    request.httpMethod = "POST"
+    request.setValue(apiKey, forHTTPHeaderField: "Api-Key")
+    request.setValue(appToken, forHTTPHeaderField: "X-APP-LICENSE-KEY")
+    request.setValue(encodedTelemetry, forHTTPHeaderField: telemetryDataHeader)
+    request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+    var body = Data()
+    let textFields = [
+        "jsBundleId": jsBundleId,
+        "appVersion": appVersion,
+        "sourcemapName": sourcemapName
+    ]
+    for (key, value) in textFields {
+        body.append("--\(boundary)\r\n")
+        body.append("Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n")
+        body.append("\(value)\r\n")
+    }
+    body.append("--\(boundary)--\r\n")
+    request.httpBody = body
+
+    let semaphore = DispatchSemaphore(value: 0)
+    let task = URLSession.shared.dataTask(with: request) { data, response, error in
+        defer { semaphore.signal() }
+
+        if let error = error {
+            print("Note: Telemetry send encountered an error (non-critical): \(error.localizedDescription)")
+            return
+        }
+        guard let httpResponse = response as? HTTPURLResponse else { return }
+        // A non-2xx response is expected here since no source map file is attached --
+        // the telemetry header is the payload, not the response status.
+        print("New Relic: Telemetry data sent (server returned \(httpResponse.statusCode)).")
+        if debug, let data = data, let responseString = String(data: data, encoding: .utf8) {
+            print("Response body: \(responseString)")
+        }
+    }
+    task.resume()
+    semaphore.wait()
+
+    print("New Relic: New Relic currently supports source map files up to 200MB. The source map for this build exceeds that limit.")
+    print("New Relic: JavaScript errors for this build will not be symbolicated.")
+}
+
+// MARK: - Region Parsing
+
+// Parses a region prefix (e.g. "eu01", "jp01") from a New Relic app token.
+// The token format is "<region>x...x<key>". Returns nil if no region prefix is present (US).
+func parseRegionFromAppToken(_ token: String) -> String? {
+    let range = NSRange(location: 0, length: token.utf16.count)
+    guard let regex = try? NSRegularExpression(pattern: "^.+?x"),
+          let match = regex.firstMatch(in: token, options: [], range: range),
+          let swiftRange = Range(match.range, in: token) else {
+        return nil
+    }
+    let raw = String(token[swiftRange])
+    guard let lastNonX = raw.lastIndex(where: { $0 != "x" }) else {
+        return nil
+    }
+    let trimmed = String(raw[...lastNonX])
+    return trimmed.isEmpty ? nil : trimmed
+}
+
+// Maps a parsed region prefix to the symbol-ingest-api host.
+// e.g. "eu01" -> https://symbol-ingest-api.service.eu.newrelic.com
+//      "jp01" -> https://symbol-ingest-api.service.jp.newrelic.com
+// The region family is the prefix stripped of trailing digits (eu01 -> eu).
+func regionAwareURL(forAppToken token: String) -> String? {
+    guard let region = parseRegionFromAppToken(token) else { return nil }
+    var regionFamily = region.lowercased()
+    while let last = regionFamily.last, last.isNumber {
+        regionFamily.removeLast()
+    }
+    guard !regionFamily.isEmpty else { return nil }
+    return "https://symbol-ingest-api.service.\(regionFamily).newrelic.com"
 }
 
 // MARK: - Extensions

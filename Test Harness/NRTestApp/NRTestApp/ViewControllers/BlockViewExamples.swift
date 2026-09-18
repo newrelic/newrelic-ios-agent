@@ -505,3 +505,188 @@ class BlockViewPropagationTestController: UIViewController {
         }
     }
 }
+
+// MARK: - Sign-Out Crash Repro (NR-566282)
+//
+// Reproduces the customer flow that previously crashed Session Replay:
+//   1. A "logged-in" screen builds a dense view tree where every UIView has an
+//      explicit borderColor + backgroundColor on its CALayer.
+//   2. The user taps Sign Out, which swaps the window's rootViewController in a
+//      tight loop. Each swap deallocates the entire previous tree, including
+//      every layer's backing CGColor.
+//   3. Session Replay's once-per-second capture pass walks the tree on the
+//      main thread and tries to read those same colors. Before NR-566282 this
+//      resulted in EXC_BAD_ACCESS inside CGColorSpaceGetModel /
+//      UIColor.init(cgColor:). With the safeColor guards, autoreleasepool,
+//      and NRMAExceptionHandler.safelyRun backstop in place the capture either
+//      sees the new tree or drops a single frame — no crash.
+//
+// To exercise the fix:
+//   1. Run NRTestApp with Session Replay enabled (see AppDelegate config).
+//   2. Open this VC from the main menu ("Sign-Out Crash Repro").
+//   3. Tap "Sign Out (Repro)" and watch the device log: no EXC_BAD_ACCESS.
+//      You may see "Session replay frame skipped after NSException: ..."
+//      lines from NRMASessionReplay.takeFrame() — those are the backstop
+//      doing its job.
+
+#if os(iOS)
+final class SignOutCrashReproViewController: UIViewController {
+
+    private let statusLabel = UILabel()
+    private let signOutButton = UIButton(type: .system)
+
+    /// How many times the rootViewController is swapped per Sign-Out tap.
+    /// Tuned to a value that reliably overlapped with at least one Session
+    /// Replay capture pass during local testing.
+    private let swapCount = 30
+    /// Delay between swaps. Short enough to land inside one SR tick, long
+    /// enough to allow the runloop to fire layout / deallocation.
+    private let swapInterval: TimeInterval = 0.05
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        title = "Sign-Out Crash Repro"
+        view.backgroundColor = .systemBackground
+
+        buildDenseColoredTree()
+        installSignOutButton()
+        installStatusLabel()
+    }
+
+    // MARK: Tree of layered, colored views
+
+    /// Builds 4 levels × 5 children per level of nested UIViews, each with a
+    /// distinct random borderColor + backgroundColor set directly on the
+    /// CALayer. The customer crash signature is specifically a CGColor read
+    /// off a deallocating layer, so the more layers-with-colors the better.
+    private func buildDenseColoredTree() {
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.backgroundColor = .systemGray6
+        view.addSubview(container)
+        NSLayoutConstraint.activate([
+            container.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            container.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            container.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            container.heightAnchor.constraint(equalToConstant: 360)
+        ])
+
+        addColoredChildren(into: container, depth: 4, fanOut: 5)
+    }
+
+    private func addColoredChildren(into parent: UIView, depth: Int, fanOut: Int) {
+        guard depth > 0 else { return }
+        for i in 0..<fanOut {
+            let child = UIView()
+            child.translatesAutoresizingMaskIntoConstraints = false
+            child.backgroundColor = UIColor(
+                red: .random(in: 0...1),
+                green: .random(in: 0...1),
+                blue: .random(in: 0...1),
+                alpha: 1.0
+            )
+            // Set borderColor directly on the layer — this is the exact path
+            // ViewDetails.init(view:) reads from.
+            child.layer.borderWidth = 1.0
+            child.layer.borderColor = UIColor(
+                red: .random(in: 0...1),
+                green: .random(in: 0...1),
+                blue: .random(in: 0...1),
+                alpha: 1.0
+            ).cgColor
+            child.layer.cornerRadius = 4
+
+            parent.addSubview(child)
+            NSLayoutConstraint.activate([
+                child.topAnchor.constraint(equalTo: parent.topAnchor, constant: CGFloat(i) * 4 + 8),
+                child.leadingAnchor.constraint(equalTo: parent.leadingAnchor, constant: CGFloat(i) * 4 + 8),
+                child.trailingAnchor.constraint(equalTo: parent.trailingAnchor, constant: -(CGFloat(i) * 4 + 8)),
+                child.bottomAnchor.constraint(equalTo: parent.bottomAnchor, constant: -(CGFloat(i) * 4 + 8))
+            ])
+
+            addColoredChildren(into: child, depth: depth - 1, fanOut: fanOut)
+        }
+    }
+
+    // MARK: Sign-out flow that triggers the race
+
+    private func installSignOutButton() {
+        signOutButton.translatesAutoresizingMaskIntoConstraints = false
+        signOutButton.setTitle("Sign Out (Repro)", for: .normal)
+        signOutButton.titleLabel?.font = .preferredFont(forTextStyle: .headline)
+        signOutButton.accessibilityIdentifier = "sign_out_repro_button"
+        signOutButton.addTarget(self, action: #selector(didTapSignOut), for: .touchUpInside)
+        view.addSubview(signOutButton)
+        NSLayoutConstraint.activate([
+            signOutButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            signOutButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -32)
+        ])
+    }
+
+    private func installStatusLabel() {
+        statusLabel.translatesAutoresizingMaskIntoConstraints = false
+        statusLabel.numberOfLines = 0
+        statusLabel.textAlignment = .center
+        statusLabel.font = .preferredFont(forTextStyle: .footnote)
+        statusLabel.text = "Tap Sign Out to swap the rootViewController \(swapCount)× in \(Int(Double(swapCount) * swapInterval * 1000)) ms while Session Replay is recording."
+        view.addSubview(statusLabel)
+        NSLayoutConstraint.activate([
+            statusLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+            statusLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+            statusLabel.bottomAnchor.constraint(equalTo: signOutButton.topAnchor, constant: -16)
+        ])
+    }
+
+    @objc private func didTapSignOut() {
+        guard let window = view.window else { return }
+        signOutButton.isEnabled = false
+        cycleSignOut(window: window, remaining: swapCount)
+    }
+
+    /// Replaces the window's rootViewController repeatedly. Each replacement
+    /// deallocates the previous controller's entire view tree (and every
+    /// layer's CGColor along with it) on the main thread — exactly the
+    /// situation that produced the customer's EXC_BAD_ACCESS.
+    private func cycleSignOut(window: UIWindow, remaining: Int) {
+        guard remaining > 0 else {
+            // Final state: a fresh, simple "logged out" screen so the test app
+            // is in a recognisable state when the loop ends.
+            let final = SignedOutPlaceholderViewController()
+            window.rootViewController = UINavigationController(rootViewController: final)
+            return
+        }
+
+        let next = SignOutCrashReproViewController()
+        window.rootViewController = UINavigationController(rootViewController: next)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + swapInterval) { [weak self, weak window] in
+            guard let self = self, let window = window else { return }
+            self.cycleSignOut(window: window, remaining: remaining - 1)
+        }
+    }
+}
+
+/// Tiny placeholder shown when the swap loop finishes. Gives the user a clear
+/// "we made it through without crashing" indicator.
+final class SignedOutPlaceholderViewController: UIViewController {
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        title = "Signed Out"
+        view.backgroundColor = .systemBackground
+
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.text = "Sign-out repro completed without crashing."
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        label.font = .preferredFont(forTextStyle: .body)
+        view.addSubview(label)
+        NSLayoutConstraint.activate([
+            label.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            label.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            label.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+            label.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24)
+        ])
+    }
+}
+#endif

@@ -14,6 +14,9 @@ struct SwiftUIContentView: View {
                     NavigationLink(destination: ButtonsView()) {
                         Text("Buttons")
                     }
+                    NavigationLink(destination: CoreDataView()) {
+                        Text("Core Data")
+                    }
                     NavigationLink(destination: TextFieldsView()) {
                         Text("Text Fields")
 
@@ -87,10 +90,18 @@ struct SwiftUIContentView: View {
                         Text("Tinted SF Symbols")
                     }
                     if #available(iOS 16.0, *) {
-                        
+
                         NavigationLink(destination: NavigationStackView()) {
                             Text("NavigationStack")
                         }
+                    }
+                    if #available(iOS 14.0, *) {
+                        NavigationLink(destination: MapViewSwiftUI()) {
+                            Text("Map View")
+                        }
+                    }
+                    NavigationLink(destination: NavigationLinkLabelLayoutTestCase()) {
+                        Text("NavigationLink Labels")
                     }
                 }
                 .navigationBarTitle("SwiftUI Elements")

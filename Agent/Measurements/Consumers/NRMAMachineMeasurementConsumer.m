@@ -30,8 +30,22 @@
 
 - (void) consumeMeasurements:(NSDictionary *)measurements
 {
-    NSSet* measurementSet = [measurements objectForKey:[NSNumber numberWithInt:self.measurementType]];
-    for (NRMANamedValueMeasurement* measurement in measurementSet.allObjects) {
+    if (![measurements isKindOfClass:[NSDictionary class]]) {
+        return;
+    }
+    id measurementSet = [measurements objectForKey:[NSNumber numberWithInt:self.measurementType]];
+    if (![measurementSet respondsToSelector:@selector(allObjects)]) {
+        return;
+    }
+    // Defense-in-depth: snapshot inside a guard so a set mutated mid-enumeration on
+    // another thread is skipped rather than crashing on a freed element.
+    NSArray* snapshot = nil;
+    @try {
+        snapshot = [measurementSet allObjects];
+    } @catch (NSException* exception) {
+        return;
+    }
+    for (NRMANamedValueMeasurement* measurement in snapshot) {
         [self consumeMeasurement:measurement];
     }
 }
