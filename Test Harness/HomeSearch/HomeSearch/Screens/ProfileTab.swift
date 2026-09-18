@@ -62,7 +62,7 @@ struct ProfileTab: View {
                         Label("Debug info", systemImage: "ladybug")
                     }
                 } footer: {
-                    Text("Debug info opts out of view tracking, so it should never appear in MobileView data.")
+                    Text("Debug info carries no MobileView modifier, so it should never appear in MobileView data.")
                 }
             }
             .navigationTitle("Profile")

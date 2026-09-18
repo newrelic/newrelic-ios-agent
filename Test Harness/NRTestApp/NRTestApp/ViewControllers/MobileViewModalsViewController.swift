@@ -28,9 +28,9 @@ class MobileViewModalsViewController: UIViewController {
 
     // MARK: - MobileViews hooks
 
-    @objc func nrMobileViewName() -> String? {
-        "Modals (UIKit)"
-    }
+//    @objc func nrMobileViewName() -> String? {
+//        "Modals (UIKit)"
+//    }
 
     // MARK: - Lifecycle counters
     //
@@ -202,9 +202,9 @@ class MobileViewPresentedModalViewController: UIViewController, UIPopoverPresent
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
-    @objc func nrMobileViewName() -> String? {
-        "Modals · Presented \(styleName)"
-    }
+//    @objc func nrMobileViewName() -> String? {
+//        "Modals · Presented \(styleName)"
+//    }
 
     @objc func nrMobileViewAttributes() -> [String: Any]? {
         ["presentationStyle": styleName, "presentedModally": true]

@@ -10,9 +10,9 @@ import UIKit
 class UtilitiesViewController: UIViewController {
     var viewModel = UtilViewModel()
     
-    @objc func nrMobileViewName() -> String? {
-        "UtilitiesViewController"
-    }
+//    @objc func nrMobileViewName() -> String? {
+//        "UtilitiesViewController"
+//    }
     
     override func viewDidLoad() {
         super.viewDidLoad()

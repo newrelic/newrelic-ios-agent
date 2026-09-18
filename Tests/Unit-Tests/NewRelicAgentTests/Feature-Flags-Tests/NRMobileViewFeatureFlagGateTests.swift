@@ -35,7 +35,7 @@ final class NRMobileViewFeatureFlagGateTests: XCTestCase {
 
         XCTAssertFalse(NRMobileViewGate.isFeatureEnabled,
                        "AutomaticMobileViews must be reported disabled after disableFeatures:")
-        XCTAssertFalse(NRMobileViewGate.shouldRecord(ignored: false, viewName: "CheckoutView"),
+        XCTAssertFalse(NRMobileViewGate.shouldRecord(viewName: "CheckoutView"),
                        "SwiftUI MobileView must NOT record while AutomaticMobileViews is disabled")
     }
 
@@ -44,15 +44,18 @@ final class NRMobileViewFeatureFlagGateTests: XCTestCase {
 
         XCTAssertTrue(NRMobileViewGate.isFeatureEnabled,
                       "AutomaticMobileViews must be reported enabled after enableFeatures:")
-        XCTAssertTrue(NRMobileViewGate.shouldRecord(ignored: false, viewName: "CheckoutView"),
+        XCTAssertTrue(NRMobileViewGate.shouldRecord(viewName: "CheckoutView"),
                       "SwiftUI MobileView must record while AutomaticMobileViews is enabled")
     }
 
-    // Even with the flag on, an explicitly ignored view must never record.
-    func testIgnoredSwiftUIViewIsNotRecordedEvenWhenEnabled() {
+    // The flag is the only switch. There is no per-view opt-out to override it: the `ignored:`
+    // parameter on .NRMobileView(...) is gone, because an attached-but-silent modifier is
+    // indistinguishable in the data from a modifier that was never attached. Not tracking a screen
+    // means not attaching the modifier.
+    func testSystemContainersAreStillSkippedWhenEnabled() {
         NewRelic.enableFeatures(NRMAFeatureFlags.NRFeatureFlag_AutomaticMobileViews)
 
-        XCTAssertFalse(NRMobileViewGate.shouldRecord(ignored: true, viewName: "CheckoutView"),
-                       "A view marked ignored must not record even when the flag is on")
+        XCTAssertFalse(NRMobileViewGate.shouldRecord(viewName: "UITabBarController"),
+                       "the agent's own class-prefix skip list is not a customer-facing opt-out, and stays")
     }
 }

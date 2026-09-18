@@ -28,9 +28,9 @@ class ViewsAndInteractionsViewController: UIViewController {
 
     // MARK: - MobileViews hooks
 
-    @objc func nrMobileViewName() -> String? {
-        Self.screenName
-    }
+//    @objc func nrMobileViewName() -> String? {
+//        Self.screenName
+//    }
 
     private static let screenName = "Views & Interactions (UIKit)"
 

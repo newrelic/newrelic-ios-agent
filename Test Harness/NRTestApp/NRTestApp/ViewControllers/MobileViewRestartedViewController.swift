@@ -2,36 +2,35 @@
 //  MobileViewRestartedViewController.swift
 //  NRTestApp
 //
-//  Exercises two documented behaviors that nothing else in the harness reaches: the `restarted`
-//  attribute, and the empty-string return from `nrMobileViewName()`.
+//  Exercises two documented behaviors that nothing else in the harness reaches: what a *second*
+//  visit to the same view-controller instance reports, and the empty-string return from
+//  `nrMobileViewName()`.
 //
 //  ─── Why a retained instance ─────────────────────────────────────────────────────────────────
 //
-//  `restarted` is per *instance*, not per class or per view name — the tracker records it as an
-//  associated object on the view controller itself. An ordinary push → pop → push allocates a fresh
-//  view controller each time, so each one is on its first appearance and every event reports
-//  restarted = false. This screen therefore holds ONE child instance and pushes that same object
-//  repeatedly, which is what a re-appearance actually looks like to the tracker.
+//  Whether a screen was rebuilt is per *instance*: the tracker keeps the load timestamp as an
+//  associated object on the view controller itself, and clears it when the view goes away. An
+//  ordinary push → pop → push allocates a fresh view controller each time, so viewDidLoad always
+//  runs and every visit has a real load span. This screen therefore holds ONE child instance and
+//  pushes that same object repeatedly, which is what a re-visit actually looks like to the tracker.
 //
-//  What to expect from the child's events, per push:
+//  What to expect from the child's events, per push (one event per visit, at viewDidDisappear:):
 //
-//    push #1  appear     no `restarted` key at all — the UIKit producer only puts it on disappear
-//             disappear  restarted = false, loadTime = the real viewDidLoad → viewDidAppear span
+//    push #1  loadTime = the real viewDidLoad → viewDidAppear span, plus timeVisible
 //
-//    push #2+ appear     `loadTime` is OMITTED, not zero. viewDidLoad does not run again, and the
-//                        load timestamp was cleared on the previous disappear, so there is no span
-//                        to report — "never observed" rather than "took no time". For the same
-//                        reason no MobileView/<viewName> segment is added to the covering
-//                        interaction's breakdown on a re-appearance.
-//             disappear  restarted = true, loadTime = 0
+//    push #2+ `loadTime` is OMITTED, not zero, and `loadTimeUnavailable` says why. viewDidLoad does
+//             not run again and the load timestamp was cleared on the previous disappear, so there
+//             is no span to report — "never observed" rather than "took no time". For the same
+//             reason no MobileView/<viewName> segment is added to the covering interaction's
+//             breakdown on a re-visit.
 //
 //  ─── Why an empty name ──────────────────────────────────────────────────────────────────────
 //
-//  `nrMobileViewName()` has three distinct return values and the harness only covered two of them:
-//  a non-empty string renames the view, and nil ignores it entirely (see
-//  MobileViewIgnoredViewController). An empty string is the third: it falls back to the demangled
-//  class name, the pre-hook behavior. The second child here returns "" so that fallback is
-//  observable — its events should arrive named "MobileViewLegacyNamedViewController".
+//  `nrMobileViewName()` renames a view and nothing else. A non-empty string is the name; nil and ""
+//  both fall back to the demangled class name (nil used to mean "ignore this view entirely" -- see
+//  MobileViewNilNameViewController for that path now that it does not). The second child here
+//  returns "" so the fallback is observable — its events should arrive named
+//  "MobileViewLegacyNamedViewController".
 //
 
 #if os(iOS)
@@ -41,9 +40,9 @@ class MobileViewRestartedViewController: UIViewController {
 
     // MARK: - MobileViews hooks
 
-    @objc func nrMobileViewName() -> String? {
-        "Restarted (UIKit)"
-    }
+//    @objc func nrMobileViewName() -> String? {
+//        "Restarted (UIKit)"
+//    }
 
     // MARK: - The children
     //
@@ -74,8 +73,8 @@ class MobileViewRestartedViewController: UIViewController {
     @objc private func pushRetainedTapped() {
         pushCount += 1
         let expectation = pushCount == 1
-            ? "expect: appear carries a real loadTime; disappear restarted=false"
-            : "expect: appear omits loadTime (no reload); disappear restarted=true, loadTime=0"
+            ? "expect: one event on pop, carrying a real loadTime"
+            : "expect: one event on pop, loadTime omitted (no reload) with loadTimeUnavailable set"
         append("push #\(pushCount) of the same instance — \(expectation)")
         navigationController?.pushViewController(retainedChild, animated: true)
     }
@@ -126,10 +125,10 @@ class MobileViewRestartedViewController: UIViewController {
         intro.numberOfLines = 0
         intro.font = .preferredFont(forTextStyle: .callout)
         intro.text = """
-            `restarted` is tracked per view-controller instance, so pushing a freshly allocated \
-            screen always reports restarted = false. Push the retained child below more than once \
-            to see it flip to true — and to see loadTime disappear from the appear event, because \
-            viewDidLoad does not run a second time.
+            A screen's load span is tracked per view-controller instance, so a freshly allocated \
+            screen always reports a real loadTime. Push the retained child below more than once to \
+            see loadTime drop out of its event — viewDidLoad does not run a second time, so there \
+            is nothing to measure and `loadTimeUnavailable` says so.
             """
         stack.addArrangedSubview(intro)
 
@@ -137,7 +136,7 @@ class MobileViewRestartedViewController: UIViewController {
         stack.addArrangedSubview(readoutLabel)
 
         stack.addArrangedSubview(sectionHeader("Push the same instance again"))
-        stack.addArrangedSubview(button("Push retained child (restarted / loadTime)", #selector(pushRetainedTapped)))
+        stack.addArrangedSubview(button("Push retained child (re-visit / loadTime)", #selector(pushRetainedTapped)))
 
         stack.addArrangedSubview(sectionHeader("Empty nrMobileViewName() → class-name fallback"))
         stack.addArrangedSubview(button("Push legacy-named child (returns \"\")", #selector(pushLegacyNamedTapped)))
@@ -166,7 +165,7 @@ class MobileViewRestartedViewController: UIViewController {
         readoutLabel.text = """
             viewDidLoad     = \(retainedChild.loadCount)   (only ever 1 — the instance is reused)
             viewDidAppear   = \(retainedChild.appearCount)
-            expected restarted on next disappear = \(retainedChild.appearCount > 1)
+            expect loadTime on next event        = \(retainedChild.appearCount <= 1)
             """
     }
 
@@ -220,8 +219,8 @@ class MobileViewRestartedChildViewController: UIViewController {
         intro.translatesAutoresizingMaskIntoConstraints = false
         intro.text = """
             This is the same object each time. Go back and push again: viewDidLoad stays at 1, so on \
-            the second and later appearances the agent has no load span to report — the appear event \
-            omits loadTime entirely, and the disappear event reports restarted = true.
+            the second and later visits the agent has no load span to report — the event omits \
+            loadTime entirely and carries `loadTimeUnavailable` instead.
             """
         view.addSubview(intro)
         view.addSubview(label)

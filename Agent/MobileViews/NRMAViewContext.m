@@ -20,7 +20,6 @@ static NSString * const kNRAttr_previousView   = @"previousView";
 static NSString * const kNRAttr_previousViewId = @"previousViewInstanceId";
 static NSString * const kNRAttr_currentView    = @"currentView";
 static NSString * const kNRAttr_currentViewId  = @"currentViewInstanceId";
-NSString * const kNRMAAttributeReappeared      = @"reappeared";
 
 // Upper bound on the visible-view stack. A producer can miss a disappearance (a view deallocated
 // without SwiftUI calling onDisappear, or the agent starting mid-session), and an unbounded stack
@@ -74,6 +73,11 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
 
     NSString *_previousViewName;
     NSString *_previousViewInstanceId;
+
+    // Attributes the customer passed to -setCurrentManualView:attributes: for the *current* manual
+    // view. Held here because they belong on that view's MobileView event, and that event is not
+    // emitted until the view is closed out -- by the next setCurrentView: or by a background flush.
+    NSDictionary<NSString *, id> *_currentViewCustomAttributes;
 
     // Views the automatic producers have reported as appeared and not yet as disappeared, oldest
     // first. Only used to decide whether a disappearance uncovered something; _currentViewName
@@ -151,6 +155,9 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     _currentViewLoadStartTime = loadStartTime ? loadStartTime.doubleValue : 0;
     _currentViewHasLoadStart  = (loadStartTime != nil);
     _currentViewSource      = NRMAViewSourceAutomatic;
+    // Automatic producers carry their own custom attributes; anything left here belongs to a manual
+    // view that is no longer current and must not leak onto this one's event.
+    _currentViewCustomAttributes = nil;
     [self pushVisibleViewLocked:name instanceId:instanceId appearTime:appearTime platform:platform];
     os_unfair_lock_unlock(&_lock);
     [self persistCurrentReferrerState];
@@ -198,12 +205,10 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
 - (void)viewDidDisappearNamed:(NSString *)name instanceId:(NSString *)instanceId {
     if (instanceId.length == 0) { return; }
 
-    // Everything the synthesized event needs is captured under the lock and the event is recorded
-    // after releasing it: -recordCustomEvent: runs the analytics stack, which must never be entered
-    // while holding this non-recursive lock.
+    // Captured under the lock and acted on after releasing it: -persistCurrentReferrerState writes
+    // to disk, which must not happen while holding this non-recursive lock.
     NSString *resurfacedName       = nil;
     NSString *resurfacedInstanceId = nil;
-    NSString *resurfacedPlatform   = nil;
     NSString *departedName         = nil;
     NSString *departedInstanceId   = nil;
 
@@ -230,7 +235,6 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
         if (uncovered.name.length > 0 && ![uncovered.name isEqualToString:name]) {
             resurfacedName       = uncovered.name;
             resurfacedInstanceId = [[NSUUID UUID] UUIDString];
-            resurfacedPlatform   = uncovered.platform;
             departedName         = [name copy];
             departedInstanceId   = [instanceId copy];
 
@@ -261,26 +265,16 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
 
     if (resurfacedName == nil) { return; }
 
+    // No event: MobileView is one event per visit, emitted by the producer that owns the view when
+    // that view goes away. This method observes a screen becoming visible again, not a visit
+    // ending, so it has nothing to report -- what it does is keep currentView / previousView
+    // truthful, so the *next* view's referrer and any breadcrumb recorded meanwhile name the screen
+    // the user is actually looking at.
+    //
+    // The consequence, accepted deliberately: a SwiftUI view popped back to reports no event for
+    // that second visit. SwiftUI does not re-fire its onAppear (the root was never torn down) and
+    // its onDisappear already fired, so no producer will ever close it out.
     [self persistCurrentReferrerState];
-
-    NRMAMobileViewFields *fields = [NRMAMobileViewFields new];
-    fields.viewName   = resurfacedName;
-    fields.instanceId = resurfacedInstanceId;
-    // The referrer is the view whose departure uncovered this one, which only this method
-    // knows -- so it is passed explicitly rather than read back out of the context.
-    fields.previousView           = departedName;
-    fields.previousViewInstanceId = departedInstanceId;
-    // Distinguishes this from an observed appearance so consumers can treat back-navigation
-    // separately -- and so it is obvious why there is no loadTime.
-    fields.reappeared = YES;
-    // An empty platform string omits uiPlatform, which is what an uncovered entry recorded
-    // without one needs.
-    fields.platform   = resurfacedPlatform;
-    // Deliberately no loadTime: nothing was constructed or laid out, the screen was merely
-    // uncovered. Zeroing it would drag load-time aggregates toward zero. Leaving both
-    // loadTimeMs and loadTimeUnavailable unset omits the pair entirely.
-
-    [NRMAMobileViewRecorder recordAppeared:fields];
 }
 
 #pragma mark - Manual producer
@@ -307,12 +301,16 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     BOOL outgoingWasManual   = (_currentViewSource == NRMAViewSourceManual);
     NSString *beforeOutgoing = _previousViewName;      // referrer of the outgoing view
     NSString *beforeOutgoingId = _previousViewInstanceId;
+    // The outgoing view's own attributes, which ride on the event emitted for it below.
+    NSDictionary *outgoingCustom = _currentViewCustomAttributes;
 
     _previousViewName       = _currentViewName;
     _previousViewInstanceId = _currentViewInstanceId;
     _currentViewName        = [name copy];
     _currentViewInstanceId  = newInstanceId;
     _currentViewAppearTime  = now;
+    // Kept until this view is closed out; that is the event they belong on.
+    _currentViewCustomAttributes = [attributes copy];
 
     // Consume any pending -beginManualViewLoad, but only if it is still plausibly about *this*
     // screen. A begin with no matching set would otherwise attach itself to whatever the customer
@@ -328,26 +326,20 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     os_unfair_lock_unlock(&_lock);
     [self persistCurrentReferrerState];
 
-    // Close the outgoing view only if the manual API opened it; auto views close via viewDidDisappear.
+    // The only event this call emits: the one for the view being *left*, now that its visit is over
+    // and its timeVisible is knowable. The view being set records nothing yet -- it is closed out by
+    // the next setCurrentView: or by -flushCurrentManualViewOnBackground.
+    //
+    // Only if the manual API opened it; auto views close via viewDidDisappear.
     if (outgoingName.length > 0 && outgoingWasManual) {
         double timeVisibleMs = [NRMAViewContext millisecondsBetween:outgoingAppear and:now];
         [self recordMobileView:outgoingName
                     instanceId:outgoingId
                   previousView:beforeOutgoing
         previousViewInstanceId:beforeOutgoingId
-                      appeared:NO
                    timeVisible:@(timeVisibleMs)
-                   customAttrs:nil];
+                   customAttrs:outgoingCustom];
     }
-
-    // Open the new manual view. previousView = the view we just left.
-    [self recordMobileView:name
-                instanceId:newInstanceId
-              previousView:outgoingName
-    previousViewInstanceId:outgoingId
-                  appeared:YES
-               timeVisible:nil
-               customAttrs:attributes];
 
     [[NRMAViewTiming sharedInstance] recordInitialDisplayForCurrentView];
 }
@@ -365,6 +357,7 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     CFAbsoluteTime appear = _currentViewAppearTime;
     NSString *previous    = _previousViewName;
     NSString *previousId  = _previousViewInstanceId;
+    NSDictionary *custom  = _currentViewCustomAttributes;
 
     // Current view is done; it becomes the previous view.
     _previousViewName       = _currentViewName;
@@ -374,6 +367,7 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     _currentViewLoadStartTime = 0;
     _currentViewHasLoadStart  = NO;
     _currentViewSource      = NRMAViewSourceNone;
+    _currentViewCustomAttributes = nil;
     os_unfair_lock_unlock(&_lock);
     [self persistCurrentReferrerState];
 
@@ -382,36 +376,31 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
                 instanceId:instanceId
               previousView:previous
     previousViewInstanceId:previousId
-                  appeared:NO
                timeVisible:@(timeVisibleMs)
-               customAttrs:nil];
+               customAttrs:custom];
 }
 
-// Reports a MobileView for the manual producer. The recorder keeps reserved keys winning over
-// caller-supplied custom attributes, so the event schema stays stable.
+// Reports the MobileView for one completed manual visit. The recorder keeps reserved keys winning
+// over caller-supplied custom attributes, so the event schema stays stable.
 - (void)recordMobileView:(NSString *)name
               instanceId:(NSString *)instanceId
             previousView:(nullable NSString *)previousView
   previousViewInstanceId:(nullable NSString *)previousViewInstanceId
-                appeared:(BOOL)appeared
              timeVisible:(nullable NSNumber *)timeVisibleMs
              customAttrs:(nullable NSDictionary<NSString *, id> *)customAttrs {
     NRMAMobileViewFields *fields = [NRMAMobileViewFields new];
     fields.viewName      = name;
     fields.viewClass     = name;   // manual views have no class; name is the identity
     fields.instanceId    = instanceId ?: @"";
-    fields.platform      = kNRUIPlatformManual;
+    fields.uiFramework      = kNRUIPlatformManual;
     fields.timeVisibleMs = timeVisibleMs;
     fields.custom        = customAttrs;
-    // The manual producer tracks its own navigation, so it names the referrer directly.
+    // The manual producer tracks its own navigation, so it names the referrer directly -- and it is
+    // the referrer this view was *entered* from, captured when setCurrentView: made it current.
     fields.previousView           = previousView;
     fields.previousViewInstanceId = previousViewInstanceId;
 
-    if (appeared) {
-        [NRMAMobileViewRecorder recordAppeared:fields];
-    } else {
-        [NRMAMobileViewRecorder recordDisappeared:fields];
-    }
+    [NRMAMobileViewRecorder record:fields];
 }
 
 #pragma mark - Referrer accessors

@@ -14,7 +14,7 @@
 //  "Update Record" and carries its purpose as a custom *attribute* rather than baking it into the
 //  name — view name is a facet, and unbounded names make a facet useless.
 //
-//  The `uiPlatform` split is worth keeping in mind when reading these: the first eight names come
+//  The `uiFramework` split is worth keeping in mind when reading these: the first eight names come
 //  from UIKit view controllers, the last four from the SwiftUI section, mirroring the Android app's
 //  split between its Activities/Fragments and its ComposeActivity.
 //

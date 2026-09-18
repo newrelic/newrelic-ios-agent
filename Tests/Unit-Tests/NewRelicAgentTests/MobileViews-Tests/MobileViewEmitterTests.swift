@@ -7,6 +7,10 @@
 //  `navigationKind` reached only the tab producers, `agentName` only some, and the
 //  loadTime-vs-loadTimeUnavailable rule was reimplemented four times.
 //
+//  A record describes one whole visit, emitted when the view goes away. There is no appear/disappear
+//  pair and no `appeared` flag: `loadTime` and the referrer are captured at appear time by the
+//  producer and handed to the record it builds at the end.
+//
 //  Copyright © 2026 New Relic. All rights reserved.
 //
 
@@ -27,50 +31,60 @@ final class MobileViewEmitterTests: XCTestCase {
         super.tearDown()
     }
 
-    private func appearRecord(load: NRViewLoadOutcome? = nil,
-                              custom: [String: Any]? = nil) -> MobileViewRecord {
+    private func visitRecord(load: NRViewLoadOutcome? = nil,
+                             custom: [String: Any]? = nil) -> MobileViewRecord {
         MobileViewRecord(viewName: "CheckoutView",
                          viewClass: "MyApp.CheckoutView",
                          instanceId: "instance-1",
                          platform: .swiftUI,
-                         phase: .appeared,
                          load: load,
                          custom: custom)
     }
 
-    // MARK: - Identity and phase
+    // MARK: - Identity
 
-    func testAppearedWritesTheIdentityAttributesAndAppearedTrue() {
-        let attrs = appearRecord().attributes()
+    func testARecordWritesTheIdentityAttributes() {
+        let attrs = visitRecord().attributes()
 
         XCTAssertEqual(attrs["viewName"] as? String, "CheckoutView")
         XCTAssertEqual(attrs["viewClass"] as? String, "MyApp.CheckoutView")
         XCTAssertEqual(attrs["viewInstanceId"] as? String, "instance-1")
-        XCTAssertEqual(attrs["uiPlatform"] as? String, "SwiftUI")
-        XCTAssertEqual(attrs["appeared"] as? NSNumber, NSNumber(value: true))
+        XCTAssertEqual(attrs["uiFramework"] as? String, "SwiftUI")
     }
 
-    func testDisappearedWritesAppearedFalse() {
-        var record = appearRecord()
-        record.phase = .disappeared
+    // MobileView is one event per visit now, emitted when the view goes away. `appeared` was the
+    // flag that told the two halves apart; with one event it carries no information, so it is not
+    // written at all rather than written as a constant.
+    func testNoRecordWritesTheAppearedFlag() {
+        var record = visitRecord(load: .measured(10))
+        record.timeVisibleMs = 500
 
-        XCTAssertEqual(record.attributes()["appeared"] as? NSNumber, NSNumber(value: false))
+        XCTAssertNil(record.attributes()["appeared"],
+                     "one event per visit means `appeared` carries no information")
     }
 
-    // An absent platform must read as absent, not as an empty string. The synthesized
-    // re-appearance is the producer that has none, when the uncovered entry was recorded
-    // without one.
+    // `restarted` is retired for the same reason plus one of its own: it described the view
+    // *instance*, so it answered "has this object been on screen before" rather than "has the user
+    // seen this screen before", which is what anyone reading it assumed.
+    func testNoRecordWritesTheRestartedFlag() {
+        var record = visitRecord(load: .measured(10))
+        record.timeVisibleMs = 500
+
+        XCTAssertNil(record.attributes()["restarted"])
+    }
+
+    // An absent platform must read as absent, not as an empty string.
     func testNilPlatformOmitsUiPlatformRatherThanEmittingEmptyString() {
-        var record = appearRecord()
+        var record = visitRecord()
         record.platform = nil
 
-        XCTAssertNil(record.attributes()["uiPlatform"])
+        XCTAssertNil(record.attributes()["uiFramework"])
     }
 
     // MARK: - The loadTime rule
 
     func testMeasuredLoadWritesLoadTimeAndNotTheReason() {
-        let attrs = appearRecord(load: .measured(123.5)).attributes()
+        let attrs = visitRecord(load: .measured(123.5)).attributes()
 
         XCTAssertEqual(attrs["loadTime"] as? NSNumber, NSNumber(value: 123.5))
         XCTAssertNil(attrs["loadTimeUnavailable"],
@@ -78,7 +92,7 @@ final class MobileViewEmitterTests: XCTestCase {
     }
 
     func testUnavailableLoadWritesTheReasonAndNotLoadTime() {
-        let attrs = appearRecord(load: .unavailable(.notRebuilt)).attributes()
+        let attrs = visitRecord(load: .unavailable(.notRebuilt)).attributes()
 
         XCTAssertEqual(attrs["loadTimeUnavailable"] as? String, "notRebuilt")
         XCTAssertNil(attrs["loadTime"],
@@ -86,7 +100,7 @@ final class MobileViewEmitterTests: XCTestCase {
     }
 
     func testNoLoadOutcomeOmitsBothKeys() {
-        let attrs = appearRecord(load: nil).attributes()
+        let attrs = visitRecord(load: nil).attributes()
 
         XCTAssertNil(attrs["loadTime"])
         XCTAssertNil(attrs["loadTimeUnavailable"])
@@ -107,8 +121,7 @@ final class MobileViewEmitterTests: XCTestCase {
     // screen view is the consumer's decision rather than one the agent makes.
     func testAShortLifetimeIsReportedVerbatimAndNotClassified() {
         for platform in [NRViewPlatform.uiKit, .swiftUI, .manual] {
-            var record = appearRecord()
-            record.phase = .disappeared
+            var record = visitRecord()
             record.platform = platform
             record.timeVisibleMs = 1
 
@@ -123,8 +136,7 @@ final class MobileViewEmitterTests: XCTestCase {
     // A zero-millisecond visit is the extreme of the same rule: still an event, still no
     // threshold applied. Distinguishable from "not measured" because the key is present.
     func testAZeroLifetimeStillReportsTimeVisible() {
-        var record = appearRecord()
-        record.phase = .disappeared
+        var record = visitRecord()
         record.timeVisibleMs = 0
 
         let attrs = record.attributes()
@@ -133,7 +145,7 @@ final class MobileViewEmitterTests: XCTestCase {
     }
 
     func testNoTimeVisibleOmitsTimeVisible() {
-        let attrs = appearRecord().attributes()
+        let attrs = visitRecord().attributes()
 
         XCTAssertNil(attrs["timeVisible"])
         XCTAssertNil(attrs["churn"])
@@ -141,26 +153,8 @@ final class MobileViewEmitterTests: XCTestCase {
 
     // MARK: - Optional facts
 
-    func testRestartedIsOmittedWhenTheProducerCannotKnowIt() {
-        var record = appearRecord()
-        record.restarted = nil
-        XCTAssertNil(record.attributes()["restarted"])
-
-        record.restarted = true
-        XCTAssertEqual(record.attributes()["restarted"] as? NSNumber, NSNumber(value: true))
-    }
-
-    func testReappearedIsWrittenOnlyForASynthesizedAppearance() {
-        var record = appearRecord()
-        XCTAssertNil(record.attributes()["reappeared"])
-
-        record.reappeared = true
-        XCTAssertEqual(record.attributes()["reappeared"] as? NSNumber,
-                       NSNumber(value: true))
-    }
-
     func testNavigationKindIsWrittenOnlyWhenPresent() {
-        var record = appearRecord()
+        var record = visitRecord()
         XCTAssertNil(record.attributes()["navigationKind"])
 
         record.navigationKind = "tab"
@@ -170,7 +164,7 @@ final class MobileViewEmitterTests: XCTestCase {
     // MARK: - Referrer
 
     func testExplicitReferrerIsWritten() {
-        var record = appearRecord()
+        var record = visitRecord()
         record.referrer = .explicit(name: "CartView", instanceId: "instance-0")
 
         let attrs = record.attributes()
@@ -179,7 +173,7 @@ final class MobileViewEmitterTests: XCTestCase {
     }
 
     func testEmptyExplicitReferrerIsOmitted() {
-        var record = appearRecord()
+        var record = visitRecord()
         record.referrer = .explicit(name: "", instanceId: "")
 
         let attrs = record.attributes()
@@ -188,7 +182,7 @@ final class MobileViewEmitterTests: XCTestCase {
     }
 
     func testNoReferrerWritesNeitherKey() {
-        let attrs = appearRecord().attributes()
+        let attrs = visitRecord().attributes()
 
         XCTAssertNil(attrs["previousView"])
         XCTAssertNil(attrs["previousViewInstanceId"])
@@ -197,7 +191,7 @@ final class MobileViewEmitterTests: XCTestCase {
     // MARK: - Customer attributes
 
     func testCustomerAttributesArePreserved() {
-        let attrs = appearRecord(custom: ["cartValue": 42, "tier": "gold"]).attributes()
+        let attrs = visitRecord(custom: ["cartValue": 42, "tier": "gold"]).attributes()
 
         XCTAssertEqual(attrs["cartValue"] as? Int, 42)
         XCTAssertEqual(attrs["tier"] as? String, "gold")
@@ -209,17 +203,15 @@ final class MobileViewEmitterTests: XCTestCase {
             "viewName":       "spoofed",
             "viewClass":      "spoofed",
             "viewInstanceId": "spoofed",
-            "appeared":       NSNumber(value: false),
-            "uiPlatform":     "spoofed",
+            "uiFramework":     "spoofed",
             "loadTime":       NSNumber(value: 999),
         ]
-        let attrs = appearRecord(load: .measured(10), custom: hostile).attributes()
+        let attrs = visitRecord(load: .measured(10), custom: hostile).attributes()
 
         XCTAssertEqual(attrs["viewName"] as? String, "CheckoutView")
         XCTAssertEqual(attrs["viewClass"] as? String, "MyApp.CheckoutView")
         XCTAssertEqual(attrs["viewInstanceId"] as? String, "instance-1")
-        XCTAssertEqual(attrs["appeared"] as? NSNumber, NSNumber(value: true))
-        XCTAssertEqual(attrs["uiPlatform"] as? String, "SwiftUI")
+        XCTAssertEqual(attrs["uiFramework"] as? String, "SwiftUI")
         XCTAssertEqual(attrs["loadTime"] as? NSNumber, NSNumber(value: 10))
     }
 
@@ -244,8 +236,7 @@ final class MobileViewEmitterTests: XCTestCase {
         XCTAssertFalse(NRMobileViewEmitter.isEnabled(for: .uiKit))
     }
 
-    // A synthesized re-appearance has no platform, and only the automatic producers can
-    // trigger one.
+    // A record with no platform can only have come from an automatic producer.
     func testPlatformlessRecordIsGatedByTheAutomaticFlag() {
         XCTAssertFalse(NRMobileViewEmitter.isEnabled(for: nil))
 
@@ -281,7 +272,7 @@ final class MobileViewEmitterTests: XCTestCase {
     // MobileView dropped agentName at 6 of its 8 sites before this change; MobileViewTiming had a
     // single site that kept it. The asymmetry is preserved deliberately -- see the report.
     func testMobileViewRecordDoesNotCarryAgentName() {
-        XCTAssertNil(appearRecord().attributes()["agentName"])
+        XCTAssertNil(visitRecord().attributes()["agentName"])
     }
 
     // An absent view must read as absent, not as an empty string.
@@ -307,41 +298,37 @@ final class MobileViewEmitterTests: XCTestCase {
         fields.viewName = "CheckoutView"
         fields.viewClass = "MyApp.CheckoutViewController"
         fields.instanceId = "instance-1"
-        fields.platform = "UIKit"
+        fields.uiFramework = "UIKit"
         fields.loadTimeMs = NSNumber(value: 88)
-        fields.restarted = NSNumber(value: true)
         fields.custom = ["tier": "gold"]
 
-        guard let record = fields.record(phase: .appeared) else {
+        guard let record = fields.record() else {
             return XCTFail("fields with a view name must produce a record")
         }
         let attrs = record.attributes()
 
         XCTAssertEqual(attrs["viewName"] as? String, "CheckoutView")
         XCTAssertEqual(attrs["viewClass"] as? String, "MyApp.CheckoutViewController")
-        XCTAssertEqual(attrs["uiPlatform"] as? String, "UIKit")
+        XCTAssertEqual(attrs["uiFramework"] as? String, "UIKit")
         XCTAssertEqual(attrs["loadTime"] as? NSNumber, NSNumber(value: 88))
-        XCTAssertEqual(attrs["restarted"] as? NSNumber, NSNumber(value: true))
         XCTAssertEqual(attrs["tier"] as? String, "gold")
-        XCTAssertEqual(attrs["appeared"] as? NSNumber, NSNumber(value: true))
     }
 
     func testObjCFacadeRejectsAnEmptyViewName() {
         let fields = NRMAMobileViewFields()
         fields.instanceId = "instance-1"
 
-        XCTAssertNil(fields.record(phase: .appeared),
+        XCTAssertNil(fields.record(),
                      "a view with no name must not produce an event")
     }
 
-    // An unrecognized platform string omits uiPlatform rather than writing it through, which
-    // is what the synthesized re-appearance depends on when it has no platform to report.
+    // An unrecognized platform string omits uiFramework rather than writing it through.
     func testObjCFacadeTreatsAnUnknownPlatformAsAbsent() {
         let fields = NRMAMobileViewFields()
         fields.viewName = "CheckoutView"
-        fields.platform = ""
+        fields.uiFramework = ""
 
-        XCTAssertNil(fields.record(phase: .appeared)?.attributes()["uiPlatform"])
+        XCTAssertNil(fields.record()?.attributes()["uiFramework"])
     }
 
     func testObjCFacadeLoadTimeWinsOverAReasonWhenBothAreSet() {
@@ -350,7 +337,7 @@ final class MobileViewEmitterTests: XCTestCase {
         fields.loadTimeMs = NSNumber(value: 5)
         fields.loadTimeUnavailable = "notRebuilt"
 
-        let attrs = fields.record(phase: .appeared)!.attributes()
+        let attrs = fields.record()!.attributes()
         XCTAssertEqual(attrs["loadTime"] as? NSNumber, NSNumber(value: 5))
         XCTAssertNil(attrs["loadTimeUnavailable"])
     }
@@ -362,7 +349,7 @@ final class MobileViewEmitterTests: XCTestCase {
         fields.previousView = "CartView"
         fields.previousViewInstanceId = "instance-0"
 
-        let attrs = fields.record(phase: .appeared)!.attributes()
+        let attrs = fields.record()!.attributes()
         XCTAssertEqual(attrs["previousView"] as? String, "CartView")
         XCTAssertEqual(attrs["previousViewInstanceId"] as? String, "instance-0")
     }

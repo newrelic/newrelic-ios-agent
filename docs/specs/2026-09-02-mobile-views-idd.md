@@ -97,7 +97,7 @@ No new transport, no new ingest path, no new NRDB event namespace.
 ## 4. Non-goals and fast-follow
 
 - **Web-view page tracking** (WKWebView, Android WebView, RN WebView). Deferred, but the schema reserves
-  room for it: `uiPlatform` accepts a `WebView` value without a schema change.
+  room for it: `uiFramework` accepts a `WebView` value without a schema change.
 - **Opt-out API.** Every platform needs a "do not track this screen" hook for splash screens, modals, and
   tab containers. The capability is required (§6); iOS has settled on a shape, other agents have not.
 - **Coupling to Interactions.** Explicitly out of scope — see §5.6.
@@ -159,9 +159,9 @@ many it needs and how each hooks its runtime — that is CDD material. What ever
 
 | Requirement | Why it is initiative-level |
 | --- | --- |
-| Report appearance and disappearance as distinct events, each carrying the same `viewInstanceId` | The `appeared` discriminator (§5.3) is how dwell time is computed downstream |
+| Report one event per visit, when the view ceases to be visible | **Diverged on iOS — see the note below §5.3.** Previously: report appearance and disappearance as distinct events sharing a `viewInstanceId`, discriminated by `appeared` |
 | Funnel through the shared view context rather than emitting directly | Otherwise `previousView` diverges between producers |
-| Declare a `uiPlatform` value from the enumerated set | It is the discriminator every cross-platform query facets on |
+| Declare a `uiFramework` value from the enumerated set | It is the discriminator every cross-platform query facets on |
 | Be inert when its gating flag is off | Goal 5 |
 | Report every appear/disappear pair the runtime delivers, however brief | **Amended — supersedes the minimum-dwell rule this row previously carried.** A duration threshold makes the agent decide which appearances were real, and that decision is invisible in the resulting data and unrecoverable from it. Brief visits are reported with their true `timeVisible` and are filtered downstream by whoever wants them filtered. A brief disappearance therefore also synthesizes a `reappeared` row for whatever it uncovered, like any other |
 
@@ -174,6 +174,39 @@ producers, because navigation state lives in JS/Dart and native lifecycle callba
 Event namespace `Custom`; event name `MobileView`. **This table is the contract.** An agent that omits a
 required attribute or renames one breaks every cross-platform dashboard, so changes here are IDD changes.
 
+> **Open: iOS now emits one event per visit, not two.** On the iOS `mobile-views-2` branch each producer
+> emits a single `MobileView` when the view ceases to be visible, carrying everything the appear event used
+> to: `loadTime` and `previousView` / `previousViewInstanceId` are captured *at* appear time and held by the
+> producer until the visit ends, which is the first moment `timeVisible` is knowable. `appeared` is no longer
+> written — with one event per visit it carries no information — and `reappeared` is no longer emitted at
+> all, since synthesizing a re-appearance infers that a screen is visible again rather than observing a
+> completed visit. This halves MobileView volume and removes the downstream join between the two halves of a
+> visit, but it is an **event-contract change no agent may adopt alone**: it needs a decision here, and the
+> queries in the appendix (`WHERE appeared IS true` / `IS false`) assume the two-event model. Two known
+> costs: a SwiftUI screen popped back to reports nothing for that second visit.
+>
+> **Backgrounding ends a visit, and foregrounding starts a new one.** The one remaining hole in
+> one-event-per-visit was the last screen of a session: no runtime callback marks an app being
+> backgrounded as the end of a view's visit (neither UIKit `viewDidDisappear:` nor SwiftUI
+> `onDisappear` fires), so it reported nothing at all. Every producer now closes out its on-screen
+> views when the app is fully backgrounded — `didEnterBackground`, not `willResignActive`, so a
+> notification banner or an incoming call does not split one screen view into several — and the
+> automatic producers re-open a visit for whatever is still on screen when the app returns, with a
+> fresh `viewInstanceId` and no `loadTime`, since nothing was rebuilt. Two consequences worth
+> agreeing on cross-platform: one screen spanning a background cycle reports **two** visits, and a
+> `timeVisible` can end at a backgrounding rather than at a navigation, with no attribute
+> distinguishing the two (deliberately — see §11 if that turns out to be needed). Manual views are
+> flushed but not re-opened: the agent cannot observe that a customer's screen is still up, only that
+> they last named it.
+>
+> **`restarted` is gone from the iOS event too.** It was defined per view *instance* — "has this object
+> been on screen before" — which is not the question anyone reading it asks ("has the user seen this
+> screen before"). The two answers differ on every ordinary push → pop → push, where a fresh view
+> controller reports `restarted: false` on a visit that is plainly a return. Whether a visit rebuilt its
+> screen is still recoverable, from `loadTime` / `loadTimeUnavailable`, and repeat visits are countable
+> from `viewName` over time. Also an event-contract change requiring a decision here, where `restarted`
+> is currently required.
+
 | Attribute | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `viewClass` | string | ✅ | Platform-native class or type name |
@@ -183,7 +216,7 @@ required attribute or renames one breaks every cross-platform dashboard, so chan
 | `restarted` | bool | ✅ | `false` on first appearance of this screen, `true` after |
 | `loadTime` | double | on appear | Best-effort; semantics and accuracy tier per §5.4 |
 | `timeVisible` | double | on disappear | Appear → disappear, clamped ≥ 0 |
-| `uiPlatform` | string | ✅ | Enum: `UIKit`, `SwiftUI`, `Android`, `AndroidFragment`, `Compose`, `ReactNative`, `Flutter`, `Capacitor`, `Cordova`, `MAUI`, `Xamarin`, `WebView` |
+| `uiFramework` | string | ✅ | Enum: `UIKit`, `SwiftUI`, `Android`, `AndroidFragment`, `Compose`, `ReactNative`, `Flutter`, `Capacitor`, `Cordova`, `MAUI`, `Xamarin`, `WebView` |
 | `agentName` | string | ✅ | The SDK: `iOS`, `Android`, `ReactNative`, … |
 | `previousView` | string | when known | Referrer — the screen navigated from |
 | `previousViewInstanceId` | string | when known | Referrer identity, for exact-visit joins |
@@ -191,14 +224,16 @@ required attribute or renames one breaks every cross-platform dashboard, so chan
 
 Three of these need justification, because they are the changes from the previous revision:
 
-**`uiPlatform`, not `platform`.** The implemented iOS agent emits `uiPlatform`. The previous revision
-specified `platform`. `uiPlatform` is the better name — it says *UI runtime*, which is what the field means,
-and avoids collision with the ambient notion of platform elsewhere in the product. Adopting the implemented
-name is also the only option that does not require a breaking rename in shipped iOS code. **Every other
-agent must emit `uiPlatform`.**
+**`uiFramework` — not `platform`, and no longer `uiFramework`.** The field names the UI toolkit that observed
+the view. The rev. 2026-09-02 name was `platform`; this document then adopted `uiFramework` because it said
+*UI runtime* rather than colliding with the ambient notion of platform elsewhere in the product. `uiFramework`
+finishes that reasoning: the values are frameworks (`UIKit`, `SwiftUI`, `Compose`), and "platform" in this
+product means the OS or the ingest platform, so any name built on it invites exactly the misreading the
+rename to `uiFramework` was meant to avoid. **iOS emits `uiFramework`; adopting it is an event-contract
+change every agent must make together, and nothing outside iOS has shipped `uiFramework` yet.**
 
-**`agentName` × `uiPlatform` is a two-axis discriminator, deliberately.** One field cannot express the
-space. `agentName` distinguishes *which SDK*; `uiPlatform` distinguishes *which UI runtime*. This separates
+**`agentName` × `uiFramework` is a two-axis discriminator, deliberately.** One field cannot express the
+space. `agentName` distinguishes *which SDK*; `uiFramework` distinguishes *which UI runtime*. This separates
 "same SDK, two runtimes" (Android + Compose; iOS + SwiftUI) from "two SDKs, same runtime" (the iOS agent and
 MAUI both reporting `UIKit`). Collapsing them loses one of those distinctions.
 
@@ -378,15 +413,23 @@ form is idiomatic for its language and runtime, documented in its CDD.
 | 2 | Enable manual tracking | Independent flag, off by default (§5.5) |
 | 3 | Set current view manually | Name plus optional custom attributes. Browser route-change semantics: setting a new view closes the previous one and emits its dwell time |
 | 4 | Override display name per screen | Per-screen hook; affects `viewName` only, never `viewClass` |
-| 5 | Ignore a screen | Suppresses all events for that screen. Required for splash screens, modals, and tab containers |
+| 5 | ~~Ignore a screen~~ | **Withdrawn on iOS — see the note below.** Was: suppresses all events for that screen. Required for splash screens, modals, and tab containers |
 | 6 | Attach custom attributes per screen | Merged into every event for that screen. **Must not** be able to overwrite any attribute in §5.3 |
 | 9 | **Declare a load start** for the next manually-set view | No arguments. Marks "construction of the next manual view starts now"; the next capability-3 call consumes it. Optional, and only meaningful for manual views (§6.3) |
 
 Two rules that are contract, not style:
 
-- **Capabilities 4 and 5 should share one hook where the language allows it.** iOS folds them together —
-  returning a name overrides, returning nothing ignores — which keeps the API surface at one member instead
-  of two. Agents whose language cannot express the absent case cleanly may split them.
+- **Capability 5 no longer exists on iOS, and folding it into capability 4 is why.** The shared-hook rule
+  said returning a name overrides and returning nothing ignores — so the natural shape of the hook in a
+  language with optionals (compute a name, return nil when there is nothing better) silently dropped the
+  screen instead of naming it after its class. The SwiftUI half had the same defect in a different form:
+  `.NRMobileView(ignored: true)` is an attached modifier that reports nothing, indistinguishable in the
+  data from a modifier that was never attached, so instrumentation could look present and do nothing.
+  iOS now has no per-screen opt-out: nil and `""` from the naming hook both mean "name it after its
+  class", not tracking a SwiftUI screen means not attaching the modifier to it, and the containers
+  capability 5 was needed for (splash screens, tab containers, system hosts) are excluded by the agent's
+  own class-prefix list, which is not a customer-facing surface. Whether the contract keeps capability 5
+  as required for other agents is a decision for this document.
 - **Reserved keys are non-overridable.** Every attribute in §5.3 must be rejected if supplied through
   capability 6. Otherwise a customer can silently corrupt the very fields the cross-platform dashboards
   depend on.
@@ -639,7 +682,7 @@ WHERE appName = 'MyApp' AND appeared IS false FACET viewName SINCE 1 day ago
 
 -- Cross-platform coverage: which SDK, which UI runtime
 SELECT count(*) FROM MobileView
-WHERE appName = 'MyApp' FACET uiPlatform, agentName SINCE 1 week ago
+WHERE appName = 'MyApp' FACET uiFramework, agentName SINCE 1 week ago
 
 -- Load percentiles compared across agents. loadTime is absent, not zero, wherever it
 -- was unmeasurable (§5.4 rule 5), so percentiles are over real measurements only.
@@ -648,7 +691,7 @@ WHERE appeared IS true FACET agentName SINCE 1 day ago
 
 -- Why loadTime is missing where it is missing: coverage check for the artifact ceiling.
 SELECT count(*) FROM MobileView
-WHERE appeared IS true FACET loadTimeUnavailable, uiPlatform SINCE 1 day ago
+WHERE appeared IS true FACET loadTimeUnavailable, uiFramework SINCE 1 day ago
 
 -- Navigation graph: routes, not just destinations
 SELECT count(*) FROM MobileView
@@ -679,7 +722,7 @@ SELECT uniques(timingName) FROM MobileViewTiming FACET viewName SINCE 1 day ago
 -- visits whose marks fell back to the appear origin. A screen high here is where
 -- capability 9 (manual) or a construction-phase fix (automatic) is needed.
 SELECT percentage(count(*), WHERE loadTimeUnavailable IS NOT NULL) FROM MobileView
-WHERE appeared IS true FACET uiPlatform, viewName SINCE 1 day ago
+WHERE appeared IS true FACET uiFramework, viewName SINCE 1 day ago
 
 -- Timings by route rather than destination: the same screen fast from
 -- search and slow from a deeplink.
@@ -712,7 +755,7 @@ timing row (§6.2).
 
 ## 11. Open questions
 
-1. **Ratify `uiPlatform` over `platform`** (§5.3). iOS has shipped `uiPlatform`. Needs explicit sign-off so
+1. **Ratify `uiFramework` over `platform` / `uiFramework`** (§5.3). iOS emits `uiFramework`. Needs explicit sign-off so
    Android and the hybrids implement the same name rather than the previous revision's.
 2. **Adopt `previousView` / `previousViewInstanceId` / `reappeared` as required, or optional?** They are
    implemented on iOS and unlock the navigation-graph queries. `reappeared` is genuinely
@@ -760,7 +803,7 @@ timing row (§6.2).
    `MobileHandledException` now all carry `currentView`/`currentViewInstanceId`/`previousView`/
    `previousViewInstanceId` when a Mobile Views flag is on and a view is current — one shared,
    flag-gated merge point (`NRMAViewContext`) feeding all four producers, breadcrumbs included, so the
-   four can no longer drift on attribute names the way §5.3's `uiPlatform`/`platform` history warns
+   four can no longer drift on attribute names the way §5.3's `platform` → `uiPlatform` → `uiFramework` history warns
    against. **Every other agent should decorate the equivalent of these three event types identically**
    — the requirement is the four attributes above on the request, request-error, and handled-exception
    events, not iOS's specific mechanism.

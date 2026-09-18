@@ -149,7 +149,8 @@ enum NewRelicConfig {
             // NewRelic.setCurrentView(_:attributes:), used by the three Home tabs, which are
             // container children the automatic instrumentation would otherwise all attribute to
             // HomeViewController.
-            NRMAFeatureFlags.NRFeatureFlag_ManualMobileViews
+            NRMAFeatureFlags.NRFeatureFlag_ManualMobileViews,
+            NRMAFeatureFlags.NRFeatureFlag_AutomaticSwiftUIViews
         ])
     }
 }

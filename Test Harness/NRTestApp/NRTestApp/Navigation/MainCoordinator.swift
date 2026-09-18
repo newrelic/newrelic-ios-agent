@@ -210,8 +210,8 @@ class MainCoordinator: Coordinator {
         navigationController.pushViewController(vc, animated: true)
     }
 
-    func showMobileViewIgnoredViewController() {
-        let vc = ViewControllerProvider.mobileViewIgnoredViewController
+    func showMobileViewNilNameViewController() {
+        let vc = ViewControllerProvider.mobileViewNilNameViewController
         navigationController.pushViewController(vc, animated: true)
     }
 

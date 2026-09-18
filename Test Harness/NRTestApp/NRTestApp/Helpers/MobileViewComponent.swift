@@ -44,9 +44,9 @@ final class MobileViewComponentController: UIViewController {
 
     // MARK: - MobileViews hooks
 
-    @objc func nrMobileViewName() -> String? {
-        componentName
-    }
+//    @objc func nrMobileViewName() -> String? {
+//        componentName
+//    }
 
     /// Marks the emitted MobileView events as components rather than screens. `viewName` alone
     /// cannot tell them apart — to the agent a component is just another view — so dashboards need

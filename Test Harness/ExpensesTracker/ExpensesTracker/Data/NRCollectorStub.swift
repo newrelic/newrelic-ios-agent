@@ -138,7 +138,7 @@ final class NRCollectorStub {
             let phase = appeared.map { $0 ? "appear   " : "disappear" } ?? "?        "
             var line = "\(phase) \(pad(string(event, "viewName"), 28))"
             line += " prev=\(pad(string(event, "previousView"), 22))"
-            line += " platform=\(string(event, "uiPlatform"))"
+            line += " platform=\(string(event, "uiFramework"))"
             if event["loadTime"] != nil    { line += " load=\(string(event, "loadTime"))" }
             if event["timeVisible"] != nil { line += " visible=\(string(event, "timeVisible"))" }
             return line

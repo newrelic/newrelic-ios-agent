@@ -85,9 +85,6 @@ struct SwiftUIContentView: View {
                     NavigationLink(destination: MobileViewAttributesDemoView()) {
                         Text("MobileView · Custom Attributes")
                     }
-                    NavigationLink(destination: MobileViewIgnoredDemoView()) {
-                        Text("MobileView · Ignored")
-                    }
                     NavigationLink(destination: ManualViewsDemoView()) {
                         Text("MobileView · Manual (setCurrentView + referrer)")
                     }

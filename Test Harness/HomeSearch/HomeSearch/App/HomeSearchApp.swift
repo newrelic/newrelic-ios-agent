@@ -15,7 +15,6 @@
 //    .NRMobileSheet(item:)     → contact agent                      (ListingDetailScreen)
 //    .NRMobileFullScreenCover  → the photo gallery                  (ListingDetailScreen)
 //    .NRMobilePopover          → the mortgage calculator            (ListingDetailScreen)
-//    ignored: true             → Debug Info, which must never report (DebugInfoScreen)
 //    NewRelic.setCurrentView   → the Saved tab's two modes          (SavedTab)
 //
 //  See ViewName for the complete inventory of names this app can emit.

@@ -99,8 +99,8 @@ enum ViewControllerProvider {
         return viewController
     }
 
-    static var mobileViewIgnoredViewController: MobileViewIgnoredViewController {
-        let viewController = MobileViewIgnoredViewController()
+    static var mobileViewNilNameViewController: MobileViewNilNameViewController {
+        let viewController = MobileViewNilNameViewController()
         return viewController
     }
 

@@ -2,9 +2,11 @@
 //  DebugInfoScreen.swift
 //  HomeSearch
 //
-//  The one screen in this app that opts out of view tracking, via `.NRMobileView(ignored: true)`.
+//  The one screen in this app that is not instrumented: it has no `.NRMobileView(...)` attached.
+//  That is now the only way to leave a screen out -- the modifier used to take `ignored: true`, an
+//  attached-but-silent mode that looked identical to this one in the data.
 //
-//  It exists so the opt-out can be tested by absence: navigate here, then confirm no MobileView
+//  It exists so the omission can be tested by absence: navigate here, then confirm no MobileView
 //  event named "Debug Info" was ever emitted. A screen that reports nothing is only convincing as a
 //  test if it is genuinely reachable, which is why it has a real row in Profile.
 //
@@ -26,7 +28,7 @@ struct DebugInfoScreen: View {
     var body: some View {
         List {
             Section {
-                Text("This screen reports `ignored: true`, so it should never appear in MobileView data. Anything recorded from here should still be attributed to the previous view.")
+                Text("This screen has no MobileView modifier attached, If AutoSwiftUIViews is on it should be named.")
                     .font(.footnote)
             }
 
@@ -84,8 +86,6 @@ struct DebugInfoScreen: View {
         }
         .navigationTitle("Debug info")
         .navigationBarTitleDisplayMode(.inline)
-        .NRMobileView(ignored: true)
-
     }
 
     private var collectorDescription: String {

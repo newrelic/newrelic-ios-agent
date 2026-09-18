@@ -147,12 +147,16 @@ private func analyticsEventChecks(events: [[String: Any]], httpCount: Int) -> [V
 // Three producers write this event type and they do not emit an identical set of keys, so the checks
 // below assert only what all of them are required to carry, plus the type of everything optional:
 //
-//   UIKit    NRMAMobileViewTracker — appear carries loadTime (unless the load was never observed)
-//            but NOT `restarted`; disappear carries restarted, loadTime and timeVisible.
-//   SwiftUI  NRMobileViewModifier — appear carries restarted and loadTime; disappear carries
-//            restarted and timeVisible.
-//   SwiftUI  NRMobileTabTrackingModifier — a tab switch is not a view lifecycle event, so it emits
-//            `appeared = false` with neither timeVisible nor loadTime, marked navigationKind = tab.
+//   UIKit    NRMAMobileViewTracker — one event per visit, at viewDidDisappear:, carrying timeVisible
+//            and loadTime (or loadTimeUnavailable when the load was never observed).
+//   SwiftUI  NRMobileViewModifier — one event per visit, at onDisappear, same shape.
+//   SwiftUI  NRMobileTabTrackingModifier — a tab switch is not a view lifecycle event, so it carries
+//            neither timeVisible nor loadTime, and is marked navigationKind = tab.
+//
+// There is no `appeared` attribute: MobileView is one event per completed visit, so the flag that
+// used to tell the appear half from the disappear half carries no information. `restarted` is gone
+// too. Both absences are asserted below rather than merely unused, so a producer reintroducing
+// either shows up as a failure.
 //
 // Requiring one uniform schema across all three would fail on correct data, so leniency here is
 // deliberate rather than sloppy.
@@ -161,7 +165,6 @@ private func mobileViewChecks(events: [[String: Any]]) -> [VerificationCheck] {
     // selection change, not a screen that appeared and later went away.
     let tabEvts       = events.filter { $0["navigationKind"] as? String == "tab" }
     let lifecycleEvts = events.filter { $0["navigationKind"] as? String != "tab" }
-    let disappearEvts = lifecycleEvts.filter { ($0["appeared"] as? NSNumber)?.boolValue == false }
 
     func optional(_ key: String, in evts: [[String: Any]], is test: (Any) -> Bool) -> Bool {
         evts.allSatisfy { $0[key] == nil || test($0[key]!) }
@@ -180,11 +183,13 @@ private func mobileViewChecks(events: [[String: Any]]) -> [VerificationCheck] {
         check("MobileView: viewInstanceId is non-empty String",
               events.allSatisfy { ($0["viewInstanceId"] as? String)?.isEmpty == false }),
 
-        // Provenance.
-        check("MobileView: appeared is NSNumber",  events.allSatisfy { $0["appeared"] is NSNumber }),
-        check("MobileView: uiPlatform is UIKit or SwiftUI",
-              events.allSatisfy { ["UIKit", "SwiftUI"].contains($0["uiPlatform"] as? String) },
-              detail: Set(events.compactMap { $0["uiPlatform"] as? String }).sorted().joined(separator: ",")),
+        // Provenance. `appeared` and `restarted` are retired attributes -- one event per visit means
+        // neither can say anything -- so their absence is the assertion.
+        check("MobileView: no appeared attribute", events.allSatisfy { $0["appeared"] == nil }),
+        check("MobileView: no restarted attribute", events.allSatisfy { $0["restarted"] == nil }),
+        check("MobileView: uiFramework is UIKit or SwiftUI",
+              events.allSatisfy { ["UIKit", "SwiftUI"].contains($0["uiFramework"] as? String) },
+              detail: Set(events.compactMap { $0["uiFramework"] as? String }).sorted().joined(separator: ",")),
         
         // Timings are milliseconds and non-negative. Both are optional per producer, so type-check
         // them only where present — an absent loadTime means the load was never observed (a view
@@ -194,22 +199,19 @@ private func mobileViewChecks(events: [[String: Any]]) -> [VerificationCheck] {
         check("MobileView: timeVisible is non-negative NSNumber when present",
               optional("timeVisible", in: events, is: isNonNegativeNumber)),
 
-        // `restarted` is NOT required: the UIKit producer omits it on the appear event.
-        check("MobileView: restarted is NSNumber when present", optional("restarted", in: events, is: isNumber)),
-
         // Referrer / correlation attributes, all optional (absent on the first view of a session and
         // when no interaction is running).
         check("MobileView: previousView is String when present",   optional("previousView", in: events, is: isString)),
         check("MobileView: interactionId is String when present",  optional("interactionId", in: events, is: isString)),
     ]
 
-    // A lifecycle disappear event is the one that closes out a view's visible span, so it is the one
-    // place timeVisible is genuinely required.
-    if !disappearEvts.isEmpty {
+    // A lifecycle event *is* a closed-out visit, so timeVisible is required on all of them. Only a
+    // tab switch is exempt, and those are filtered out above.
+    if !lifecycleEvts.isEmpty {
         checks.append(check(
-            "MobileView: lifecycle disappear events carry timeVisible",
-            disappearEvts.allSatisfy { $0["timeVisible"] is NSNumber },
-            detail: "disappearEvents=\(disappearEvts.count)"
+            "MobileView: lifecycle events carry timeVisible",
+            lifecycleEvts.allSatisfy { $0["timeVisible"] is NSNumber },
+            detail: "lifecycleEvents=\(lifecycleEvts.count)"
         ))
     }
 

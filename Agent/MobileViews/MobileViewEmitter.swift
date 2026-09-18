@@ -23,9 +23,7 @@ internal enum NRViewAttribute {
     static let viewInstanceId         = "viewInstanceId"
     static let previousView           = "previousView"
     static let previousViewInstanceId = "previousViewInstanceId"
-    static let appeared               = "appeared"
-    static let uiPlatform             = "uiPlatform"
-    static let restarted              = "restarted"
+    static let uiFramework             = "uiFramework"
     static let loadTime               = "loadTime"
     static let loadTimeUnavailable    = "loadTimeUnavailable"
     static let timeVisible            = "timeVisible"
@@ -71,25 +69,27 @@ internal enum NRViewLoadOutcome {
     }
 }
 
-internal enum NRViewPhase {
-    case appeared
-    case disappeared
-}
-
 /// Where `previousView` / `previousViewInstanceId` come from.
 internal enum NRViewReferrer {
-    /// No referrer on this event (the disappear half of an automatic view).
+    /// No referrer on this event.
     case none
     /// Read the current referrer out of the shared view context.
     case fromContext
-    /// The producer knows the referrer itself (the manual API, and the synthesized
-    /// re-appearance, which names the view whose departure uncovered this one).
+    /// The producer knows the referrer itself. Every producer captures the referrer when the
+    /// view *appears* and hands it over here, because by emit time -- the end of the visit --
+    /// the context has already moved on to whatever came next.
     case explicit(name: String?, instanceId: String?)
 }
 
 // MARK: - Records
 
 /// One MobileView event, as facts rather than as a dictionary.
+///
+/// One event per visit, emitted when the view goes away: a visit is only fully describable
+/// once it has ended, since `timeVisible` is not knowable before then. Producers used to emit
+/// a second event on appear as well, which doubled the MobileView volume to carry `loadTime`
+/// and the referrer -- both of which are captured at appear time and held by the producer
+/// until this event is built.
 ///
 /// The producer owns *when* things happened -- it holds the timestamps, the associated
 /// objects and the locks. This type owns *what the event looks like*.
@@ -98,19 +98,12 @@ internal struct MobileViewRecord {
     var viewClass: String?
     var instanceId: String
     var platform: NRViewPlatform?
-    var phase: NRViewPhase
     var referrer: NRViewReferrer = .none
-    /// Appear only. `nil` omits both loadTime and loadTimeUnavailable.
+    /// Measured at appear time and carried until the visit ends. `nil` omits both loadTime
+    /// and loadTimeUnavailable.
     var load: NRViewLoadOutcome?
-    /// Disappear only, in milliseconds.
+    /// Milliseconds the view was on screen.
     var timeVisibleMs: Double?
-    /// Omitted when the producer cannot know (the manual API and the synthesized
-    /// re-appearance have no notion of a previous appearance of the same instance).
-    var restarted: Bool?
-    /// True only for an appearance the agent synthesized because a producer never
-    /// delivered one -- SwiftUI popping a NavigationStack back to a view being the case
-    /// that requires it.
-    var reappeared: Bool = false
     var navigationKind: String?
     var custom: [String: Any]?
 
@@ -136,22 +129,15 @@ internal struct MobileViewRecord {
 
         attrs[NRViewAttribute.viewName]       = viewName
         attrs[NRViewAttribute.viewInstanceId] = instanceId
-        attrs[NRViewAttribute.appeared]       = NSNumber(value: phase == .appeared)
 
         if let viewClass = viewClass, !viewClass.isEmpty {
             attrs[NRViewAttribute.viewClass] = viewClass
         }
-        // Omitted rather than defaulted: an absent uiPlatform must read as absent. The
-        // synthesized re-appearance is the case that has none, when the uncovered entry
-        // was recorded without one.
+        // Omitted rather than defaulted: an absent uiFramework must read as absent, so a
+        // producer that genuinely does not know which toolkit it saw cannot be mistaken for
+        // one that reported an empty string.
         if let platform = platform {
-            attrs[NRViewAttribute.uiPlatform] = platform.rawValue
-        }
-        if let restarted = restarted {
-            attrs[NRViewAttribute.restarted] = NSNumber(value: restarted)
-        }
-        if reappeared {
-            attrs[kNRMAAttributeReappeared] = NSNumber(value: true)
+            attrs[NRViewAttribute.uiFramework] = platform.rawValue
         }
         if let navigationKind = navigationKind, !navigationKind.isEmpty {
             attrs[NRViewAttribute.navigationKind] = navigationKind
@@ -238,8 +224,8 @@ internal enum NRMobileViewEmitter {
         case .some(.uiKit), .some(.swiftUI):
             return NRMAFlags.shouldEnableAutomaticMobileViews()
         case .none:
-            // No platform recorded: the synthesized re-appearance, which only the automatic
-            // producers can trigger.
+            // No platform recorded. Only an automatic producer can get here, so the automatic
+            // flag is the one that decides.
             return NRMAFlags.shouldEnableAutomaticMobileViews()
         }
     }
@@ -271,16 +257,14 @@ public class NRMAMobileViewFields: NSObject {
     public var viewClass: String?
     public var instanceId: String = ""
     /// "UIKit", "SwiftUI" or "Manual". Anything else (including nil or empty) omits
-    /// `uiPlatform`, which is what the synthesized re-appearance relies on.
-    public var platform: String?
+    /// `uiFramework`.
+    public var uiFramework: String?
     /// Milliseconds. Setting this writes `loadTime`; it wins over `loadTimeUnavailable`.
     public var loadTimeMs: NSNumber?
     /// One of "constructedBeforeAppear", "noConstructionObserved", "notRebuilt".
     public var loadTimeUnavailable: String?
     /// Milliseconds. Setting this writes `timeVisible`.
     public var timeVisibleMs: NSNumber?
-    public var restarted: NSNumber?
-    public var reappeared: Bool = false
     public var navigationKind: String?
     /// Merge `previousView` / `previousViewInstanceId` out of the shared view context.
     /// Ignored when `previousView` is set explicitly.
@@ -289,7 +273,7 @@ public class NRMAMobileViewFields: NSObject {
     public var previousViewInstanceId: String?
     public var custom: [String: Any]?
 
-    internal func record(phase: NRViewPhase) -> MobileViewRecord? {
+    internal func record() -> MobileViewRecord? {
         guard !viewName.isEmpty else { return nil }
 
         let referrer: NRViewReferrer
@@ -317,13 +301,10 @@ public class NRMAMobileViewFields: NSObject {
             viewName: viewName,
             viewClass: viewClass,
             instanceId: instanceId,
-            platform: platform.flatMap { NRViewPlatform(rawValue: $0) },
-            phase: phase,
+            platform: uiFramework.flatMap { NRViewPlatform(rawValue: $0) },
             referrer: referrer,
             load: load,
             timeVisibleMs: timeVisibleMs?.doubleValue,
-            restarted: restarted?.boolValue,
-            reappeared: reappeared,
             navigationKind: navigationKind,
             custom: custom)
     }
@@ -333,12 +314,9 @@ public class NRMAMobileViewFields: NSObject {
 @objcMembers
 public class NRMAMobileViewRecorder: NSObject {
 
-    public static func recordAppeared(_ fields: NRMAMobileViewFields) {
-        fields.record(phase: .appeared)?.emit()
-    }
-
-    public static func recordDisappeared(_ fields: NRMAMobileViewFields) {
-        fields.record(phase: .disappeared)?.emit()
+    /// Emits the single MobileView event for one completed visit.
+    public static func record(_ fields: NRMAMobileViewFields) {
+        fields.record()?.emit()
     }
 
     /*

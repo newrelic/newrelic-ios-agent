@@ -680,11 +680,15 @@ extern "C" {
 /*!
  * Manually set the currently-displayed view (screen).
  *
- * Records a "MobileView" event for `name` and marks it as the current view using a browser
- * route-change model: the previously set current view is closed out first (emitting its
- * timeVisible), then `name` becomes current with the prior view recorded as its referrer
+ * Marks `name` as the current view using a browser route-change model: the previously set current
+ * view is closed out first -- that visit has ended, so its "MobileView" event is recorded now, with
+ * its timeVisible -- and then `name` becomes current with the prior view recorded as its referrer
  * (previousView). Breadcrumbs and MobileView events recorded while `name` is current carry it as
  * currentView.
+ *
+ * One MobileView event is recorded per visit, when the view is closed out rather than when it is
+ * set: a visit cannot be described until it has ended. `name` therefore produces its event on the
+ * *next* setCurrentView: call, or when the app is backgrounded, whichever comes first.
  *
  * Use this when automatic instrumentation does not capture a view correctly, to rename views for
  * business reasons, or to name cross-platform (e.g. React Native) screens that would otherwise
@@ -693,9 +697,10 @@ extern "C" {
  * Requires NRFeatureFlag_ManualViews to be enabled. Independent of NRFeatureFlag_AutomaticViews.
  *
  * @param name The display name of the view (screen). Must be a non-empty string.
- * @param attributes Optional custom attributes merged into the MobileView event. Reserved keys
- *        (viewClass, viewName, viewInstanceId, previousView, appeared, timeVisible, uiPlatform,
- *        agentName) are not overridden.
+ * @param attributes Optional custom attributes merged into this view's MobileView event -- which is
+ *        recorded when the view is closed out, so they are held until then. Reserved keys
+ *        (viewClass, viewName, viewInstanceId, previousView, timeVisible, uiFramework, agentName) are
+ *        not overridden.
  */
 + (void) setCurrentView:(NSString* _Nonnull)name
              attributes:(NSDictionary* _Nullable)attributes;

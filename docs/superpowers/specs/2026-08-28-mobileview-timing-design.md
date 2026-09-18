@@ -34,8 +34,7 @@ Discovery confirmed several pieces of the browser mapping already exist and must
   documented as such in `NRMAViewContext.h`.
 - `nrMobileViewName` (subclass hook; returning `nil` ignores the view) and `nrMobileViewAttributes` provide
   custom naming and custom attributes.
-- `MobileView` already carries `viewClass`, `viewName`, `viewInstanceId`, `appeared`, `restarted`,
-  `reappeared`, `loadTime`, `timeVisible`, `previousView`, `previousViewInstanceId`, `uiPlatform`, and
+- `MobileView` already carries `viewClass`, `viewName`, `viewInstanceId`, `loadTime`, `timeVisible`, `previousView`, `previousViewInstanceId`, `uiFramework`, and
   `component` / `componentOf` / `interactionId`.
 - `scripts/mobileview_flow.py` renders the session DAG from `previousView` → `viewName` edges.
 

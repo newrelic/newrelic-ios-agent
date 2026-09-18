@@ -48,8 +48,6 @@ enum ViewName: String, CaseIterable {
     case notificationSettings = "Notification Settings"
     case searchPreferences    = "Search Preferences"
 
-    /// Reports `ignored: true`, so it must never appear in the data. Present precisely so we can
-    /// assert its absence.
     case debugInfo = "Debug Info"
 
     // MARK: Modal presentations

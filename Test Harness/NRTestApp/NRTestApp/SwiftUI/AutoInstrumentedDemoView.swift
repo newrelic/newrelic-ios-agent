@@ -90,7 +90,7 @@ struct AutoPushedDetailScreen: View {
         VStack(spacing: 12) {
             Text("AutoPushedDetailScreen")
                 .font(.headline)
-            Text("Expect viewName = AutoPushedDetailScreen, uiPlatform = SwiftUI.")
+            Text("Expect viewName = AutoPushedDetailScreen, uiFramework = SwiftUI.")
                 .font(.footnote)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.secondary)

@@ -1953,7 +1953,7 @@
         return [analytics addMobileViewEventWithAttributes:@{@"viewName": @"CheckoutView",
                                                              @"viewInstanceId": @"instance-1",
                                                              @"appeared": @YES,
-                                                             @"uiPlatform": @"UIKit"}];
+                                                             @"uiFramework": @"UIKit"}];
     }
                                  expectedSubstrings:@[@"MobileView", @"CheckoutView", @"instance-1"]];
 }

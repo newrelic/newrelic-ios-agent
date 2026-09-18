@@ -23,9 +23,9 @@ class MobileViewAttributesViewController: UIViewController {
 
     // MARK: - MobileViews hooks
 
-    @objc func nrMobileViewName() -> String? {
-        Self.screenName
-    }
+//    @objc func nrMobileViewName() -> String? {
+//        Self.screenName
+//    }
 
     private static let screenName = "Custom Attrs ViewController"
 

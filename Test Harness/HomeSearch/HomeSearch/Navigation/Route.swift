@@ -49,9 +49,6 @@ enum ProfileRoute: Hashable {
         case .debugInfo:            return ViewName.debugInfo.rawValue
         }
     }
-
-    /// `Debug Info` opts out of view tracking entirely via `.NRMobileView(ignored: true)`.
-    var isIgnored: Bool { self == .debugInfo }
 }
 
 /// Tabs are a `Hashable` selection type so `.NRMobileTabTracking(selection:name:)` can name them.

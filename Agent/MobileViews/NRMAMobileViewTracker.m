@@ -11,6 +11,7 @@
 
 #import "NRMAMobileViewTracker.h"
 #import <UIKit/UIKit.h>
+#import <os/lock.h>
 #import <objc/runtime.h>
 #import <dlfcn.h>
 #import "NRLogger.h"
@@ -24,10 +25,14 @@
 static const char kNRLoadTimestampKey;
 static const char kNRAppearTimestampKey;
 static const char kNRViewInstanceIdKey;
-static const char kNRHasAppearedBeforeKey;
+// The referrer as of this appearance (a dictionary of previousView / previousViewInstanceId).
+// Captured at viewDidAppear: and held until the single event is emitted at viewDidDisappear:,
+// because by then the shared context's "previous view" is this screen itself and whatever
+// replaced it is current -- reading the referrer at emit time would name the wrong screen.
+static const char kNRReferrerKey;
 // Caches the resolved SwiftUI screen for a hosting controller. Cached rather than re-resolved so
-// the disappear event cannot report a different viewName than its appear event -- and so the
-// mirror walk in the resolver runs once per screen instead of once per appearance.
+// the emitted event cannot report a different viewName than the appearance it describes -- and so
+// the mirror walk in the resolver runs once per screen instead of once per appearance.
 static const char kNRSwiftUIScreenKey;
 
 // Attribute names, the event type, and the loadTime-vs-loadTimeUnavailable rule all live in
@@ -156,6 +161,78 @@ static NSString *NRMA_DemangledName(Class cls, BOOL fullName) {
     return NRMA_StripOuterModule(qualified);
 }
 
+#if !TARGET_OS_WATCH
+
+/*
+ * Controllers believed to be on screen: appeared and not yet disappeared.
+ *
+ * The per-visit facts live as associated objects on the controllers themselves, which is enough for
+ * viewDidAppear:/viewDidDisappear: -- each call already has the controller in hand. Backgrounding
+ * does not: the app is going away with views still on screen, and there is no lifecycle callback
+ * per controller to hang the close-out on (neither viewDidDisappear: nor viewWillDisappear: fires
+ * when an app is backgrounded). So the set has to be enumerable, which is what this is for.
+ *
+ * Held weakly and in appear order. Weakly because a controller must not be kept alive by the agent
+ * observing it; in order because the foreground path re-pushes these onto the shared view context's
+ * visible stack, and the stack is meaningful only bottom-up -- pushing them in a different order
+ * would make the wrong screen current.
+ */
+@interface NRMAOnScreenController : NSObject
+@property (nonatomic, weak) UIViewController *controller;
+@end
+
+@implementation NRMAOnScreenController
+@end
+
+// Mutated from viewDidAppear:/viewDidDisappear: and read by the background/foreground handlers. All
+// of those are main-thread in practice; the lock is here because "in practice" is not a guarantee
+// worth a corrupted array, and it is never held while an event is recorded.
+static NSMutableArray<NRMAOnScreenController *> *sOnScreen;
+static os_unfair_lock sOnScreenLock = OS_UNFAIR_LOCK_INIT;
+
+static void NRMA_MarkOnScreen(UIViewController *vc) {
+    os_unfair_lock_lock(&sOnScreenLock);
+    if (sOnScreen == nil) { sOnScreen = [NSMutableArray array]; }
+    // Drop any existing entry first, so a repeated appearance moves the controller to the top
+    // rather than leaving a stale duplicate lower down. Deallocated entries are swept on the way.
+    for (NSInteger i = (NSInteger)sOnScreen.count - 1; i >= 0; i--) {
+        UIViewController *held = sOnScreen[(NSUInteger)i].controller;
+        if (held == nil || held == vc) {
+            [sOnScreen removeObjectAtIndex:(NSUInteger)i];
+        }
+    }
+    NRMAOnScreenController *entry = [NRMAOnScreenController new];
+    entry.controller = vc;
+    [sOnScreen addObject:entry];
+    os_unfair_lock_unlock(&sOnScreenLock);
+}
+
+static void NRMA_MarkOffScreen(UIViewController *vc) {
+    os_unfair_lock_lock(&sOnScreenLock);
+    for (NSInteger i = (NSInteger)sOnScreen.count - 1; i >= 0; i--) {
+        UIViewController *held = sOnScreen[(NSUInteger)i].controller;
+        if (held == nil || held == vc) {
+            [sOnScreen removeObjectAtIndex:(NSUInteger)i];
+        }
+    }
+    os_unfair_lock_unlock(&sOnScreenLock);
+}
+
+/// Snapshot of the on-screen controllers, oldest first. Strong references for the duration of the
+/// caller's loop, so a controller cannot be deallocated halfway through being reported.
+static NSArray<UIViewController *> *NRMA_OnScreenControllers(void) {
+    NSMutableArray<UIViewController *> *controllers = [NSMutableArray array];
+    os_unfair_lock_lock(&sOnScreenLock);
+    for (NRMAOnScreenController *entry in sOnScreen) {
+        UIViewController *held = entry.controller;
+        if (held) { [controllers addObject:held]; }
+    }
+    os_unfair_lock_unlock(&sOnScreenLock);
+    return controllers;
+}
+
+#endif
+
 // Storage for original IMPs — set once during swizzle setup
 static void (*orig_viewDidLoad)(id, SEL);
 static void (*orig_viewDidAppear)(id, SEL, BOOL);
@@ -190,20 +267,19 @@ BOOL NRMA_ShouldSkipClass(Class cls) {
  * Resolves the display name for a view controller, honoring the optional
  * nrMobileViewName hook.
  *
- * Returns nil to signal "ignore this view" — happens only when the VC implements
- * nrMobileViewName and explicitly returns nil. Empty string falls back to the
- * demangled class name (legacy behavior).
+ * Always names the view. A nil or empty return from the hook falls back to the demangled class
+ * name; there is no return value that opts a view out. Nil used to mean "ignore this view", so a
+ * hook that computes its name and returns nil when it has nothing better -- the natural shape for
+ * an optional-returning Swift method -- silently dropped the screen instead of naming it after its
+ * class. Screens are reported or not by the AutomaticMobileViews flag, which is one decision the
+ * customer makes once, rather than per view controller in code the agent cannot see.
  */
-NS_INLINE NSString * _Nullable NRMA_ViewNameForController(UIViewController *vc) {
+NS_INLINE NSString *NRMA_ViewNameForController(UIViewController *vc) {
     SEL sel = @selector(nrMobileViewName);
     if ([vc respondsToSelector:sel]) {
         NSString *custom = [(id<_NRMVNameHook>)vc nrMobileViewName];
-        if (custom == nil) {
-            // Explicit nil = caller wants this view ignored.
-            return nil;
-        }
+        // nil or empty: fall through to the class name.
         if (custom.length > 0) return custom;
-        // Empty string: fall through to class name.
     }
     // Demangled simple name, e.g. "ProductDetailViewController"
     return NRMA_DemangledName([vc class], NO);
@@ -277,8 +353,6 @@ static void NRMA_ViewDidLoad(UIViewController *self, SEL _cmd) {
     if (NRMA_ShouldSkipClass([self class])) return;
 
     NSString *viewName  = NRMA_ViewNameForController(self);
-    // nil viewName = caller's nrMobileViewName returned nil → ignore this view.
-    if (viewName == nil) return;
     if (NRMA_ShouldSkipViewName(viewName)) return;
 
     objc_setAssociatedObject(self, &kNRLoadTimestampKey,
@@ -297,7 +371,6 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
     if (!swiftUIScreen && NRMA_ShouldSkipClass([self class])) return;
 
     NSString *viewName = swiftUIScreen ? swiftUIScreen.viewName : NRMA_ViewNameForController(self);
-    if (viewName == nil) return;
     if (NRMA_ShouldSkipViewName(viewName)) return;
 
     CFAbsoluteTime appearTime = [NRMAViewContext monotonicNow];
@@ -346,36 +419,23 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
                                          loadStartTime:(loadIsMeasurable ? loadTimestamp : nil)
                                               platform:platform];
 
-    // For a SwiftUI host the class name is a generic modifier stack, so the resolved concrete
-    // type is the only usable viewClass.
-    NSString *viewClass = swiftUIScreen ? swiftUIScreen.viewClass : NRMA_DemangledName([self class], YES);
-
-    NRMAMobileViewFields *fields = [NRMAMobileViewFields new];
-    fields.viewName   = viewName;
-    fields.viewClass  = viewClass;
-    fields.instanceId = uuid;
-    fields.platform   = platform;
-    // Referrer for this appearance (previousView / previousViewInstanceId).
-    fields.useContextReferrer = YES;
-    fields.custom     = NRMA_AttributesForController(self);
-    // loadTime belongs here and not only on the disappear event, which is where this producer used
-    // to report it alone. It also brings the UIKit schema in line with the SwiftUI producer, which
-    // has always put loadTime on appear.
+    // No event is emitted here. One MobileView event is recorded per visit, at
+    // viewDidDisappear:, because a visit cannot be described until it has ended -- timeVisible is
+    // only knowable then. What an appearance *does* know is captured instead: the referrer below,
+    // and the construction start read above (kNRLoadTimestampKey survives until the disappear
+    // handler recomputes loadTime from it).
     //
-    // The recorder omits loadTime rather than zeroing it when there is no trustworthy construction
-    // start, so aggregates are not dragged toward 0 by a placeholder, and records the reason either
-    // way. Setting exactly one of these is what picks that branch.
-    if (loadIsMeasurable) {
-        fields.loadTimeMs = @(loadTimeMs);
-    } else if (loadTimestamp) {
-        fields.loadTimeUnavailable = kNRLoadUnavailableConstructedBeforeAppear;
-    } else {
-        fields.loadTimeUnavailable = kNRLoadUnavailableNoConstructionObserved;
-    }
+    // Stashed now rather than read at emit time: the transition above just made this view current,
+    // so the context's previous view is this appearance's referrer only until the next screen
+    // appears.
+    NSDictionary *referrer = [[NRMAViewContext sharedInstance] previousViewAttributes];
+    objc_setAssociatedObject(self, &kNRReferrerKey,
+                             referrer.count > 0 ? referrer : nil,
+                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
-    // Both halves of a view's lifetime are recorded, and they carry different things: this one
-    // loadTime, the disappear event timeVisible.
-    [NRMAMobileViewRecorder recordAppeared:fields];
+    // Enumerable from outside a lifecycle callback, which is what backgrounding needs: it must
+    // close out every visit that is still open, and no per-controller callback fires for it.
+    NRMA_MarkOnScreen(self);
 
     // The out-of-the-box baseline, so MobileViewTiming dashboards populate with no customer
     // instrumentation and customer marks such as timeToFullDisplay share its origin. Derived from
@@ -385,39 +445,38 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
     [[NRMAViewTiming sharedInstance] recordInitialDisplayForCurrentView];
 }
 
-static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animated) {
-    if (orig_viewDidDisappear) orig_viewDidDisappear(self, _cmd, animated);
+/*
+ * Ends the visit `vc` is in: records its one MobileView event and drops it from the shared view
+ * context's visible stack.
+ *
+ * Two callers, and the difference between them is why this is a function rather than the body of
+ * viewDidDisappear:. The lifecycle callback means "this screen is gone". The background handler
+ * means "the app is gone, with this screen still on it" -- the visit has ended either way, and
+ * ended at `endTime`, but only the first should stop treating the controller as on screen.
+ *
+ * A no-op when there is no open visit to end: viewDidAppear: was never observed for this instance
+ * (the agent started mid-session, or the view was skipped on appear), or the visit was already
+ * closed out by a background flush and no foreground has re-opened it.
+ */
+static void NRMA_CloseVisit(UIViewController *vc, NRMASwiftUIScreen *swiftUIScreen, CFAbsoluteTime endTime) {
+    CFAbsoluteTime disappearTime = endTime;
 
-    // Read from the cache the appear event populated, so both halves of a screen's lifetime carry
-    // the same viewName even if the host's content has since changed.
-    NRMASwiftUIScreen *swiftUIScreen = NRMA_SwiftUIScreenForController(self);
+    NSNumber *appearTimestamp    = objc_getAssociatedObject(vc, &kNRAppearTimestampKey);
+    NSNumber *loadTimestamp      = objc_getAssociatedObject(vc, &kNRLoadTimestampKey);
+    NSString *instanceId         = objc_getAssociatedObject(vc, &kNRViewInstanceIdKey);
 
-    if (!swiftUIScreen && NRMA_ShouldSkipClass([self class])) return;
-
-    CFAbsoluteTime disappearTime = [NRMAViewContext monotonicNow];
-
-    NSNumber *appearTimestamp    = objc_getAssociatedObject(self, &kNRAppearTimestampKey);
-    NSNumber *loadTimestamp      = objc_getAssociatedObject(self, &kNRLoadTimestampKey);
-    NSString *instanceId         = objc_getAssociatedObject(self, &kNRViewInstanceIdKey);
-    NSNumber *hasAppearedBefore  = objc_getAssociatedObject(self, &kNRHasAppearedBeforeKey);
-
-    if (!appearTimestamp || !instanceId) {
-        // viewDidAppear was never observed for this instance (agent started mid-session,
-        // or the view was ignored on appear).
-        return;
-    }
+    if (!appearTimestamp || !instanceId) { return; }
 
     // viewName: the resolved SwiftUI screen name, or the simple demangled name (or custom
     // override) for UIKit, e.g. "ProductDetailViewController"
-    NSString *viewName = swiftUIScreen ? swiftUIScreen.viewName : NRMA_ViewNameForController(self);
-    if (viewName == nil) return;
+    NSString *viewName = swiftUIScreen ? swiftUIScreen.viewName : NRMA_ViewNameForController(vc);
 
     double timeVisibleMs = [NRMAViewContext millisecondsBetween:appearTimestamp.doubleValue and:disappearTime];
 
-    // Same rule as the appear half: report loadTime only when there is a trustworthy construction
-    // start. This used to fall through to 0.0, which put a real zero into every percentile over
-    // loadTime for exactly the appearances that had nothing to measure -- every screen the user
-    // returned to, since viewDidLoad fires once per load.
+    // loadTime is reported only when there is a trustworthy construction start. This used to fall
+    // through to 0.0, which put a real zero into every percentile over loadTime for exactly the
+    // appearances that had nothing to measure -- every screen the user returned to, since
+    // viewDidLoad fires once per load.
     double loadTimeMs     = 0.0;
     BOOL loadIsMeasurable = NO;
     if (loadTimestamp) {
@@ -425,18 +484,21 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
         loadIsMeasurable = (loadTimeMs <= kNRMAMaxPlausibleLoadMs);
     }
 
-    BOOL isRestarted = (hasAppearedBefore != nil && hasAppearedBefore.boolValue);
     // viewClass: fully-qualified demangled name, e.g. "MyApp.ProductDetailViewController"
-    NSString *viewClass = swiftUIScreen ? swiftUIScreen.viewClass : NRMA_DemangledName([self class], YES);
+    NSString *viewClass = swiftUIScreen ? swiftUIScreen.viewClass : NRMA_DemangledName([vc class], YES);
+
+    NSDictionary *referrer = objc_getAssociatedObject(vc, &kNRReferrerKey);
 
     NRMAMobileViewFields *fields = [NRMAMobileViewFields new];
     fields.viewName      = viewName;
     fields.viewClass     = viewClass;
     fields.instanceId    = instanceId;
-    fields.platform      = swiftUIScreen ? @"SwiftUI" : @"UIKit";
-    fields.restarted     = @(isRestarted);
+    fields.uiFramework   = swiftUIScreen ? @"SwiftUI" : @"UIKit";
     fields.timeVisibleMs = @(timeVisibleMs);
-    fields.custom        = NRMA_AttributesForController(self);
+    fields.custom        = NRMA_AttributesForController(vc);
+    // The referrer this screen appeared from, captured back at viewDidAppear:.
+    fields.previousView           = referrer[@"previousView"];
+    fields.previousViewInstanceId = referrer[@"previousViewInstanceId"];
 
     if (loadIsMeasurable) {
         fields.loadTimeMs = @(loadTimeMs);
@@ -446,7 +508,7 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
         fields.loadTimeUnavailable = kNRLoadUnavailableNoConstructionObserved;
     }
 
-    [NRMAMobileViewRecorder recordDisappeared:fields];
+    [NRMAMobileViewRecorder record:fields];
 
     // Drop this instance from the visible-view stack. For UIKit this is bookkeeping rather than a
     // fix: viewDidAppear: fires on pop, so the uncovered screen reports a real appearance moments
@@ -454,16 +516,71 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
     // because a UIKit controller can be what a *SwiftUI* view was covering.
     [[NRMAViewContext sharedInstance] viewDidDisappearNamed:viewName instanceId:instanceId];
 
-    //NRLOG_AGENT_VERBOSE(@"[MobileViews] %@ — loadTime=%.1fms timeVisible=%.1fms restarted=%@",
-    //                    viewName, loadTimeSec, timeVisibleSec, isRestarted ? @"YES" : @"NO");
+    // Clear per-instance timing so stale data isn't carried forward. Clearing the appear timestamp
+    // is also what marks the visit closed, so a later viewDidDisappear: for a controller already
+    // flushed at background finds nothing to report rather than emitting the visit twice.
+    //
+    // The referrer is deliberately kept: if the app is foregrounded with this screen still up, the
+    // re-opened visit was still reached from the same place, and re-reading the context then would
+    // name this screen as its own referrer.
+    objc_setAssociatedObject(vc, &kNRLoadTimestampKey,   nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(vc, &kNRAppearTimestampKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(vc, &kNRViewInstanceIdKey,  nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
 
-    // Mark that this VC has appeared at least once (restarted = YES on next display)
-    objc_setAssociatedObject(self, &kNRHasAppearedBeforeKey,
-                             @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    // Clear per-instance timing so stale data isn't carried forward
-    objc_setAssociatedObject(self, &kNRLoadTimestampKey,   nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    objc_setAssociatedObject(self, &kNRAppearTimestampKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    objc_setAssociatedObject(self, &kNRViewInstanceIdKey,  nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+/*
+ * Starts a new visit for a controller that is still on screen after the app came back.
+ *
+ * Backgrounding ended the previous visit, and nothing re-announces a screen on the way back in:
+ * neither viewDidAppear: nor viewWillAppear: fires when an app is foregrounded, because from
+ * UIKit's point of view the screen never went anywhere. Without this the time the user spends on
+ * that screen after returning belongs to no visit at all, and the shared context's visible stack
+ * has a hole where this screen used to be -- so the next screen to appear would report whatever is
+ * left underneath as its referrer.
+ *
+ * No construction start: nothing was built or laid out, the app was merely resumed. That is the
+ * same shape as any other visit with no observed load, so `loadTime` is omitted and the reason
+ * recorded rather than a zero being invented.
+ */
+static void NRMA_ReopenVisit(UIViewController *vc, NRMASwiftUIScreen *swiftUIScreen, CFAbsoluteTime startTime) {
+    // Only re-open what a background flush closed. A controller whose visit is somehow still open
+    // must be left alone: overwriting its appear timestamp would strand that visit -- no event for
+    // it, and its entry stuck on the visible stack for another disappearance to resurrect.
+    if (objc_getAssociatedObject(vc, &kNRAppearTimestampKey) != nil) { return; }
+
+    NSString *viewName = swiftUIScreen ? swiftUIScreen.viewName : NRMA_ViewNameForController(vc);
+    if (NRMA_ShouldSkipViewName(viewName)) { return; }
+
+    NSString *uuid = [[NSUUID UUID] UUIDString];
+    objc_setAssociatedObject(vc, &kNRAppearTimestampKey, @(startTime), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(vc, &kNRViewInstanceIdKey,  uuid,        OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+
+    [[NRMAViewContext sharedInstance] transitionToView:viewName
+                                           instanceId:uuid
+                                           appearTime:startTime
+                                        loadStartTime:nil
+                                             platform:(swiftUIScreen ? @"SwiftUI" : @"UIKit")];
+}
+
+static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animated) {
+    if (orig_viewDidDisappear) orig_viewDidDisappear(self, _cmd, animated);
+
+    // Read from the cache viewDidAppear: populated, so the event names the screen as it was when
+    // it appeared even if the host's content has since changed.
+    NRMASwiftUIScreen *swiftUIScreen = NRMA_SwiftUIScreenForController(self);
+
+    if (!swiftUIScreen && NRMA_ShouldSkipClass([self class])) return;
+
+    // Off the on-screen list before the close-out, and unconditionally: a controller that
+    // disappeared while the app was backgrounded has no visit left to close, but it must still not
+    // be re-opened when the app comes back.
+    NRMA_MarkOffScreen(self);
+
+    NRMA_CloseVisit(self, swiftUIScreen, [NRMAViewContext monotonicNow]);
+
+    // The referrer outlives a background-flushed visit (see NRMA_CloseVisit), but not a real
+    // disappearance -- the next appearance of this controller gets its own.
+    objc_setAssociatedObject(self, &kNRReferrerKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 #endif
 
@@ -505,6 +622,34 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
 #endif
 
     });
+}
+
+- (void)flushOpenVisitsOnBackground {
+#if !TARGET_OS_WATCH
+    // One instant for every view, so two screens that were on screen together report the same end.
+    CFAbsoluteTime now = [NRMAViewContext monotonicNow];
+
+    // Newest first: closing the topmost screen first means each close-out uncovers the one beneath
+    // it in the shared context's visible stack, which is the same order a user leaving these screens
+    // would produce. Closing bottom-up would make a screen the user is not looking at current.
+    for (UIViewController *vc in [NRMA_OnScreenControllers() reverseObjectEnumerator]) {
+        NRMA_CloseVisit(vc, NRMA_SwiftUIScreenForController(vc), now);
+    }
+    // The controllers stay on the on-screen list: they are still on screen, and the app coming back
+    // must be able to re-open them.
+#endif
+}
+
+- (void)reopenOpenVisitsOnForeground {
+#if !TARGET_OS_WATCH
+    CFAbsoluteTime now = [NRMAViewContext monotonicNow];
+
+    // Oldest first, the mirror image of the flush: the last one pushed is the one the user is
+    // looking at, and it must end up on top of the visible stack and current.
+    for (UIViewController *vc in NRMA_OnScreenControllers()) {
+        NRMA_ReopenVisit(vc, NRMA_SwiftUIScreenForController(vc), now);
+    }
+#endif
 }
 
 @end

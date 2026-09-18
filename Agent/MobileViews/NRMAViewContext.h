@@ -5,7 +5,9 @@
 //  Thread-safe source of truth for the currently-visible view and the one before it (the
 //  "referrer"). All view producers funnel their transitions through here so breadcrumbs and
 //  MobileView events can be stamped with a consistent currentView / previousView, regardless
-//  of which producer is active:
+//  of which producer is active. Each producer emits exactly one MobileView event per visit, when
+//  the view goes away, and captures the referrer it reads here at appear time -- by emit time the
+//  current view is whatever replaced it:
 //
 //    - Automatic UIViewController swizzling  (NRMAMobileViewTracker, gated by AutomaticViews)
 //    - Automatic SwiftUI .NRMobileView       (NRViewModifier, gated by AutomaticViews)
@@ -19,10 +21,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/// Marks a MobileView appear event the agent synthesized because a screen became visible again
-/// when the view covering it went away, rather than because a producer observed an appearance.
-FOUNDATION_EXPORT NSString * const kNRMAAttributeReappeared;
-
 /// Longest construction-to-appear interval still treated as a measurement rather than an artifact.
 ///
 /// A load start is only trustworthy when the runtime built the screen *because* it was about to show
@@ -31,7 +29,7 @@ FOUNDATION_EXPORT NSString * const kNRMAAttributeReappeared;
 /// manual `beginViewLoad` may never be followed by a `setCurrentView:`. All three then report the
 /// interval since app launch as a screen load.
 ///
-/// Above this, `loadTime` and the `timeToInitialDisplay` baseline are both withheld and the appear
+/// Above this, `loadTime` and the `timeToInitialDisplay` baseline are both withheld and the view's
 /// event carries `loadTimeUnavailable` instead, so the omission is diagnosable in NRDB rather than
 /// looking like the attribute was never implemented.
 ///
@@ -77,7 +75,7 @@ FOUNDATION_EXPORT const double kNRMAMaxPlausibleLoadMs;
               appearTime:(CFAbsoluteTime)appearTime;
 
 /// As above, recording which producer saw the appearance so a synthesized re-appearance can report
-/// the same `uiPlatform` the original event did.
+/// the same `uiFramework` the original event did.
 - (void)transitionToView:(NSString *)name
               instanceId:(NSString *)instanceId
               appearTime:(CFAbsoluteTime)appearTime
@@ -96,23 +94,28 @@ FOUNDATION_EXPORT const double kNRMAMaxPlausibleLoadMs;
 /// re-appearance, a tab selection), the agent started mid-construction, or the interval exceeded
 /// `kNRMAMaxPlausibleLoadMs`. Then no baseline row is emitted and marks fall back to `appearTime` --
 /// which also means such a view has no baseline for a mark to be wrongly subtracted from. Whether a
-/// given visit had a construction start is recoverable from its `MobileView` appear event, which
-/// carries `loadTime` exactly when one was vouched for.
+/// given visit had a construction start is recoverable from its `MobileView` event, which carries
+/// `loadTime` exactly when one was vouched for.
 - (void)transitionToView:(NSString *)name
               instanceId:(NSString *)instanceId
               appearTime:(CFAbsoluteTime)appearTime
            loadStartTime:(nullable NSNumber *)loadStartTime
                 platform:(nullable NSString *)platform;
 
-/// Records that an automatically-tracked view instance is no longer visible, and synthesizes a
-/// MobileView appear event for whatever it was covering.
+/// Records that an automatically-tracked view instance is no longer visible, and makes whatever it
+/// was covering current again.
 ///
 /// SwiftUI is the reason this exists. `onDisappear` fires when a NavigationStack pushes past a
 /// view, but popping back to that view does *not* fire its `onAppear` again -- the root was never
 /// torn down -- so nothing tells the agent the screen is visible again. Without this, the next
 /// screen to appear reports a dismissed sheet as its `previousView`. UIKit does not have the
-/// problem (`viewDidAppear:` fires on pop) and is unaffected: a real appearance always supersedes
-/// a synthesized one.
+/// problem (`viewDidAppear:` fires on pop) and is unaffected: a real appearance supersedes whatever
+/// this inferred.
+///
+/// No MobileView event comes out of this. It infers that a screen is visible again, which is not a
+/// completed visit, and a completed visit is the only thing MobileView reports. The screen the pop
+/// returned to therefore has no event for that second visit -- SwiftUI will not re-fire its
+/// onAppear and its onDisappear has already fired, so no producer can close it out.
 ///
 /// `instanceId` identifies which visible lifetime ended, and it is removed from wherever it sits in
 /// the stack rather than only from the top. That matters because SwiftUI fires the *incoming*
@@ -138,13 +141,20 @@ FOUNDATION_EXPORT const double kNRMAMaxPlausibleLoadMs;
 - (void)beginManualViewLoad;
 
 /// Sets the current view by name (browser route-change / SPA model). If a manual view is already
-/// current, its MobileView `appeared:NO` event is emitted first (with timeVisible). Then `name`
-/// becomes current and its MobileView `appeared:YES` event is emitted (stamped with previousView).
+/// current, its MobileView event is emitted now -- that visit has just ended, so its `timeVisible`
+/// is finally knowable. `name` then becomes current and emits nothing yet; `attributes` are held
+/// and ride on its event when the *next* setCurrentView: (or a background flush) closes it out.
 /// Auto-tracked views that happen to be current are left for their own viewDidDisappear to close.
 - (void)setCurrentManualView:(NSString *)name attributes:(nullable NSDictionary<NSString *, id> *)attributes;
 
-/// If the current view was set manually, emits its `appeared:NO` MobileView event (with timeVisible)
-/// and clears it. Called on app background so the last manual view's duration is not lost.
+/// If the current view was set manually, emits its MobileView event (with timeVisible) and clears
+/// it. Called on app background so the last manual view produces an event at all -- it is otherwise
+/// closed out only by the next setCurrentView:, which may never come.
+///
+/// Manual views only. The automatic producers close out their own on-screen views at background --
+/// see -[NRMAMobileViewTracker flushOpenVisitsOnBackground] and the SwiftUI modifier -- and unlike
+/// them, a manual view is not re-opened on foreground: the agent cannot observe that the customer's
+/// screen is still up, only that they last named it. The next setCurrentView: opens the next visit.
 - (void)flushCurrentManualViewOnBackground;
 
 #pragma mark - Referrer accessors
@@ -156,6 +166,10 @@ FOUNDATION_EXPORT const double kNRMAMaxPlausibleLoadMs;
 
 /// Attributes for MobileView events, which already carry the current view as viewName:
 /// previousView, previousViewInstanceId (only keys with values are included).
+///
+/// Read this when a view *appears* and hold the result: a MobileView event is emitted at the end of
+/// a visit, by which point the current view is whatever replaced it and this would name the wrong
+/// screen.
 - (NSDictionary<NSString *, id> *)previousViewAttributes;
 
 /// Merges `referrerAttributes` into `attributes`, agent-owned referrer keys winning over any
