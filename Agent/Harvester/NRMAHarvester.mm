@@ -24,6 +24,7 @@
 #import "Constants.h"
 #import "NewRelicAgentInternal.h"
 #import "NewRelicInternalUtils.h"
+#import <NewRelic/NewRelic-Swift.h>
 #import "NRAutoLogCollector.h"
 
 #define kNRSupportabilityResponseCode kNRSupportabilityPrefix @"/Collector/ResponseStatusCodes"
@@ -922,6 +923,10 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
 
 - (void) setMaxOfflineStorageSize:(NSUInteger) size {
     [connection setMaxOfflineStorageSize:size];
+}
+
+- (void) backgroundFlush {
+    [connection.httpClient backgroundFlush];
 }
 
 - (void) handleLoggingConfigurationUpdate {
