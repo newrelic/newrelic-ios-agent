@@ -42,7 +42,7 @@ private let kNRViewAgentName = "iOS"
 
 /// The UI toolkit that observed the view. Absent when a producer genuinely does not know,
 /// which is why the record holds this as an optional rather than defaulting it.
-internal enum NRViewPlatform: String {
+internal enum NRViewFramework: String {
     case uiKit   = "UIKit"
     case swiftUI = "SwiftUI"
     case manual  = "Manual"
@@ -97,7 +97,7 @@ internal struct MobileViewRecord {
     var viewName: String
     var viewClass: String?
     var instanceId: String
-    var platform: NRViewPlatform?
+    var framework: NRViewFramework?
     var referrer: NRViewReferrer = .none
     /// Measured at appear time and carried until the visit ends. `nil` omits both loadTime
     /// and loadTimeUnavailable.
@@ -136,8 +136,8 @@ internal struct MobileViewRecord {
         // Omitted rather than defaulted: an absent uiFramework must read as absent, so a
         // producer that genuinely does not know which toolkit it saw cannot be mistaken for
         // one that reported an empty string.
-        if let platform = platform {
-            attrs[NRViewAttribute.uiFramework] = platform.rawValue
+        if let framework = framework {
+            attrs[NRViewAttribute.uiFramework] = framework.rawValue
         }
         if let navigationKind = navigationKind, !navigationKind.isEmpty {
             attrs[NRViewAttribute.navigationKind] = navigationKind
@@ -169,7 +169,7 @@ internal struct MobileViewRecord {
 
     @discardableResult
     internal func emit() -> Bool {
-        guard NRMobileViewEmitter.isEnabled(for: platform) else { return false }
+        guard NRMobileViewEmitter.isEnabled(for: framework) else { return false }
         return NRMobileViewEmitter.send(attributes(), timing: false)
     }
 }
@@ -217,8 +217,8 @@ internal enum NRMobileViewEmitter {
 
     /// The manual API and the automatic producers are gated by different flags, so a
     /// customer can enable one without the other.
-    internal static func isEnabled(for platform: NRViewPlatform?) -> Bool {
-        switch platform {
+    internal static func isEnabled(for framework: NRViewFramework?) -> Bool {
+        switch framework {
         case .some(.manual):
             return NRMAFlags.shouldEnableManualMobileViews()
         case .some(.uiKit), .some(.swiftUI):
@@ -301,7 +301,7 @@ public class NRMAMobileViewFields: NSObject {
             viewName: viewName,
             viewClass: viewClass,
             instanceId: instanceId,
-            platform: uiFramework.flatMap { NRViewPlatform(rawValue: $0) },
+            framework: uiFramework.flatMap { NRViewFramework(rawValue: $0) },
             referrer: referrer,
             load: load,
             timeVisibleMs: timeVisibleMs?.doubleValue,

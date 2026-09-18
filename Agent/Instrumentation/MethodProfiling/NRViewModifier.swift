@@ -244,7 +244,7 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
         MobileViewRecord(viewName: viewName,
                          viewClass: viewClass,
                          instanceId: id,
-                         platform: .swiftUI,
+                         framework: .swiftUI,
                          referrer: .explicit(name: referrerName,
                                              instanceId: referrerInstanceId),
                          load: loadOutcome,
