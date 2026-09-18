@@ -59,6 +59,8 @@
 
 + (BOOL) shouldEnableAutoCollectLogs;
 
++ (BOOL) shouldEnableURLSessionDelegateInjection;
+
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags;
 
 // Private Setting

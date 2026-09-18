@@ -11,6 +11,17 @@
 #import "NRMAURLSessionTaskOverride.h"
 #import "NRMAURLSessionOverride.h"
 #import "NRMAExceptionHandler.h"
+#import "NRLogger.h"
+
+static NSString *NRMA__fetchTypeName(NSURLSessionTaskMetricsResourceFetchType type) {
+    switch (type) {
+        case NSURLSessionTaskMetricsResourceFetchTypeNetworkLoad: return @"networkLoad";
+        case NSURLSessionTaskMetricsResourceFetchTypeServerPush:  return @"serverPush";
+        case NSURLSessionTaskMetricsResourceFetchTypeLocalCache:  return @"localCache";
+        case NSURLSessionTaskMetricsResourceFetchTypeUnknown:
+        default:                                                  return @"unknown";
+    }
+}
 
 @implementation NRURLSessionTaskDelegateBase
 
@@ -51,17 +62,24 @@
                                               withTimer:timer];
             } else {
                 NSData *data = NRMA__getDataForSessionTask(task);
+                NSString* fetchType = NRMA__getFetchTypeForSessionTask(task);
+                NSInteger wireStatus = NRMA__getWireStatusForSessionTask(task);
+                int64_t wireBytes = NRMA__getWireBytesForSessionTask(task);
 
                 [NRMANSURLConnectionSupport noticeResponse:task.response
                                                 forRequest:task.originalRequest
                                                  withTimer:timer
                                                    andBody:data
                                                  bytesSent:(NSUInteger)task.countOfBytesSent
-                                             bytesReceived:(NSUInteger)task.countOfBytesReceived];
+                                             bytesReceived:(NSUInteger)task.countOfBytesReceived
+                                         resourceFetchType:fetchType
+                                            wireStatusCode:wireStatus
+                                         wireBytesReceived:wireBytes];
             }
             // Set the timer corresponding with this task to nil since we just stopped it and recorded the network request.
             NRMA__setTimerForSessionTask(task, nil);
             NRMA__setDataForSessionTask(task, nil);
+            NRMA__setFetchTypeForSessionTask(task, nil);
         }
 
     } @catch(NSException* exception) {
@@ -82,6 +100,74 @@
         [self.realDelegate URLSession:session
                              dataTask:dataTask
                        didReceiveData:data];
+    }
+}
+
+- (void)URLSession:(NSURLSession *)session
+              task:(NSURLSessionTask *)task
+didFinishCollectingMetrics:(NSURLSessionTaskMetrics *)metrics
+{
+    // Async/await fallback for response body capture (see NRMAURLSessionOverride.m).
+    // didReceiveData: doesn't fire for URLSession.shared.data(for:) etc. on iOS 15+.
+    // Apple buffers bytes in __NSCFLocalSessionTask's private _dataTaskData ivar.
+    // Read it as a fallback only when our didReceiveData: stash is empty.
+    if (NRMA__getDataForSessionTask(task) == nil) {
+        NSData *bufferedData = nil;
+        @try { bufferedData = [task valueForKey:@"_dataTaskData"]; } @catch (...) {}
+        if ([bufferedData isKindOfClass:[NSData class]] && bufferedData.length > 0) {
+            NRMA__setDataForSessionTask(task, bufferedData);
+        }
+    }
+
+    @try {
+        NSURLSessionTaskTransactionMetrics *last = metrics.transactionMetrics.lastObject;
+        NSInteger appVisibleStatus = [task.response isKindOfClass:[NSHTTPURLResponse class]]
+            ? [(NSHTTPURLResponse *)task.response statusCode] : -1;
+        NSInteger finalWireStatus  = [last.response isKindOfClass:[NSHTTPURLResponse class]]
+            ? [(NSHTTPURLResponse *)last.response statusCode] : -1;
+
+        // Stash on the task so didCompleteWithError: can attach them to the MobileRequest event.
+        NRMA__setFetchTypeForSessionTask(task, NRMA__fetchTypeName(last.resourceFetchType));
+        if (finalWireStatus > 0) {
+            NRMA__setWireStatusForSessionTask(task, finalWireStatus);
+        }
+        if (last.countOfResponseBodyBytesReceived > 0) {
+            NRMA__setWireBytesForSessionTask(task, last.countOfResponseBodyBytesReceived);
+        }
+
+        NRLOG_AGENT_INFO(@"[NRFetch] url=%@ txCount=%lu finalFetchType=%@(%ld) "
+                         @"finalWireStatus=%ld appVisibleStatus=%ld reusedConn=%d proxy=%d",
+                         task.originalRequest.URL.absoluteString,
+                         (unsigned long)metrics.transactionMetrics.count,
+                         NRMA__fetchTypeName(last.resourceFetchType),
+                         (long)last.resourceFetchType,
+                         (long)finalWireStatus,
+                         (long)appVisibleStatus,
+                         last.reusedConnection,
+                         last.proxyConnection);
+
+        NSUInteger i = 0;
+        for (NSURLSessionTaskTransactionMetrics *t in metrics.transactionMetrics) {
+            NSInteger wireStatus = [t.response isKindOfClass:[NSHTTPURLResponse class]]
+                ? [(NSHTTPURLResponse *)t.response statusCode] : -1;
+            NRLOG_AGENT_INFO(@"[NRFetch.tx %lu] fetchType=%@(%ld) wireStatus=%ld reusedConn=%d",
+                             (unsigned long)i,
+                             NRMA__fetchTypeName(t.resourceFetchType),
+                             (long)t.resourceFetchType,
+                             (long)wireStatus,
+                             t.reusedConnection);
+            i++;
+        }
+    } @catch (NSException *exception) {
+        [NRMAExceptionHandler logException:exception
+                                     class:NSStringFromClass([self class])
+                                  selector:@"URLSession:task:didFinishCollectingMetrics:"];
+    }
+
+    if ([self.realDelegate respondsToSelector:@selector(URLSession:task:didFinishCollectingMetrics:)]) {
+        [(id<NSURLSessionTaskDelegate>)self.realDelegate URLSession:session
+                                                              task:task
+                                       didFinishCollectingMetrics:metrics];
     }
 }
 

@@ -29,6 +29,35 @@ NS_ASSUME_NONNULL_BEGIN
                  traceHeaders:(NSDictionary<NSString*,NSString*>* _Nullable)traceHeaders
                        params:(NSDictionary* _Nullable)params;
 
+/// Variant that captures URLSessionTaskMetrics-derived fields. Pass nil/0 when the metrics
+/// callback didn't fire (e.g. URLSession.shared completion-handler path).
++ (void) noticeNetworkRequest:(NSURLRequest*)request
+                     response:(NSURLResponse*)response
+                    withTimer:(NRTimer*)timer
+                    bytesSent:(NSUInteger)bytesSent
+                bytesReceived:(NSUInteger)bytesReceived
+                 responseData:(NSData* _Nullable)responseData
+                 traceHeaders:(NSDictionary<NSString*,NSString*>* _Nullable)traceHeaders
+                       params:(NSDictionary* _Nullable)params
+            resourceFetchType:(NSString* _Nullable)resourceFetchType
+               wireStatusCode:(NSInteger)wireStatusCode;
+
+/// Variant that also accepts the authoritative wire-bytes-received from
+/// URLSessionTaskTransactionMetrics.countOfResponseBodyBytesReceived. When non-zero, this
+/// value is reported as bytesReceived (bypassing the gzip-recompression estimate). Pass 0
+/// when the metrics callback didn't fire.
++ (void) noticeNetworkRequest:(NSURLRequest*)request
+                     response:(NSURLResponse*)response
+                    withTimer:(NRTimer*)timer
+                    bytesSent:(NSUInteger)bytesSent
+                bytesReceived:(NSUInteger)bytesReceived
+                 responseData:(NSData* _Nullable)responseData
+                 traceHeaders:(NSDictionary<NSString*,NSString*>* _Nullable)traceHeaders
+                       params:(NSDictionary* _Nullable)params
+            resourceFetchType:(NSString* _Nullable)resourceFetchType
+               wireStatusCode:(NSInteger)wireStatusCode
+            wireBytesReceived:(int64_t)wireBytesReceived;
+
 + (void) noticeNetworkFailure:(NSURLRequest*)request
                     withTimer:(NRTimer*)timer
                     withError:(NSError*)error;

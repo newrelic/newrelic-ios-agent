@@ -20,10 +20,109 @@
 #import "NRMAAssociate.h"
 #import "NRMAURLSessionTaskSearch.h"
 #import "NRMAFlags.h"
+#import "NRLogger.h"
 
 #define NRMASwizzledMethodPrefix @"_NRMAOverride__"
 
+// Phase-2 viability probe: try to read private NSURLSessionTaskMetrics on tasks
+// that have NO delegate (URLSession.shared completion-handler path, async/await path).
+// Diagnostic-only; never ship enabled.
+#define NR_DEBUG_FETCH_TYPE_PROBE 1
+
+#if NR_DEBUG_FETCH_TYPE_PROBE
+static NSString *NRMA__probeFetchTypeName(NSInteger type) {
+    switch (type) {
+        case 0: return @"unknown";
+        case 1: return @"networkLoad";
+        case 2: return @"serverPush";
+        case 3: return @"localCache";
+        default: return @"?";
+    }
+}
+
+static void NRMA__probeTaskMetrics(NSURLSessionTask *task, NSString *origin) {
+    @try {
+        // _metrics is private SPI on NSURLSessionTask. KVC peek — diagnostic only.
+        id m = nil;
+        @try { m = [task valueForKey:@"_metrics"]; } @catch (...) {}
+        if (m == nil) {
+            @try { m = [task valueForKey:@"metrics"]; } @catch (...) {}
+        }
+        if (m == nil) {
+            NRLOG_AGENT_INFO(@"[NRFetchProbe %@] url=%@ metrics=nil",
+                             origin, task.originalRequest.URL.absoluteString);
+            return;
+        }
+
+        NSInteger appVisibleStatus = [task.response isKindOfClass:[NSHTTPURLResponse class]]
+            ? [(NSHTTPURLResponse *)task.response statusCode] : -1;
+
+        // Public path: m is a real NSURLSessionTaskMetrics.
+        if ([m respondsToSelector:@selector(transactionMetrics)]) {
+            NSURLSessionTaskMetrics *pub = (NSURLSessionTaskMetrics *)m;
+            NSURLSessionTaskTransactionMetrics *last = pub.transactionMetrics.lastObject;
+            NSInteger wireStatus = [last.response isKindOfClass:[NSHTTPURLResponse class]]
+                ? [(NSHTTPURLResponse *)last.response statusCode] : -1;
+            NRLOG_AGENT_INFO(@"[NRFetchProbe %@] url=%@ txCount=%lu finalFetchType=%@(%ld) "
+                             @"finalWireStatus=%ld appVisibleStatus=%ld",
+                             origin,
+                             task.originalRequest.URL.absoluteString,
+                             (unsigned long)pub.transactionMetrics.count,
+                             NRMA__probeFetchTypeName(last.resourceFetchType),
+                             (long)last.resourceFetchType,
+                             (long)wireStatus,
+                             (long)appVisibleStatus);
+            return;
+        }
+
+        // Private path: iOS 26+ stores metrics as __CFN_TaskMetrics, an NSObject-rooted
+        // CF-bridged type that exposes only _daemon_* selectors. The public properties
+        // (transactionMetrics, response, resourceFetchType) are NOT reachable here —
+        // Apple synthesizes them only when bridging to NSURLSessionTaskMetrics for
+        // didFinishCollectingMetrics: delivery. We log what we *can* read.
+        SEL daemonTxSel = NSSelectorFromString(@"_daemon_transactionMetrics");
+        if (![m respondsToSelector:daemonTxSel]) {
+            NRLOG_AGENT_INFO(@"[NRFetchProbe %@] url=%@ unsupported metrics class=%@ appVisibleStatus=%ld",
+                             origin,
+                             task.originalRequest.URL.absoluteString,
+                             NSStringFromClass([m class]),
+                             (long)appVisibleStatus);
+            return;
+        }
+
+        // Cast through IMP to silence ARC's "no known method" warning.
+        IMP imp = [m methodForSelector:daemonTxSel];
+        NSArray *txs = ((NSArray *(*)(id, SEL))imp)(m, daemonTxSel);
+
+        int64_t wireBodyBytes = -1;
+        SEL bodyBytesSel = NSSelectorFromString(@"_daemon_responseBodyTransferSize");
+        id lastTx = txs.lastObject;
+        if ([lastTx respondsToSelector:bodyBytesSel]) {
+            NSMethodSignature *sig = [lastTx methodSignatureForSelector:bodyBytesSel];
+            NSInvocation *inv = [NSInvocation invocationWithMethodSignature:sig];
+            inv.selector = bodyBytesSel;
+            [inv invokeWithTarget:lastTx];
+            [inv getReturnValue:&wireBodyBytes];
+        }
+
+        NRLOG_AGENT_INFO(@"[NRFetchProbe %@] url=%@ private=%@ txCount=%lu "
+                         @"wireBodyBytes=%lld appVisibleStatus=%ld "
+                         @"(fetchType requires delegate path)",
+                         origin,
+                         task.originalRequest.URL.absoluteString,
+                         NSStringFromClass([m class]),
+                         (unsigned long)txs.count,
+                         (long long)wireBodyBytes,
+                         (long)appVisibleStatus);
+    } @catch (NSException *e) {
+        NRLOG_AGENT_INFO(@"[NRFetchProbe %@] exception: %@", origin, e);
+    }
+}
+#endif
+
 IMP NRMAOriginal__sessionWithConfiguration_delegate_delegateQueue;
+IMP NRMAOriginal__sessionWithConfiguration;
+IMP NRMAOriginal__sharedSession;
 
 IMP NRMAOriginal__dataTaskWithRequest;
 IMP NRMAOriginal__dataTaskWithRequest_completionHandler;
@@ -45,6 +144,114 @@ void NRMA__instanceSwizzleIfNotSwizzled(Class clazz, SEL selector, IMP newImplem
 
 @implementation PayloadHolder
 @end
+
+#pragma mark - Metrics-only injected delegate
+
+// Lightweight session delegate injected when the customer didn't supply one
+// (URLSession.shared and URLSession(configuration:)) so we can capture
+// resourceFetchType / wireStatusCode from didFinishCollectingMetrics:.
+// Also implements didReceiveData: so the agent can capture the response body
+// for async/await calls on URLSession.shared (which otherwise has no public
+// hook for body bytes). didCompleteWithError: is deliberately NOT implemented
+// so customer completion handlers continue to receive bytes from Apple's
+// internal data path unchanged.
+@interface NRMAURLSessionMetricsOnlyDelegate : NSObject <NSURLSessionTaskDelegate, NSURLSessionDataDelegate>
+@end
+
+static NSString *NRMA__injectedFetchTypeName(NSURLSessionTaskMetricsResourceFetchType type) {
+    switch (type) {
+        case NSURLSessionTaskMetricsResourceFetchTypeNetworkLoad: return @"networkLoad";
+        case NSURLSessionTaskMetricsResourceFetchTypeServerPush:  return @"serverPush";
+        case NSURLSessionTaskMetricsResourceFetchTypeLocalCache:  return @"localCache";
+        case NSURLSessionTaskMetricsResourceFetchTypeUnknown:
+        default:                                                  return @"unknown";
+    }
+}
+
+@implementation NRMAURLSessionMetricsOnlyDelegate
+
+- (void)URLSession:(NSURLSession *)session
+          dataTask:(NSURLSessionDataTask *)dataTask
+    didReceiveData:(NSData *)data
+{
+    if (data.length == 0) return;
+    @try {
+        NSData *existing = NRMA__getDataForSessionTask(dataTask);
+        if (existing.length > 0) {
+            NSMutableData *combined = [NSMutableData dataWithCapacity:existing.length + data.length];
+            [combined appendData:existing];
+            [combined appendData:data];
+            NRMA__setDataForSessionTask(dataTask, combined);
+        } else {
+            NRMA__setDataForSessionTask(dataTask, data);
+        }
+    } @catch (NSException *e) {
+        [NRMAExceptionHandler logException:e
+                                     class:NSStringFromClass([self class])
+                                  selector:@"URLSession:dataTask:didReceiveData:"];
+    }
+}
+
+- (void)URLSession:(NSURLSession *)session
+              task:(NSURLSessionTask *)task
+didFinishCollectingMetrics:(NSURLSessionTaskMetrics *)metrics
+{
+    // Async/await fallback for response body capture.
+    // On iOS 15+, URLSession.shared.data(for:) and friends do NOT call
+    // URLSession:dataTask:didReceiveData: on the session-level delegate —
+    // Apple buffers bytes inside __NSCFLocalSessionTask's private _dataTaskData
+    // ivar to feed the awaited continuation. By the time this metrics callback
+    // fires, the buffer is fully populated and the continuation has not yet
+    // drained it. KVC-read it as a fallback, but ONLY when our normal
+    // didReceiveData: stash is empty — so on paths where didReceiveData: did
+    // fire we keep using the canonical accumulated buffer.
+    if (NRMA__getDataForSessionTask(task) == nil) {
+        NSData *bufferedData = nil;
+        @try { bufferedData = [task valueForKey:@"_dataTaskData"]; } @catch (...) {}
+        if ([bufferedData isKindOfClass:[NSData class]] && bufferedData.length > 0) {
+            NRMA__setDataForSessionTask(task, bufferedData);
+        }
+    }
+
+    @try {
+        NSURLSessionTaskTransactionMetrics *last = metrics.transactionMetrics.lastObject;
+        NRMA__setFetchTypeForSessionTask(task, NRMA__injectedFetchTypeName(last.resourceFetchType));
+        NSInteger wire = [last.response isKindOfClass:[NSHTTPURLResponse class]]
+            ? [(NSHTTPURLResponse *)last.response statusCode] : 0;
+        if (wire > 0) {
+            NRMA__setWireStatusForSessionTask(task, wire);
+        }
+        if (last.countOfResponseBodyBytesReceived > 0) {
+            NRMA__setWireBytesForSessionTask(task, last.countOfResponseBodyBytesReceived);
+        }
+    } @catch (NSException *e) {
+        [NRMAExceptionHandler logException:e
+                                     class:NSStringFromClass([self class])
+                                  selector:@"URLSession:task:didFinishCollectingMetrics:"];
+    }
+}
+
+@end
+
+// Lazily-constructed session that the +sharedSession swizzle hands out. Built
+// directly via the original IMP so our wrap-the-delegate swizzle on
+// sessionWithConfiguration:delegate:delegateQueue: doesn't double-wrap.
+static NSURLSession *NRMA__injectedSharedSession(void) {
+    static NSURLSession *sharedInstance = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        if (NRMAOriginal__sessionWithConfiguration_delegate_delegateQueue == nil) return;
+        NRMAURLSessionMetricsOnlyDelegate *delegate = [NRMAURLSessionMetricsOnlyDelegate new];
+        Class sessionClass = objc_getClass("NSURLSession");
+        SEL sel = @selector(sessionWithConfiguration:delegate:delegateQueue:);
+        sharedInstance = ((id(*)(id, SEL, id, id, id))NRMAOriginal__sessionWithConfiguration_delegate_delegateQueue)(
+            sessionClass, sel,
+            [NSURLSessionConfiguration defaultSessionConfiguration],
+            delegate,
+            nil);
+    });
+    return sharedInstance;
+}
 
 @interface NRMAIMPContainer : NSObject
 @property(readonly) IMP imp;
@@ -105,12 +312,35 @@ void NRMA__instanceSwizzleIfNotSwizzled(Class clazz, SEL selector, IMP newImplem
     if ([NRMAFlags shouldEnableSwiftAsyncURLSessionSupport]) {
         [self swizzleURLSessionTask];
     }
+
+    if ([NRMAFlags shouldEnableURLSessionDelegateInjection]) {
+        Class baseSessionClass = objc_getClass("NSURLSession");
+        if (baseSessionClass) {
+            // Class methods live on the metaclass.
+            NRMAOriginal__sessionWithConfiguration = NRMASwapImplementations(baseSessionClass,
+                                                                             @selector(sessionWithConfiguration:),
+                                                                             (IMP)NRMAOverride__sessionWithConfiguration);
+            NRMAOriginal__sharedSession = NRMASwapImplementations(baseSessionClass,
+                                                                  @selector(sharedSession),
+                                                                  (IMP)NRMAOverride__sharedSession);
+        }
+    }
 }
 
 + (void) deinstrument
 {
     id clazz = objc_getClass("NSURLSession");
     if (clazz) {
+        // Reverse the delegate-injection swizzles first, before the metaclass shifts.
+        if (NRMAOriginal__sessionWithConfiguration != nil) {
+            NRMASwapImplementations(clazz, @selector(sessionWithConfiguration:), (IMP)NRMAOriginal__sessionWithConfiguration);
+            NRMAOriginal__sessionWithConfiguration = nil;
+        }
+        if (NRMAOriginal__sharedSession != nil) {
+            NRMASwapImplementations(clazz, @selector(sharedSession), (IMP)NRMAOriginal__sharedSession);
+            NRMAOriginal__sharedSession = nil;
+        }
+
         //session task overrides
         NRMASwapImplementations(clazz, @selector(sessionWithConfiguration:delegate:delegateQueue:), (IMP)NRMAOriginal__sessionWithConfiguration_delegate_delegateQueue);
         
@@ -170,12 +400,65 @@ NSURLSession* NRMAOverride__sessionWithConfiguration_delegate_delegateQueue(id s
                                                                           id<NSURLSessionDelegate> delegate,
                                                                           NSOperationQueue* queue)
 {
-    NSURLSession* session =  ((id(*)(id, SEL, id, id, id))NRMAOriginal__sessionWithConfiguration_delegate_delegateQueue)(self,
+    id wrappedDelegate = nil;
+    if (delegate != nil) {
+        // Don't wrap our own injected delegate.
+        if ([delegate isKindOfClass:[NRMAURLSessionMetricsOnlyDelegate class]]) {
+            wrappedDelegate = delegate;
+        } else {
+            wrappedDelegate = [[NRMAURLSessionTaskDelegate alloc] initWithOriginalDelegate:delegate];
+        }
+    } else if ([NRMAFlags shouldEnableURLSessionDelegateInjection]) {
+        wrappedDelegate = [NRMAURLSessionMetricsOnlyDelegate new];
+    }
+
+    NSURLSession* session = ((id(*)(id, SEL, id, id, id))NRMAOriginal__sessionWithConfiguration_delegate_delegateQueue)(self,
                                                                                          _cmd,
                                                                                          configuration,
-                                                                                         delegate?[[NRMAURLSessionTaskDelegate alloc] initWithOriginalDelegate:delegate]:nil,
+                                                                                         wrappedDelegate,
                                                                                          queue);
     return session;
+}
+
+NSURLSession* NRMAOverride__sessionWithConfiguration(id self, SEL _cmd, NSURLSessionConfiguration* configuration)
+{
+    if (NRMAOriginal__sessionWithConfiguration == nil) {
+        return nil;
+    }
+
+    if (![NRMAFlags shouldEnableURLSessionDelegateInjection]) {
+        return ((id(*)(id, SEL, id))NRMAOriginal__sessionWithConfiguration)(self, _cmd, configuration);
+    }
+
+    // Inject our metrics-only delegate by routing through the original
+    // sessionWithConfiguration:delegate:delegateQueue: IMP — bypassing our
+    // wrap-the-delegate swizzle so the delegate isn't double-wrapped.
+    if (NRMAOriginal__sessionWithConfiguration_delegate_delegateQueue == nil) {
+        return ((id(*)(id, SEL, id))NRMAOriginal__sessionWithConfiguration)(self, _cmd, configuration);
+    }
+
+    NRMAURLSessionMetricsOnlyDelegate *delegate = [NRMAURLSessionMetricsOnlyDelegate new];
+    SEL fullSel = @selector(sessionWithConfiguration:delegate:delegateQueue:);
+    return ((id(*)(id, SEL, id, id, id))NRMAOriginal__sessionWithConfiguration_delegate_delegateQueue)(self,
+                                                                                                       fullSel,
+                                                                                                       configuration,
+                                                                                                       delegate,
+                                                                                                       nil);
+}
+
+NSURLSession* NRMAOverride__sharedSession(id self, SEL _cmd)
+{
+    if (![NRMAFlags shouldEnableURLSessionDelegateInjection]) {
+        if (NRMAOriginal__sharedSession == nil) return nil;
+        return ((id(*)(id, SEL))NRMAOriginal__sharedSession)(self, _cmd);
+    }
+
+    NSURLSession *injected = NRMA__injectedSharedSession();
+    if (injected != nil) return injected;
+
+    // Fall back to original if injection couldn't build a session.
+    if (NRMAOriginal__sharedSession == nil) return nil;
+    return ((id(*)(id, SEL))NRMAOriginal__sharedSession)(self, _cmd);
 }
 
 
@@ -484,12 +767,33 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromData_completionH
 
 void NRMA__recordTask(NSURLSessionTask* task, NSData* data, NSURLResponse* response, NSError* error)
 {
+#if NR_DEBUG_FETCH_TYPE_PROBE
+    NRMA__probeTaskMetrics(task, @"recordTask");
+#endif
     @try {
         NRTimer* timer = NRMA__getTimerForSessionTask(task);
         // If there is no timer, let's not record this network activity. this could mean a session executed before task was instrumented or the request has already been instrumented by another handler.
         if (timer) {
 
             [timer stopTimer];
+
+            // Last-resort body recovery for async paths: if no caller delivered data
+            // and the delegate's didFinishCollectingMetrics fallback didn't populate
+            // the stash either, KVC-read __NSCFLocalSessionTask's _dataTaskData.
+            // Apple's async data(for:)/data(from:) buffers the body there for the
+            // continuation; the buffer survives until the task is fully released.
+            if (data == nil || data.length == 0) {
+                @try {
+                    NSData *buffered = [task valueForKey:@"_dataTaskData"];
+                    if ([buffered isKindOfClass:[NSData class]] && buffered.length > 0) {
+                        data = buffered;
+                    }
+                } @catch (...) {}
+            }
+
+            NSString* fetchType = NRMA__getFetchTypeForSessionTask(task);
+            NSInteger wireStatus = NRMA__getWireStatusForSessionTask(task);
+            int64_t wireBytes = NRMA__getWireBytesForSessionTask(task);
 
             if (error) {
                 [NRMANSURLConnectionSupport noticeError:error
@@ -501,11 +805,15 @@ void NRMA__recordTask(NSURLSessionTask* task, NSData* data, NSURLResponse* respo
                                                withTimer:timer
                                                  andBody:data
                                                bytesSent:(NSUInteger)task.countOfBytesSent
-                                           bytesReceived:(NSUInteger)task.countOfBytesReceived];
+                                           bytesReceived:(NSUInteger)task.countOfBytesReceived
+                                       resourceFetchType:fetchType
+                                          wireStatusCode:wireStatus
+                                       wireBytesReceived:wireBytes];
             }
             // Set the timer corresponding with this task to nil since we just stopped it and recorded the network request.
             NRMA__setTimerForSessionTask(task, nil);
             NRMA__setDataForSessionTask(task, nil);
+            NRMA__setFetchTypeForSessionTask(task, nil);
         }
 
     } @catch (NSException* exception) {
@@ -547,4 +855,43 @@ NSData* NRMA__getDataForSessionTask(NSURLSessionTask* task)
     if (task == nil) return nil;
 
     return objc_getAssociatedObject(task, kNRSessionDataAssociatedObject);
+}
+
+NSString* NRMA__getFetchTypeForSessionTask(NSURLSessionTask* task)
+{
+    if (task == nil) return nil;
+    return objc_getAssociatedObject(task, kNRFetchTypeAssociatedObject);
+}
+
+void NRMA__setFetchTypeForSessionTask(NSURLSessionTask* task, NSString* fetchType)
+{
+    if (task == nil) return;
+    objc_AssociationPolicy policy = fetchType ? OBJC_ASSOCIATION_RETAIN_NONATOMIC : OBJC_ASSOCIATION_ASSIGN;
+    objc_setAssociatedObject(task, kNRFetchTypeAssociatedObject, fetchType, policy);
+}
+
+NSInteger NRMA__getWireStatusForSessionTask(NSURLSessionTask* task)
+{
+    if (task == nil) return 0;
+    NSNumber* val = objc_getAssociatedObject(task, kNRWireStatusAssociatedObject);
+    return val ? [val integerValue] : 0;
+}
+
+void NRMA__setWireStatusForSessionTask(NSURLSessionTask* task, NSInteger wireStatus)
+{
+    if (task == nil) return;
+    objc_setAssociatedObject(task, kNRWireStatusAssociatedObject, @(wireStatus), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+int64_t NRMA__getWireBytesForSessionTask(NSURLSessionTask* task)
+{
+    if (task == nil) return 0;
+    NSNumber* val = objc_getAssociatedObject(task, kNRWireBytesAssociatedObject);
+    return val ? [val longLongValue] : 0;
+}
+
+void NRMA__setWireBytesForSessionTask(NSURLSessionTask* task, int64_t wireBytes)
+{
+    if (task == nil) return;
+    objc_setAssociatedObject(task, kNRWireBytesAssociatedObject, @(wireBytes), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }

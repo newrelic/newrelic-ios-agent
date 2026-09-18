@@ -323,6 +323,46 @@ static SEL swizzleSelectors[swizzleCount] = {NULL, NULL};
              bytesSent:(NSUInteger)sent
          bytesReceived:(NSUInteger)received
 {
+    [self noticeResponse:response
+              forRequest:request
+               withTimer:timer
+                 andBody:body
+               bytesSent:sent
+           bytesReceived:received
+       resourceFetchType:nil
+          wireStatusCode:0];
+}
+
++ (void)noticeResponse:(NSURLResponse *)response
+            forRequest:(NSURLRequest *)request
+             withTimer:(NRTimer *)timer
+               andBody:(NSData *)body
+             bytesSent:(NSUInteger)sent
+         bytesReceived:(NSUInteger)received
+     resourceFetchType:(NSString *)resourceFetchType
+        wireStatusCode:(NSInteger)wireStatusCode
+{
+    [self noticeResponse:response
+              forRequest:request
+               withTimer:timer
+                 andBody:body
+               bytesSent:sent
+           bytesReceived:received
+       resourceFetchType:resourceFetchType
+          wireStatusCode:wireStatusCode
+       wireBytesReceived:0];
+}
+
++ (void)noticeResponse:(NSURLResponse *)response
+            forRequest:(NSURLRequest *)request
+             withTimer:(NRTimer *)timer
+               andBody:(NSData *)body
+             bytesSent:(NSUInteger)sent
+         bytesReceived:(NSUInteger)received
+     resourceFetchType:(NSString *)resourceFetchType
+        wireStatusCode:(NSInteger)wireStatusCode
+     wireBytesReceived:(int64_t)wireBytesReceived
+{
     // ignore self-instrumentation here, the agent records this stuff into Supportability metrics elsewhere
     if ([NRMANSURLConnectionSupport isNewRelicServiceRequest:request]) {
         return;
@@ -335,7 +375,10 @@ static SEL swizzleSelectors[swizzleCount] = {NULL, NULL};
                               bytesReceived:received
                                responseData:body
                                traceHeaders:nil
-                                     params:nil];
+                                     params:nil
+                          resourceFetchType:resourceFetchType
+                             wireStatusCode:wireStatusCode
+                          wireBytesReceived:wireBytesReceived];
 }
 
 + (NRMANSURLConnectionDelegate*) generateProxyFromDelegate:(id<NSURLConnectionDelegate>)realDelegate
