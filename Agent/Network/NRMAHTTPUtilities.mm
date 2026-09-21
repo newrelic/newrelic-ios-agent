@@ -7,11 +7,9 @@
 //
 
 #include <iostream>
-#include <sstream>
 
 #include <Connectivity/Facade.hpp>
 
-#import "NRMABase64.h"
 #import "NRMAHTTPUtilities.h"
 #import "NRMAHarvestController.h"
 #import "NRMAFlags.h"
@@ -101,12 +99,7 @@ NSString* currentParentId = @"";
     if(payload == nil) { return nil; }
     
     NSDictionary<NSString*, NSString*> *connectivityHeaders = [NRMAHTTPUtilities generateConnectivityHeadersWithNRMAPayload:payload];
-    
-    if(connectivityHeaders[NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY].length) {
-        [request setValue:connectivityHeaders[NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY]
-       forHTTPHeaderField:NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY];
-    }
-    
+
     BOOL dtError = false;
     if(connectivityHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY].length) {
         [request setValue:connectivityHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY]
@@ -131,7 +124,7 @@ NSString* currentParentId = @"";
                            value:@1
                        scope:@""]];
     }
-    
+
     return payload;
 }
 
@@ -151,12 +144,7 @@ NSString* currentParentId = @"";
     if(payloadContainer == nil) { return nil; }
     
     NSDictionary<NSString*, NSString*> *connectivityHeaders = [NRMAHTTPUtilities generateConnectivityHeadersWithPayload:payloadContainer];
-    
-    if(connectivityHeaders[NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY].length) {
-        [request setValue:connectivityHeaders[NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY]
-       forHTTPHeaderField:NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY];
-    }
-    
+
     BOOL dtError = false;
     if(connectivityHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY].length) {
         [request setValue:connectivityHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY]
@@ -225,19 +213,12 @@ NSString* currentParentId = @"";
     if(payload == nil) {
         return @{};
     }
-    NSDictionary *json;
-    
-    if(payload != nil) {
-        json = [payload JSONObject];
-    }
-    
+
     NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithNRMAPayload:payload];
     NSString *traceParent = [W3CTraceParent headerFromContext:traceContext];
     NSString *traceState = [W3CTraceState headerFromContext:traceContext];
-    NSString *encodedPayloadHeader = [NRMABase64 encodeFromData:[NSJSONSerialization  dataWithJSONObject:json options:0 error:nil]];
-    
-    return @{NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY:encodedPayloadHeader,
-             W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY:traceParent,
+
+    return @{W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY:traceParent,
              W3C_DISTRIBUTED_TRACING_STATE_HEADER_KEY:traceState};
 }
 
@@ -264,25 +245,13 @@ NSString* currentParentId = @"";
     if(payloadContainer == nil) {
         return @{};
     }
-    NSString *payloadHeader;
     const std::unique_ptr<NewRelic::Connectivity::Payload>& payload = [payloadContainer getReference];
-    
-    if(payload != nullptr) {
-        auto json = payload->toJSON();
-        std::stringstream s;
-        s << json;
-        
-        payloadHeader = [NSString stringWithCString:s.str().c_str()
-                                           encoding:NSUTF8StringEncoding];
-    }
-    
+
     NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithPayload:payload];
     NSString *traceParent = [W3CTraceParent headerFromContext:traceContext];
     NSString *traceState = [W3CTraceState headerFromContext:traceContext];
-    NSString *encodedPayloadHeader = [NRMABase64 encodeFromData:[payloadHeader dataUsingEncoding:NSUTF8StringEncoding]];
-    
-    return @{NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY:encodedPayloadHeader,
-             W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY:traceParent,
+
+    return @{W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY:traceParent,
              W3C_DISTRIBUTED_TRACING_STATE_HEADER_KEY:traceState};
 }
 
