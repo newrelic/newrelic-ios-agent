@@ -12,7 +12,6 @@
 #import "NRMAAppToken.h"
 #import "NRMAHarvestController.h"
 #import "NRTestConstants.h"
-#import "NRMABase64.h"
 #import "NRMAFlags.h"
 
 @interface NRMAHTTPUtilitiesTests : XCTestCase
@@ -40,13 +39,9 @@
     XCTAssertNotNil(payload);
 
     NSDictionary<NSString *, NSString *>* headers = [mutableRequest allHTTPHeaderFields];
-    NSString* newrelicHeader = headers[@"newrelic"];
 
-    NSDictionary* decodedDict = [NSJSONSerialization JSONObjectWithData:[[NSData alloc] initWithBase64EncodedString:newrelicHeader options:0]
-                                                           options:0
-                                                             error:nil];
-    // By default no "tk" is set, so we test for the default behavior of not including tk if no trust key is found.
-    XCTAssertNil(decodedDict[@"d"][@"tk"]);
+    // The proprietary "newrelic" header is no longer sent for Distributed Tracing.
+    XCTAssertNil(headers[@"newrelic"]);
 
     NSString* traceparent = headers[@"traceparent"];
     XCTAssertNotNil(traceparent);
@@ -74,13 +69,9 @@
     XCTAssertNotNil(payload);
 
     NSDictionary<NSString *, NSString *>* headers = [mutableRequest allHTTPHeaderFields];
-    NSString* newrelicHeader = headers[@"newrelic"];
 
-    NSDictionary* decodedDict = [NSJSONSerialization JSONObjectWithData:[[NSData alloc] initWithBase64EncodedString:newrelicHeader options:0]
-                                                           options:0
-                                                             error:nil];
-    // By default no "tk" is set, so we test for the default behavior of not including tk if no trust key is found.
-    XCTAssertNil(decodedDict[@"d"][@"tk"]);
+    // The proprietary "newrelic" header is no longer sent for Distributed Tracing.
+    XCTAssertNil(headers[@"newrelic"]);
 
     NSString* traceparent = headers[@"traceparent"];
     XCTAssertNotNil(traceparent);
@@ -142,11 +133,8 @@
 
     NSDictionary<NSString *, NSString *>* headers = [mutableRequest allHTTPHeaderFields];
 
-    NSString* newrelicHeader = headers[@"newrelic"];
-    NSDictionary* decodedDict = [NSJSONSerialization JSONObjectWithData:[[NSData alloc] initWithBase64EncodedString:newrelicHeader options:0]
-                                                           options:0
-                                                             error:nil];
-    XCTAssertTrue([decodedDict[@"d"][@"tk"] isEqualToString: @"777"]);
+    // The proprietary "newrelic" header is no longer sent for Distributed Tracing.
+    XCTAssertNil(headers[@"newrelic"]);
 
     NSString* traceparent = headers[@"traceparent"];
     XCTAssertNotNil(traceparent);
@@ -177,11 +165,8 @@
 
     NSDictionary<NSString *, NSString *>* headers = [mutableRequest allHTTPHeaderFields];
 
-    NSString* newrelicHeader = headers[@"newrelic"];
-    NSDictionary* decodedDict = [NSJSONSerialization JSONObjectWithData:[[NSData alloc] initWithBase64EncodedString:newrelicHeader options:0]
-                                                           options:0
-                                                             error:nil];
-    XCTAssertTrue([decodedDict[@"d"][@"tk"] isEqualToString: @"777"]);
+    // The proprietary "newrelic" header is no longer sent for Distributed Tracing.
+    XCTAssertNil(headers[@"newrelic"]);
 
     NSString* traceparent = headers[@"traceparent"];
     XCTAssertNotNil(traceparent);
