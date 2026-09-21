@@ -9,17 +9,14 @@
 #import <Foundation/Foundation.h>
 #import "NRMAConnection.h"
 
-// Maximum number of launch cycles before a crash report is abandoned.
 #define kNRMAMaxCrashUploadRetry 3
-
-@interface NRMACrashDataUploader : NRMAConnection <NSURLSessionTaskDelegate>
+@interface NRMACrashDataUploader : NRMAConnection
 {
     NSFileManager* _fileManager;
     NSString* _crashCollectorHost;
     BOOL _useSSL;
 }
 
-// Background URLSession — uploads survive app suspension. Exposed for test injection.
 @property(strong) NSURLSession* uploadSession;
 
 - (void) uploadCrashReports;

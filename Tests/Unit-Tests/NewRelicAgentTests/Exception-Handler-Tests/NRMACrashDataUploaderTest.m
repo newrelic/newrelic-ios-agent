@@ -68,42 +68,26 @@
     [super tearDown];
 }
 
-- (id) makeMockURLSessionWithUploader:(NRMACrashDataUploader*)uploader {
-    return [self makeMockURLSessionWithStatusCode:200 uploader:uploader];
+- (id) makeMockURLSession {
+    return [self makeMockURLSessionWithStatusCode:200];
 }
 
-// NRMACrashDataUploader.uploadSession is a BACKGROUND NSURLSession (survives app
-// suspension/termination), which does not support per-task completion handlers —
-// production code creates the task with the 2-arg uploadTaskWithRequest:fromFile:
-// and reports the outcome via the NSURLSessionTaskDelegate method
-// URLSession:task:didCompleteWithError: instead. Simulate that by having the mock
-// task's resume synchronously invoke that delegate method on `uploader`, using the
-// SAME task instance production code already stamped with the report's path via
-// task.taskDescription (captured here since a nice mock doesn't echo back a
-// property's value on its own).
-- (id) makeMockURLSessionWithStatusCode:(NSInteger)statusCode uploader:(NRMACrashDataUploader*)uploader {
-    NSHTTPURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://google.com"] statusCode:statusCode HTTPVersion:@"1.1" headerFields:nil];
+- (id) makeMockURLSessionWithStatusCode:(NSInteger)statusCode {
+    __block NSURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://google.com"] statusCode:statusCode HTTPVersion:@"1.1" headerFields:nil];
 
     id mockNSURLSession = [OCMockObject mockForClass:NSURLSession.class];
     [[[mockNSURLSession stub] classMethod] andReturn:mockNSURLSession];
 
-    id mockUploadTask = [OCMockObject niceMockForClass:NSURLSessionUploadTask.class];
-    [[[mockUploadTask stub] andReturn:bresponse] response];
+    id mockUploadTask = [OCMockObject mockForClass:NSURLSessionUploadTask.class];
 
-    __block NSString* capturedTaskDescription = nil;
-    [[[mockUploadTask stub] andDo:^(NSInvocation *invoke) {
-        NSString* desc;
-        [invoke getArgument:&desc atIndex:2];
-        capturedTaskDescription = desc;
-    }] setTaskDescription:OCMOCK_ANY];
-    [[[mockUploadTask stub] andDo:^(NSInvocation *invoke) {
-        [invoke setReturnValue:&capturedTaskDescription];
-    }] taskDescription];
+    __block void (^completionHandler)(NSData*, NSURLResponse*, NSError*);
 
-    [[[mockNSURLSession stub] andReturn:mockUploadTask] uploadTaskWithRequest:OCMOCK_ANY fromFile:OCMOCK_ANY];
+    [[[[mockNSURLSession stub] andReturn:mockUploadTask] andDo:^(NSInvocation * invoke) {
+        [invoke getArgument:&completionHandler atIndex:4];
+    }] uploadTaskWithRequest:OCMOCK_ANY fromFile:OCMOCK_ANY completionHandler:OCMOCK_ANY];
 
     [[[mockUploadTask stub] andDo:^(NSInvocation *invoke) {
-        [uploader URLSession:mockNSURLSession task:mockUploadTask didCompleteWithError:nil];
+        completionHandler(nil, bresponse, nil);
     }] resume];
 
     return mockNSURLSession;
@@ -136,7 +120,7 @@
                                                                               applicationToken:@"token"
                                                                          connectionInformation:[NRMAAgentConfiguration connectionInformation]
                                                                                         useSSL:YES];
-    uploader.uploadSession = [self makeMockURLSessionWithStatusCode:statusCode uploader:uploader];
+    uploader.uploadSession = [self makeMockURLSessionWithStatusCode:statusCode];
     return uploader;
 }
 
@@ -331,12 +315,13 @@
 
 -(void) testCrashReportMobileCrashSupportabilityMetric {
     [helper.consumedMeasurements removeAllObjects];
+    id mockNSURLSession = [self makeMockURLSession];
 
     NRMACrashDataUploader* uploader = [[NRMACrashDataUploader alloc] initWithCrashCollectorURL:@"google.com"
                                                                               applicationToken:@"token"
                                                                          connectionInformation:[NRMAAgentConfiguration connectionInformation]
                                                                                         useSSL:YES];
-    uploader.uploadSession = [self makeMockURLSessionWithUploader:uploader];
+    uploader.uploadSession = mockNSURLSession;
     [NRMAFakeDataHelper makeFakeCrashReport:1000];
     
     XCTAssertNoThrow([uploader uploadCrashReports]);
