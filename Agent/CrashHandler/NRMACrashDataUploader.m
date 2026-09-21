@@ -17,6 +17,8 @@
 
 static int __NRMACrashDataUploaderInProgressRequestCount = 0;
 
+static NSString* const kNRMACrashUploadSessionId = @"com.newrelic.crash-upload";
+
 @implementation NRMACrashDataUploader
 
 + (int) inProgressRequestCount {
@@ -39,8 +41,7 @@ static int __NRMACrashDataUploaderInProgressRequestCount = 0;
         // Background URLSession: uploads continue even if the app is suspended or killed.
         // Reconnecting to the same identifier on relaunch automatically delivers
         // any pending background-upload events via the delegate.
-        NSString* sessionId = [@"com.newrelic.crash-upload." stringByAppendingString:token];
-        NSURLSessionConfiguration* cfg = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:sessionId];
+        NSURLSessionConfiguration* cfg = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:kNRMACrashUploadSessionId];
         cfg.sessionSendsLaunchEvents = NO; // avoids requiring host-app delegate wiring
         self.uploadSession = [NSURLSession sessionWithConfiguration:cfg delegate:self delegateQueue:nil];
     }
