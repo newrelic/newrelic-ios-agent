@@ -27,8 +27,8 @@ static void NRMA__probeAsyncTaskMetrics(NSURLSessionTask *task) {
             @try { m = [task valueForKey:@"metrics"]; } @catch (...) {}
         }
         if (m == nil) {
-            NRLOG_AGENT_INFO(@"[NRFetchProbe asyncSetState] url=%@ metrics=nil",
-                             task.originalRequest.URL.absoluteString);
+//            NRLOG_AGENT_INFO(@"[NRFetchProbe asyncSetState] url=%@ metrics=nil",
+//                             task.originalRequest.URL.absoluteString);
             return;
         }
         NSInteger appVisibleStatus = [task.response isKindOfClass:[NSHTTPURLResponse class]]
@@ -40,13 +40,13 @@ static void NRMA__probeAsyncTaskMetrics(NSURLSessionTask *task) {
             NSURLSessionTaskTransactionMetrics *last = pub.transactionMetrics.lastObject;
             NSInteger wireStatus = [last.response isKindOfClass:[NSHTTPURLResponse class]]
                 ? [(NSHTTPURLResponse *)last.response statusCode] : -1;
-            NRLOG_AGENT_INFO(@"[NRFetchProbe asyncSetState] url=%@ txCount=%lu fetchType=%ld "
-                             @"finalWireStatus=%ld appVisibleStatus=%ld",
-                             task.originalRequest.URL.absoluteString,
-                             (unsigned long)pub.transactionMetrics.count,
-                             (long)last.resourceFetchType,
-                             (long)wireStatus,
-                             (long)appVisibleStatus);
+//            NRLOG_AGENT_INFO(@"[NRFetchProbe asyncSetState] url=%@ txCount=%lu fetchType=%ld "
+//                             @"finalWireStatus=%ld appVisibleStatus=%ld",
+//                             task.originalRequest.URL.absoluteString,
+//                             (unsigned long)pub.transactionMetrics.count,
+//                             (long)last.resourceFetchType,
+//                             (long)wireStatus,
+//                             (long)appVisibleStatus);
             return;
         }
 
@@ -54,10 +54,10 @@ static void NRMA__probeAsyncTaskMetrics(NSURLSessionTask *task) {
         // log what's available.
         SEL daemonTxSel = NSSelectorFromString(@"_daemon_transactionMetrics");
         if (![m respondsToSelector:daemonTxSel]) {
-            NRLOG_AGENT_INFO(@"[NRFetchProbe asyncSetState] url=%@ unsupported metrics class=%@ appVisibleStatus=%ld",
-                             task.originalRequest.URL.absoluteString,
-                             NSStringFromClass([m class]),
-                             (long)appVisibleStatus);
+//            NRLOG_AGENT_INFO(@"[NRFetchProbe asyncSetState] url=%@ unsupported metrics class=%@ appVisibleStatus=%ld",
+//                             task.originalRequest.URL.absoluteString,
+//                             NSStringFromClass([m class]),
+//                             (long)appVisibleStatus);
             return;
         }
         IMP imp = [m methodForSelector:daemonTxSel];
@@ -72,14 +72,14 @@ static void NRMA__probeAsyncTaskMetrics(NSURLSessionTask *task) {
             [inv invokeWithTarget:lastTx];
             [inv getReturnValue:&wireBodyBytes];
         }
-        NRLOG_AGENT_INFO(@"[NRFetchProbe asyncSetState] url=%@ private=%@ txCount=%lu "
-                         @"wireBodyBytes=%lld appVisibleStatus=%ld "
-                         @"(fetchType requires delegate path)",
-                         task.originalRequest.URL.absoluteString,
-                         NSStringFromClass([m class]),
-                         (unsigned long)txs.count,
-                         (long long)wireBodyBytes,
-                         (long)appVisibleStatus);
+//        NRLOG_AGENT_INFO(@"[NRFetchProbe asyncSetState] url=%@ private=%@ txCount=%lu "
+//                         @"wireBodyBytes=%lld appVisibleStatus=%ld "
+//                         @"(fetchType requires delegate path)",
+//                         task.originalRequest.URL.absoluteString,
+//                         NSStringFromClass([m class]),
+//                         (unsigned long)txs.count,
+//                         (long long)wireBodyBytes,
+//                         (long)appVisibleStatus);
     } @catch (NSException *e) {
         NRLOG_AGENT_INFO(@"[NRFetchProbe asyncSetState] exception: %@", e);
     }

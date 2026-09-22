@@ -49,8 +49,8 @@ static void NRMA__probeTaskMetrics(NSURLSessionTask *task, NSString *origin) {
             @try { m = [task valueForKey:@"metrics"]; } @catch (...) {}
         }
         if (m == nil) {
-            NRLOG_AGENT_INFO(@"[NRFetchProbe %@] url=%@ metrics=nil",
-                             origin, task.originalRequest.URL.absoluteString);
+//            NRLOG_AGENT_INFO(@"[NRFetchProbe %@] url=%@ metrics=nil",
+//                             origin, task.originalRequest.URL.absoluteString);
             return;
         }
 
@@ -63,15 +63,15 @@ static void NRMA__probeTaskMetrics(NSURLSessionTask *task, NSString *origin) {
             NSURLSessionTaskTransactionMetrics *last = pub.transactionMetrics.lastObject;
             NSInteger wireStatus = [last.response isKindOfClass:[NSHTTPURLResponse class]]
                 ? [(NSHTTPURLResponse *)last.response statusCode] : -1;
-            NRLOG_AGENT_INFO(@"[NRFetchProbe %@] url=%@ txCount=%lu finalFetchType=%@(%ld) "
-                             @"finalWireStatus=%ld appVisibleStatus=%ld",
-                             origin,
-                             task.originalRequest.URL.absoluteString,
-                             (unsigned long)pub.transactionMetrics.count,
-                             NRMA__probeFetchTypeName(last.resourceFetchType),
-                             (long)last.resourceFetchType,
-                             (long)wireStatus,
-                             (long)appVisibleStatus);
+//            NRLOG_AGENT_INFO(@"[NRFetchProbe %@] url=%@ txCount=%lu finalFetchType=%@(%ld) "
+//                             @"finalWireStatus=%ld appVisibleStatus=%ld",
+//                             origin,
+//                             task.originalRequest.URL.absoluteString,
+//                             (unsigned long)pub.transactionMetrics.count,
+//                             NRMA__probeFetchTypeName(last.resourceFetchType),
+//                             (long)last.resourceFetchType,
+//                             (long)wireStatus,
+//                             (long)appVisibleStatus);
             return;
         }
 
@@ -82,11 +82,11 @@ static void NRMA__probeTaskMetrics(NSURLSessionTask *task, NSString *origin) {
         // didFinishCollectingMetrics: delivery. We log what we *can* read.
         SEL daemonTxSel = NSSelectorFromString(@"_daemon_transactionMetrics");
         if (![m respondsToSelector:daemonTxSel]) {
-            NRLOG_AGENT_INFO(@"[NRFetchProbe %@] url=%@ unsupported metrics class=%@ appVisibleStatus=%ld",
-                             origin,
-                             task.originalRequest.URL.absoluteString,
-                             NSStringFromClass([m class]),
-                             (long)appVisibleStatus);
+//            NRLOG_AGENT_INFO(@"[NRFetchProbe %@] url=%@ unsupported metrics class=%@ appVisibleStatus=%ld",
+//                             origin,
+//                             task.originalRequest.URL.absoluteString,
+//                             NSStringFromClass([m class]),
+//                             (long)appVisibleStatus);
             return;
         }
 
@@ -105,15 +105,15 @@ static void NRMA__probeTaskMetrics(NSURLSessionTask *task, NSString *origin) {
             [inv getReturnValue:&wireBodyBytes];
         }
 
-        NRLOG_AGENT_INFO(@"[NRFetchProbe %@] url=%@ private=%@ txCount=%lu "
-                         @"wireBodyBytes=%lld appVisibleStatus=%ld "
-                         @"(fetchType requires delegate path)",
-                         origin,
-                         task.originalRequest.URL.absoluteString,
-                         NSStringFromClass([m class]),
-                         (unsigned long)txs.count,
-                         (long long)wireBodyBytes,
-                         (long)appVisibleStatus);
+//        NRLOG_AGENT_INFO(@"[NRFetchProbe %@] url=%@ private=%@ txCount=%lu "
+//                         @"wireBodyBytes=%lld appVisibleStatus=%ld "
+//                         @"(fetchType requires delegate path)",
+//                         origin,
+//                         task.originalRequest.URL.absoluteString,
+//                         NSStringFromClass([m class]),
+//                         (unsigned long)txs.count,
+//                         (long long)wireBodyBytes,
+//                         (long)appVisibleStatus);
     } @catch (NSException *e) {
         NRLOG_AGENT_INFO(@"[NRFetchProbe %@] exception: %@", origin, e);
     }

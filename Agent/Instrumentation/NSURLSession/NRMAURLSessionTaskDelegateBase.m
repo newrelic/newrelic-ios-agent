@@ -135,27 +135,27 @@ didFinishCollectingMetrics:(NSURLSessionTaskMetrics *)metrics
             NRMA__setWireBytesForSessionTask(task, last.countOfResponseBodyBytesReceived);
         }
 
-        NRLOG_AGENT_INFO(@"[NRFetch] url=%@ txCount=%lu finalFetchType=%@(%ld) "
-                         @"finalWireStatus=%ld appVisibleStatus=%ld reusedConn=%d proxy=%d",
-                         task.originalRequest.URL.absoluteString,
-                         (unsigned long)metrics.transactionMetrics.count,
-                         NRMA__fetchTypeName(last.resourceFetchType),
-                         (long)last.resourceFetchType,
-                         (long)finalWireStatus,
-                         (long)appVisibleStatus,
-                         last.reusedConnection,
-                         last.proxyConnection);
+//        NRLOG_AGENT_INFO(@"[NRFetch] url=%@ txCount=%lu finalFetchType=%@(%ld) "
+//                         @"finalWireStatus=%ld appVisibleStatus=%ld reusedConn=%d proxy=%d",
+//                         task.originalRequest.URL.absoluteString,
+//                         (unsigned long)metrics.transactionMetrics.count,
+//                         NRMA__fetchTypeName(last.resourceFetchType),
+//                         (long)last.resourceFetchType,
+//                         (long)finalWireStatus,
+//                         (long)appVisibleStatus,
+//                         last.reusedConnection,
+//                         last.proxyConnection);
 
         NSUInteger i = 0;
         for (NSURLSessionTaskTransactionMetrics *t in metrics.transactionMetrics) {
             NSInteger wireStatus = [t.response isKindOfClass:[NSHTTPURLResponse class]]
                 ? [(NSHTTPURLResponse *)t.response statusCode] : -1;
-            NRLOG_AGENT_INFO(@"[NRFetch.tx %lu] fetchType=%@(%ld) wireStatus=%ld reusedConn=%d",
-                             (unsigned long)i,
-                             NRMA__fetchTypeName(t.resourceFetchType),
-                             (long)t.resourceFetchType,
-                             (long)wireStatus,
-                             t.reusedConnection);
+//            NRLOG_AGENT_INFO(@"[NRFetch.tx %lu] fetchType=%@(%ld) wireStatus=%ld reusedConn=%d",
+//                             (unsigned long)i,
+//                             NRMA__fetchTypeName(t.resourceFetchType),
+//                             (long)t.resourceFetchType,
+//                             (long)wireStatus,
+//                             t.reusedConnection);
             i++;
         }
     } @catch (NSException *exception) {
