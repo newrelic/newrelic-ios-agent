@@ -106,7 +106,15 @@ public class NRMARetryingHTTPClient: NSObject {
     /// The client must not be used after this call.
     @objc public func invalidate() {
         pathMonitor.cancel()
+        retryLock.lock()
+        isInvalidated = true
+        // Orphan any pending retry the same way backgroundFlush() does, so a
+        // delayed retry can't fire scheduleAttempt() after the session below
+        // is invalidated (was crashing with "API misuse: invalidated session").
+        retryGeneration += 1
+        pendingWork = nil
         session.invalidateAndCancel()
+        retryLock.unlock()
     }
 
     // MARK: - Private state
@@ -121,6 +129,7 @@ public class NRMARetryingHTTPClient: NSObject {
     private let retryLock = NSLock()
     private var retryGeneration = 0
     private var pendingWork: (() -> Void)?
+    private var isInvalidated = false
 
     // MARK: - Upload body
 
@@ -172,11 +181,18 @@ public class NRMARetryingHTTPClient: NSObject {
                               request: request, body: body, endpoint: endpoint,
                               attempt: attempt, completion: completion)
         }
+        retryLock.lock()
+        if isInvalidated {
+            retryLock.unlock()
+            completion(nil, nil, NSError(domain: NSURLErrorDomain, code: NSURLErrorCancelled, userInfo: nil))
+            return
+        }
         let task: URLSessionUploadTask
         switch body {
         case .data(let d):   task = session.uploadTask(with: request, from: d, completionHandler: handler)
         case .file(let url): task = session.uploadTask(with: request, fromFile: url, completionHandler: handler)
         }
+        retryLock.unlock()
         task.taskDescription = endpoint
         task.resume()
     }
