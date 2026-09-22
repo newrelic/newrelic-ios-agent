@@ -19,7 +19,7 @@ permissions:
 jobs:
   archive:
     name: Archive + validate NRTestApp
-    runs-on: macos-27
+    runs-on: xcode-27
     steps:
       - uses: actions/checkout@v3
         with:

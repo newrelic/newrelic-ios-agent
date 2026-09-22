@@ -19,7 +19,7 @@ jobs:
     name: TestIOS
     # runs-on: will be set to macos-latest when running on actual GHA.
     # *** runs-on: ubuntu-latest is used when running via act on mac os. ***
-    runs-on: macos-27
+    runs-on: xcode-27
     steps:
       - uses: actions/checkout@master
         with:
@@ -53,7 +53,7 @@ jobs:
     name: TestTVOS
     # runs-on: will be set to macos-latest when running on actual GHA.
     # *** runs-on: ubuntu-latest is used when running via act on mac os. ***
-    runs-on: macos-27
+    runs-on: xcode-27
     steps:
       - uses: actions/checkout@v3
         with:
@@ -85,7 +85,7 @@ jobs:
     name: TestWatchOS
     # runs-on: will be set to macos-latest when running on actual GHA.
     # *** runs-on: ubuntu-latest is used when running via act on mac os. ***
-    runs-on: macos-27
+    runs-on: xcode-27
     steps:
       - uses: actions/checkout@v3
         with:
@@ -117,7 +117,7 @@ jobs:
     name: DeployS3
     # runs-on: will be set to macos-latest when running on actual GHA.
     # *** runs-on: ubuntu-latest is used when running via act on mac os. ***
-    runs-on: macos-27
+    runs-on: xcode-27
     needs: [testIOS, testTVOS, testWatchOS]
     if: github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main'
     outputs:
@@ -210,7 +210,7 @@ jobs:
   # Create NewRelicAgent.podspec & Package.swift with new version number and checksum.
   deployStagingSpecs:
     name: DeployStagingSpecs
-    runs-on: macos-27
+    runs-on: xcode-27
     permissions:
       contents: write
     needs: [deployS3, archiveNRTestApp]
