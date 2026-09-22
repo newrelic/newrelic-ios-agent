@@ -186,6 +186,10 @@ static NSString* __deviceIdentifierReplacement = NULL;
     return ([NRMAFlags featureFlags] & NRFeatureFlag_AutoCollectLogs) != 0;
 }
 
++ (BOOL) shouldEnableURLSessionDelegateInjection {
+    return ([NRMAFlags featureFlags] & NRFeatureFlag_URLSessionDelegateInjection) != 0;
+}
+
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags {
     NSMutableArray *retArray = [NSMutableArray array];
     if ((flags & NRFeatureFlag_InteractionTracing) == NRFeatureFlag_InteractionTracing) {
@@ -251,7 +255,10 @@ static NSString* __deviceIdentifierReplacement = NULL;
     if ((flags & NRFeatureFlag_AutoCollectLogs) == NRFeatureFlag_AutoCollectLogs) {
         [retArray addObject:@"AutoCollectLogs"];
     }
-    
+    if ((flags & NRFeatureFlag_URLSessionDelegateInjection) == NRFeatureFlag_URLSessionDelegateInjection) {
+        [retArray addObject:@"URLSessionDelegateInjection"];
+    }
+
     return retArray;
 }
 

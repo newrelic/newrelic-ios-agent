@@ -60,6 +60,11 @@ enum ViewControllerProvider {
         let viewController = AttributedTextTestViewController()
         return viewController
     }
+
+    static var urlCacheTestViewController: URLCacheTestViewController {
+        let viewController = URLCacheTestViewController()
+        return viewController
+    }
 #if os(iOS)
     static var dateTimePickerViewController: DateTimePickerViewController {
         let viewController = DateTimePickerViewController()
