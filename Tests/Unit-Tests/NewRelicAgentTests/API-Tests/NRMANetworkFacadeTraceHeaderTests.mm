@@ -467,17 +467,40 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
     XCTAssertEqualWithAccuracy([payloadData[@"ti"] doubleValue], (double)(kCallerTimestampMillis / 1000), 1.0);
 }
 
-// A non-string value for a header this agent does read must be ignored, not crash or
-// half-apply -- the method-channel dictionary is untyped ([String: Any]).
+// A non-string value for a header this agent reads must be ignored, not crash or half-apply --
+// the method-channel dictionary is untyped ([String: Any]), so a Dart null arrives as NSNull
+// and a number stays a number.
+//
+// This asserts against the parse and the applier, both synchronous. Driving it through
+// +noticeNetworkRequest instead made the test depend on event-recording timing, which proved
+// flaky in CI (zero events observed within the poll timeout). The end-to-end path is already
+// covered for this exact shape by -testFlutterSuppliedTraceHeadersAreApplied, whose headers
+// carry an NSNull `newrelic` entry just as the Flutter plugin's do.
 - (void) testNonStringTraceHeaderValuesAreIgnored {
-    [self assertNoTraceAttributesForEachOf:@[ @{@"traceparent": [NSNull null]},
-                                              @{@"traceparent": @(42)} ]];
+    NSDictionary* nullTraceParent = @{@"traceparent": [NSNull null]};
+    NSDictionary* numericTraceParent = @{@"traceparent": @(42)};
+    NSDictionary* arrayTraceParent = @{@"traceparent": @[@"00", @"trace", @"span"]};
 
-    NSDictionary* event = [self noticeRequestWithTraceHeaders:(NSDictionary<NSString*,NSString*>*)@{
-        @"traceparent": [NSString stringWithFormat:@"00-%@-%@-01", kCallerTraceId, kCallerSpanId],
-        @"tracestate": [NSNull null] }];
-    XCTAssertEqualObjects(event[@"traceId"], kCallerTraceId, @"a bad tracestate must not discard a good traceparent");
-    XCTAssertEqualObjects(event[@"payload"][@"d"][@"ac"], @"1234567", @"account must fall back to the native context");
+    XCTAssertNil([NRMANetworkFacade callerTraceContextFromTraceHeaders:nullTraceParent]);
+    XCTAssertNil([NRMANetworkFacade callerTraceContextFromTraceHeaders:numericTraceParent]);
+    XCTAssertNil([NRMANetworkFacade callerTraceContextFromTraceHeaders:arrayTraceParent]);
+
+    // A non-string tracestate must not discard a usable traceparent, and must not apply any of
+    // the components tracestate would have supplied -- those fall back to the native context.
+    NSDictionary* nullTraceState = @{ @"traceparent": [NSString stringWithFormat:@"00-%@-%@-01", kCallerTraceId, kCallerSpanId],
+                                      @"tracestate": [NSNull null] };
+    id context = [NRMANetworkFacade callerTraceContextFromTraceHeaders:nullTraceState];
+    XCTAssertNotNil(context, @"a usable traceparent must survive a non-string tracestate");
+
+    auto payload = std::make_unique<NewRelic::Connectivity::Payload>();
+    payload->setAccountId("native-account");
+    payload->setAppId("native-app");
+    [NRMANetworkFacade applyCallerTraceContext:context toCppPayload:payload];
+
+    XCTAssertEqualObjects(@(payload->getTraceId().c_str()), kCallerTraceId);
+    XCTAssertEqualObjects(@(payload->getId().c_str()), kCallerSpanId);
+    XCTAssertEqualObjects(@(payload->getAccountId().c_str()), @"native-account", @"account must fall back to the native context");
+    XCTAssertEqualObjects(@(payload->getAppId().c_str()), @"native-app", @"application must fall back to the native context");
 }
 
 #pragma mark - Legacy (C++) event system: the same components reach Connectivity::Payload
