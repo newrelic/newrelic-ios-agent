@@ -205,14 +205,21 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
 }
 
 // The facade records events asynchronously; poll the analytics controller until at least
-// `count` network events (identified by requestUrl) are present, and return all of them.
+// `count` network events (identified by requestUrl) have been seen, and return all of them.
+//
+// -analyticsJSONString DRAINS the event buffer -- it calls
+// -getEventJSONStringWithError:clearEvents:YES -- so each poll returns only the events recorded
+// since the previous one. The results must therefore be accumulated across polls: re-reading a
+// fresh snapshot each time can never reach `count` whenever the recorded requests land in
+// different polls, which is what happens as soon as the machine is loaded enough to interleave
+// them with this loop.
+//
 // Requests are recorded on a concurrent queue, so the order between them is not guaranteed --
 // assert over the whole set rather than by position.
 - (NSArray<NSDictionary*>*) pollForNetworkEventsCount:(NSUInteger)count {
     NSDate *timeoutDate = [NSDate dateWithTimeIntervalSinceNow:10.0];
     NSMutableArray<NSDictionary*>* events = [NSMutableArray array];
-    while ([timeoutDate timeIntervalSinceNow] > 0) {
-        [events removeAllObjects];
+    while (events.count < count && [timeoutDate timeIntervalSinceNow] > 0) {
         NSString* json = [[NewRelicAgentInternal sharedInstance].analyticsController analyticsJSONString];
         if (json.length) {
             NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
@@ -224,7 +231,7 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
                 }
             }
             if (events.count >= count) {
-                return events;
+                break;
             }
         }
         [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.05]];
@@ -233,7 +240,9 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
 }
 
 // The facade records events asynchronously; poll the analytics controller until
-// a network event (identified by requestUrl) is present.
+// a network event (identified by requestUrl) is present. Safe to read one event at a time
+// because this returns on the first sighting -- but note that each -analyticsJSONString call
+// drains the buffer, so do not use this to look for a second event.
 - (NSDictionary*) pollForNetworkEvent {
     NSDate *timeoutDate = [NSDate dateWithTimeIntervalSinceNow:10.0];
     while ([timeoutDate timeIntervalSinceNow] > 0) {
