@@ -34,8 +34,7 @@
 @property (nonatomic, strong) NSString* accountId;
 @property (nonatomic, strong) NSString* appId;
 @property (nonatomic, strong) NSString* trustedAccountKey;
-// Milliseconds since the epoch, 0 when absent. The two payload types disagree on units:
-// NRMAPayload.timestamp is in seconds, Connectivity::Payload's is in milliseconds.
+// Milliseconds since the epoch, 0 when absent.
 @property (nonatomic) long long timestampMillis;
 @end
 
@@ -162,9 +161,8 @@ static NSString* const kNRMAInvalidSpanId  = @"0000000000000000";
     return value.length ? value : nil;
 }
 
-// The NR tracestate entry carries the payload's creation time. Other agents write milliseconds, the dist tracing spec says to write milliseconds. This agent's own W3CTraceState
-// used to incorrectly pass seconds. Tell the two apart by magnitude -- a
-// millisecond value for any plausible date has at least 12 digits.
+// The NR tracestate entry carries the payload's creation time. Other agents write milliseconds, the dist tracing spec says to write milliseconds. This agent's own W3CTraceState used to incorrectly pass seconds. Tell the two apart by magnitude
+// A millisecond value for any plausible date has at least 12 digits.
 + (long long) timestampMillisFromTraceStateField:(NSString*)field {
     if (!field.length) {
         return 0;
