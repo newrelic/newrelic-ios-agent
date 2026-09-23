@@ -157,6 +157,9 @@ static NewRelicAgentInternal* _sharedInstance;
     if (seconds < kNRMA_MinEventBufferTimeSeconds) {
         NRLOG_AGENT_WARNING(@"setMaxEventBufferTime: value %u is less than the minimum of %u seconds. Defaulting to %u seconds.", seconds, kNRMA_MinEventBufferTimeSeconds, kNRMA_MinEventBufferTimeSeconds);
         seconds = kNRMA_MinEventBufferTimeSeconds;
+    } else if (seconds > kNRMA_MaxEventBufferTimeSeconds) {
+        NRLOG_AGENT_WARNING(@"setMaxEventBufferTime: value %u is greater than the maximum of %u seconds. Defaulting to %u seconds.", seconds, kNRMA_MaxEventBufferTimeSeconds, kNRMA_MaxEventBufferTimeSeconds);
+        seconds = kNRMA_MaxEventBufferTimeSeconds;
     }
 
     [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityPrefix@"/API/setMaxBufferTime"

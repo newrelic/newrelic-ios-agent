@@ -631,6 +631,16 @@ static NewRelicAgentInternal* _sharedInstance;
     XCTAssertEqual([NRMAAgentConfiguration getMaxEventBufferTime], 120);
 }
 
+- (void) testSetMaxEventBufferTimeAboveMaximumDefaultsToMaximum {
+    [NewRelic setMaxEventBufferTime:900];
+    XCTAssertEqual([NRMAAgentConfiguration getMaxEventBufferTime], kNRMA_MaxEventBufferTimeSeconds);
+}
+
+- (void) testSetMaxEventBufferTimeAtMaximumIsRespected {
+    [NewRelic setMaxEventBufferTime:kNRMA_MaxEventBufferTimeSeconds];
+    XCTAssertEqual([NRMAAgentConfiguration getMaxEventBufferTime], kNRMA_MaxEventBufferTimeSeconds);
+}
+
 - (void) testSetMaxEventPoolSizeBelowMinimumDefaultsToMinimum {
     [NewRelic setMaxEventPoolSize:10];
     XCTAssertEqual([NRMAAgentConfiguration getMaxEventBufferSize], kNRMA_MinEventPoolSize);

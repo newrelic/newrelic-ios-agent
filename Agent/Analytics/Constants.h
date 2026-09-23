@@ -106,5 +106,6 @@ static int kNRMA_Attrib_Max_Number_Attributes = 128;
 
 // Event buffer/pool size limits
 static unsigned int kNRMA_MinEventBufferTimeSeconds = 60;
+static unsigned int kNRMA_MaxEventBufferTimeSeconds = 600;
 static unsigned int kNRMA_MinEventPoolSize = 64;
 static unsigned int kNRMA_MaxEventPoolSize = 1000;

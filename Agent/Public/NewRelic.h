@@ -710,7 +710,7 @@ extern "C" {
  The default timeout before sending events is 60 seconds. If the user
  keeps your app open for longer than that, any stored events will be transmitted and the timer resets.
 
- @note The minimum allowed value is 60 seconds. Values lower than 60 will be reset to 60 and a warning will be logged.
+ @note The allowed range is 60 to 600 seconds. Values outside this range will be reset to the nearest bound and a warning will be logged.
 
  @note events transmitted before the end of session will not have a `sessionDuration` attribute.
  */
