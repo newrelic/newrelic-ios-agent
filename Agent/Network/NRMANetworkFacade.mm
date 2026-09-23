@@ -162,9 +162,8 @@ static NSString* const kNRMAInvalidSpanId  = @"0000000000000000";
     return value.length ? value : nil;
 }
 
-// The NR tracestate entry carries the payload's creation time. Cross-platform agents write
-// it in milliseconds (the distributed-tracing spec's unit); this agent's own W3CTraceState
-// writes NRMAPayload.timestamp, which is in seconds. Tell the two apart by magnitude -- a
+// The NR tracestate entry carries the payload's creation time. Other agents write milliseconds, the dist tracing spec says to write milliseconds. This agent's own W3CTraceState
+// used to incorrectly pass seconds. Tell the two apart by magnitude -- a
 // millisecond value for any plausible date has at least 12 digits.
 + (long long) timestampMillisFromTraceStateField:(NSString*)field {
     if (!field.length) {
@@ -268,7 +267,8 @@ static NSString* const kNRMAInvalidSpanId  = @"0000000000000000";
         payload.trustedAccountKey = context.trustedAccountKey;
     }
     if (context.timestampMillis > 0) {
-        payload.timestamp = context.timestampMillis / 1000.0;
+        // Sets Millis.
+        payload.timestamp = context.timestampMillis;
     }
 }
 

@@ -153,7 +153,7 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
     XCTAssertEqualObjects(payloadData[@"ap"], kCallerAppId, @"payload application must come from the caller's tracestate");
     XCTAssertEqualObjects(payloadData[@"tk"], kCallerTrustedAccountKey, @"payload trusted-account-key must come from the caller's tracestate");
     // NRMAPayload.timestamp is in seconds; the tracestate entry carries milliseconds.
-    XCTAssertEqualWithAccuracy([payloadData[@"ti"] doubleValue], kCallerTimestampMillis / 1000.0, 0.001,
+    XCTAssertEqualWithAccuracy([payloadData[@"ti"] doubleValue], kCallerTimestampMillis, 0.001,
                                @"payload timestamp must come from the caller's tracestate");
 }
 
@@ -399,16 +399,16 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
     XCTAssertEqualObjects(event[@"payload"][@"d"][@"ac"], @"1234567", @"account must fall back to the native context");
 }
 
-// This agent's own W3CTraceState writes the payload timestamp in seconds while cross-platform
+// This agent's own W3CTraceState writes the payload timestamp in milliseconds now, it used to not. while cross-platform
 // agents write milliseconds, so a seconds-valued entry must not be read as milliseconds.
 - (void) testSecondsValuedTraceStateTimestampIsNormalized {
     NSString* traceState = [NSString stringWithFormat:@"%@@nr=0-2-%@-%@-%@----%lld",
                             kCallerTrustedAccountKey, kCallerAccountId, kCallerAppId, kCallerSpanId,
-                            kCallerTimestampMillis / 1000];
+                            kCallerTimestampMillis];
     NSDictionary* event = [self noticeRequestWithTraceHeaders:@{@"traceparent": [NSString stringWithFormat:@"00-%@-%@-01", kCallerTraceId, kCallerSpanId],
                                                                @"tracestate": traceState}];
 
-    XCTAssertEqualWithAccuracy([event[@"payload"][@"d"][@"ti"] doubleValue], (double)(kCallerTimestampMillis / 1000), 1.0,
+    XCTAssertEqualWithAccuracy([event[@"payload"][@"d"][@"ti"] doubleValue], (double)(kCallerTimestampMillis), 1.0,
                                @"a seconds-valued tracestate timestamp must stay in seconds");
 }
 
@@ -454,7 +454,7 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
               @"tracestate":  [NSString stringWithFormat:@"%@@nr=0-2-%@-%@-%@----%lld",
                                                          kCallerTrustedAccountKey, kCallerAccountId,
                                                          kCallerAppId, kCallerSpanId,
-                                                         kCallerTimestampMillis / 1000],
+                                                         kCallerTimestampMillis],
               @"newrelic":    [NSNull null] };
 }
 
@@ -473,7 +473,7 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
     XCTAssertEqualObjects(payloadData[@"ap"], kCallerAppId);
     XCTAssertEqualObjects(payloadData[@"tk"], kCallerTrustedAccountKey);
     // The seconds-valued tracestate timestamp must not be read as milliseconds.
-    XCTAssertEqualWithAccuracy([payloadData[@"ti"] doubleValue], (double)(kCallerTimestampMillis / 1000), 1.0);
+    XCTAssertEqualWithAccuracy([payloadData[@"ti"] doubleValue], (double)(kCallerTimestampMillis), 1.0);
 }
 
 // A non-string value for a header this agent reads must be ignored, not crash or half-apply --

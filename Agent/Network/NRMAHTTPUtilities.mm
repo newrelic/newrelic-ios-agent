@@ -199,7 +199,7 @@ NSString* currentParentId = @"";
         // spec defines for the tracestate entry and the DT payload's `ti` field, the unit
         // Connectivity::Payload carries, and the unit the DT unit tests pass in.
         // -timeIntervalSince1970 is in seconds.
-        NSTimeInterval currentTimeStamp = floor([[NSDate date] timeIntervalSince1970] * 1000);
+        long long currentTimeStamp = floor([[NSDate date] timeIntervalSince1970] * 1000);
 
         currentTraceId = [[[[[NSUUID UUID] UUIDString] componentsSeparatedByString:@"-"] componentsJoinedByString:@""] lowercaseString];
         currentParentId = @"";

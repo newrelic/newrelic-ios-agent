@@ -13,8 +13,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NRMAPayload : NSObject <NRMAJSONABLE, NSSecureCoding>
 
-/// Milliseconds since the epoch. Not an interval despite the type -- see +[NRMAHTTPUtilities startTrip].
-@property  NSTimeInterval timestamp;
+/// Milliseconds since the epoch.  -- see +[NRMAHTTPUtilities startTrip].
+@property  long long timestamp;
 @property (nonatomic, strong) NSString *payloadType;
 @property (nonatomic, strong) NSString *accountId;
 @property (nonatomic, strong) NSString *appId;
@@ -24,7 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) NSString *trustedAccountKey;
 @property  bool dtEnabled;
 
-- (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
+- (nonnull instancetype) initWithTimestamp:(long long)timestamp
                                  accountID:(NSString*)accountId
                                  appID:(NSString*)appId
                                  traceID:(NSString*)traceId
