@@ -406,15 +406,44 @@
     [super tearDown];
 }
 
-- (void)testDetectionRecordsMetricWhenBrowserAgentPresent {
-    WKWebView *webView = [[WKWebView alloc] init];
-    [webView loadHTMLString:@"<script>window.newrelic = {}</script>" baseURL:nil];
+// Waits until the WebView has a JavaScript context in which window.newrelic is defined.
+//
+// That -- not -isLoading -- is the precondition +startBrowserAgentDetection: actually needs:
+// +pollForBrowserAgent:attempts: gives up permanently on the first evaluateJavaScript: error
+// instead of retrying, so a WebView that is not yet ready yields no metric, ever. Waiting on
+// -isLoading was racy in both directions: it reads NO before the provisional navigation has
+// started as well as after the load has finished, and a WebView that is never added to a view
+// hierarchy can take well over the old five-second budget to load on a loaded CI runner.
+- (BOOL)waitForBrowserAgentInWebView:(WKWebView *)webView timeout:(NSTimeInterval)timeout {
+    NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:timeout];
 
-    NSDate *loadDeadline = [NSDate dateWithTimeIntervalSinceNow:5.0];
-    while (webView.isLoading && [NSDate.date compare:loadDeadline] == NSOrderedAscending) {
+    while ([NSDate.date compare:deadline] == NSOrderedAscending) {
+        __block BOOL evaluated = NO;
+        __block BOOL defined = NO;
+        [webView evaluateJavaScript:@"typeof window.newrelic !== 'undefined'"
+                 completionHandler:^(id result, NSError *error) {
+            defined = (error == nil && [result boolValue]);
+            evaluated = YES;
+        }];
+
+        while (!evaluated && [NSDate.date compare:deadline] == NSOrderedAscending) {
+            [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.05]];
+        }
+        if (defined) {
+            return YES;
+        }
         [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
     }
-    XCTAssertFalse(webView.isLoading, @"WebView timed out while loading");
+    return NO;
+}
+
+- (void)testDetectionRecordsMetricWhenBrowserAgentPresent {
+    // A non-zero frame keeps the WebView from being treated as having nothing to display.
+    WKWebView *webView = [[WKWebView alloc] initWithFrame:CGRectMake(0, 0, 320, 480)];
+    [webView loadHTMLString:@"<html><body><script>window.newrelic = {}</script></body></html>" baseURL:nil];
+
+    XCTAssertTrue([self waitForBrowserAgentInWebView:webView timeout:30.0],
+                  @"WebView never reached a JavaScript context defining window.newrelic");
 
     [NRMAWebViewSupportability startBrowserAgentDetection:webView];
 
