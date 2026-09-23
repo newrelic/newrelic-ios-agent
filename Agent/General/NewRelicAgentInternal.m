@@ -154,6 +154,11 @@ static NewRelicAgentInternal* _sharedInstance;
     return urlTransformer;
 }
 - (void) setMaxEventBufferTime:(unsigned int)seconds {
+    if (seconds < kNRMA_MinEventBufferTimeSeconds) {
+        NRLOG_AGENT_WARNING(@"setMaxEventBufferTime: value %u is less than the minimum of %u seconds. Defaulting to %u seconds.", seconds, kNRMA_MinEventBufferTimeSeconds, kNRMA_MinEventBufferTimeSeconds);
+        seconds = kNRMA_MinEventBufferTimeSeconds;
+    }
+
     [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityPrefix@"/API/setMaxBufferTime"
                                                     value:@1
                                                     scope:@""]];
@@ -165,6 +170,14 @@ static NewRelicAgentInternal* _sharedInstance;
 
 }
 - (void) setMaxEventPoolSize:(unsigned int)size {
+    if (size < kNRMA_MinEventPoolSize) {
+        NRLOG_AGENT_WARNING(@"setMaxEventPoolSize: value %u is less than the minimum of %u. Defaulting to %u.", size, kNRMA_MinEventPoolSize, kNRMA_MinEventPoolSize);
+        size = kNRMA_MinEventPoolSize;
+    } else if (size > kNRMA_MaxEventPoolSize) {
+        NRLOG_AGENT_WARNING(@"setMaxEventPoolSize: value %u is greater than the maximum of %u. Defaulting to %u.", size, kNRMA_MaxEventPoolSize, kNRMA_MaxEventPoolSize);
+        size = kNRMA_MaxEventPoolSize;
+    }
+
     [NRMASupportMetricHelper enqueueBufferPoolSizeConfiguration:size];
     // TODO clean up references to poolsize/buffersize. Lets pick one and stick with it throughout our code.
     // Note: the name for the metric representing "PoolSize" will change throught the code. Occasianally referenced as 'PoolSize' or 'BufferSize'
