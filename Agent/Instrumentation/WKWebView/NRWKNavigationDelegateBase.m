@@ -12,10 +12,13 @@
 #import <objc/message.h>
 #import "NRTimer.h"
 #import <WebKit/WKNavigationDelegate.h>
+#import <WebKit/WKNavigationAction.h>
+#import <WebKit/WKFrameInfo.h>
 #import "NRMAWebViewSupportability.h"
 
 #define kNRWKTimerAssocObject @"com.NewRelic.WKNavigation.Timer"
 #define kNRWKURLAssocObject @"com.NewRelic.WKNavigation.URL"
+#define kNRWKPendingURLAssocObject @"com.NewRelic.WKWebView.PendingURL"
 
 @class WKWebView, WKNavigation, WKNavigationAction, WKNavigationResponse;
 @protocol WKNavigationDelegate;
@@ -24,6 +27,7 @@
 + (NSURL*) currentURLForWebView:(WKWebView*)webView;
 + (NSURL*) urlForNavigation:(WKNavigation*)nav webView:(WKWebView*)webView;
 + (NSURL*) navigationURL:(WKNavigation*)nav;
++ (void) recordPendingNavigationAction:(WKNavigationAction*)navigationAction webView:(WKWebView*)webView;
 @end
 
 @implementation NRWKNavigationDelegateBase
@@ -156,6 +160,8 @@ didFailNavigation:(WKNavigation*)navigation
 
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction preferences:(WKWebpagePreferences *)preferences decisionHandler:(void (^)(WKNavigationActionPolicy, WKWebpagePreferences *))decisionHandler API_AVAILABLE(ios(13.0))
 {
+    [NRWKNavigationDelegateBase recordPendingNavigationAction:navigationAction webView:webView];
+
     if ([self.realDelegate respondsToSelector:@selector(webView:decidePolicyForNavigationAction:preferences:decisionHandler:)]) {
         NSArray* parameters = [NSArray arrayWithObjects:
                                    [NSValue valueWithPointer: &(webView)],
@@ -187,6 +193,8 @@ didFailNavigation:(WKNavigation*)navigation
 
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
 {
+    [NRWKNavigationDelegateBase recordPendingNavigationAction:navigationAction webView:webView];
+
     if ([self.realDelegate respondsToSelector:@selector(webView:decidePolicyForNavigationAction:decisionHandler:)]) {
         if([self.realDelegate respondsToSelector:_cmd]) {
             NSArray* parameters = [NSArray arrayWithObjects:
@@ -254,8 +262,9 @@ didFailNavigation:(WKNavigation*)navigation
 }
 
 // Resolves the web view's current URL. Prefer WKWebView's original -URL IMP so a
-// host-app swizzle of -URL can't interfere, but fall back to a normal message send
-// if the IMP lookup fails or yields nil.
+// host-app swizzle of -URL can't interfere, then a normal message send. With the
+// iOS 27 SDK -URL can still be nil for a load WebKit hasn't committed yet, so finally
+// fall back to the main-frame request URL captured in decidePolicyForNavigationAction.
 + (NSURL*) currentURLForWebView:(WKWebView*)webView
 {
     if (webView == nil) return nil;
@@ -270,7 +279,32 @@ didFailNavigation:(WKNavigation*)navigation
         url = ((NSURL*(*)(id,SEL))objc_msgSend)(webView,@selector(URL));
     }
 
+    if (url == nil) {
+        url = objc_getAssociatedObject(webView, kNRWKPendingURLAssocObject);
+    }
+
     return url;
+}
+
++ (void) recordPendingNavigationAction:(WKNavigationAction*)navigationAction webView:(WKWebView*)webView
+{
+    if (webView == nil || navigationAction == nil) return;
+
+    // Guard against objects that only masquerade as a WKNavigationAction.
+    if (![(id)navigationAction respondsToSelector:@selector(request)] ||
+        ![(id)navigationAction respondsToSelector:@selector(targetFrame)]) {
+        return;
+    }
+
+    // didStartProvisionalNavigation: only fires for main-frame navigations; don't let
+    // subframe (iframe) loads overwrite the main-frame URL.
+    WKFrameInfo* targetFrame = navigationAction.targetFrame;
+    if (targetFrame == nil || !targetFrame.isMainFrame) return;
+
+    NSURL* url = navigationAction.request.URL;
+    if (url == nil) return;
+
+    objc_setAssociatedObject(webView, kNRWKPendingURLAssocObject, url, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
 // The URL captured at didStartProvisionalNavigation, or the web view's current URL
