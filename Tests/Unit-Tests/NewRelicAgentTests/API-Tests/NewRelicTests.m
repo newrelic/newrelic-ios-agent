@@ -646,9 +646,9 @@ static NewRelicAgentInternal* _sharedInstance;
     XCTAssertEqual([NRMAAgentConfiguration getMaxEventBufferSize], kNRMA_MinEventPoolSize);
 }
 
-- (void) testSetMaxEventPoolSizeAboveMaximumDefaultsToMaximum {
+- (void) testSetMaxEventPoolSizeAboveMaximumIsNotClamped {
     [NewRelic setMaxEventPoolSize:5000];
-    XCTAssertEqual([NRMAAgentConfiguration getMaxEventBufferSize], kNRMA_MaxEventPoolSize);
+    XCTAssertEqual([NRMAAgentConfiguration getMaxEventBufferSize], 5000);
 }
 
 - (void) testSetMaxEventPoolSizeWithinRangeIsRespected {

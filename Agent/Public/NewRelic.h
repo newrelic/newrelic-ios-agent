@@ -727,7 +727,7 @@ extern "C" {
   a Reservoir Sampling algorithm. http://en.wikipedia.org/wiki/Reservoir_sampling
  If `maxEventBufferTime` seconds elapse, the existing event buffer will be transmitted and then emptied.
 
- @note The allowed range is 64 to 1000. Values outside this range will be reset to the nearest bound and a warning will be logged.
+ @note The minimum allowed value is 64. Values lower than 64 will be reset to 64 and a warning will be logged. Values above 1000 are allowed but not recommended; a warning will be logged.
  */
 + (void) setMaxEventPoolSize:(unsigned int)size;
 

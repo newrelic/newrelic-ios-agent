@@ -177,8 +177,7 @@ static NewRelicAgentInternal* _sharedInstance;
         NRLOG_AGENT_WARNING(@"setMaxEventPoolSize: value %u is less than the minimum of %u. Defaulting to %u.", size, kNRMA_MinEventPoolSize, kNRMA_MinEventPoolSize);
         size = kNRMA_MinEventPoolSize;
     } else if (size > kNRMA_MaxEventPoolSize) {
-        NRLOG_AGENT_WARNING(@"setMaxEventPoolSize: value %u is greater than the maximum of %u. Defaulting to %u.", size, kNRMA_MaxEventPoolSize, kNRMA_MaxEventPoolSize);
-        size = kNRMA_MaxEventPoolSize;
+        NRLOG_AGENT_WARNING(@"setMaxEventPoolSize: value %u is greater than the recommended maximum of %u.", size, kNRMA_MaxEventPoolSize);
     }
 
     [NRMASupportMetricHelper enqueueBufferPoolSizeConfiguration:size];
