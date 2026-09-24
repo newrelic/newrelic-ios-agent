@@ -13,6 +13,7 @@
 #import "NRMAHarvestController.h"
 #import "NRTestConstants.h"
 #import "NRMAFlags.h"
+#import "NewRelic.h"
 
 @interface NRMAHTTPUtilitiesTests : XCTestCase
 @end
@@ -234,12 +235,9 @@ static const long long kMinimumPlausibleEpochMillis = 100000000000LL;
 
     XCTAssertNotNil(payload, @"expected a payload once the harvester is configured");
     XCTAssertTrue(payload.timestamp >= kMinimumPlausibleEpochMillis,
-                  @"payload timestamp must be in milliseconds, got %f", payload.timestamp);
+                  @"payload timestamp must be in milliseconds, got %lld", payload.timestamp);
     XCTAssertTrue(payload.timestamp >= before && payload.timestamp <= after,
-                  @"payload timestamp %f must fall inside [%lld, %lld]", payload.timestamp, before, after);
-    // +startTrip floors the value: `ti` is an integer count of milliseconds, as the legacy
-    // C++ payload's is.
-    XCTAssertEqual(payload.timestamp, floor(payload.timestamp), @"payload timestamp must be a whole millisecond");
+                  @"payload timestamp %lld must fall inside [%lld, %lld]", payload.timestamp, before, after);
 
     [NRMAFlags setFeatureFlags:originalFlags];
 }
@@ -279,6 +277,60 @@ static const long long kMinimumPlausibleEpochMillis = 100000000000LL;
                   @"tracestate timestamp must be in milliseconds, got %lld", timestamp);
     XCTAssertTrue(timestamp >= before && timestamp <= after,
                   @"tracestate timestamp %lld must fall inside [%lld, %lld]", timestamp, before, after);
+
+    [NRMAFlags setFeatureFlags:originalFlags];
+}
+
+#pragma mark - +generateDistributedTracingContext
+
+// The context must describe ONE trace in both representations: the W3C headers to put on the wire
+// and the identity to hand back through a notice* API. Two separate generator calls would mint two
+// unrelated traces, which is the trap this API exists to remove.
+- (void) assertContextDescribesOneTrace:(NSDictionary<NSString*,NSString*>*)context {
+    NSString* traceparent = context[@"traceparent"];
+    XCTAssertNotNil(traceparent, @"context must carry the wire headers");
+    XCTAssertNotNil(context[@"tracestate"], @"context must carry the wire headers");
+
+    NSArray<NSString*>* fields = [traceparent componentsSeparatedByString:@"-"];
+    XCTAssertEqual(fields.count, (NSUInteger)4, @"malformed traceparent: %@", traceparent);
+
+    XCTAssertEqualObjects(context[@"trace.id"], fields[1], @"trace.id must match the traceparent's trace-id");
+    XCTAssertEqualObjects(context[@"id"], fields[2], @"id must match the traceparent's span-id");
+    XCTAssertEqualObjects(context[@"guid"], fields[2], @"guid is the deprecated spelling of id");
+}
+
+- (void) testGeneratedContextDescribesOneTraceWithNewEventSystem {
+    NRMAFeatureFlags originalFlags = [NRMAFlags featureFlags];
+    [NRMAFlags enableFeatures:NRFeatureFlag_DistributedTracing | NRFeatureFlag_NewEventSystem];
+    [self configureHarvesterForDistributedTracing];
+
+    [self assertContextDescribesOneTrace:[NewRelic generateDistributedTracingContext]];
+
+    [NRMAFlags setFeatureFlags:originalFlags];
+}
+
+- (void) testGeneratedContextDescribesOneTraceWithCppPayload {
+    NRMAFeatureFlags originalFlags = [NRMAFlags featureFlags];
+    [NRMAFlags enableFeatures:NRFeatureFlag_DistributedTracing];
+    [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
+    [self configureHarvesterForDistributedTracing];
+
+    [self assertContextDescribesOneTrace:[NewRelic generateDistributedTracingContext]];
+
+    [NRMAFlags setFeatureFlags:originalFlags];
+}
+
+// Successive calls are separate traces; nothing is cached or reused.
+- (void) testEachGeneratedContextIsADistinctTrace {
+    NRMAFeatureFlags originalFlags = [NRMAFlags featureFlags];
+    [NRMAFlags enableFeatures:NRFeatureFlag_DistributedTracing | NRFeatureFlag_NewEventSystem];
+    [self configureHarvesterForDistributedTracing];
+
+    NSDictionary<NSString*,NSString*>* first = [NewRelic generateDistributedTracingContext];
+    NSDictionary<NSString*,NSString*>* second = [NewRelic generateDistributedTracingContext];
+
+    XCTAssertNotEqualObjects(first[@"trace.id"], second[@"trace.id"]);
+    XCTAssertNotEqualObjects(first[@"id"], second[@"id"]);
 
     [NRMAFlags setFeatureFlags:originalFlags];
 }

@@ -152,7 +152,7 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
     XCTAssertEqualObjects(payloadData[@"ac"], kCallerAccountId, @"payload account must come from the caller's tracestate");
     XCTAssertEqualObjects(payloadData[@"ap"], kCallerAppId, @"payload application must come from the caller's tracestate");
     XCTAssertEqualObjects(payloadData[@"tk"], kCallerTrustedAccountKey, @"payload trusted-account-key must come from the caller's tracestate");
-    // NRMAPayload.timestamp is in seconds; the tracestate entry carries milliseconds.
+    // Both NRMAPayload.timestamp and the tracestate entry are in milliseconds.
     XCTAssertEqualWithAccuracy([payloadData[@"ti"] doubleValue], kCallerTimestampMillis, 0.001,
                                @"payload timestamp must come from the caller's tracestate");
 }
@@ -399,17 +399,23 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
     XCTAssertEqualObjects(event[@"payload"][@"d"][@"ac"], @"1234567", @"account must fall back to the native context");
 }
 
-// This agent's own W3CTraceState writes the payload timestamp in milliseconds now, it used to not. while cross-platform
-// agents write milliseconds, so a seconds-valued entry must not be read as milliseconds.
+// The tracestate timestamp is specified in milliseconds, and this agent now emits it that way --
+// but it emitted SECONDS until the +startTrip fix, and a caller that is not this agent may supply
+// either. So a seconds-valued entry must be normalized to milliseconds rather than taken at face
+// value, which would place the payload near 1970.
+//
+// Feed seconds in; expect the millisecond equivalent out. (The milliseconds case is covered by
+// -testCallerSuppliedTraceHeadersAreAppliedOnSuccess, whose tracestate carries milliseconds.)
 - (void) testSecondsValuedTraceStateTimestampIsNormalized {
+    long long secondsValuedTimestamp = kCallerTimestampMillis / 1000;
     NSString* traceState = [NSString stringWithFormat:@"%@@nr=0-2-%@-%@-%@----%lld",
                             kCallerTrustedAccountKey, kCallerAccountId, kCallerAppId, kCallerSpanId,
-                            kCallerTimestampMillis];
+                            secondsValuedTimestamp];
     NSDictionary* event = [self noticeRequestWithTraceHeaders:@{@"traceparent": [NSString stringWithFormat:@"00-%@-%@-01", kCallerTraceId, kCallerSpanId],
                                                                @"tracestate": traceState}];
 
-    XCTAssertEqualWithAccuracy([event[@"payload"][@"d"][@"ti"] doubleValue], (double)(kCallerTimestampMillis), 1.0,
-                               @"a seconds-valued tracestate timestamp must stay in seconds");
+    XCTAssertEqualWithAccuracy([event[@"payload"][@"d"][@"ti"] doubleValue], (double)(secondsValuedTimestamp * 1000), 1.0,
+                               @"a seconds-valued tracestate timestamp must be normalized to milliseconds");
 }
 
 #pragma mark - New event system: native (auto-instrumented) request regression
@@ -510,6 +516,104 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
     XCTAssertEqualObjects(@(payload->getId().c_str()), kCallerSpanId);
     XCTAssertEqualObjects(@(payload->getAccountId().c_str()), @"native-account", @"account must fall back to the native context");
     XCTAssertEqualObjects(@(payload->getAppId().c_str()), @"native-app", @"application must fall back to the native context");
+}
+
+#pragma mark - The trace-attribute shape: applied with no parsing
+
+// What +generateDistributedTracingContext hands back, and what the Android agent's
+// noticeHttpTransaction takes: the trace's identity under the attribute names the event records it
+// under. No wire format, so nothing to parse.
+- (NSDictionary*) callerSuppliedTraceAttributes {
+    return @{ @"trace.id": kCallerTraceId,
+              @"id": kCallerSpanId,
+              @"guid": kCallerSpanId };
+}
+
+- (void) testTraceAttributesAreAppliedWithoutAnyHeaders {
+    NSDictionary* event = [self noticeRequestWithTraceHeaders:(NSDictionary<NSString*,NSString*>*)[self callerSuppliedTraceAttributes]];
+
+    XCTAssertEqualObjects(event[@"traceId"], kCallerTraceId);
+    XCTAssertEqualObjects(event[@"trace.id"], kCallerTraceId);
+    XCTAssertEqualObjects(event[@"guid"], kCallerSpanId);
+    XCTAssertEqualObjects(event[@"id"], kCallerSpanId);
+    XCTAssertEqualObjects(event[@"payload"][@"d"][@"tr"], kCallerTraceId);
+    XCTAssertEqualObjects(event[@"payload"][@"d"][@"id"], kCallerSpanId);
+    // Account, application and trust key come from the native context, which is correct by
+    // construction: the span belongs to this app.
+    XCTAssertEqualObjects(event[@"payload"][@"d"][@"ac"], @"1234567");
+}
+
+// `guid` is the deprecated spelling of `id`; either identifies the span.
+- (void) testGuidAloneSatisfiesTheSpanId {
+    NSDictionary* event = [self noticeRequestWithTraceHeaders:(NSDictionary<NSString*,NSString*>*)@{ @"trace.id": kCallerTraceId, @"guid": kCallerSpanId }];
+
+    XCTAssertEqualObjects(event[@"traceId"], kCallerTraceId);
+    XCTAssertEqualObjects(event[@"guid"], kCallerSpanId);
+}
+
+// +generateDistributedTracingContext returns both representations of one trace, so both will
+// usually be present. The attributes are authoritative -- they need no parsing.
+- (void) testTraceAttributesTakePrecedenceOverHeaders {
+    NSString* otherTraceId = @"99999999999999999999999999999999";
+    NSString* otherSpanId = @"9999999999999999";
+    NSDictionary* mixed = @{ @"trace.id": kCallerTraceId,
+                             @"id": kCallerSpanId,
+                             @"traceparent": [NSString stringWithFormat:@"00-%@-%@-01", otherTraceId, otherSpanId] };
+
+    NSDictionary* event = [self noticeRequestWithTraceHeaders:(NSDictionary<NSString*,NSString*>*)mixed];
+
+    XCTAssertEqualObjects(event[@"traceId"], kCallerTraceId, @"the attributes must win over the traceparent");
+    XCTAssertEqualObjects(event[@"guid"], kCallerSpanId, @"the attributes must win over the traceparent");
+}
+
+- (void) testIncompleteTraceAttributesFallBackToTheTraceparent {
+    // A trace.id with no span id is not a usable identity on its own; the traceparent still is.
+    NSDictionary* headers = @{ @"trace.id": @"99999999999999999999999999999999",
+                               @"traceparent": [NSString stringWithFormat:@"00-%@-%@-01", kCallerTraceId, kCallerSpanId] };
+
+    NSDictionary* event = [self noticeRequestWithTraceHeaders:(NSDictionary<NSString*,NSString*>*)headers];
+
+    XCTAssertEqualObjects(event[@"traceId"], kCallerTraceId);
+    XCTAssertEqualObjects(event[@"guid"], kCallerSpanId);
+}
+
+#pragma mark - Network failures: MobileRequestError from +noticeNetworkFailure
+
+- (NSDictionary*) noticeFailureWithTraceHeaders:(NSDictionary*)traceHeaders {
+    [NRMANetworkFacade noticeNetworkFailure:[self request]
+                                 withTimer:[[NRTimer alloc] initWithStartTime:6000 andEndTime:10000]
+                                 withError:[NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorTimedOut userInfo:nil]
+                              traceHeaders:(NSDictionary<NSString*,NSString*>*)traceHeaders];
+    return [self pollForNetworkEvent];
+}
+
+// A network-level failure (timeout, SSL, dropped connection) reported by a cross-platform caller
+// must be attributed to the caller's trace, exactly as an HTTP-status error is.
+- (void) testNetworkFailureAppliesCallerSuppliedTraceAttributes {
+    NSDictionary* event = [self noticeFailureWithTraceHeaders:[self callerSuppliedTraceAttributes]];
+
+    XCTAssertNotNil(event, @"expected a MobileRequestError event to be recorded");
+    XCTAssertEqualObjects(event[@"traceId"], kCallerTraceId);
+    XCTAssertEqualObjects(event[@"guid"], kCallerSpanId);
+    XCTAssertEqualObjects(event[@"payload"][@"d"][@"tr"], kCallerTraceId);
+}
+
+- (void) testNetworkFailureAppliesCallerSuppliedTraceHeaders {
+    NSDictionary* event = [self noticeFailureWithTraceHeaders:[self callerSuppliedTraceHeaders]];
+
+    XCTAssertNotNil(event, @"expected a MobileRequestError event to be recorded");
+    XCTAssertEqualObjects(event[@"traceId"], kCallerTraceId);
+    XCTAssertEqualObjects(event[@"guid"], kCallerSpanId);
+}
+
+// Native instrumentation passes no trace context and must keep minting its own, as before.
+- (void) testNetworkFailureWithoutCallerTraceKeepsANativeTrace {
+    NSDictionary* event = [self noticeFailureWithTraceHeaders:nil];
+
+    XCTAssertNotNil(event, @"expected a MobileRequestError event to be recorded");
+    XCTAssertNotNil(event[@"traceId"], @"a natively generated trace must still be attached");
+    XCTAssertNotNil(event[@"guid"]);
+    XCTAssertNotEqualObjects(event[@"traceId"], kCallerTraceId);
 }
 
 #pragma mark - Legacy (C++) event system: the same components reach Connectivity::Payload

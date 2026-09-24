@@ -11,6 +11,7 @@
 #include <Connectivity/Facade.hpp>
 
 #import "NRMAHTTPUtilities.h"
+#import "Constants.h"
 #import "NRMAHarvestController.h"
 #import "NRMAFlags.h"
 #import "NRMAPayloadContainer+cppInterface.h"
@@ -211,6 +212,41 @@ NSString* currentParentId = @"";
         }
         return payload;
     }
+}
+
++ (NSDictionary<NSString*, NSString*> *) traceAttributesWithTraceId:(NSString*)traceId
+                                                            spanId:(NSString*)spanId {
+    if (!traceId.length || !spanId.length) {
+        return @{};
+    }
+
+    // kNRMA_Attrib_dtGuid is the deprecated spelling of kNRMA_Attrib_dtId; both are recorded, as
+    // the Android agent does, so consumers of either keep working.
+    return @{kNRMA_Attrib_dtTraceId: traceId,
+             kNRMA_Attrib_dtId: spanId,
+             kNRMA_Attrib_dtGuid: spanId};
+}
+
++ (NSDictionary<NSString*, NSString*> *) traceAttributesWithNRMAPayload:(NRMAPayload*)payload {
+    if (payload == nil) {
+        return @{};
+    }
+
+    return [NRMAHTTPUtilities traceAttributesWithTraceId:payload.traceId spanId:payload.id];
+}
+
++ (NSDictionary<NSString*, NSString*> *) traceAttributesWithPayload:(NRMAPayloadContainer*)payloadContainer {
+    if (payloadContainer == nil) {
+        return @{};
+    }
+
+    const std::unique_ptr<NewRelic::Connectivity::Payload>& payload = [payloadContainer getReference];
+    if (payload == nullptr) {
+        return @{};
+    }
+
+    return [NRMAHTTPUtilities traceAttributesWithTraceId:@(payload->getTraceId().c_str())
+                                                 spanId:@(payload->getId().c_str())];
 }
 
 + (NSDictionary<NSString*, NSString*> *) generateConnectivityHeadersWithNRMAPayload:(NRMAPayload*)payload {

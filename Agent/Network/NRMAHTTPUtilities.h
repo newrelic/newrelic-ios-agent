@@ -22,6 +22,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (NRMAPayload *) generateNRMAPayload;
 + (NSDictionary<NSString*, NSString*> *) generateConnectivityHeadersWithNRMAPayload:(NRMAPayload*)payload;
+
+// The distributed-trace identity of a payload, keyed by the event attribute names the agent
+// records it under (id / guid / trace.id). This is the representation a caller should hand back
+// through a notice* API's traceHeaders: parameter: it needs no parsing, unlike the W3C headers.
+// Mirrors the Android agent's TraceContext -asTraceAttributes.
++ (NSDictionary<NSString*, NSString*> *) traceAttributesWithNRMAPayload:(NRMAPayload*)payload;
++ (NSDictionary<NSString*, NSString*> *) traceAttributesWithPayload:(NRMAPayloadContainer*)payloadContainer;
 + (void) attachNRMAPayload:(NRMAPayload*)payload to:(id)object;
 + (NRMAPayload*) addConnectivityHeaderNRMAPayload:(NSMutableURLRequest*)request;
 

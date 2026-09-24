@@ -18,6 +18,7 @@
 #import <Connectivity/Payload.hpp>
 #include <Connectivity/Facade.hpp>
 #import "NRMAPayloadContainer+cppInterface.h"
+#import "Constants.h"
 #import "NRMAAnalytics.h"
 
 #import "NRMAAnalytics+cppInterface.h"
@@ -153,6 +154,15 @@ static NSString* const kNRMAInvalidSpanId  = @"0000000000000000";
     }
 }
 
+// The trace dictionary arrives from a public API and, for cross-platform callers, across a method
+// channel, so any value may be NSNull or a non-string. Returns nil unless it is a non-empty string.
++ (NSString*) stringValue:(id)value {
+    if (![value isKindOfClass:[NSString class]]) {
+        return nil;
+    }
+    return [(NSString*)value length] ? (NSString*)value : nil;
+}
+
 + (NSString*) component:(NSArray<NSString*>*)components atIndex:(NSUInteger)index {
     if (index >= components.count) {
         return nil;
@@ -218,16 +228,29 @@ static NSString* const kNRMAInvalidSpanId  = @"0000000000000000";
         return nil;
     }
 
-    NSString* traceParent = traceHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
-    if (![traceParent isKindOfClass:[NSString class]]) {
-        NRLOG_AGENT_WARNING(@"Supplied trace headers carry no traceparent. Skipping distributed tracing.");
-        return nil;
+    // Preferred shape: the caller hands back the trace's identity under the attribute names the
+    // event records it under, as +generateDistributedTracingContext returns and as the Android
+    // agent's API takes. Nothing needs parsing, and no wire format is involved.
+    NSString* traceId = [NRMANetworkFacade stringValue:traceHeaders[kNRMA_Attrib_dtTraceId]];
+    NSString* spanId = [NRMANetworkFacade stringValue:traceHeaders[kNRMA_Attrib_dtId]];
+    if (!spanId) {
+        spanId = [NRMANetworkFacade stringValue:traceHeaders[kNRMA_Attrib_dtGuid]];
     }
 
-    // traceparent: "<version>-<traceId>-<spanId>-<traceFlags>".
-    NSArray<NSString*>* traceParentComponents = [traceParent componentsSeparatedByString:@"-"];
-    NSString* traceId = [NRMANetworkFacade component:traceParentComponents atIndex:1];
-    NSString* spanId = [NRMANetworkFacade component:traceParentComponents atIndex:2];
+    // Otherwise recover the identity from the W3C headers, for callers that only hold the wire
+    // representation -- an upstream service's propagated context, say.
+    if (!traceId || !spanId) {
+        NSString* traceParent = [NRMANetworkFacade stringValue:traceHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY]];
+        if (!traceParent) {
+            NRLOG_AGENT_WARNING(@"Supplied trace headers carry neither trace attributes nor a traceparent. Skipping distributed tracing.");
+            return nil;
+        }
+
+        // traceparent: "<version>-<traceId>-<spanId>-<traceFlags>".
+        NSArray<NSString*>* traceParentComponents = [traceParent componentsSeparatedByString:@"-"];
+        traceId = [NRMANetworkFacade component:traceParentComponents atIndex:1];
+        spanId = [NRMANetworkFacade component:traceParentComponents atIndex:2];
+    }
 
     if (!traceId || !spanId ||
         [traceId isEqualToString:kNRMAInvalidTraceId] ||
@@ -427,6 +450,13 @@ static NSString* const kNRMAInvalidSpanId  = @"0000000000000000";
 + (void) noticeNetworkFailure:(NSURLRequest*)request
                     withTimer:(NRTimer*)timer
                     withError:(NSError*)error {
+    [NRMANetworkFacade noticeNetworkFailure:request withTimer:timer withError:error traceHeaders:nil];
+}
+
++ (void) noticeNetworkFailure:(NSURLRequest*)request
+                    withTimer:(NRTimer*)timer
+                    withError:(NSError*)error
+                 traceHeaders:(NSDictionary<NSString*,NSString*>* _Nullable)traceHeaders {
 
     [timer stopTimer];
     double startTime = timer.startTimeInMillis;
@@ -461,19 +491,25 @@ static NSString* const kNRMAInvalidSpanId  = @"0000000000000000";
                                                                                              bytesSent:0];
         [NRMAHTTPUtilities addTrackedHeaders:request.allHTTPHeaderFields to:networkRequestData];
 
-        NSDictionary<NSString*,NSString*>*  traceHeaders;
-    
-        
+        // NR-622029: a cross-platform caller that owns the distributed trace supplies it here, and
+        // the event must be reported against that trace. Without one, the agent mints its own, as
+        // it always has.
+        NRMACallerTraceContext* callerTrace = [NRMANetworkFacade callerTraceContextFromTraceHeaders:traceHeaders];
+        NSDictionary<NSString*,NSString*>* generatedHeaders;
 
         if([NRMAFlags shouldEnableNewEventSystem]){
             if(retrievedPayload == nil) {
                 retrievedPayload = [NRMAHTTPUtilities generateNRMAPayload];
             }
-            traceHeaders = [NRMAHTTPUtilities generateConnectivityHeadersWithNRMAPayload:retrievedPayload];
-            
-            if(traceHeaders) {
 
-                [NRMANetworkFacade configureNRMAPayloadWithTraceHeaders:retrievedPayload traceHeaders:traceHeaders];
+            if(callerTrace) {
+                [NRMANetworkFacade applyCallerTraceContext:callerTrace toNRMAPayload:retrievedPayload];
+            } else {
+                generatedHeaders = [NRMAHTTPUtilities generateConnectivityHeadersWithNRMAPayload:retrievedPayload];
+
+                if(generatedHeaders) {
+                    [NRMANetworkFacade configureNRMAPayloadWithTraceHeaders:retrievedPayload traceHeaders:generatedHeaders];
+                }
             }
 
             [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:networkRequestData
@@ -489,10 +525,15 @@ static NSString* const kNRMAInvalidSpanId  = @"0000000000000000";
             if(retrievedCppPayload == nullptr) {
                 retrievedCppPayload = NewRelic::Connectivity::Facade::getInstance().newPayload();
             }
-            traceHeaders = [NRMAHTTPUtilities generateConnectivityHeadersWithPayload:[NRMAHTTPUtilities generatePayload]];
 
-            if(traceHeaders) {
-                [NRMANetworkFacade configureCppPayloadWithTraceHeaders:retrievedCppPayload traceHeaders:traceHeaders];
+            if(callerTrace) {
+                [NRMANetworkFacade applyCallerTraceContext:callerTrace toCppPayload:retrievedCppPayload];
+            } else {
+                generatedHeaders = [NRMAHTTPUtilities generateConnectivityHeadersWithPayload:[NRMAHTTPUtilities generatePayload]];
+
+                if(generatedHeaders) {
+                    [NRMANetworkFacade configureCppPayloadWithTraceHeaders:retrievedCppPayload traceHeaders:generatedHeaders];
+                }
             }
 
             [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:networkRequestData
