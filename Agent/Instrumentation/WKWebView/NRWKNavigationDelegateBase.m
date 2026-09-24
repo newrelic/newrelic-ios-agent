@@ -9,6 +9,7 @@
 #import "NRWKNavigationDelegateBase.h"
 #import "NRMANetworkFacade.h"
 #import <objc/runtime.h>
+#import <objc/message.h>
 #import "NRTimer.h"
 #import <WebKit/WKNavigationDelegate.h>
 #import "NRMAWebViewSupportability.h"
@@ -18,6 +19,12 @@
 
 @class WKWebView, WKNavigation, WKNavigationAction, WKNavigationResponse;
 @protocol WKNavigationDelegate;
+
+@interface NRWKNavigationDelegateBase ()
++ (NSURL*) currentURLForWebView:(WKWebView*)webView;
++ (NSURL*) urlForNavigation:(WKNavigation*)nav webView:(WKWebView*)webView;
++ (NSURL*) navigationURL:(WKNavigation*)nav;
+@end
 
 @implementation NRWKNavigationDelegateBase
 
@@ -42,12 +49,7 @@ didStartProvisionalNavigation:(WKNavigation*)navigation {
     //record network details
     [NRWKNavigationDelegateBase navigation:navigation setTimer:[NRTimer new]];
 
-    NSURL* url = nil;
-    Method m = class_getInstanceMethod(objc_getClass("WKWebView"), @selector(URL));
-
-    if (m != NULL) {
-        url = ((NSURL*(*)(id,SEL))(IMP)method_getImplementation(m))(webView,@selector(URL));
-    }
+    NSURL* url = [NRWKNavigationDelegateBase currentURLForWebView:webView];
 
     [NRWKNavigationDelegateBase navigation:navigation setURL:url];
     if ([self.realDelegate respondsToSelector:_cmd]) {
@@ -67,7 +69,7 @@ didFinishNavigation:(WKNavigation*)navigation
     //record network details
 
     NRTimer* timer = [NRWKNavigationDelegateBase navigationTimer:navigation];
-    NSURL* url = [NRWKNavigationDelegateBase navigationURL:navigation];
+    NSURL* url = [NRWKNavigationDelegateBase urlForNavigation:navigation webView:webView];
     if (timer) {
 
         NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url];
@@ -103,7 +105,7 @@ didFailProvisionalNavigation:(WKNavigation*)navigation
 {
     NRTimer* timer = [NRWKNavigationDelegateBase navigationTimer:navigation];
 
-    NSURL* url = [NRWKNavigationDelegateBase navigationURL:navigation];
+    NSURL* url = [NRWKNavigationDelegateBase urlForNavigation:navigation webView:webView];
 
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url];
     [request setHTTPMethod:@"GET"];
@@ -133,7 +135,7 @@ didFailNavigation:(WKNavigation*)navigation
     //record network details
     NRTimer* timer = [NRWKNavigationDelegateBase navigationTimer:navigation];
 
-    NSURL* url = [NRWKNavigationDelegateBase navigationURL:navigation];
+    NSURL* url = [NRWKNavigationDelegateBase urlForNavigation:navigation webView:webView];
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url];
     [request setHTTPMethod:@"GET"];
 
@@ -249,6 +251,37 @@ didFailNavigation:(WKNavigation*)navigation
     }
 
     [inv invoke];
+}
+
+// Resolves the web view's current URL. Prefer WKWebView's original -URL IMP so a
+// host-app swizzle of -URL can't interfere, but fall back to a normal message send
+// if the IMP lookup fails or yields nil.
++ (NSURL*) currentURLForWebView:(WKWebView*)webView
+{
+    if (webView == nil) return nil;
+
+    NSURL* url = nil;
+    Method m = class_getInstanceMethod(objc_getClass("WKWebView"), @selector(URL));
+    if (m != NULL) {
+        url = ((NSURL*(*)(id,SEL))(IMP)method_getImplementation(m))(webView,@selector(URL));
+    }
+
+    if (url == nil && [(id)webView respondsToSelector:@selector(URL)]) {
+        url = ((NSURL*(*)(id,SEL))objc_msgSend)(webView,@selector(URL));
+    }
+
+    return url;
+}
+
+// The URL captured at didStartProvisionalNavigation, or the web view's current URL
+// if none was captured (e.g. WebKit hadn't populated -URL yet when the navigation started).
++ (NSURL*) urlForNavigation:(WKNavigation*)nav webView:(WKWebView*)webView
+{
+    NSURL* url = [NRWKNavigationDelegateBase navigationURL:nav];
+    if (url == nil) {
+        url = [NRWKNavigationDelegateBase currentURLForWebView:webView];
+    }
+    return url;
 }
 
 + (NSURL*) navigationURL:(WKNavigation*)nav
