@@ -124,7 +124,7 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
 - (NSMutableURLRequest*) requestWithAttachedPayload {
     NSMutableURLRequest* request = [self request];
 
-    NRMAPayload* payload = [[NRMAPayload alloc] initWithTimestamp:[[NSDate date] timeIntervalSince1970]
+    NRMAPayload* payload = [[NRMAPayload alloc] initWithTimestamp:(long long)([[NSDate date] timeIntervalSince1970] * 1000)
                                                         accountID:@"1"
                                                             appID:@"1"
                                                           traceID:kNativeTraceId
@@ -454,7 +454,8 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
 //   * `newrelic` is no longer produced by this agent (NR-382855 removed it), so the Dart map
 //     carries a null for that key, which arrives over the method channel as NSNull.
 //   * the tracestate timestamp comes from W3CTraceState, which prints NRMAPayload.timestamp --
-//     seconds, not the milliseconds a cross-platform agent would write.
+//     milliseconds since the +startTrip fix (NR-622029). Builds before that printed seconds;
+//     -testSecondsValuedTraceStateTimestampIsNormalized covers that shape.
 - (NSDictionary*) flutterSuppliedTraceHeaders {
     return @{ @"traceparent": [NSString stringWithFormat:@"00-%@-%@-01", kCallerTraceId, kCallerSpanId],
               @"tracestate":  [NSString stringWithFormat:@"%@@nr=0-2-%@-%@-%@----%lld",
@@ -478,7 +479,7 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
     XCTAssertEqualObjects(payloadData[@"ac"], kCallerAccountId);
     XCTAssertEqualObjects(payloadData[@"ap"], kCallerAppId);
     XCTAssertEqualObjects(payloadData[@"tk"], kCallerTrustedAccountKey);
-    // The seconds-valued tracestate timestamp must not be read as milliseconds.
+    // The millisecond tracestate timestamp passes through unscaled.
     XCTAssertEqualWithAccuracy([payloadData[@"ti"] doubleValue], (double)(kCallerTimestampMillis), 1.0);
 }
 
@@ -639,8 +640,8 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
     XCTAssertEqualObjects(@(payload->getTrustedAccountKey().c_str()), kCallerTrustedAccountKey);
     XCTAssertEqualObjects(@(payload->getParentId().c_str()), @"0");
     XCTAssertTrue(payload->getDistributedTracing());
-    // Connectivity::Payload's timestamp is in milliseconds, so the tracestate value passes
-    // through unscaled -- unlike NRMAPayload's, which is in seconds.
+    // Connectivity::Payload's timestamp is in milliseconds, as NRMAPayload's is, so the
+    // tracestate value passes through unscaled.
     XCTAssertEqual(payload->getTimestamp(), kCallerTimestampMillis);
 }
 
