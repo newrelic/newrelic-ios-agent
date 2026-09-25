@@ -822,12 +822,14 @@ extern "C" {
 
 /*!
  Change the maximum length of time before the SDK sends queued events to New Relic.
- 
+
  @param seconds The number of seconds to wait before sending any events to New Relic.
- 
- The default timeout before sending events is 600 seconds (10 minutes). If the user 
- keeps your app open for longer than that, any stored events will be transmitted and the timer resets. 
- 
+
+ The default timeout before sending events is 60 seconds. If the user
+ keeps your app open for longer than that, any stored events will be transmitted and the timer resets.
+
+ @note The allowed range is 60 to 600 seconds. Values outside this range will be reset to the nearest bound and a warning will be logged.
+
  @note events transmitted before the end of session will not have a `sessionDuration` attribute.
  */
 + (void) setMaxEventBufferTime:(unsigned int)seconds;
@@ -835,13 +837,15 @@ extern "C" {
 
 /*!
  Change the maximum number of events that will be stored in memory.
- 
+
  @param size the maximum number of events to store in memory
- 
+
  By default the SDK will store up to 1000 events in memory. If more events are
-  recorded before `maxEventBufferTime` seconds elapse, events are sampled using 
+  recorded before `maxEventBufferTime` seconds elapse, events are sampled using
   a Reservoir Sampling algorithm. http://en.wikipedia.org/wiki/Reservoir_sampling
  If `maxEventBufferTime` seconds elapse, the existing event buffer will be transmitted and then emptied.
+
+ @note The minimum allowed value is 64. Values lower than 64 will be reset to 64 and a warning will be logged. Values above 1000 are allowed but not recommended; a warning will be logged.
  */
 + (void) setMaxEventPoolSize:(unsigned int)size;
 
