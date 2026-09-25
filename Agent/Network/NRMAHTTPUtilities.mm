@@ -11,6 +11,7 @@
 #include <Connectivity/Facade.hpp>
 
 #import "NRMAHTTPUtilities.h"
+#import "Constants.h"
 #import "NRMAHarvestController.h"
 #import "NRMAFlags.h"
 #import "NRMAPayloadContainer+cppInterface.h"
@@ -195,7 +196,11 @@ NSString* currentParentId = @"";
         NSString * accountID = @(NewRelic::Application::getInstance().getContext().getAccountId().c_str());
         NSString * appId = @(NewRelic::Application::getInstance().getContext().getApplicationId().c_str());
         NSString * trustedAccountKey =  @(NewRelic::Application::getInstance().getContext().getTrustedAccountKey().c_str());
-        NSTimeInterval currentTimeStamp = [[NSDate date] timeIntervalSince1970];
+        // NRMAPayload.timestamp is milliseconds since the epoch: the unit the distributed-tracing
+        // spec defines for the tracestate entry and the DT payload's `ti` field, the unit
+        // Connectivity::Payload carries, and the unit the DT unit tests pass in.
+        // -timeIntervalSince1970 is in seconds.
+        long long currentTimeStamp = floor([[NSDate date] timeIntervalSince1970] * 1000);
 
         currentTraceId = [[[[[NSUUID UUID] UUIDString] componentsSeparatedByString:@"-"] componentsJoinedByString:@""] lowercaseString];
         currentParentId = @"";
@@ -207,6 +212,41 @@ NSString* currentParentId = @"";
         }
         return payload;
     }
+}
+
++ (NSDictionary<NSString*, NSString*> *) traceAttributesWithTraceId:(NSString*)traceId
+                                                            spanId:(NSString*)spanId {
+    if (!traceId.length || !spanId.length) {
+        return @{};
+    }
+
+    // kNRMA_Attrib_dtGuid is the deprecated spelling of kNRMA_Attrib_dtId; both are recorded, as
+    // the Android agent does, so consumers of either keep working.
+    return @{kNRMA_Attrib_dtTraceId: traceId,
+             kNRMA_Attrib_dtId: spanId,
+             kNRMA_Attrib_dtGuid: spanId};
+}
+
++ (NSDictionary<NSString*, NSString*> *) traceAttributesWithNRMAPayload:(NRMAPayload*)payload {
+    if (payload == nil) {
+        return @{};
+    }
+
+    return [NRMAHTTPUtilities traceAttributesWithTraceId:payload.traceId spanId:payload.id];
+}
+
++ (NSDictionary<NSString*, NSString*> *) traceAttributesWithPayload:(NRMAPayloadContainer*)payloadContainer {
+    if (payloadContainer == nil) {
+        return @{};
+    }
+
+    const std::unique_ptr<NewRelic::Connectivity::Payload>& payload = [payloadContainer getReference];
+    if (payload == nullptr) {
+        return @{};
+    }
+
+    return [NRMAHTTPUtilities traceAttributesWithTraceId:@(payload->getTraceId().c_str())
+                                                 spanId:@(payload->getId().c_str())];
 }
 
 + (NSDictionary<NSString*, NSString*> *) generateConnectivityHeadersWithNRMAPayload:(NRMAPayload*)payload {

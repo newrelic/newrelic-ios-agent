@@ -25,7 +25,7 @@ static NSString* const kTrustedAccountKey   = @"TrustedAccountKey";
     return YES;
 }
 
-- (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
+- (nonnull instancetype) initWithTimestamp:(long long)timestamp
                                  accountID:(NSString*)accountId
                                  appID:(NSString*)appId
                                  traceID:(NSString*)traceId
