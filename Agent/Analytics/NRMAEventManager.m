@@ -17,7 +17,6 @@
 
 static const NSUInteger kDefaultBufferSize = 1000;
 static const NSUInteger kDefaultBufferTimeSeconds = 60; // 60 seconds
-static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
 static const NSUInteger kBufferTimeSecondsLeeway = 60; // 60 seconds
 static const double kMillisecondsPerSecond = 1000.0; // milliseconds to seconds conversion
 
@@ -61,13 +60,6 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
 }
 
 - (void)setMaxEventBufferTimeInSeconds:(NSUInteger)seconds {
-    if(seconds < kMinBufferTimeSeconds) {
-        NRLOG_AGENT_ERROR(@"Buffer Time cannot be less than %lu Seconds", (unsigned long)kMinBufferTimeSeconds);
-        maxBufferTimeSeconds = kMinBufferTimeSeconds;
-    } else if (seconds > kDefaultBufferTimeSeconds){
-        NRLOG_AGENT_WARNING(@"Buffer Time should not be longer than %lu seconds", (unsigned long)kDefaultBufferTimeSeconds);
-        maxBufferTimeSeconds = kDefaultBufferTimeSeconds;
-    }
     maxBufferTimeSeconds = seconds;
 }
 

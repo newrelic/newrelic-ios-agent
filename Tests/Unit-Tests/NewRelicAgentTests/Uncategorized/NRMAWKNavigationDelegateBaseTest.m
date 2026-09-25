@@ -420,7 +420,10 @@
     WKWebView *webView = [[WKWebView alloc] init];
     [webView loadHTMLString:@"<script>window.newrelic = {}</script>" baseURL:nil];
 
-    NSDate *loadDeadline = [NSDate dateWithTimeIntervalSinceNow:5.0];
+    // CI runners (e.g. GitHub Actions macOS) can be slow to spin up WebKit's WebContent
+    // process on a cold start, so give the initial load a generous timeout rather than
+    // the ~5s that's plenty locally but flakes under CI load.
+    NSDate *loadDeadline = [NSDate dateWithTimeIntervalSinceNow:20.0];
     while (webView.isLoading && [NSDate.date compare:loadDeadline] == NSOrderedAscending) {
         [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
     }
@@ -429,8 +432,10 @@
     [NRMAWebViewSupportability startBrowserAgentDetection:webView];
 
     // Poll until the specific browser agent metric arrives (ignore other NRMANamedValueMeasurements
-    // such as memory/CPU produced by NRMANamedValueProducer while the run loop spins).
-    NSDate *detectDeadline = [NSDate dateWithTimeIntervalSinceNow:5.0];
+    // such as memory/CPU produced by NRMANamedValueProducer while the run loop spins). Give this a
+    // generous deadline too: each evaluateJavaScript: round-trip in NRMAWebViewSupportability's own
+    // polling can itself be slow on a loaded-down CI runner, pushing out its 8-attempt/2s budget.
+    NSDate *detectDeadline = [NSDate dateWithTimeIntervalSinceNow:15.0];
     NRMANamedValueMeasurement *found = nil;
     while (!found && [NSDate.date compare:detectDeadline] == NSOrderedAscending) {
         [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
