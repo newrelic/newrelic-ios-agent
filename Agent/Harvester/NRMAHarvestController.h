@@ -77,6 +77,8 @@
 + (void) addHarvestableActivity:(NRMAHarvestableActivity* _Nonnull)activity;
 
 + (void) addHarvestableAnalytics:(NRMAHarvestableAnalytics* _Nonnull)analytics;
+
++ (void) backgroundFlush;
 @end
 
 #ifdef __cplusplus
