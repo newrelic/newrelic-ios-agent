@@ -465,6 +465,63 @@ final class SwiftUIScreenResolverTests: XCTestCase {
         XCTAssertFalse(SwiftUIScreenResolver.isMainBundleModuleType("DesignSystem.Route"))
     }
 
+    // MARK: - Hosts owned by .NRMobileView
+    //
+    // The marker check above only sees a modifier stored in the host's view graph, which is where
+    // it sits at a call site (`Screen().NRMobileView()`). Applied inside `body` it is never stored
+    // -- `body` is computed -- so the host resolved *and* the modifier reported: the same screen
+    // twice, once under a `ModifiedContent<…>` name. The modifier now claims its host at runtime.
+
+    func testHostClaimedByTheModifierIsNotAnAutomaticScreen() {
+        let host = UIHostingController(rootView: AnyView(CheckoutScreen()))
+        _ = UINavigationController(rootViewController: host)
+        XCTAssertNotNil(NRMASwiftUIScreenResolver.screen(for: host), "precondition: an unclaimed host resolves")
+
+        SwiftUIScreenResolver.claimForModifier(host)
+
+        XCTAssertNil(NRMASwiftUIScreenResolver.screen(for: host),
+                     "a host whose content carries .NRMobileView must be left to the modifier")
+    }
+
+    func testClaimingIgnoresControllersThatAreNotSwiftUIHosts() {
+        let controller = UIViewController()
+
+        SwiftUIScreenResolver.claimForModifier(controller)
+
+        XCTAssertFalse(SwiftUIScreenResolver.isClaimedByModifier(controller))
+    }
+
+    // At a call site the modifier's `self` is the screen, so its type is the name.
+    func testModifierDefaultNameIsTheAppTypeAtACallSite() {
+        XCTAssertEqual(SwiftUIScreenResolver.modifierDefaultName(for: CheckoutScreen.self), "CheckoutScreen")
+    }
+
+    // Inside `body` the modifier's `self` is the modifier chain the body built. The observed
+    // viewName was a ~1.5 KB `ModifiedContent<ModifiedContent<…ScrollView<…` string.
+    func testModifierDefaultNameIsNilForASwiftUIModifierChain() {
+        let chain = ScrollView { Text("x") }.padding().navigationBarTitle("t")
+
+        XCTAssertNil(SwiftUIScreenResolver.modifierDefaultName(for: type(of: chain)))
+    }
+
+    func testModifierDefaultNameIsNilForAWrappedAppView() {
+        let wrapped = CheckoutScreen().padding()
+
+        XCTAssertNil(SwiftUIScreenResolver.modifierDefaultName(for: type(of: wrapped)),
+                     "the leading type is SwiftUI's; naming is left to the host lookup")
+    }
+
+    // A modifier with no usable default name takes its host's name. That host may well carry the
+    // modifier visibly (`Screen().padding().NRMobileView()`), so the lookup must not stop at the
+    // marker the way automatic resolution does.
+    func testIdentityIgnoringTheModifierNamesAnInstrumentedHost() {
+        let host = UIHostingController(
+            rootView: AnyView(CheckoutScreen().modifier(NRMobileViewModifier())))
+
+        XCTAssertEqual(SwiftUIScreenResolver.screenIdentity(for: host, ignoringModifier: true)?.viewName,
+                       "CheckoutScreen")
+    }
+
     // MARK: - viewClass stability
 
     // `viewName` was already stripped; `viewClass` was not, so one screen's viewClass changed every

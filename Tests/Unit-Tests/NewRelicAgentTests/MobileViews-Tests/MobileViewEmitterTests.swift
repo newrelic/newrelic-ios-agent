@@ -36,7 +36,7 @@ final class MobileViewEmitterTests: XCTestCase {
         MobileViewRecord(viewName: "CheckoutView",
                          viewClass: "MyApp.CheckoutView",
                          instanceId: "instance-1",
-                         platform: .swiftUI,
+                         framework: .swiftUI,
                          load: load,
                          custom: custom)
     }
@@ -76,7 +76,7 @@ final class MobileViewEmitterTests: XCTestCase {
     // An absent platform must read as absent, not as an empty string.
     func testNilPlatformOmitsUiPlatformRatherThanEmittingEmptyString() {
         var record = visitRecord()
-        record.platform = nil
+        record.framework = nil
 
         XCTAssertNil(record.attributes()["uiFramework"])
     }
@@ -120,16 +120,16 @@ final class MobileViewEmitterTests: XCTestCase {
     // visit is reported with its real duration and nothing else, and whether it counts as a
     // screen view is the consumer's decision rather than one the agent makes.
     func testAShortLifetimeIsReportedVerbatimAndNotClassified() {
-        for platform in [NRViewPlatform.uiKit, .swiftUI, .manual] {
+        for framework in [NRViewFramework.uiKit, .swiftUI, .manual] {
             var record = visitRecord()
-            record.platform = platform
+            record.framework = framework
             record.timeVisibleMs = 1
 
             let attrs = record.attributes()
             XCTAssertEqual(attrs["timeVisible"] as? NSNumber, NSNumber(value: 1.0),
-                           "\(platform.rawValue) must report the lifetime it observed")
+                           "\(framework.rawValue) must report the lifetime it observed")
             XCTAssertNil(attrs["churn"],
-                         "\(platform.rawValue) must not reintroduce a churn classification")
+                         "\(framework.rawValue) must not reintroduce a churn classification")
         }
     }
 

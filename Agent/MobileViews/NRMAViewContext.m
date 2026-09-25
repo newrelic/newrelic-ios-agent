@@ -83,6 +83,11 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     // first. Only used to decide whether a disappearance uncovered something; _currentViewName
     // above remains the source of truth for referrer stamping.
     NSMutableArray<NRMAVisibleView *> *_visibleViews;
+
+    // Bumped by every real transition, automatic or manual. A deferred resurface (see
+    // -viewDidDisappearNamed:instanceId:departure:) runs only if this has not moved since the
+    // departure, which is how "no real appearance arrived first" is decided.
+    NSUInteger _transitionGeneration;
 }
 
 + (instancetype)sharedInstance {
@@ -140,6 +145,19 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
                 platform:(nullable NSString *)platform {
     if (name.length == 0) { return; }
     os_unfair_lock_lock(&_lock);
+
+    // A manual view this screen replaces has ended its visit, so it is reported here. Before, only the
+    // next setCurrentView: (or a background flush that still found it current) did that; an automatic
+    // screen overwrote it silently -- the visit was never reported, yet this screen still named it as
+    // its previousView, under an id no event carried.
+    BOOL closesManualView         = (_currentViewSource == NRMAViewSourceManual && _currentViewName.length > 0);
+    NSString *manualName          = closesManualView ? _currentViewName : nil;
+    NSString *manualInstanceId    = closesManualView ? _currentViewInstanceId : nil;
+    CFAbsoluteTime manualAppear   = _currentViewAppearTime;
+    NSString *manualReferrer      = closesManualView ? _previousViewName : nil;
+    NSString *manualReferrerId    = closesManualView ? _previousViewInstanceId : nil;
+    NSDictionary *manualCustom    = closesManualView ? _currentViewCustomAttributes : nil;
+
     // A view replacing itself (a new instance of the same screen, as SwiftUI produces on a tab
     // switch) keeps the referrer it already had. Shifting it here would make the screen its own
     // previousView, which reads as a navigation from a screen to itself.
@@ -155,12 +173,22 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     _currentViewLoadStartTime = loadStartTime ? loadStartTime.doubleValue : 0;
     _currentViewHasLoadStart  = (loadStartTime != nil);
     _currentViewSource      = NRMAViewSourceAutomatic;
+    _transitionGeneration++;
     // Automatic producers carry their own custom attributes; anything left here belongs to a manual
     // view that is no longer current and must not leak onto this one's event.
     _currentViewCustomAttributes = nil;
     [self pushVisibleViewLocked:name instanceId:instanceId appearTime:appearTime platform:platform];
     os_unfair_lock_unlock(&_lock);
     [self persistCurrentReferrerState];
+
+    if (closesManualView) {
+        [self recordMobileView:manualName
+                    instanceId:manualInstanceId
+                  previousView:manualReferrer
+        previousViewInstanceId:manualReferrerId
+                   timeVisible:@([NRMAViewContext millisecondsBetween:manualAppear and:appearTime])
+                   customAttrs:manualCustom];
+    }
 }
 
 #pragma mark - Visible-view stack (lock held)
@@ -203,78 +231,93 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
 #pragma mark - Re-appearance synthesis
 
 - (void)viewDidDisappearNamed:(NSString *)name instanceId:(NSString *)instanceId {
+    [self viewDidDisappearNamed:name instanceId:instanceId departure:NRMAViewDepartureUnknown];
+}
+
+- (void)viewDidDisappearNamed:(NSString *)name
+                   instanceId:(NSString *)instanceId
+                    departure:(NRMAViewDeparture)departure {
     if (instanceId.length == 0) { return; }
 
-    // Captured under the lock and acted on after releasing it: -persistCurrentReferrerState writes
-    // to disk, which must not happen while holding this non-recursive lock.
-    NSString *resurfacedName       = nil;
-    NSString *resurfacedInstanceId = nil;
-    NSString *departedName         = nil;
-    NSString *departedInstanceId   = nil;
-
     os_unfair_lock_lock(&_lock);
-
-    // The instant the departure was observed. It becomes the appear time of whatever this
-    // disappearance uncovers, so the resurfaced screen's visible lifetime restarts here.
-    //
-    // How long the departing instance had been on screen is deliberately not consulted: a
-    // short-lived appear/disappear pair is reported and synthesized from exactly like any other,
-    // with no minimum-dwell threshold suppressing it.
-    CFAbsoluteTime now = [NRMAViewContext monotonicNow];
-
     NSUInteger removedIndex = [self removeVisibleViewLocked:instanceId];
     // After the removal, the departing view was on top precisely when it sat at what is now the end
     // of the array. Anything else means it was buried and nothing was uncovered.
     BOOL wasTop = (removedIndex != NSNotFound && removedIndex == _visibleViews.count);
 
-    if (wasTop && _visibleViews.count > 0 && _currentViewSource == NRMAViewSourceAutomatic) {
-        NRMAVisibleView *uncovered = _visibleViews.lastObject;
-
-        // Guard against a same-name resurrection (a view replaced by another instance of itself),
-        // which would emit an edge from a screen to itself.
-        if (uncovered.name.length > 0 && ![uncovered.name isEqualToString:name]) {
-            resurfacedName       = uncovered.name;
-            resurfacedInstanceId = [[NSUUID UUID] UUIDString];
-            departedName         = [name copy];
-            departedInstanceId   = [instanceId copy];
-
-            // A new visible lifetime, so timeVisible restarts from now.
-            //
-            // The entry's instanceId is deliberately NOT overwritten with resurfacedInstanceId. It is
-            // the key -removeVisibleViewLocked: matches on, and only the producer knows it: when this
-            // view really does disappear it reports the id it was pushed with. Replacing the key with
-            // a UUID no producer holds made the entry unremovable, so it stayed on the stack until the
-            // 32-entry cap evicted it -- and any later disappearance could "uncover" it and resurrect
-            // a screen the user left minutes ago, stealing the referrer of whatever appeared next.
-            uncovered.appearTime = now;
-
-            _previousViewName       = departedName;
-            _previousViewInstanceId = departedInstanceId;
-            _currentViewName        = uncovered.name;
-            _currentViewInstanceId  = resurfacedInstanceId;
-            _currentViewAppearTime  = uncovered.appearTime;
-            // A screen resurfacing was never rebuilt, so it has no construction start. Marks on it
-            // fall back to the appear time, and it emits no baseline row.
-            _currentViewLoadStartTime = 0;
-            _currentViewHasLoadStart  = NO;
-            _currentViewSource      = NRMAViewSourceAutomatic;
-        }
+    BOOL resurfaced = NO;
+    NSUInteger generation = _transitionGeneration;
+    if (wasTop && departure == NRMAViewDepartureUnknown) {
+        resurfaced = [self resurfaceTopAfterDepartureOf:name instanceId:instanceId];
     }
-
     os_unfair_lock_unlock(&_lock);
 
-    if (resurfacedName == nil) { return; }
+    // Captured under the lock and acted on after releasing it: -persistCurrentReferrerState writes
+    // to disk, which must not happen while holding this non-recursive lock.
+    if (resurfaced) { [self persistCurrentReferrerState]; }
 
-    // No event: MobileView is one event per visit, emitted by the producer that owns the view when
-    // that view goes away. This method observes a screen becoming visible again, not a visit
-    // ending, so it has nothing to report -- what it does is keep currentView / previousView
-    // truthful, so the *next* view's referrer and any breadcrumb recorded meanwhile name the screen
-    // the user is actually looking at.
+    // A covered view uncovers nothing -- it is still there, underneath whatever covered it, and it
+    // remains the referrer for that. A leaving one hands over to whatever the runtime shows next;
+    // only if that never announces itself does the screen beneath become current.
+    if (!wasTop || departure != NRMAViewDepartureLeaving) { return; }
+
+    NSString *departedName = [name copy];
+    NSString *departedInstanceId = [instanceId copy];
+    __weak NRMAViewContext *weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NRMAViewContext *strongSelf = weakSelf;
+        if (!strongSelf) { return; }
+        BOOL didResurface = NO;
+        os_unfair_lock_lock(&strongSelf->_lock);
+        if (strongSelf->_transitionGeneration == generation) {
+            didResurface = [strongSelf resurfaceTopAfterDepartureOf:departedName instanceId:departedInstanceId];
+        }
+        os_unfair_lock_unlock(&strongSelf->_lock);
+        if (didResurface) { [strongSelf persistCurrentReferrerState]; }
+    });
+}
+
+/// Makes the top of the visible stack current again, after `name` left it. Lock held.
+///
+/// No event: MobileView is one event per visit, emitted by the producer that owns the view when that
+/// view goes away. This observes a screen becoming visible again, not a visit ending, so it has
+/// nothing to report -- what it does is keep currentView / previousView truthful, so the *next*
+/// view's referrer and any breadcrumb recorded meanwhile name the screen the user is looking at.
+///
+/// The consequence, accepted deliberately: a SwiftUI view popped back to reports no event for that
+/// second visit. SwiftUI does not re-fire its onAppear (the root was never torn down) and its
+/// onDisappear already fired, so no producer will ever close it out.
+- (BOOL)resurfaceTopAfterDepartureOf:(NSString *)name instanceId:(NSString *)instanceId {
+    if (_visibleViews.count == 0 || _currentViewSource != NRMAViewSourceAutomatic) { return NO; }
+
+    NRMAVisibleView *uncovered = _visibleViews.lastObject;
+    // Guard against a same-name resurrection (a view replaced by another instance of itself), which
+    // would emit an edge from a screen to itself.
+    if (uncovered.name.length == 0 || [uncovered.name isEqualToString:name]) { return NO; }
+
+    // The instant the departure was observed. It becomes the appear time of whatever this uncovers,
+    // so marks on the resurfaced screen measure from here.
     //
-    // The consequence, accepted deliberately: a SwiftUI view popped back to reports no event for
-    // that second visit. SwiftUI does not re-fire its onAppear (the root was never torn down) and
-    // its onDisappear already fired, so no producer will ever close it out.
-    [self persistCurrentReferrerState];
+    // How long the departing instance had been on screen is deliberately not consulted: a
+    // short-lived appear/disappear pair is reported and synthesized from exactly like any other,
+    // with no minimum-dwell threshold suppressing it.
+    uncovered.appearTime = [NRMAViewContext monotonicNow];
+
+    _previousViewName       = [name copy];
+    _previousViewInstanceId = [instanceId copy];
+    _currentViewName        = uncovered.name;
+    // The uncovered visit's own id. An entry is on this stack only while its visit is open -- both
+    // producers remove it when they close one out -- so this is the id its eventual event carries,
+    // and a referrer naming it joins. A fresh UUID here was referenced by the next screen's
+    // previousViewInstanceId and by no event at all.
+    _currentViewInstanceId  = uncovered.instanceId;
+    _currentViewAppearTime  = uncovered.appearTime;
+    // A screen resurfacing was never rebuilt, so it has no construction start. Marks on it fall back
+    // to the appear time, and it emits no baseline row.
+    _currentViewLoadStartTime = 0;
+    _currentViewHasLoadStart  = NO;
+    _currentViewSource      = NRMAViewSourceAutomatic;
+    return YES;
 }
 
 #pragma mark - Manual producer
@@ -323,6 +366,7 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     _hasPendingManualLoadStart = NO;
 
     _currentViewSource      = NRMAViewSourceManual;
+    _transitionGeneration++;
     os_unfair_lock_unlock(&_lock);
     [self persistCurrentReferrerState];
 

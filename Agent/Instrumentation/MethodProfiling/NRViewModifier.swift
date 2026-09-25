@@ -93,9 +93,22 @@ internal enum NRMobileViewGate {
 @available(iOS 13, tvOS 13, *)
 internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
 
-    let viewName: String
-    let viewClass: String
+    /// The caller's name, or the modifier's own type name where that names a screen. `nil` when the
+    /// modifier was applied inside `body` with no `name:` -- see `SwiftUIScreenResolver.modifierDefaultName`
+    /// -- in which case the screen is named after its hosting controller once that is found.
+    let declaredName: String?
+    let declaredClass: String?
     let customAttributes: [String: Any]?
+
+    /// The host-derived identity, for a modifier with no declared name.
+    @State private var hostName: String?
+    @State private var hostClass: String?
+    /// An appearance that could not open a visit yet because no name was known. The host is found a
+    /// few milliseconds after onAppear; the visit is opened then, but timed from here.
+    @State private var pendingAppearTime: Double?
+
+    private var viewName: String? { declaredName ?? hostName }
+    private var viewClass: String? { declaredClass ?? hostClass }
 
     /// Monotonic seconds, from `NRMAViewContext.monotonicNow()`. Never `Date` — see that method for
     /// why a wall-clock step surfaces here as a fabricated 0 ms rather than as an obvious error.
@@ -123,8 +136,18 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .onAppear { openVisit() }
+            .modifier(NRMobileViewHostBridge(onHost: hostFound))
+            .onAppear {
+                let now = NRMAViewContext.monotonicNow()
+                if viewName != nil {
+                    openVisit(at: now)
+                } else {
+                    pendingAppearTime = now
+                }
+            }
             .onDisappear {
+                // A visit that never opened (its host was never found) has nothing to report.
+                pendingAppearTime = nil
                 closeVisit(at: NRMAViewContext.monotonicNow())
 
                 // Marks this identity as one SwiftUI preserved: the next onAppear on this same @State
@@ -140,14 +163,41 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
                 onForeground: { reopenVisit(at: NRMAViewContext.monotonicNow()) }))
     }
 
-    /// Opens a visit. `onAppear` only -- the app coming back to the foreground goes through
-    /// `reopenVisit(at:)`, which has no construction to time and no referrer to look up.
-    private func openVisit() {
+    /// The hosting controller this view is shown in, reported when the view reaches a window.
+    ///
+    /// Two jobs. The host is claimed, so automatic SwiftUI collection does not report the same screen
+    /// a second time. And a modifier with no name of its own is named after the screen the host holds,
+    /// then opens the visit its appearance had to leave pending.
+    private func hostFound(_ host: AnyObject) {
+#if !os(watchOS)
+        guard let host = host as? UIViewController else { return }
+        SwiftUIScreenResolver.claimForModifier(host)
+
+        guard declaredName == nil else { return }
+        if hostName == nil {
+            guard let identity = SwiftUIScreenResolver.screenIdentity(for: host, ignoringModifier: true) else {
+                NRLOG_AGENT_DEBUG("NRMobileView: could not name this screen from its host; pass name: to report it")
+                return
+            }
+            hostName = identity.viewName
+            hostClass = identity.viewClass
+        }
+        if let pending = pendingAppearTime, appearTime == nil {
+            pendingAppearTime = nil
+            openVisit(at: pending)
+        }
+#endif
+    }
+
+    /// Opens a visit that appeared at `now`. From onAppear, or from `hostFound` for a visit that had
+    /// to wait for its name -- the foreground path goes through `reopenVisit(at:)`, which has no
+    /// construction to time and no referrer to look up.
+    private func openVisit(at now: Double) {
+        guard let viewName = viewName else { return }
         // Master switch: emit (and touch the shared view context) only when the
         // AutomaticMobileViews feature flag is enabled and this view is trackable.
         guard NRMobileViewGate.shouldRecord(viewName: viewName) else { return }
 
-        let now = NRMAViewContext.monotonicNow()
         let id = UUID().uuidString
         appearTime = now
         instanceId = id
@@ -226,6 +276,7 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
     /// closed this one and no foreground has re-opened it. That is what keeps a background followed
     /// by a real `onDisappear` from reporting the same visit twice.
     private func closeVisit(at endTime: Double) {
+        guard let viewName = viewName else { return }
         // Master switch: honor the AutomaticMobileViews feature flag here too, so a view
         // never emits an event while the feature is disabled.
         guard NRMobileViewGate.shouldRecord(viewName: viewName) else { return }
@@ -242,7 +293,7 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
         // appear/disappear pair milliseconds apart on every TabView switch; those pairs are
         // reported like any other rather than being suppressed or labelled by the agent.
         MobileViewRecord(viewName: viewName,
-                         viewClass: viewClass,
+                         viewClass: viewClass ?? viewName,
                          instanceId: id,
                          framework: .swiftUI,
                          referrer: .explicit(name: referrerName,
@@ -273,6 +324,7 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
     /// Nothing was rebuilt, so there is no construction to time: `notRebuilt`, the same outcome a
     /// preserved identity reports. The referrer is the one captured when the view really appeared.
     private func reopenVisit(at startTime: Double) {
+        guard let viewName = viewName else { return }
         guard NRMobileViewGate.shouldRecord(viewName: viewName) else { return }
         // Only re-open what backgrounding closed. A view that was already gone must stay gone.
         guard appearTime == nil, instanceId == nil else { return }
@@ -290,6 +342,63 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
             platform: "SwiftUI")
     }
 }
+
+/// Delivers the hosting controller a MobileView modifier's content is shown in.
+///
+/// SwiftUI gives a modifier no handle on its host, so a zero-size, hidden UIKit view is placed behind
+/// the content and walks the responder chain once it reaches a window -- which happens as the host's
+/// push or presentation *starts*, well before the host's own `viewDidAppear:`. On watchOS this is the
+/// identity modifier: there are no hosting controllers to claim.
+@available(iOS 13, tvOS 13, *)
+private struct NRMobileViewHostBridge: SwiftUI.ViewModifier {
+
+    let onHost: (AnyObject) -> Void
+
+    func body(content: Content) -> some View {
+#if os(watchOS)
+        content
+#else
+        content.background(NRHostingControllerProbe(onHost: onHost))
+#endif
+    }
+}
+
+#if !os(watchOS)
+@available(iOS 13, tvOS 13, *)
+private struct NRHostingControllerProbe: UIViewRepresentable {
+    let onHost: (AnyObject) -> Void
+
+    func makeUIView(context: Context) -> ProbeView {
+        let view = ProbeView()
+        view.isHidden = true
+        view.isUserInteractionEnabled = false
+        view.isAccessibilityElement = false
+        view.onHost = onHost
+        return view
+    }
+
+    func updateUIView(_ uiView: ProbeView, context: Context) {
+        uiView.onHost = onHost
+    }
+
+    final class ProbeView: UIView {
+        var onHost: ((AnyObject) -> Void)?
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            guard window != nil else { return }
+            var responder: UIResponder? = self
+            while let current = responder {
+                if let controller = current as? UIViewController {
+                    onHost?(controller)
+                    return
+                }
+                responder = current.next
+            }
+        }
+    }
+}
+#endif
 
 /// Delivers app background / foreground to the MobileView modifier.
 ///
@@ -324,7 +433,10 @@ private struct NRMobileViewBackgroundBridge: SwiftUI.ViewModifier {
 /// Enable via NRFeatureFlag_AutomaticMobileViews.
 ///
 /// - Parameters:
-///   - name: Display name for the view. Defaults to the SwiftUI view type name.
+///   - name: Display name for the view. Defaults to the type the modifier is attached to when that
+///     is one of the app's views (`CheckoutScreen().NRMobileView()`), and otherwise -- typically
+///     inside `body`, where that type is SwiftUI's modifier chain -- to the screen its hosting
+///     controller holds, the name automatic SwiftUI collection would give it.
 ///   - attributes: Optional custom attributes merged into the MobileView event emitted
 ///     for this view. Reserved keys (viewClass, viewName, viewInstanceId, loadTime,
 ///     timeVisible, uiFramework, previousView) are not overridden.
@@ -336,14 +448,17 @@ private struct NRMobileViewBackgroundBridge: SwiftUI.ViewModifier {
 public extension SwiftUI.View {
     func NRMobileView(name: String? = nil,
                       attributes: [String: Any]? = nil) -> some View {
-        // String(reflecting:) produces a noisy generic modifier stack when views are chained
-        // (e.g. "SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<...>>"), so we use
-        // String(describing:) for a clean simple name, or the caller-supplied name if given.
-        let simpleName = String(describing: type(of: self))
-        let resolved   = name ?? simpleName
+        // Inside `body`, `self` is the modifier chain the body built, and its type named the screen
+        // "ModifiedContent<ModifiedContent<…ScrollView<…" -- a ~1.5 KB viewName. Only an app type is
+        // taken as the name; otherwise the modifier is named after its host once it is on screen.
+#if os(watchOS)
+        let resolved: String? = name ?? String(describing: type(of: self))
+#else
+        let resolved: String? = name ?? SwiftUIScreenResolver.modifierDefaultName(for: type(of: self))
+#endif
         return modifier(NRMobileViewModifier(
-            viewName:          resolved,
-            viewClass:         resolved,
+            declaredName:      resolved,
+            declaredClass:     resolved,
             customAttributes:  attributes
         ))
     }

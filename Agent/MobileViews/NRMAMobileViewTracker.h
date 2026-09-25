@@ -67,6 +67,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 FOUNDATION_EXPORT BOOL NRMA_ShouldSkipViewName(NSString *viewName);
 
+#if !TARGET_OS_WATCH
+/// YES when some part of the controller's view is visible in its window. See NRMAMobileViewTracker.m.
+FOUNDATION_EXPORT BOOL NRMA_IsControllerViewOnScreen(UIViewController *vc);
+#endif
+
 + (instancetype)sharedInstance;
 
 /**

@@ -136,7 +136,9 @@ currently inconsistent across sites.
 
 `ViewPhase` is one decision point in one file. That is what makes DACI action #2
 (collapse to one event on disappear) a single-file change later — **not done
-here**, see Non-goals.
+here**, see Non-goals. *It has since been done; see implementation note 5, which
+supersedes `ViewPhase`, `restarted`, `reappeared` and the `platform` field name
+throughout this section.*
 
 The emitter owns, in one place:
 
@@ -392,10 +394,18 @@ tree.
 
 ## Implementation notes
 
-Four things came out differently from the design above. Recorded here because each was a
-judgement call, not a detail.
+Five things came out differently from the design above. Recorded here because each was a
+judgement call, not a detail. Notes 2 and 5 were decided *after* the emitter landed, and the
+design body above still describes the pre-change shape — read the notes as authoritative where
+they disagree with it.
 
 ### 1. `agentName` is on MobileViewTiming and not on MobileView
+
+**Unresolved at the initiative level — see IDD §11 Q9.** The reasoning below settles iOS's internal
+drift, which is what this design was scoped to do, but it leaves iOS omitting an attribute IDD §5.3
+marks required and the §8 cross-platform coverage query facets on. That contradiction is the IDD's to
+resolve, and the likely resolution is restoring `agentName` on `MobileView` rather than dropping it
+from the contract.
 
 Commit `fb34bb84` ("remove agentName") stripped `agentName` from six emission sites but left
 it at three: both `NRMAViewContext.m` sites and the `NRMAViewTiming.m` one. So the attribute
@@ -409,12 +419,20 @@ stays the hardcoded `"iOS"` the three producers used, rather than
 `+[NewRelicInternalUtils osName]`, which would change the value on tvOS and watchOS — a wire
 change, not a refactor.
 
-### 2. `churn` now applies to every producer
+### 2. `churn` was generalised to every producer, then removed outright
 
-It previously reached only the SwiftUI disappear site, so a UIKit or manual view with the same
-sub-dwell lifetime went unmarked and inflated screen-view counts. The emitter derives it from
-`timeVisible`, so all four disappear producers mark it. Additive — `WHERE churn IS NULL` keeps
-working and now also excludes genuinely churny UIKit visits.
+First half as designed: `churn` previously reached only the SwiftUI disappear site, so a UIKit or
+manual view with the same sub-dwell lifetime went unmarked and inflated screen-view counts, and
+centralising the `kNRMAMinDwellMs` derivation in the emitter made all four disappear producers mark it.
+
+**It was then deleted, along with `kNRMAMinDwellMs` and the tab-bar debounce.** Generalising it made
+the objection to it visible rather than answering it: `churn` is the agent deciding which appearances
+were real, and that decision is invisible in the resulting data and unrecoverable from it — a consumer
+cannot tell a visit the agent labelled churny from one it did not measure, and cannot re-run the
+threshold at a different value. `timeVisible` is now reported verbatim however short it is, and
+consumers that want brief visits excluded filter on `timeVisible` itself. The emitter retains only a
+comment where the derivation was (`MobileViewEmitter.swift`); no attribute named `churn` is emitted.
+IDD §5.2 carries the initiative-level version of this rule.
 
 ### 3. MobileViewTiming splits schema from admission policy
 
@@ -445,3 +463,42 @@ weakened it, so `emit()`, `send()` and `emitTiming(attributes:)` all propagate t
   `NRMAViewContext.m` to `HEAD` and re-running, which reproduces the same three failures with
   the same messages. The synthesized re-appearance is not firing for a past-dwell disappearance;
   unrelated to this change, and untouched by it.
+
+### 5. Collapsed to one event per visit, and `restarted` / `reappeared` / `platform` are gone
+
+The design deferred DACI action #2 to "a single-file change later". That change has since been made,
+and it took three attributes with it:
+
+- **One `MobileView` per visit, emitted when the view ceases to be visible.** `ViewPhase` no longer
+  exists; `MobileViewRecord` carries `load` *and* `timeVisibleMs` on the same record, because the
+  producer holds the load outcome and referrer from appear time until the visit ends — the first
+  moment `timeVisible` is knowable. This halves MobileView volume and removes the downstream join
+  between the two halves of a visit.
+- **`appeared` dropped** — with one event per visit it carries no information.
+- **`reappeared` dropped, and nothing is synthesized.** Re-opening a visit for an uncovered screen
+  infers that a screen is visible again rather than observing a completed visit, so the
+  `NRMAViewContext` synthesis site is gone rather than being ported to the emitter.
+- **`restarted` dropped.** It was defined per view *instance* — "has this object been on screen
+  before" — which is `false` on every ordinary push → pop → push, i.e. on visits that are plainly
+  returns. Whether a visit rebuilt its screen is recoverable from `loadTime` / `loadTimeUnavailable`.
+- **`platform` renamed to `uiFramework`** on the wire and in the record (`ViewPlatform` →
+  `NRViewFramework`), because the values are frameworks and "platform" means the OS or the ingest
+  platform elsewhere in the product.
+- **Backgrounding closes out on-screen visits and foregrounding re-opens them** with a fresh
+  `viewInstanceId` and no `loadTime`. Without this, one-event-per-visit silently lost the last screen
+  of every session, since neither `viewDidDisappear:` nor SwiftUI's `onDisappear` fires on
+  backgrounding. Hooked at `didEnterBackground`, not `willResignActive`, so a notification banner or
+  an incoming call does not split one screen view into several. Manual views are flushed but not
+  re-opened: the agent cannot observe that a customer's screen is still up.
+
+Every one of these is an event-contract change no agent may adopt alone. They are recorded at the
+initiative level in IDD §5.3 and are pending cross-platform ratification (IDD §11 Q1–Q2).
+
+### 6. `navigationKind` survives in the emitter with no live producer
+
+The emitter carries `navigationKind` and the tab sites were to set it to `"tab"`, but the tab
+producers were removed with the debounce work (note 2) and the only remaining call site is commented
+out (`NRViewModifier.swift`). The attribute therefore reaches NRDB from nothing today. Kept rather
+than deleted so an agent that does report how a visit was reached uses this name and value set; IDD
+§11 Q10 asks whether that reservation is worth keeping, since a half-populated navigation
+discriminator reads "absent" as "not a tab selection" on every agent that never implemented it.

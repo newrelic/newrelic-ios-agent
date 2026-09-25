@@ -396,6 +396,13 @@ def sanitize(label):
     return str(label).replace('"', "'").replace("|", "/").replace("\n", " ")
 
 
+def frontmatter_title(title):
+    """The diagram title as a YAML scalar. Written bare, a title such as "App: checkout" is a
+    YAML mapping error and mmdc fails the whole render, so it is always double-quoted."""
+    text = str(title).replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
+    return f'"{text}"'
+
+
 def sanitize_edge_label(label):
     """Edge labels sit bare between pipes, so Mermaid lexes their punctuation as shape tokens.
 
@@ -417,7 +424,7 @@ def render(g, slow_ms, lie_ms=None, edge_timings=True, title=None):
     lines = ["flowchart LR"]
     if title:
         lines.insert(0, "---")
-        lines.insert(1, f"title: {sanitize(title)}")
+        lines.insert(1, f"title: {frontmatter_title(title)}")
         lines.insert(2, "---")
 
     lines.append("    classDef slow fill:#fde2e2,stroke:#c0392b,stroke-width:2px;")
@@ -593,9 +600,15 @@ def build_timeline(rows, max_visits=25):
 
     Keyed on viewInstanceId rather than viewName: the same screen visited twice is two rows on a
     timeline, which is the whole point of putting it on a time axis.
+
+    Two event shapes are accepted. The current iOS contract emits one MobileView per visit, when the
+    visit *ends*: its timestamp is the end of the bar and `timeVisible` reaches back to the start.
+    The older contract emitted an `appeared: true` event at the start and an `appeared: false` one
+    at the end. Reading the one-event shape as if it were an appear event put every bar's start at
+    its end and ran every bar to the end of the session.
     """
     visits = {}
-    order = []
+    marks = []
     for row in rows:
         if not isinstance(row, dict):
             continue
@@ -604,12 +617,22 @@ def build_timeline(rows, max_visits=25):
             continue
         instance = row.get("viewInstanceId")
         etype = row.get("eventType", MOBILE_VIEW)
+        appeared = row.get("appeared")
+        visible_ms = row.get("timeVisible")
 
-        if etype == MOBILE_VIEW and row.get("appeared") is not False and row.get("viewName"):
+        if etype == MOBILE_VIEW and appeared is None and row.get("viewName") and instance \
+                and isinstance(visible_ms, (int, float)):
+            visits[instance] = {
+                "name": row["viewName"],
+                "appear": ts - visible_ms,
+                "load_ms": row["loadTime"] if isinstance(row.get("loadTime"), (int, float)) else None,
+                "reappeared": bool(row.get("reappeared")),
+                "end": ts,
+                "marks": [],
+            }
+        elif etype == MOBILE_VIEW and appeared is not False and row.get("viewName"):
             if not instance:
                 continue
-            if instance not in visits:
-                order.append(instance)
             visits[instance] = {
                 "name": row["viewName"],
                 "appear": ts,
@@ -618,15 +641,23 @@ def build_timeline(rows, max_visits=25):
                 "end": None,
                 "marks": [],
             }
-        elif etype == MOBILE_VIEW and row.get("appeared") is False and instance in visits:
+        elif etype == MOBILE_VIEW and appeared is False and instance in visits:
             # The disappear event's own timestamp ends the bar; timeVisible would say the same.
             visits[instance]["end"] = ts
-        elif etype == MOBILE_VIEW_TIMING and instance in visits:
+        elif etype == MOBILE_VIEW_TIMING and instance:
             if not row.get("timingName") or not isinstance(row.get("timingValue"), (int, float)):
                 continue
-            visits[instance]["marks"].append((ts, row["timingName"], float(row["timingValue"])))
+            # Attached after the loop: a timing is recorded during its visit, so under the
+            # one-event-per-visit contract it arrives *before* the event that names the visit.
+            marks.append((instance, (ts, row["timingName"], float(row["timingValue"]))))
 
-    ordered = [visits[i] for i in order]
+    for instance, mark in marks:
+        if instance in visits:
+            visits[instance]["marks"].append(mark)
+
+    # Appear order, not arrival order: events arrive when visits end, so a parent that contains its
+    # children's visits would otherwise be drawn after all of them.
+    ordered = sorted(visits.values(), key=lambda v: v["appear"])
     dropped = 0
     if max_visits and len(ordered) > max_visits:
         dropped = len(ordered) - max_visits
@@ -660,7 +691,7 @@ def render_timeline(visits, origin, exact_origin, title=None, axis_format="%M:%S
 
     lines = []
     if title:
-        lines += ["---", f"title: {sanitize(title)}", "---"]
+        lines += ["---", f"title: {frontmatter_title(title)}", "---"]
     lines.append("gantt")
     lines.append("    dateFormat x")
     lines.append(f"    axisFormat {axis_format}")

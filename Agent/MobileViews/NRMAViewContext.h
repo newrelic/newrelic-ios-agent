@@ -41,6 +41,13 @@ FOUNDATION_EXPORT const double kNRMAMaxPlausibleLoadMs;
 
 @class NRMAViewTimingSnapshot;
 
+/// Why an automatically tracked view went away. See -viewDidDisappearNamed:instanceId:departure:.
+typedef NS_ENUM(NSInteger, NRMAViewDeparture) {
+    NRMAViewDepartureUnknown = 0,
+    NRMAViewDepartureCovered,
+    NRMAViewDepartureLeaving,
+};
+
 @interface NRMAViewContext : NSObject
 
 + (instancetype)sharedInstance;
@@ -123,6 +130,20 @@ FOUNDATION_EXPORT const double kNRMAMaxPlausibleLoadMs;
 /// the departing view is already buried; and because a pop delivers its disappearances batched and
 /// out of order. Only a removal that actually changes the top of the stack synthesizes an event.
 - (void)viewDidDisappearNamed:(NSString *)name instanceId:(NSString *)instanceId;
+
+/// The same, for a producer that knows *why* the view went away. A view controller does: and it
+/// needs to say so, because it reports viewDidDisappear: before the next screen's viewDidAppear: --
+/// the reverse of SwiftUI's order that the method above is built around.
+///
+///  - `NRMAViewDepartureCovered`: pushed past, or covered by a full-screen presentation or a tab
+///    switch. Nothing is uncovered, and the departing view stays the referrer for what appears next.
+///  - `NRMAViewDepartureLeaving`: popped or dismissed. What it uncovers becomes current only if no
+///    real appearance arrives first -- the uncovered controller's own viewDidAppear: normally follows
+///    in the same main-queue turn, and it is the truth.
+///  - `NRMAViewDepartureUnknown`: the method above.
+- (void)viewDidDisappearNamed:(NSString *)name
+                   instanceId:(NSString *)instanceId
+                    departure:(NRMAViewDeparture)departure;
 
 #pragma mark - Manual producer (+[NewRelic setCurrentView:attributes:])
 

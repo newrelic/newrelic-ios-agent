@@ -132,8 +132,11 @@ Whenever the agent emits a `MobileView` appear event carrying `loadTime`, it add
 - This is a second projection of a number already measured. No new measurement, no new swizzle.
 - It makes every timing dashboard populate with zero customer code, and puts customer TTFD marks on the
   same axis as the agent's TTID.
-- `reappeared` views emit no TTID row, mirroring the existing deliberate decision that a resurfaced view
-  carries no `loadTime`: nothing was constructed or laid out, so there is nothing to time.
+- A visit that resurfaced without being rebuilt emits no TTID row, mirroring the deliberate decision that
+  such a visit carries no `loadTime`: nothing was constructed or laid out, so there is nothing to time. This
+  was originally phrased in terms of a `reappeared` attribute; that attribute no longer exists (the branch
+  emits one event per visit and synthesizes nothing), but the rule is unchanged — it is keyed on whether the
+  producer vouched for a construction start, not on how the visit was labelled.
 - `loadTime` **remains** on `MobileView`. This is deliberately additive; removing it would break already
   shipped panels in `mobviews-dashboard.json`.
 
@@ -162,11 +165,12 @@ Unit tests against `NRMAViewTiming` with a stubbed context snapshot:
 4. 17 marks against one `viewInstanceId` → 16 emitted, 17th dropped, warning logged once.
 5. `NaN`, `-1`, and `10 * 60 * 1000 + 1` durations → all rejected.
 6. Both feature flags off → both methods return `NO`, emit nothing.
-7. Appear event with `loadTime` → exactly one `timeToInitialDisplay` row; `reappeared` appear event → none.
+7. A visit with a vouched-for `loadTime` → exactly one `timeToInitialDisplay` row; a visit that resurfaced
+   without being rebuilt → none.
 
 Integration: an `NRTestApp` screen that appears, loads asynchronously, then calls
 `markViewTiming("timeToFullDisplay")`; verified by dumping the buffered events and asserting the TTID and
-TTFD rows share a `viewInstanceId` with the `MobileView` appear event.
+TTFD rows share a `viewInstanceId` with the visit's `MobileView` event.
 
 Note for whoever runs the suite: per existing project notes, `Agent` tests need
 `IPHONEOS_DEPLOYMENT_TARGET=15.0` under Xcode 27, two `NSURLSession` test classes hang behind a TLS proxy
@@ -216,8 +220,9 @@ SELECT uniques(timingName) FROM MobileViewTiming FACET viewName SINCE 1 day ago
 
 ### Also worth a panel
 
-- **Re-entry vs first visit.** Compare TTFD on first visit against re-entry, using `MobileView.reappeared`
-  joined on `viewInstanceId`, to show whether caching is working.
+- **Re-entry vs first visit.** Compare TTFD on first visit against re-entry, to show whether caching is
+  working. This panel was specified against `MobileView.reappeared`, which no longer exists: re-entry is now
+  identified by `loadTimeUnavailable = 'notRebuilt'` on the visit, joined on `viewInstanceId`.
 - **Worst instances, not averages.** `max(timingValue)` with `viewInstanceId` listed, for drilling into a
   specific bad visit via the session walk page.
 

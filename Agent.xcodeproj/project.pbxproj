@@ -1589,7 +1589,6 @@
 		34EA78CA2A39221E0071CC95 /* NRMACustomEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */; };
 		34EA78CB2A39221E0071CC95 /* NRMACustomEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */; };
 		34EA78E02A3924CC0071CC95 /* TestCustomEvents.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78DF2A3924CC0071CC95 /* TestCustomEvents.m */; };
-		8B498242383AF7020CD36D72 /* NRMANetworkFacadeTraceHeaderTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 578D57D9E9373167EBE8C0CF /* NRMANetworkFacadeTraceHeaderTests.mm */; };
 		37F1B0DF9A9C13558ED499A6 /* NRMAViewEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 8D330758817C970ED5E5ABA2 /* NRMAViewEvent.m */; };
 		3AB97ABFFC8D50D7E77776F1 /* NRMAViewEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 4787C96D62C2271D6F71F4F5 /* NRMAViewEvent.h */; };
 		507B2C259DD5885F94F7B3B7 /* NRMAViewContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 705CC98B0BFF164ECC441A86 /* NRMAViewContext.h */; };
@@ -1600,12 +1599,14 @@
 		6EA7B6F7517900513F4578C4 /* SwiftUIScreenResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0B291E1F14076B11F11A332 /* SwiftUIScreenResolver.swift */; };
 		818AFF06F0BFB7F95EB7FCE8 /* NRMAViewTiming.h in Headers */ = {isa = PBXBuildFile; fileRef = 5A93F4E393A973FA48E954AD /* NRMAViewTiming.h */; };
 		8AB68B2F284863F47C53B319 /* SwiftUIScreenResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC8FEC8F250FE636526A9F3E /* SwiftUIScreenResolverTests.swift */; };
+		8B498242383AF7020CD36D72 /* NRMANetworkFacadeTraceHeaderTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 578D57D9E9373167EBE8C0CF /* NRMANetworkFacadeTraceHeaderTests.mm */; };
 		93C8868778F013C21F19F5B8 /* NRMAViewTiming.h in Headers */ = {isa = PBXBuildFile; fileRef = 5A93F4E393A973FA48E954AD /* NRMAViewTiming.h */; };
 		9653014BC99284AE44B75148 /* NRMAViewEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 4787C96D62C2271D6F71F4F5 /* NRMAViewEvent.h */; };
 		A05B32D10732915D2D8DCA3B /* NRMAMobileViewTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 9E661A2BE0D13360A95C81A6 /* NRMAMobileViewTracker.m */; };
 		A903DFFF8DD414A0CE83E72F /* NRMAViewEventTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = E82A412D801937F59940F53C /* NRMAViewEventTests.mm */; };
 		AD5B1B2261682AEEAA17D236 /* NRMAViewContext.m in Sources */ = {isa = PBXBuildFile; fileRef = C9AF87A7CB68173909761538 /* NRMAViewContext.m */; };
 		B8C98B3428B46926D9F3083F /* NRMAViewTiming.m in Sources */ = {isa = PBXBuildFile; fileRef = F85603AA0CBFCFD2072DDE84 /* NRMAViewTiming.m */; };
+		BC162D229E9F050732557C38 /* NRMAMobileViewTrackerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 37015588058D181AE69F7EA5 /* NRMAMobileViewTrackerTests.m */; };
 		C29396C345FFB1967E5E69E4 /* NRMAViewTiming.m in Sources */ = {isa = PBXBuildFile; fileRef = F85603AA0CBFCFD2072DDE84 /* NRMAViewTiming.m */; };
 		C6EBCA8F96D37B1FE792B222 /* NRMAViewContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 705CC98B0BFF164ECC441A86 /* NRMAViewContext.h */; };
 		C8E9F3E9FA5715DCF5E90668 /* NRMAViewContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 705CC98B0BFF164ECC441A86 /* NRMAViewContext.h */; };
@@ -2743,8 +2744,9 @@
 		34EA78C62A39221E0071CC95 /* NRMACustomEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMACustomEvent.h; sourceTree = "<group>"; };
 		34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMACustomEvent.m; sourceTree = "<group>"; };
 		34EA78DF2A3924CC0071CC95 /* TestCustomEvents.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestCustomEvents.m; sourceTree = "<group>"; };
-		578D57D9E9373167EBE8C0CF /* NRMANetworkFacadeTraceHeaderTests.mm */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.objcpp; path = NRMANetworkFacadeTraceHeaderTests.mm; sourceTree = "<group>"; };
+		37015588058D181AE69F7EA5 /* NRMAMobileViewTrackerTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = NRMAMobileViewTrackerTests.m; sourceTree = "<group>"; };
 		4787C96D62C2271D6F71F4F5 /* NRMAViewEvent.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = NRMAViewEvent.h; sourceTree = "<group>"; };
+		578D57D9E9373167EBE8C0CF /* NRMANetworkFacadeTraceHeaderTests.mm */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.objcpp; path = NRMANetworkFacadeTraceHeaderTests.mm; sourceTree = "<group>"; };
 		59AA4543706D6BB36459A6C5 /* NewRelicAgent.podspec.template */ = {isa = PBXFileReference; lastKnownFileType = file.podspec; name = NewRelicAgent.podspec.template; path = cocoapods/NewRelicAgent.podspec.template; sourceTree = "<group>"; };
 		59AA4F6AF53601FEA41A1303 /* dev_build_xcframework.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = dev_build_xcframework.sh; sourceTree = "<group>"; };
 		5A93F4E393A973FA48E954AD /* NRMAViewTiming.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = NRMAViewTiming.h; sourceTree = "<group>"; };
@@ -4385,6 +4387,7 @@
 				E82A412D801937F59940F53C /* NRMAViewEventTests.mm */,
 				77C2300971F0A0B87895043D /* MobileViewEmitterTests.swift */,
 				FC8FEC8F250FE636526A9F3E /* SwiftUIScreenResolverTests.swift */,
+				37015588058D181AE69F7EA5 /* NRMAMobileViewTrackerTests.m */,
 			);
 			path = "MobileViews-Tests";
 			sourceTree = "<group>";
@@ -5889,6 +5892,7 @@
 				A903DFFF8DD414A0CE83E72F /* NRMAViewEventTests.mm in Sources */,
 				D24CF0D18763D6FD19E9F0DD /* MobileViewEmitterTests.swift in Sources */,
 				8AB68B2F284863F47C53B319 /* SwiftUIScreenResolverTests.swift in Sources */,
+				BC162D229E9F050732557C38 /* NRMAMobileViewTrackerTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

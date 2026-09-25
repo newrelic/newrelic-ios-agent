@@ -84,6 +84,9 @@ NSArray<NSString *> * const NRMAExcludedViewClassPrefixes(void) {
             @"UICompatibilityInputViewController",
             @"UIKitNavigationController",
             @"_UICursorAccessoryViewController",
+            // An alert or action sheet interrupts a screen; it is not one. Reported, a logout
+            // confirmation became a visit of its own and the referrer of the screen after it.
+            @"UIAlertController",
             @"NotifyingMulticolumnSplitViewController",
             @"_UIContextMenu"
         ];
@@ -251,6 +254,34 @@ BOOL NRMA_ShouldSkipClass(Class cls) {
     return NRMA_ShouldSkipViewName(NSStringFromClass(cls));
 }
 
+#if !TARGET_OS_WATCH
+/*
+ * YES when some part of the controller's view is actually visible: it is in a window, neither it nor
+ * any ancestor is hidden, and it overlaps the window's bounds.
+ *
+ * viewDidAppear: alone does not say that. UIKit delivers it to every child of an appearing parent,
+ * including one parked off-screen until the user reveals it -- a side-menu drawer constrained to
+ * leading = -width. Treated as appeared, such a drawer was reported as visible for as long as its
+ * parent was, and as the most recent appearance it became the referrer of whatever appeared next.
+ *
+ * Alpha is deliberately not consulted: a screen that fades its content in from alpha 0 in
+ * viewDidAppear: is being shown, not hidden, and would be dropped.
+ */
+BOOL NRMA_IsControllerViewOnScreen(UIViewController *vc) {
+    UIView *view = vc.viewIfLoaded;
+    UIWindow *window = view.window;
+    if (view == nil || window == nil) { return NO; }
+
+    for (UIView *node = view; node != nil; node = node.superview) {
+        if (node.isHidden) { return NO; }
+    }
+
+    CGRect inWindow = [view convertRect:view.bounds toView:nil];
+    CGRect visible  = CGRectIntersection(inWindow, window.bounds);
+    return !CGRectIsNull(visible) && visible.size.width > 0 && visible.size.height > 0;
+}
+#endif
+
 // File-private — used only for a type-safe cast when calling the informal hooks.
 // Developers never need to adopt these; they exist solely to avoid compiler warnings.
 @protocol _NRMVNameHook <NSObject>
@@ -373,6 +404,10 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
     NSString *viewName = swiftUIScreen ? swiftUIScreen.viewName : NRMA_ViewNameForController(self);
     if (NRMA_ShouldSkipViewName(viewName)) return;
 
+    // Appeared, but not where the user can see it. No visit is opened, so its viewDidDisappear: finds
+    // nothing to close, and it never sits on the visible stack to be "uncovered" later.
+    if (!NRMA_IsControllerViewOnScreen(self)) return;
+
     CFAbsoluteTime appearTime = [NRMAViewContext monotonicNow];
     objc_setAssociatedObject(self, &kNRAppearTimestampKey,
                              @(appearTime),
@@ -458,7 +493,8 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
  * (the agent started mid-session, or the view was skipped on appear), or the visit was already
  * closed out by a background flush and no foreground has re-opened it.
  */
-static void NRMA_CloseVisit(UIViewController *vc, NRMASwiftUIScreen *swiftUIScreen, CFAbsoluteTime endTime) {
+static void NRMA_CloseVisit(UIViewController *vc, NRMASwiftUIScreen *swiftUIScreen, CFAbsoluteTime endTime,
+                            NRMAViewDeparture departure) {
     CFAbsoluteTime disappearTime = endTime;
 
     NSNumber *appearTimestamp    = objc_getAssociatedObject(vc, &kNRAppearTimestampKey);
@@ -514,7 +550,7 @@ static void NRMA_CloseVisit(UIViewController *vc, NRMASwiftUIScreen *swiftUIScre
     // fix: viewDidAppear: fires on pop, so the uncovered screen reports a real appearance moments
     // from now, which supersedes anything synthesized here. Keeping the stack accurate matters
     // because a UIKit controller can be what a *SwiftUI* view was covering.
-    [[NRMAViewContext sharedInstance] viewDidDisappearNamed:viewName instanceId:instanceId];
+    [[NRMAViewContext sharedInstance] viewDidDisappearNamed:viewName instanceId:instanceId departure:departure];
 
     // Clear per-instance timing so stale data isn't carried forward. Clearing the appear timestamp
     // is also what marks the visit closed, so a later viewDidDisappear: for a controller already
@@ -562,6 +598,26 @@ static void NRMA_ReopenVisit(UIViewController *vc, NRMASwiftUIScreen *swiftUIScr
                                              platform:(swiftUIScreen ? @"SwiftUI" : @"UIKit")];
 }
 
+/*
+ * Why a controller's viewDidDisappear: fired: it is leaving (popped, or dismissed -- itself or any
+ * container above it), or it is only covered (pushed past, under a full-screen presentation, a tab
+ * switched away from).
+ *
+ * The shared context needs the difference because this callback arrives *before* the next screen's
+ * viewDidAppear:. Treating every disappearance of the top screen as a return to what was beneath it
+ * made the screen beneath the referrer of the very push that covered the departing one. Inside a
+ * SwiftUI NavigationView the outer host is always beneath, so every pushed screen, and every return
+ * to one, named the enclosing list as its previousView.
+ */
+static NRMAViewDeparture NRMA_DepartureOf(UIViewController *vc) {
+    for (UIViewController *node = vc; node != nil; node = node.parentViewController) {
+        if (node.isMovingFromParentViewController || node.isBeingDismissed) {
+            return NRMAViewDepartureLeaving;
+        }
+    }
+    return NRMAViewDepartureCovered;
+}
+
 static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animated) {
     if (orig_viewDidDisappear) orig_viewDidDisappear(self, _cmd, animated);
 
@@ -576,7 +632,7 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
     // be re-opened when the app comes back.
     NRMA_MarkOffScreen(self);
 
-    NRMA_CloseVisit(self, swiftUIScreen, [NRMAViewContext monotonicNow]);
+    NRMA_CloseVisit(self, swiftUIScreen, [NRMAViewContext monotonicNow], NRMA_DepartureOf(self));
 
     // The referrer outlives a background-flushed visit (see NRMA_CloseVisit), but not a real
     // disappearance -- the next appearance of this controller gets its own.
@@ -633,7 +689,8 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
     // it in the shared context's visible stack, which is the same order a user leaving these screens
     // would produce. Closing bottom-up would make a screen the user is not looking at current.
     for (UIViewController *vc in [NRMA_OnScreenControllers() reverseObjectEnumerator]) {
-        NRMA_CloseVisit(vc, NRMA_SwiftUIScreenForController(vc), now);
+        // Unknown, not Covered: the visible stack has to unwind top-down as each screen is closed.
+        NRMA_CloseVisit(vc, NRMA_SwiftUIScreenForController(vc), now, NRMAViewDepartureUnknown);
     }
     // The controllers stay on the on-screen list: they are still on screen, and the app coming back
     // must be able to re-open them.

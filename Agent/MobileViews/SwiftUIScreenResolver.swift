@@ -135,10 +135,14 @@ internal enum SwiftUIScreenResolver {
     ///
     /// Navigation participation is deliberately *not* checked here: the caller composes the two
     /// so each stays independently testable.
-    internal static func screenIdentity(for controller: UIViewController) -> SwiftUIScreenIdentity? {
+    ///
+    /// `ignoringModifier` is for the modifier itself: one with no usable name of its own takes its
+    /// host's, and that host may well carry it visibly (`Screen().padding().NRMobileView()`).
+    internal static func screenIdentity(for controller: UIViewController,
+                                        ignoringModifier: Bool = false) -> SwiftUIScreenIdentity? {
         guard let root = rootViewValue(of: controller) else { return nil }
 
-        let outcome = resolveContentType(from: root)
+        let outcome = resolveContentType(from: root, stopAtModifier: !ignoringModifier)
         // Coexistence rule: where the modifier is present it wins outright. It carries an
         // explicit name and custom attributes this resolver cannot know, so reporting the host
         // as well would double-count the screen.
@@ -322,7 +326,7 @@ internal enum SwiftUIScreenResolver {
     /// `.NRMobileView(...)` marker sits in the *modifier* position of a `ModifiedContent` whose
     /// *content* is the app view -- returning early would find the app view first and miss the
     /// suppression signal entirely.
-    private static func resolveContentType(from root: Any) -> ContentTypeOutcome {
+    private static func resolveContentType(from root: Any, stopAtModifier: Bool) -> ContentTypeOutcome {
         var outcome = ContentTypeOutcome()
         var queue: [(value: Any, depth: Int)] = [(root, 0)]
         var visited = 0
@@ -338,7 +342,7 @@ internal enum SwiftUIScreenResolver {
             // Checked on every node's *type name*, which is what makes suppression work even
             // though a ViewModifier is not a View and is therefore never descended into: the
             // marker still appears in the enclosing ModifiedContent's generic parameters.
-            if isExplicitInstrumentationMarker(qualified) {
+            if stopAtModifier, isExplicitInstrumentationMarker(qualified) {
                 outcome.isExplicitlyInstrumented = true
                 // Nothing else about this host matters once the modifier owns it.
                 return outcome
@@ -532,6 +536,44 @@ internal enum SwiftUIScreenResolver {
         return true
     }
 
+    // MARK: - Hosts owned by .NRMobileView
+
+    /// Marks a host whose content carries `.NRMobileView(...)`, so automatic collection leaves it to
+    /// the modifier.
+    ///
+    /// The marker check in `resolveContentType` cannot do this alone: it sees the modifier only where
+    /// it is *stored* in the host's view graph, which is at a call site. Applied inside `body` -- the
+    /// usual place -- it is never stored, because `body` is computed, and the screen was reported by
+    /// both producers. The modifier finds its host at runtime and claims it instead.
+    ///
+    /// Called roughly half a second before the host's `viewDidAppear:` in practice (the modifier's
+    /// view reaches the window when the push starts, the host appears when it ends), which is the
+    /// only point the tracker consults this. A claim after that would come too late to matter.
+    internal static func claimForModifier(_ controller: UIViewController) {
+        guard isSwiftUIHost(controller) else { return }
+        objc_setAssociatedObject(controller, &modifierClaimKey, true, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+    }
+
+    internal static func isClaimedByModifier(_ controller: UIViewController) -> Bool {
+        (objc_getAssociatedObject(controller, &modifierClaimKey) as? Bool) ?? false
+    }
+
+    private static var modifierClaimKey: UInt8 = 0
+
+    /// The name `.NRMobileView()` can take from its own type, or `nil` when that type does not name
+    /// a screen.
+    ///
+    /// At a call site (`CheckoutScreen().NRMobileView()`) the modifier's `self` is the screen, and its
+    /// type is the right name. Inside `body` it is the modifier chain the body built, and the type
+    /// names nothing -- it was observed as a ~1.5 KB `ModifiedContent<ModifiedContent<…ScrollView<…`
+    /// string reported as a viewName. Only an app type is accepted, by the same rule automatic
+    /// collection names screens by; anything else defers to the host's name.
+    internal static func modifierDefaultName(for type: Any.Type) -> String? {
+        let qualified = String(reflecting: type)
+        guard isAppModuleType(qualified), !isAgentWrapperType(qualified) else { return nil }
+        return simpleName(from: qualified)
+    }
+
     // MARK: - Objective-C facade
 
     /// Composed decision for a producer: a host is a screen only when it is navigation
@@ -539,7 +581,8 @@ internal enum SwiftUIScreenResolver {
     /// rule lives with the two halves it combines.
     fileprivate static func automaticScreen(for controller: UIViewController) -> SwiftUIScreenIdentity? {
         guard isSwiftUIHost(controller),
-              isNavigationParticipating(controller) else { return nil }
+              isNavigationParticipating(controller),
+              !isClaimedByModifier(controller) else { return nil }
         return screenIdentity(for: controller)
     }
 

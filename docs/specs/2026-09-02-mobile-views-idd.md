@@ -163,7 +163,7 @@ many it needs and how each hooks its runtime — that is CDD material. What ever
 | Funnel through the shared view context rather than emitting directly | Otherwise `previousView` diverges between producers |
 | Declare a `uiFramework` value from the enumerated set | It is the discriminator every cross-platform query facets on |
 | Be inert when its gating flag is off | Goal 5 |
-| Report every appear/disappear pair the runtime delivers, however brief | **Amended — supersedes the minimum-dwell rule this row previously carried.** A duration threshold makes the agent decide which appearances were real, and that decision is invisible in the resulting data and unrecoverable from it. Brief visits are reported with their true `timeVisible` and are filtered downstream by whoever wants them filtered. A brief disappearance therefore also synthesizes a `reappeared` row for whatever it uncovered, like any other |
+| Report every appear/disappear pair the runtime delivers, however brief | **Amended — supersedes the minimum-dwell rule this row previously carried.** A duration threshold makes the agent decide which appearances were real, and that decision is invisible in the resulting data and unrecoverable from it. Brief visits are reported with their true `timeVisible` and are filtered downstream by whoever wants them filtered. A brief disappearance no longer synthesizes anything for whatever it uncovered: under one-event-per-visit the uncovered screen is reported when *it* ceases to be visible, from its own observed visit, rather than from an inferred re-appearance |
 
 Hybrid agents (Capacitor, Cordova, MAUI, Xamarin) **reuse the native iOS and Android producers** through
 their bridge layer and expose only a thin JS/C# surface. React Native and Flutter require their own
@@ -182,8 +182,14 @@ required attribute or renames one breaks every cross-platform dashboard, so chan
 > all, since synthesizing a re-appearance infers that a screen is visible again rather than observing a
 > completed visit. This halves MobileView volume and removes the downstream join between the two halves of a
 > visit, but it is an **event-contract change no agent may adopt alone**: it needs a decision here, and the
-> queries in the appendix (`WHERE appeared IS true` / `IS false`) assume the two-event model. Two known
-> costs: a SwiftUI screen popped back to reports nothing for that second visit.
+> queries in the appendix assume the two-event model and are rewritten in §8 for this one. Two known
+> costs. First, nothing is reported for a visit that is still in progress: a screen the user is sitting on
+> has emitted no row yet, so "what is on screen right now" is not answerable, and a session that ends
+> without a clean disappearance loses its last visit unless some other signal closes it out (which is what
+> the backgrounding rule below exists to provide). Second, a visit's `loadTime` and referrer are held in
+> producer memory from appear until the visit ends, so a producer that loses that state — an agent started
+> mid-visit, a host that tears down the producer — emits the visit without them rather than emitting a
+> half-visit that says so.
 >
 > **Backgrounding ends a visit, and foregrounding starts a new one.** The one remaining hole in
 > one-event-per-visit was the last screen of a session: no runtime callback marks an app being
@@ -212,24 +218,31 @@ required attribute or renames one breaks every cross-platform dashboard, so chan
 | `viewClass` | string | ✅ | Platform-native class or type name |
 | `viewName` | string | ✅ | Customer override, else class or route name |
 | `viewInstanceId` | string (UUID) | ✅ | Unique per visible lifetime; the join key |
-| `appeared` | bool | ✅ | `true` = became visible, `false` = ceased to be visible |
-| `restarted` | bool | ✅ | `false` on first appearance of this screen, `true` after |
-| `loadTime` | double | on appear | Best-effort; semantics and accuracy tier per §5.4 |
-| `timeVisible` | double | on disappear | Appear → disappear, clamped ≥ 0 |
+| `loadTime` | double | when measured | Measured at appear, carried on the visit's single event. Best-effort; semantics and accuracy tier per §5.4. Omitted, never zeroed, when unmeasurable (§5.4 rule 5) |
+| `timeVisible` | double | ✅ | Appear → disappear, clamped ≥ 0. Known only when the visit ends, which is why the event is emitted there |
 | `uiFramework` | string | ✅ | Enum: `UIKit`, `SwiftUI`, `Android`, `AndroidFragment`, `Compose`, `ReactNative`, `Flutter`, `Capacitor`, `Cordova`, `MAUI`, `Xamarin`, `WebView` |
-| `agentName` | string | ✅ | The SDK: `iOS`, `Android`, `ReactNative`, … |
+| `agentName` | string | ✅ | The SDK: `iOS`, `Android`, `ReactNative`, … **iOS currently omits this on `MobileView` and sets it only on `MobileViewTiming` — unresolved, see §11 Q9** |
 | `previousView` | string | when known | Referrer — the screen navigated from |
 | `previousViewInstanceId` | string | when known | Referrer identity, for exact-visit joins |
-| `reappeared` | bool | when true | Set when the agent *synthesized* the appearance because a covering screen went away, rather than observing it |
+| `navigationKind` | string | optional | How the visit was reached, where the producer can tell: `tab` for a tab selection. Reserved rather than live — iOS's emitter carries it but no iOS producer currently sets it (see §11 Q10). Agents must not invent values outside this table |
 
-Three of these need justification, because they are the changes from the previous revision:
+Four of these need justification, because they are the changes from the previous revision. A fifth note
+records what is no longer here:
 
-**`uiFramework` — not `platform`, and no longer `uiFramework`.** The field names the UI toolkit that observed
-the view. The rev. 2026-09-02 name was `platform`; this document then adopted `uiFramework` because it said
+**`appeared`, `restarted`, and `reappeared` are absent, and that is the one-event-per-visit change above.**
+`appeared` carried no information once a visit produces one event; `restarted` answered "has this view
+*instance* been on screen before", which is not the question a reader asks and is `false` on every ordinary
+push → pop → push; `reappeared` labelled rows the agent inferred rather than observed, and nothing is
+inferred any more. Whether a visit rebuilt its screen is still recoverable from `loadTime` /
+`loadTimeUnavailable`, and repeat visits are countable from `viewName` over time. The decision record is the
+note above this table; an agent implementing from the table alone must not add these back.
+
+**`uiFramework` — not `platform`, and no longer `uiPlatform`.** The field names the UI toolkit that observed
+the view. The rev. 2026-09-02 name was `platform`; this document then adopted `uiPlatform` because it said
 *UI runtime* rather than colliding with the ambient notion of platform elsewhere in the product. `uiFramework`
 finishes that reasoning: the values are frameworks (`UIKit`, `SwiftUI`, `Compose`), and "platform" in this
 product means the OS or the ingest platform, so any name built on it invites exactly the misreading the
-rename to `uiFramework` was meant to avoid. **iOS emits `uiFramework`; adopting it is an event-contract
+rename to `uiPlatform` was meant to avoid. **iOS emits `uiFramework`; adopting it is an event-contract
 change every agent must make together, and nothing outside iOS has shipped `uiFramework` yet.**
 
 **`agentName` × `uiFramework` is a two-axis discriminator, deliberately.** One field cannot express the
@@ -257,7 +270,8 @@ the distinction be declarable rather than inferred.
 
 1. Each agent's CDD **declares its own mapping** from runtime lifecycle signals to `loadTime`, and states
    the resulting tier.
-2. `loadTime` is emitted **only on appearance**, and **only for a genuine first construction**. A screen
+2. `loadTime` is measured **at the moment the screen becomes visible** — carried on the visit's single
+   event (§5.3), not emitted at appear time — and **only for a genuine first construction**. A screen
    that resurfaced without being rebuilt has nothing to time and must omit the attribute.
 3. Values are non-negative and monotonic-clock derived. Wall-clock deltas are not acceptable — clock
    adjustment mid-load would otherwise produce negative or absurd durations. Note that flooring a negative
@@ -270,11 +284,11 @@ the distinction be declarable rather than inferred.
    report the interval since app launch as a screen load. Above **`kNRMAMaxPlausibleLoadMs`** (§6.4) an agent
    **must not vouch** for the start: no `loadTime`, no baseline row (§6.3), and marks fall back to the appear
    origin (§6.2).
-5. When `loadTime` is withheld the attribute is **omitted, never zeroed**, and the appear event carries
+5. When `loadTime` is withheld the attribute is **omitted, never zeroed**, and the event carries
    `loadTimeUnavailable` naming the reason (`constructedBeforeAppear`, `noConstructionObserved`, `notRebuilt`).
    A `0` placeholder counts as a real value in every aggregate; an omission with a reason is diagnosable in
    NRDB rather than looking like the attribute was never implemented.
-4. All agents emit the **same unit**. Unit drift between agents is the single most likely way to corrupt a
+6. All agents emit the **same unit**. Unit drift between agents is the single most likely way to corrupt a
    cross-platform percentile, and it is invisible in the data.
 
 **Tier per platform** (mapping detail lives in each CDD):
@@ -394,7 +408,7 @@ none, because it is indistinguishable from a real measurement in an aggregate. C
 `"unknown"`, or `null`. Empty strings become a legitimate-looking facet value that silently splits every
 group-by, and they defeat `IS NULL` filtering — so this is a query-correctness rule, not formatting.
 
-**Deliberately narrower than `MobileView`.** `viewClass`, `restarted`, `appeared`, `timeVisible`, and
+**Deliberately narrower than `MobileView`.** `viewClass`, `timeVisible`, `loadTime`, and
 `previousViewInstanceId` are **not** on this event. Everything but the last is already reachable by joining on
 `viewInstanceId`, and duplicating it costs event volume for no additional information. `previousViewInstanceId`
 is the real omission: timings can be faceted by referrer **name**, but cannot be joined to the exact referrer
@@ -676,26 +690,28 @@ diverges from the schema is the one failure mode this split introduces, and revi
 Representative queries the schema must support:
 
 ```sql
--- Dwell time and traffic per screen
+-- Dwell time and traffic per screen. One row per visit, so count(*) is the visit
+-- count with no appeared filter to apply.
 SELECT average(timeVisible), count(*) FROM MobileView
-WHERE appName = 'MyApp' AND appeared IS false FACET viewName SINCE 1 day ago
+WHERE appName = 'MyApp' FACET viewName SINCE 1 day ago
 
 -- Cross-platform coverage: which SDK, which UI runtime
 SELECT count(*) FROM MobileView
 WHERE appName = 'MyApp' FACET uiFramework, agentName SINCE 1 week ago
 
 -- Load percentiles compared across agents. loadTime is absent, not zero, wherever it
--- was unmeasurable (§5.4 rule 5), so percentiles are over real measurements only.
+-- was unmeasurable (§5.4 rule 5), so percentiles are over real measurements only and
+-- the IS NOT NULL filter only narrows the facets, never the values.
 SELECT percentile(loadTime, 50, 95, 99) FROM MobileView
-WHERE appeared IS true FACET agentName SINCE 1 day ago
+WHERE loadTime IS NOT NULL FACET agentName SINCE 1 day ago
 
 -- Why loadTime is missing where it is missing: coverage check for the artifact ceiling.
 SELECT count(*) FROM MobileView
-WHERE appeared IS true FACET loadTimeUnavailable, uiFramework SINCE 1 day ago
+FACET loadTimeUnavailable, uiFramework SINCE 1 day ago
 
 -- Navigation graph: routes, not just destinations
 SELECT count(*) FROM MobileView
-WHERE appeared IS true FACET previousView, viewName SINCE 1 day ago
+FACET previousView, viewName SINCE 1 day ago
 ```
 
 The navigation-graph query is only answerable because of the referrer attributes added in this revision.
@@ -722,7 +738,7 @@ SELECT uniques(timingName) FROM MobileViewTiming FACET viewName SINCE 1 day ago
 -- visits whose marks fell back to the appear origin. A screen high here is where
 -- capability 9 (manual) or a construction-phase fix (automatic) is needed.
 SELECT percentage(count(*), WHERE loadTimeUnavailable IS NOT NULL) FROM MobileView
-WHERE appeared IS true FACET uiFramework, viewName SINCE 1 day ago
+FACET uiFramework, viewName SINCE 1 day ago
 
 -- Timings by route rather than destination: the same screen fast from
 -- search and slow from a deeplink.
@@ -755,7 +771,7 @@ timing row (§6.2).
 
 ## 11. Open questions
 
-1. **Ratify `uiFramework` over `platform` / `uiFramework`** (§5.3). iOS emits `uiFramework`. Needs explicit sign-off so
+1. **Ratify `uiFramework` over `platform` / `uiPlatform`** (§5.3). iOS emits `uiFramework`. Needs explicit sign-off so
    Android and the hybrids implement the same name rather than the previous revision's.
 2. **Adopt `previousView` / `previousViewInstanceId` / `reappeared` as required, or optional?** They are
    implemented on iOS and unlock the navigation-graph queries. `reappeared` is genuinely
@@ -819,3 +835,23 @@ timing row (§6.2).
    not an iOS peculiarity) will need an equivalent persist-and-recover step — this is not something a
    live in-memory accessor like `referrerAttributes` can solve on its own, and is worth a line in each
    CDD rather than being assumed to fall out of the shared mechanism for free.
+
+9. **Is `agentName` required on `MobileView`, or has it been superseded?** §5.3 requires it, and the
+   cross-platform coverage query in §8 facets on it. iOS no longer emits it on `MobileView` — the shared
+   emitter sets it only on `MobileViewTiming` (`Agent/MobileViews/MobileViewEmitter.swift`) — so as things
+   stand either iOS is dropping a required attribute and that query cannot run, or the attribute is not
+   actually required and §5.3's "`agentName` × `uiFramework` is a two-axis discriminator, deliberately"
+   argument no longer holds. Both cannot be true. The argument itself is sound — `uiFramework` alone cannot
+   separate "the iOS agent reporting `UIKit`" from "MAUI reporting `UIKit`" — which points at restoring it
+   on iOS rather than removing it from the contract, but that is a decision for this document. Note that
+   session-level attributes may already carry the SDK identity, which if true makes this a question about
+   whether the event should be self-describing rather than about information loss.
+
+10. **Keep or drop `navigationKind`?** (§5.3). iOS's shared emitter carries the attribute and a single
+    value, `tab`, is defined for it, but no live iOS producer sets it — the only call site that did is
+    commented out (`Agent/Instrumentation/MethodProfiling/NRViewModifier.swift`), so it reaches NRDB from
+    nothing today. It is in the §5.3 table as reserved so that an agent which *does* want to report how a
+    visit was reached uses this name and this value set rather than inventing a parallel one. The decision
+    is whether that is worth reserving: a half-populated navigation discriminator is worse than none, since
+    a query faceting on it silently reads "absent" as "not a tab selection" on every agent that never
+    implemented it.
