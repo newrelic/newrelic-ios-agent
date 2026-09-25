@@ -41,6 +41,7 @@
 @interface NRWKNavigationDelegateBase ()
 - (instancetype) initWithOriginalDelegate:(NSObject<WKNavigationDelegate>* __nullable __weak)delegate;
 + (NSURL*) navigationURL:(WKNavigation*) nav;
++ (NSURL*) currentURLForWebView:(WKWebView*) webView;
 + (NRTimer*) navigationTimer:(WKNavigation*) nav;
 + (void) navigation:(WKNavigation*)nav setURL:(NSURL*)url;
 + (void) navigation:(WKNavigation*)nav setTimer:(NRTimer*)timer;
@@ -323,7 +324,16 @@
 - (void) startWebKitLoad {
     NSURLRequest* urlRequest = [[NSURLRequest alloc] initWithURL:self.url];
     [self.webViewWithDelegateFunction loadRequest:urlRequest];
-    
+
+    // WebKit resolves the load asynchronously on the main run loop (-URL and the
+    // decidePolicyForNavigationAction callback the agent captures the URL from),
+    // so spin it until the agent can see the URL before driving the delegate by hand.
+    NSDate* deadline = [NSDate dateWithTimeIntervalSinceNow:5.0];
+    while ([NRWKNavigationDelegateBase currentURLForWebView:self.webViewWithDelegateFunction] == nil &&
+           [NSDate.date compare:deadline] == NSOrderedAscending) {
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.05]];
+    }
+
     [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction didStartProvisionalNavigation:self.navigationItem];
 }
 
