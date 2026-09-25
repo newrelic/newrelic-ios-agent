@@ -72,6 +72,7 @@ struct ChartsView: View {
                 viewModel.loadData()
             }
         }
+
     }
 
     private func refreshCharts() {
