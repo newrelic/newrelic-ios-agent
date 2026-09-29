@@ -36,11 +36,15 @@ static NewRelicAgentInternal* _sharedInstance;
 + (void) deinitialize;
 @end
 
-// The trace-header parse and the legacy (C++ payload) applier are internal to the facade.
-// The legacy analytics path cannot be driven end-to-end in this harness (see the note at the
-// bottom of this file), so the applier is exercised directly against a Connectivity::Payload.
+// The trace-header parse and the payload appliers are internal to the facade. The events only
+// report the trace-id and span-id, so the remaining components the tracestate supplies (account,
+// application, trusted account key, timestamp) are asserted against the appliers directly. The
+// legacy analytics path cannot be driven end-to-end in this harness either (see the note at the
+// bottom of this file), so its applier is exercised directly against a Connectivity::Payload.
 @interface NRMANetworkFacade (TraceHeaderTesting)
 + (id) callerTraceContextFromTraceHeaders:(NSDictionary<NSString*,NSString*>*)traceHeaders;
++ (void) applyCallerTraceContext:(id)context
+                   toNRMAPayload:(NRMAPayload*)payload;
 + (void) applyCallerTraceContext:(id)context
                     toCppPayload:(std::unique_ptr<NewRelic::Connectivity::Payload>&)payload;
 @end
@@ -143,17 +147,42 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
                                                          kCallerAppId, kCallerSpanId, kCallerTimestampMillis] };
 }
 
-// Asserts that every component of -callerSuppliedTraceHeaders reached the event's payload.
-- (void) assertPayloadMatchesCallerTrace:(NSDictionary*)event {
-    NSDictionary* payloadData = event[@"payload"][@"d"];
-    XCTAssertNotNil(payloadData, @"expected the payload attribute to be present");
-    XCTAssertEqualObjects(payloadData[@"tr"], kCallerTraceId, @"payload trace-id must be the caller's");
-    XCTAssertEqualObjects(payloadData[@"id"], kCallerSpanId, @"payload span-id must be the caller's");
-    XCTAssertEqualObjects(payloadData[@"ac"], kCallerAccountId, @"payload account must come from the caller's tracestate");
-    XCTAssertEqualObjects(payloadData[@"ap"], kCallerAppId, @"payload application must come from the caller's tracestate");
-    XCTAssertEqualObjects(payloadData[@"tk"], kCallerTrustedAccountKey, @"payload trusted-account-key must come from the caller's tracestate");
+// Asserts that the event is linked to the caller's trace, and that the payload is not reported
+// as an event attribute.
+- (void) assertEventMatchesCallerTrace:(NSDictionary*)event {
+    XCTAssertEqualObjects(event[@"traceId"], kCallerTraceId, @"event must be linked to the caller-supplied trace-id");
+    XCTAssertEqualObjects(event[@"trace.id"], kCallerTraceId, @"event must be linked to the caller-supplied trace-id");
+    XCTAssertEqualObjects(event[@"guid"], kCallerSpanId, @"event guid must be the caller-supplied span-id");
+    XCTAssertEqualObjects(event[@"id"], kCallerSpanId, @"event id must be the caller-supplied span-id");
+    XCTAssertNil(event[@"payload"], @"the payload must not be reported as an event attribute");
+}
+
+// A native payload, as +startTrip would create, with the context parsed from `traceHeaders`
+// applied to it.
+- (NRMAPayload*) nativePayloadWithTraceHeaders:(NSDictionary*)traceHeaders {
+    NRMAPayload* payload = [[NRMAPayload alloc] initWithTimestamp:1
+                                                        accountID:@"1234567"
+                                                            appID:@"1234567"
+                                                          traceID:kNativeTraceId
+                                                         parentID:@""
+                                                trustedAccountKey:@"777"];
+    id context = [NRMANetworkFacade callerTraceContextFromTraceHeaders:(NSDictionary<NSString*,NSString*>*)traceHeaders];
+    XCTAssertNotNil(context, @"the supplied headers carry a usable trace");
+    [NRMANetworkFacade applyCallerTraceContext:context toNRMAPayload:payload];
+    return payload;
+}
+
+// Asserts that every component of `traceHeaders` -- shaped like -callerSuppliedTraceHeaders --
+// reaches the payload.
+- (void) assertPayloadReceivesEveryCallerComponentFrom:(NSDictionary*)traceHeaders {
+    NRMAPayload* payload = [self nativePayloadWithTraceHeaders:traceHeaders];
+    XCTAssertEqualObjects(payload.traceId, kCallerTraceId, @"payload trace-id must be the caller's");
+    XCTAssertEqualObjects(payload.id, kCallerSpanId, @"payload span-id must be the caller's");
+    XCTAssertEqualObjects(payload.accountId, kCallerAccountId, @"payload account must come from the caller's tracestate");
+    XCTAssertEqualObjects(payload.appId, kCallerAppId, @"payload application must come from the caller's tracestate");
+    XCTAssertEqualObjects(payload.trustedAccountKey, kCallerTrustedAccountKey, @"payload trusted-account-key must come from the caller's tracestate");
     // Both NRMAPayload.timestamp and the tracestate entry are in milliseconds.
-    XCTAssertEqualWithAccuracy([payloadData[@"ti"] doubleValue], kCallerTimestampMillis, 0.001,
+    XCTAssertEqualWithAccuracy((double)payload.timestamp, kCallerTimestampMillis, 0.001,
                                @"payload timestamp must come from the caller's tracestate");
 }
 
@@ -282,14 +311,8 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
 
     NSDictionary* event = [self pollForNetworkEvent];
     XCTAssertNotNil(event, @"expected a MobileRequest event to be recorded");
-    XCTAssertEqualObjects(event[@"traceId"], kCallerTraceId, @"event must be linked to the caller-supplied trace-id");
-    XCTAssertEqualObjects(event[@"trace.id"], kCallerTraceId, @"event must be linked to the caller-supplied trace-id");
-    XCTAssertEqualObjects(event[@"guid"], kCallerSpanId, @"event guid must be the caller-supplied span-id");
-    XCTAssertEqualObjects(event[@"id"], kCallerSpanId, @"event id must be the caller-supplied span-id");
-
-    // The `payload` attribute is serialized from the same NRMAPayload, so every component
-    // of the supplied headers must be visible there too.
-    [self assertPayloadMatchesCallerTrace:event];
+    [self assertEventMatchesCallerTrace:event];
+    [self assertPayloadReceivesEveryCallerComponentFrom:[self callerSuppliedTraceHeaders]];
 }
 
 - (void) testCallerSuppliedTraceHeadersAreAppliedOnHTTPError {
@@ -311,9 +334,7 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
     NSDictionary* event = [self pollForNetworkEvent];
     XCTAssertNotNil(event, @"expected a MobileRequestError event to be recorded");
     XCTAssertTrue([event[@"statusCode"] isEqual:@403], @"expected the HTTP error event");
-    XCTAssertEqualObjects(event[@"traceId"], kCallerTraceId, @"error event must be linked to the caller-supplied trace-id");
-    XCTAssertEqualObjects(event[@"guid"], kCallerSpanId, @"error event guid must be the caller-supplied span-id");
-    [self assertPayloadMatchesCallerTrace:event];
+    [self assertEventMatchesCallerTrace:event];
 }
 
 // A cross-platform caller reports a request it made itself, so there is no native
@@ -336,9 +357,7 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
 
     NSDictionary* event = [self pollForNetworkEvent];
     XCTAssertNotNil(event, @"expected a MobileRequest event to be recorded");
-    XCTAssertEqualObjects(event[@"traceId"], kCallerTraceId, @"event must be linked to the caller-supplied trace-id");
-    XCTAssertEqualObjects(event[@"guid"], kCallerSpanId, @"event guid must be the caller-supplied span-id");
-    [self assertPayloadMatchesCallerTrace:event];
+    [self assertEventMatchesCallerTrace:event];
 }
 
 #pragma mark - New event system: unusable trace headers must not fabricate a trace
@@ -372,31 +391,33 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
 // A traceparent on its own is a usable trace: the trace-id and span-id are honored, and the
 // components tracestate would have supplied fall back to the native context.
 - (void) testTraceparentAloneIsHonored {
-    NSDictionary* event = [self noticeRequestWithTraceHeaders:@{@"traceparent": [NSString stringWithFormat:@"00-%@-%@-01", kCallerTraceId, kCallerSpanId]}];
+    NSDictionary* traceHeaders = @{@"traceparent": [NSString stringWithFormat:@"00-%@-%@-01", kCallerTraceId, kCallerSpanId]};
+    NSDictionary* event = [self noticeRequestWithTraceHeaders:traceHeaders];
 
-    XCTAssertEqualObjects(event[@"traceId"], kCallerTraceId);
-    XCTAssertEqualObjects(event[@"guid"], kCallerSpanId);
-    XCTAssertEqualObjects(event[@"payload"][@"d"][@"ac"], @"1234567", @"account must fall back to the native context");
+    [self assertEventMatchesCallerTrace:event];
+    XCTAssertEqualObjects([self nativePayloadWithTraceHeaders:traceHeaders].accountId, @"1234567", @"account must fall back to the native context");
 }
 
 // tracestate carries entries from every vendor in the trace; the NR entry is the one to read.
 - (void) testTraceStateWithOtherVendorEntriesIsParsed {
     NSString* traceState = [NSString stringWithFormat:@"congo=t61rcWkgMzE,%@@nr=0-2-%@-%@-%@----%lld",
                             kCallerTrustedAccountKey, kCallerAccountId, kCallerAppId, kCallerSpanId, kCallerTimestampMillis];
-    NSDictionary* event = [self noticeRequestWithTraceHeaders:@{@"traceparent": [NSString stringWithFormat:@"00-%@-%@-01", kCallerTraceId, kCallerSpanId],
-                                                               @"tracestate": traceState}];
+    NSDictionary* traceHeaders = @{@"traceparent": [NSString stringWithFormat:@"00-%@-%@-01", kCallerTraceId, kCallerSpanId],
+                                   @"tracestate": traceState};
+    NSDictionary* event = [self noticeRequestWithTraceHeaders:traceHeaders];
 
-    [self assertPayloadMatchesCallerTrace:event];
+    [self assertEventMatchesCallerTrace:event];
+    [self assertPayloadReceivesEveryCallerComponentFrom:traceHeaders];
 }
 
 // A tracestate whose NR entry is truncated or absent still leaves a usable traceparent trace.
 - (void) testPartialTraceStateFallsBackToNativeComponents {
-    NSDictionary* event = [self noticeRequestWithTraceHeaders:@{@"traceparent": [NSString stringWithFormat:@"00-%@-%@-01", kCallerTraceId, kCallerSpanId],
-                                                               @"tracestate": @"congo=t61rcWkgMzE"}];
+    NSDictionary* traceHeaders = @{@"traceparent": [NSString stringWithFormat:@"00-%@-%@-01", kCallerTraceId, kCallerSpanId],
+                                   @"tracestate": @"congo=t61rcWkgMzE"};
+    NSDictionary* event = [self noticeRequestWithTraceHeaders:traceHeaders];
 
-    XCTAssertEqualObjects(event[@"traceId"], kCallerTraceId);
-    XCTAssertEqualObjects(event[@"guid"], kCallerSpanId);
-    XCTAssertEqualObjects(event[@"payload"][@"d"][@"ac"], @"1234567", @"account must fall back to the native context");
+    [self assertEventMatchesCallerTrace:event];
+    XCTAssertEqualObjects([self nativePayloadWithTraceHeaders:traceHeaders].accountId, @"1234567", @"account must fall back to the native context");
 }
 
 // The tracestate timestamp is specified in milliseconds, and this agent now emits it that way --
@@ -411,16 +432,16 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
     NSString* traceState = [NSString stringWithFormat:@"%@@nr=0-2-%@-%@-%@----%lld",
                             kCallerTrustedAccountKey, kCallerAccountId, kCallerAppId, kCallerSpanId,
                             secondsValuedTimestamp];
-    NSDictionary* event = [self noticeRequestWithTraceHeaders:@{@"traceparent": [NSString stringWithFormat:@"00-%@-%@-01", kCallerTraceId, kCallerSpanId],
-                                                               @"tracestate": traceState}];
+    NRMAPayload* payload = [self nativePayloadWithTraceHeaders:@{@"traceparent": [NSString stringWithFormat:@"00-%@-%@-01", kCallerTraceId, kCallerSpanId],
+                                                                 @"tracestate": traceState}];
 
-    XCTAssertEqualWithAccuracy([event[@"payload"][@"d"][@"ti"] doubleValue], (double)(secondsValuedTimestamp * 1000), 1.0,
+    XCTAssertEqualWithAccuracy((double)payload.timestamp, (double)(secondsValuedTimestamp * 1000), 1.0,
                                @"a seconds-valued tracestate timestamp must be normalized to milliseconds");
 }
 
 #pragma mark - New event system: native (auto-instrumented) request regression
 
-- (void) testNativeDTRequestStillIncludesPayload {
+- (void) testNativeDTRequestOmitsPayloadAttribute {
     NSMutableURLRequest* request = [self requestWithAttachedPayload];
     NSHTTPURLResponse* response = [[NSHTTPURLResponse alloc] initWithURL:request.URL
                                                              statusCode:200
@@ -439,7 +460,7 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
 
     NSDictionary* event = [self pollForNetworkEvent];
     XCTAssertNotNil(event, @"expected a MobileRequest event to be recorded");
-    XCTAssertNotNil(event[@"payload"], @"native DT-instrumented request must still include the payload attribute");
+    XCTAssertNil(event[@"payload"], @"the payload must not be reported as an event attribute");
     XCTAssertNotNil(event[@"guid"], @"native DT-instrumented request must still include guid");
     XCTAssertEqualObjects(event[@"traceId"], kNativeTraceId, @"native DT-instrumented request must keep its own trace-id");
 }
@@ -468,19 +489,9 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
 - (void) testFlutterSuppliedTraceHeadersAreApplied {
     NSDictionary* event = [self noticeRequestWithTraceHeaders:(NSDictionary<NSString*,NSString*>*)[self flutterSuppliedTraceHeaders]];
 
-    XCTAssertEqualObjects(event[@"traceId"], kCallerTraceId, @"event must carry Flutter's trace-id");
-    XCTAssertEqualObjects(event[@"trace.id"], kCallerTraceId);
-    XCTAssertEqualObjects(event[@"guid"], kCallerSpanId, @"event guid must be Flutter's span-id");
-    XCTAssertEqualObjects(event[@"id"], kCallerSpanId);
-
-    NSDictionary* payloadData = event[@"payload"][@"d"];
-    XCTAssertEqualObjects(payloadData[@"tr"], kCallerTraceId);
-    XCTAssertEqualObjects(payloadData[@"id"], kCallerSpanId);
-    XCTAssertEqualObjects(payloadData[@"ac"], kCallerAccountId);
-    XCTAssertEqualObjects(payloadData[@"ap"], kCallerAppId);
-    XCTAssertEqualObjects(payloadData[@"tk"], kCallerTrustedAccountKey);
+    [self assertEventMatchesCallerTrace:event];
     // The millisecond tracestate timestamp passes through unscaled.
-    XCTAssertEqualWithAccuracy([payloadData[@"ti"] doubleValue], (double)(kCallerTimestampMillis), 1.0);
+    [self assertPayloadReceivesEveryCallerComponentFrom:[self flutterSuppliedTraceHeaders]];
 }
 
 // A non-string value for a header this agent reads must be ignored, not crash or half-apply --
@@ -537,11 +548,10 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
     XCTAssertEqualObjects(event[@"trace.id"], kCallerTraceId);
     XCTAssertEqualObjects(event[@"guid"], kCallerSpanId);
     XCTAssertEqualObjects(event[@"id"], kCallerSpanId);
-    XCTAssertEqualObjects(event[@"payload"][@"d"][@"tr"], kCallerTraceId);
-    XCTAssertEqualObjects(event[@"payload"][@"d"][@"id"], kCallerSpanId);
+    XCTAssertNil(event[@"payload"], @"the payload must not be reported as an event attribute");
     // Account, application and trust key come from the native context, which is correct by
     // construction: the span belongs to this app.
-    XCTAssertEqualObjects(event[@"payload"][@"d"][@"ac"], @"1234567");
+    XCTAssertEqualObjects([self nativePayloadWithTraceHeaders:[self callerSuppliedTraceAttributes]].accountId, @"1234567");
 }
 
 // `guid` is the deprecated spelling of `id`; either identifies the span.
@@ -596,7 +606,7 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
     XCTAssertNotNil(event, @"expected a MobileRequestError event to be recorded");
     XCTAssertEqualObjects(event[@"traceId"], kCallerTraceId);
     XCTAssertEqualObjects(event[@"guid"], kCallerSpanId);
-    XCTAssertEqualObjects(event[@"payload"][@"d"][@"tr"], kCallerTraceId);
+    XCTAssertNil(event[@"payload"], @"the payload must not be reported as an event attribute");
 }
 
 - (void) testNetworkFailureAppliesCallerSuppliedTraceHeaders {
@@ -662,10 +672,9 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
     XCTAssertFalse(payload->getDistributedTracing());
 }
 
-// Note: the legacy (C++) event system does not emit the `payload` attribute (it
-// carries DT as guid/traceId intrinsics), so the reported bug is new-event-system
-// only. The legacy path receives the identical `traceHeaders => apply to payload`
-// fix in NRMANetworkFacade; it is not covered by an end-to-end test here because
+// Note: neither event system emits a `payload` attribute; both carry DT as
+// guid/traceId attributes. The legacy path receives the identical
+// `traceHeaders => apply to payload` fix in NRMANetworkFacade; it is not covered by an end-to-end test here because
 // pushing a populated C++ Connectivity::Payload through the legacy analytics
 // controller in isolation (outside a fully-initialized agent) segfaults in this
 // unit-test harness — a pre-existing harness limitation unrelated to this change.
