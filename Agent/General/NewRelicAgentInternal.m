@@ -811,6 +811,16 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     _sessionReplayExternalCaptureSource = external;
     if (_sessionReplay != nil) {
         _sessionReplay.externalCaptureSource = external;
+        // TEST-ONLY (2026-09-29, hybrid-app Option C PoC — revert before merge):
+        // resume native capture when the external source hands back, in the
+        // config-derived recording mode (same source as the ingest gate).
+        if (!external && [self isSessionReplayEnabled]) {
+            SessionReplayRecordingMode m = [self determineRecordingMode];
+            NSLog(@"🧪[HYBRID-POC] externalCaptureSource=false — resuming native capture in config-derived mode %ld", (long)m);
+            if (m != SessionReplayRecordingModeOff) {
+                [_sessionReplay startFromManual:FALSE with:m];
+            }
+        }
     }
 #endif
 }

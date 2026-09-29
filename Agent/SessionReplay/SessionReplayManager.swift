@@ -46,12 +46,34 @@ public class SessionReplayManager: NSObject {
     /// running tears the capture loop down.
     @objc public var externalCaptureSource: Bool = false {
         didSet {
-            if externalCaptureSource && isRunning() {
-                NRLOG_AGENT_DEBUG("Session replay: external capture source enabled — stopping native capture.")
-                stop()
+            guard oldValue != externalCaptureSource else { return }
+            if externalCaptureSource {
+                if isRunning() {
+                    NRLOG_AGENT_DEBUG("Session replay: external capture source enabled — stopping native capture.")
+                    // TEST-ONLY (2026-09-29, hybrid-app Option C PoC — revert before merge):
+                    // upload native's segment now so it lands before the external
+                    // source's next chunk. Only when native was resumed by the toggle,
+                    // so the initial suppression at startAgent behaves as before.
+                    if resumedByExternalToggle {
+                        NSLog("🧪[HYBRID-POC] externalCaptureSource=true — harvesting native segment, then stopping")
+                        harvest()
+                    }
+                    stop()
+                }
+                resumedByExternalToggle = false
+            } else {
+                // TEST-ONLY (Option C PoC): the caller
+                // (NewRelicAgentInternal.setSessionReplayExternalCaptureSource:)
+                // restarts native capture in the config-derived mode — this
+                // manager's sessionReplayMode stays .off until the first harvest
+                // connect, so it can't be used here.
+                resumedByExternalToggle = true
             }
         }
     }
+
+    // TEST-ONLY (2026-09-29, hybrid-app Option C PoC — revert before merge).
+    private var resumedByExternalToggle = false
     
     @objc public init(reporter: SessionReplayReporter, url: NSString) {
         self.url = url
@@ -125,16 +147,25 @@ public class SessionReplayManager: NSObject {
             // Ingest-only: an external source (e.g. Flutter) provides frames, so
             // skip the native capture engine + timer. The recording mode is still
             // set above, and `recordSessionReplayEvents` ingest/upload is unaffected.
+            // TEST-ONLY (2026-09-29, hybrid-app Option C PoC — revert before merge):
+            // NSLog bypasses the agent's own log-level gating, so it stays visible
+            // even when NRLOG_AGENT_DEBUG output is throttled (e.g. after repeated
+            // relaunches against staging).
+            NSLog("🧪[HYBRID-POC] start(fromManual:\(fromManual), mode:\(newMode)) — externalCaptureSource=\(externalCaptureSource) isRunning=\(isRunning())")
+
             guard !externalCaptureSource else {
                 NRLOG_AGENT_DEBUG("Session replay: external capture source active — skipping native capture (ingest-only).")
+                NSLog("🧪[HYBRID-POC] start() returning early — externalCaptureSource still true")
                 return
             }
 
             guard !isRunning() else {
                 NRLOG_AGENT_DEBUG("Session replay harvest timer attempting to start while already running.")
+                NSLog("🧪[HYBRID-POC] start() returning early — already running")
                 return
             }
-            
+
+            NSLog("🧪[HYBRID-POC] start() proceeding — native capture timer about to start")
             sessionReplay.start()
             self.harvestseconds = 0
             
@@ -244,7 +275,9 @@ public class SessionReplayManager: NSObject {
         
         harvestseconds += 1
         sessionReplay.takeFrame()
-        
+        // TEST-ONLY (2026-09-29, hybrid-app Option C PoC — revert before merge).
+        NSLog("🧪[HYBRID-POC] sessionReplayTick #\(harvestseconds) — took a native frame")
+
         if harvestseconds == harvestPeriod {
             harvest()
         }
@@ -263,21 +296,23 @@ public class SessionReplayManager: NSObject {
     }
     
     private func harvestSessionReplayFramesAndTouches() {
-        
+
         defer {
             self.harvestseconds = 0
         }
-        
+        // TEST-ONLY (2026-09-29, hybrid-app Option C PoC — revert before merge).
+        NSLog("🧪[HYBRID-POC] harvestSessionReplayFramesAndTouches() entered — mode=\(sessionReplayMode)")
+
         if sessionReplayMode == .off {
             NRLOG_AGENT_DEBUG("Skipping harvest in off mode.")
             return
         }
-        
+
         if sessionReplayMode == .error {
             NRLOG_AGENT_DEBUG("Skipping harvest in ERROR mode.")
             return
         }
-        
+
         let frames = self.sessionReplay.getSessionReplayFrames()
 
         // A chunk with no frames has no viewport/DOM to establish Meta from, so any
@@ -301,6 +336,8 @@ public class SessionReplayManager: NSObject {
         guard let upload = buildReplayUpload(frames: boxedFrames, touches: boxedTouches) else {
             return
         }
+        // TEST-ONLY (2026-09-29, hybrid-app Option C PoC — revert before merge).
+        NSLog("🧪[HYBRID-POC] NATIVE-OWN-CAPTURE upload enqueued — frames=\(boxedFrames.count) touches=\(boxedTouches.count) isFirstChunk=\(self.sessionReplay.isFirstChunk)")
         self.sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
 
         self.sessionReplay.isFirstChunk = false
@@ -472,6 +509,8 @@ public class SessionReplayManager: NSObject {
                                            isFirstChunk: sessionReplay.isFirstChunk) else {
                 return
             }
+            // TEST-ONLY (2026-09-29, hybrid-app Option C PoC — revert before merge).
+            NSLog("🧪[HYBRID-POC] FLUTTER-BRIDGE upload enqueued — isFirstChunk=\(sessionReplay.isFirstChunk)")
             sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
             sessionReplay.isFirstChunk = false
         }
