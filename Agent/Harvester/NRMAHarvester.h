@@ -75,6 +75,8 @@ typedef enum {
 - (void) stop;
 
 - (void) setMaxOfflineStorageSize:(NSUInteger) size;
+
+- (void) backgroundFlush;
 @end
 
 #ifdef __cplusplus

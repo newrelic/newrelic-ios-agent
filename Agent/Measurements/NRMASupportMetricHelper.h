@@ -44,6 +44,13 @@ static NSMutableArray *deferredMetrics;
 
 + (void) enqueueKMMDetectionMetric;
 
+// Retry backoff supportability metrics (NR-323614 CDD).
+// endpoint = last URL path component, e.g. "data", "connect", "f", "mobile_crash", "logs".
++ (void) enqueueHarvestFailedUploadMetric:(NSString*)endpoint;
++ (void) enqueueHarvestRetrySuccessMetric:(NSString*)endpoint;
++ (void) enqueueHarvestRetryFailedMetric:(NSString*)endpoint;
++ (void) enqueueHarvestRetryNetworkSuspendedMetric:(NSString*)endpoint;
+
 // Events (queue lifecycle) supportability metrics -- Android parity (NR-478730)
 + (void) enqueueEventAddedMetric;
 + (void) enqueueEventOverflowMetric;

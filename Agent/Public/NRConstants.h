@@ -200,6 +200,14 @@ typedef NSString NRMetricUnit;
 #define kNRMAJSErrorMetricUploadThrottled   kNRMAJSError @"/UploadThrottled"
 #define kNRMAJSErrorMetricFailedUpload      kNRMAJSError @"/FailedUpload"
 
+// Retry backoff supportability metrics — argument is the endpoint path component
+// (e.g. "data", "connect", "f", "mobile_crash", "logs").
+// These match the Android agent metric names for cross-platform parity.
+#define kNRMAHarvestFailedUploadMetricFormat          kNRAgentHealthPrefix @"/%@/FailedUpload"
+#define kNRMAHarvestRetrySuccessMetricFormat          kNRAgentHealthPrefix @"/%@/Retry/Success"
+#define kNRMAHarvestRetryFailedMetricFormat           kNRAgentHealthPrefix @"/%@/Retry/Failed"
+#define kNRMAHarvestRetryNetworkSuspendedMetricFormat kNRAgentHealthPrefix @"/%@/Retry/NetworkOfflineSuspended"
+
 // Crash
 // Emitted when a cached crash report is permanently rejected by the collector
 // (HTTP 400/403) and therefore deleted instead of being retried. Uses the

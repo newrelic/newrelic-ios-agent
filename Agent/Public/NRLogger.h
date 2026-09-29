@@ -110,7 +110,6 @@ typedef enum _NRLogTargets {
 
     NSMutableArray *uploadQueue;
     BOOL isUploading;
-    unsigned int failureCount;
     BOOL debugLogs;
 
     NRLogLevels remoteLogLevel;
@@ -208,6 +207,8 @@ withTimestamp:(NSNumber *)timestamp;
  return currently set logLevels
  */
 + (NRLogLevels) logLevels;
+
++ (void)backgroundFlush;
 
 @end
 

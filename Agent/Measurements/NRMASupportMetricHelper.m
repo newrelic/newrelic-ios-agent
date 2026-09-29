@@ -12,6 +12,7 @@
 #import "NRMATaskQueue.h"
 #import "NRMAFlags.h"
 #import "NRMAStartTimer.h"
+#import "NRConstants.h"
 
 @implementation NRMASupportMetricHelper
 
@@ -117,6 +118,36 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
                                                     produceUnscoped:YES
                                                     additionalValue:nil]];
     }
+}
+
+// MARK: - Retry backoff metrics
+
++ (void) enqueueHarvestFailedUploadMetric:(NSString*)endpoint {
+    if (endpoint.length == 0) { return; }
+    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMAHarvestFailedUploadMetricFormat, endpoint]
+                                                    value:@1
+                                                    scope:@""]];
+}
+
++ (void) enqueueHarvestRetrySuccessMetric:(NSString*)endpoint {
+    if (endpoint.length == 0) { return; }
+    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMAHarvestRetrySuccessMetricFormat, endpoint]
+                                                    value:@1
+                                                    scope:@""]];
+}
+
++ (void) enqueueHarvestRetryFailedMetric:(NSString*)endpoint {
+    if (endpoint.length == 0) { return; }
+    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMAHarvestRetryFailedMetricFormat, endpoint]
+                                                    value:@1
+                                                    scope:@""]];
+}
+
++ (void) enqueueHarvestRetryNetworkSuspendedMetric:(NSString*)endpoint {
+    if (endpoint.length == 0) { return; }
+    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMAHarvestRetryNetworkSuspendedMetricFormat, endpoint]
+                                                    value:@1
+                                                    scope:@""]];
 }
 
 + (void) enqueueMaxBufferTimeConfiguration:(unsigned int)seconds {
