@@ -59,6 +59,16 @@ class UtilViewModel {
         options.append(UtilOption(title: "End Interaction Trace", handler: { [self] in stopInteractionTrace()}))
         options.append(UtilOption(title: "Notice Network Request", handler: { [self] in noticeNWRequest()}))
         options.append(UtilOption(title: "Notice Network Failure", handler: { [self] in noticeFailedNWRequest()}))
+
+        // NR-622029 — a cross-platform caller owns the distributed trace; the reported event must
+        // carry the caller's trace, not a natively generated one. 200 produces a MobileRequest,
+        // 403 a MobileRequestError; both go through the same trace-header path.
+        options.append(UtilOption(title: "Notice Flutter-style DT Request (200)", handler: { [self] in
+            noticeFlutterStyleDistributedTracedRequest()
+        }))
+        options.append(UtilOption(title: "Notice Flutter-style DT Request (403)", handler: { [self] in
+            noticeFlutterStyleDistributedTracedRequest(statusCode: 403)
+        }))
         
         // NR-323614 — NSArray/NSDictionary values must be rejected as attribute values.
         options.append(UtilOption(title: "Try Collection Session Attributes", handler: { [self] in setCollectionSessionAttributes()}))
@@ -270,6 +280,56 @@ class UtilViewModel {
     func noticeNWRequest() {
         NewRelic.noticeNetworkRequest(for: URL(string: "https://www.google.com"), httpMethod: "GET", with: NRTimer(), responseHeaders: [:],
                                       statusCode: 200, bytesSent: 1000, bytesReceived: 1000, responseData: Data(), traceHeaders: nil, andParams: nil)
+    }
+
+    // Reports a request exactly the way the Flutter agent's iOS bridge does, to exercise the
+    // caller-supplied distributed-trace path end to end against a real collector (NR-622029).
+    //
+    // Mirrors newrelic-flutter-agent:
+    //   * the plugin asks this agent for the headers  ("noticeDistributedTrace" ->
+    //     +generateDistributedTracingHeaders, NewrelicMobilePlugin.swift)
+    //   * the Dart side keeps only traceparent/tracestate/newrelic on iOS
+    //     (newrelic_mobile_io.dart, noticeHttpTransaction)
+    //   * the bridge passes that dictionary to the startTime/endTime overload, whose timestamps
+    //     are Dart millisecond values and whose traceHeaders is an untyped NSDictionary
+    //
+    // `newrelic` is no longer produced by this agent (NR-382855 removed it), so the Dart map
+    // carries a null for that key, which arrives here as NSNull. That is reproduced below: it is
+    // the shape the agent actually receives in production, and a typed [String: String] could not
+    // express it.
+    //
+    // To verify: note the traceparent logged below, then confirm the resulting MobileRequest /
+    // MobileRequestError event carries that same trace.id and guid rather than a fresh native one.
+    func noticeFlutterStyleDistributedTracedRequest(statusCode: Int = 200) {
+        let url = URL(string: "https://www.google.com")!
+
+        let generated = NewRelic.generateDistributedTracingHeaders()
+        var traceAttributes: [AnyHashable: Any] = [:]
+        for key in ["traceparent", "tracestate", "newrelic"] {
+            if let value = generated[key] {
+                traceAttributes[key] = value
+            } else {
+                traceAttributes[key] = NSNull()
+            }
+        }
+
+        // Flutter reports Dart timestamps: milliseconds since the epoch.
+        let endTime = Date().timeIntervalSince1970 * 1000
+        let startTime = endTime - 250
+
+        NewRelic.noticeNetworkRequest(for: url,
+                                      httpMethod: "GET",
+                                      startTime: startTime,
+                                      endTime: endTime,
+                                      responseHeaders: nil,
+                                      statusCode: statusCode,
+                                      bytesSent: 1000,
+                                      bytesReceived: 1000,
+                                      responseData: Data(),
+                                      traceHeaders: traceAttributes,
+                                      andParams: nil)
+
+        print("Flutter-style DT request reported: statusCode \(statusCode), traceHeaders \(traceAttributes)")
     }
 
     func setBuild() {

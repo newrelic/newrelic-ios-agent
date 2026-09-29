@@ -621,10 +621,57 @@ extern "C" {
                     andFailureCode:(NSInteger)iOSFailureCode;
 
 /*******************************************************************************
+ * Manually record a failed transactional network request whose distributed trace
+ * the caller owns.
+ *
+ * Pass the trace context returned by +generateDistributedTracingContext (or its
+ * `id` / `guid` / `trace.id` entries) so the resulting MobileRequestError event is
+ * reported against that trace instead of a natively generated one. Cross-platform
+ * agents that both make and report the request should use these overloads; native
+ * instrumentation does not need them.
+ *
+ * W3C headers (traceparent / tracestate) are also accepted, for callers that only
+ * have the wire representation.
+ *******************************************************************************/
+
++ (void)noticeNetworkFailureForURL:(NSURL* _Null_unspecified)url
+                        httpMethod:(NSString* _Null_unspecified)httpMethod
+                         withTimer:(NRTimer* _Null_unspecified)timer
+                      traceHeaders:(NSDictionary* _Nullable)traceHeaders
+                    andFailureCode:(NSInteger)iOSFailureCode;
+
++ (void)noticeNetworkFailureForURL:(NSURL* _Null_unspecified)url
+                        httpMethod:(NSString* _Null_unspecified)httpMethod
+                         startTime:(double)startTime
+                           endTime:(double)endTime
+                      traceHeaders:(NSDictionary* _Nullable)traceHeaders
+                    andFailureCode:(NSInteger)iOSFailureCode;
+
+/*******************************************************************************
  * Generates Distributed Tracing headers for use if not
  * automatically instrumenting network connections
  *******************************************************************************/
 + (NSDictionary<NSString*,NSString*>* _Nonnull)generateDistributedTracingHeaders;
+
+/*******************************************************************************
+ * Generates a new distributed trace and returns everything needed to both
+ * propagate and report it, in one dictionary:
+ *
+ *   traceparent, tracestate    W3C headers to set on the outbound request
+ *   trace.id, id, guid         the trace's identity, to hand back through the
+ *                              traceHeaders: parameter of
+ *                              +noticeNetworkRequestForURL:... or
+ *                              +noticeNetworkFailureForURL:...
+ *
+ * Prefer this over +generateDistributedTracingHeaders when the caller both makes
+ * the request and reports it -- a cross-platform agent, say. One call yields one
+ * trace, and the returned identity is applied to the reported event directly,
+ * rather than being recovered by re-parsing the W3C headers.
+ *
+ * Equivalent to the Android agent's TraceContext: -asTraceAttributes plus
+ * -getHeaders, from a single trace.
+ *******************************************************************************/
++ (NSDictionary<NSString*,NSString*>* _Nonnull)generateDistributedTracingContext;
 
 /*******************************************************************************
  * Add a NSArray of NSStrings of the header
