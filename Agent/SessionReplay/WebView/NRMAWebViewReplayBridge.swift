@@ -21,8 +21,10 @@ import WebKit
 ///    document-end user script plus the `nrWebViewReplay` message handler.
 /// 2. At document end the page posts `ready`. If replay is recording in FULL mode, native evaluates
 ///    `injectionScript`, which loads the experimental loader and registers a `beforeHarvest` hook.
-/// 3. The hook posts each `session_replay` body as `events`; they are wrapped per channel on a
-///    background queue and buffered on `NRMASessionReplay` until the next harvest.
+/// 3. The hook posts each `session_replay` body as `events`. On a background queue their node IDs
+///    are remapped into the native ID space (`WebViewReplayRemapper`), and they are buffered on
+///    `NRMASessionReplay` until the harvest splices them into the native tree under the WebView's
+///    `<iframe>` node (`WebViewReplayChunkBuilder`).
 @available(iOS 13.0, *)
 public class NRMAWebViewReplayBridge: NSObject {
 
@@ -45,7 +47,12 @@ public class NRMAWebViewReplayBridge: NSObject {
         /// The document has posted `ready` but the agent has not been injected into it yet, because
         /// replay was not recording at the time. Injected if recording later switches to FULL.
         var awaitingInjection = false
-        init(_ webView: WKWebView) { self.webView = webView }
+        /// Used only on `parseQueue`.
+        let remapper: WebViewReplayRemapper
+        init(_ webView: WKWebView, channelId: Int) {
+            self.webView = webView
+            self.remapper = WebViewReplayRemapper(channelId: channelId)
+        }
     }
 
     private let lock = NSLock()
@@ -92,15 +99,17 @@ public class NRMAWebViewReplayBridge: NSObject {
     }
 
     /// Main thread. Resolves the channel and blocked state through `ViewDetails`, which is also what
-    /// assigns the WebView's stable node ID if it has not been captured yet.
-    private func channel(for webView: WKWebView) -> (id: Int, isBlocked: Bool) {
+    /// assigns the WebView's stable node ID if it has not been captured yet. The channel ID is that
+    /// node ID: it is the `<iframe>` node the page's document gets attached to.
+    private func channel(for webView: WKWebView) -> (id: Int, isBlocked: Bool, remapper: WebViewReplayRemapper) {
         let details = ViewDetails(view: webView)
         lock.lock()
+        defer { lock.unlock() }
         if channels[details.viewId]?.webView !== webView {
-            channels[details.viewId] = WeakWebView(webView)
+            channels[details.viewId] = WeakWebView(webView, channelId: details.viewId)
         }
-        lock.unlock()
-        return (details.viewId, details.blockView ?? false)
+        let remapper = channels[details.viewId]!.remapper
+        return (details.viewId, details.blockView ?? false, remapper)
     }
 
     private var isRecordingFull: Bool {
@@ -151,9 +160,13 @@ public class NRMAWebViewReplayBridge: NSObject {
     private func documentReady(in webView: WKWebView) {
         let channel = channel(for: webView)
 
-        // The previous document is gone. Without this its cached copy would be re-emitted into the next
-        // chunk, showing the old page until the new one's first snapshot arrives.
-        sessionReplay?.resetWebViewChannel(channel.id)
+        // The previous document is gone. Without this its cached copy would be re-attached in the next
+        // chunk, showing the old page until the new one's first snapshot arrives. On the parse queue so
+        // it lands between the old document's events and the new one's.
+        parseQueue.async { [weak self] in
+            channel.remapper.reset()
+            self?.sessionReplay?.resetWebViewChannel(channel.id)
+        }
 
         guard isRecordingFull, !channel.isBlocked else {
             // Not an error: a page can finish loading before the collector's connect response has
@@ -192,14 +205,15 @@ public class NRMAWebViewReplayBridge: NSObject {
 
         let receivedAt = (Date().timeIntervalSince1970 * 1000).rounded()
         parseQueue.async { [weak self] in
-            let envelopes = WebViewReplayPayloadParser.envelopes(fromBridgeBody: text,
-                                                                 channelId: channel.id,
-                                                                 receivedAt: receivedAt)
-            if envelopes.isEmpty {
+            guard let events = WebViewReplayPayloadParser.extractEvents(from: text), !events.isEmpty else {
                 NRLOG_AGENT_DEBUG("[NR-WV-SR] replay batch (\(text.utf8.count) bytes) contained no rrweb events")
                 return
             }
-            self?.sessionReplay?.addWebViewReplayEvents(envelopes)
+            let translated = channel.remapper.translate(events, receivedAt: receivedAt)
+            if translated.isEmpty {
+                return
+            }
+            self?.sessionReplay?.addWebViewReplayEvents(translated)
         }
     }
 

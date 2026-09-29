@@ -277,8 +277,7 @@ public class SessionReplayManager: NSObject {
         let boxedTouches = touches.map(AnyRRWebEvent.init)
 
         let webViewEvents = self.sessionReplay.getSessionReplayWebViewEvents(
-            chunkStart: boxedFrames.first?.base.timestamp ?? 0,
-            nativeFullSnapshotTimestamps: boxedFrames.filter { $0.base.type == .fullSnapshot }.map { $0.base.timestamp })
+            chunkStart: boxedFrames.first?.base.timestamp ?? 0)
 
         guard let upload = buildReplayUpload(frames: boxedFrames, touches: boxedTouches, webViewEvents: webViewEvents) else {
             return
@@ -341,7 +340,7 @@ public class SessionReplayManager: NSObject {
     /// is directly testable with synthetic events, without needing to dispatch
     /// (or mock) an actual upload -- this is still the real production logic,
     /// called above with genuinely captured frames/touches.
-    func buildReplayUpload(frames: [AnyRRWebEvent], touches: [AnyRRWebEvent], webViewEvents: [WebViewReplayEnvelope] = []) -> SessionReplayData? {
+    func buildReplayUpload(frames: [AnyRRWebEvent], touches: [AnyRRWebEvent], webViewEvents: [WebViewReplayOutputEvent] = []) -> SessionReplayData? {
         if !webViewEvents.isEmpty {
             let chunk = mergeReplayChunk(frames: frames, touches: touches, webViewEvents: webViewEvents)
             guard let encoded = encodeReplayChunk(chunk) else {
@@ -392,13 +391,13 @@ public class SessionReplayManager: NSObject {
         return (jsonData, uncompressedDataSize)
     }
 
-    /// Merges WebView plugin envelopes into the native merge order.
+    /// Merges WebView events into the native merge order.
     ///
     /// Native events keep exactly the order mergeAndSortReplayEvents() gives them, leading Meta and
-    /// FullSnapshot anchored first. WebView envelopes (already in timestamp order) are merged into the
-    /// rest by timestamp, after native events at the same ms: a WebView document stamped with a native
-    /// full snapshot's timestamp must land after the snapshot that rebuilds its mount point.
-    func mergeReplayChunk(frames: [AnyRRWebEvent], touches: [AnyRRWebEvent], webViewEvents: [WebViewReplayEnvelope]) -> [ReplayChunkEvent] {
+    /// FullSnapshot anchored first. WebView events (already in timestamp order) are merged into the
+    /// rest by timestamp, after native events at the same ms: a document attached at a native full
+    /// snapshot's timestamp must land after the snapshot that builds its `<iframe>`.
+    func mergeReplayChunk(frames: [AnyRRWebEvent], touches: [AnyRRWebEvent], webViewEvents: [WebViewReplayOutputEvent]) -> [ReplayChunkEvent] {
         let native = mergeAndSortReplayEvents(frames: frames, touches: touches)
         guard !webViewEvents.isEmpty else {
             return native.map { .native($0) }
@@ -430,10 +429,10 @@ public class SessionReplayManager: NSObject {
         return chunk
     }
 
-    /// Encodes and gzips a chunk that carries WebView envelopes. Native events go through the same
-    /// JSONEncoder as encodeReplayPayload(); envelopes are spliced in as already-serialized JSON rather
-    /// than re-encoded. If the compressed chunk is over the upload cap, WebView documents are shed
-    /// before the reporter would reject the whole chunk.
+    /// Encodes and gzips a chunk that carries WebView events. Native events go through the same
+    /// JSONEncoder as encodeReplayPayload(); WebView events are spliced in as already-serialized JSON
+    /// rather than re-encoded. If the compressed chunk is over the upload cap, attached WebView
+    /// documents are shed before the reporter would reject the whole chunk.
     func encodeReplayChunk(_ chunk: [ReplayChunkEvent]) -> (data: Data, uncompressedSize: Int, firstTimestamp: TimeInterval, lastTimestamp: TimeInterval)? {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .withoutEscapingSlashes
@@ -449,8 +448,8 @@ public class SessionReplayManager: NSObject {
                     NRLOG_AGENT_DEBUG("Failed to encode session replay events to JSON: \(error)")
                     return nil
                 }
-            case .webView(let envelope):
-                pieces.append(.init(event: event, json: envelope.encoded()))
+            case .webView(let webViewEvent):
+                pieces.append(.init(event: event, json: webViewEvent.json))
             }
         }
 

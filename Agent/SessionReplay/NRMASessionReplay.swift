@@ -71,20 +71,20 @@ public class NRMASessionReplay: NSObject {
 
     // MARK: WebView replay state
 
-    /// WebView rrweb events received since the last harvest, already wrapped as plugin envelopes.
-    private var pendingWebViewEvents = [WebViewReplayEnvelope]()
+    /// WebView rrweb events received since the last harvest, already remapped into native IDs.
+    private var pendingWebViewEvents = [WebViewReplayEvent]()
     private var pendingWebViewEventBytes = 0
-    /// Each WebView's most recent document, carried across chunk boundaries so every chunk can
-    /// re-emit it (see WebViewReplayChunkBuilder).
-    private var webViewDocuments = [Int: WebViewReplayDocument]()
+    /// Each WebView's current document and the changes since, carried across chunk boundaries so
+    /// every chunk can attach it (see WebViewReplayChunkBuilder).
+    private var webViewStates = [Int: WebViewReplayChannelState]()
     /// Guards the WebView state above. Events arrive on the bridge's parse queue; harvest drains them
     /// on the session replay queue.
     private let webViewLock = NSLock()
     /// Bounds memory if harvests stall. Documents run to hundreds of KB each.
     private let maxPendingWebViewEventBytes = 16 * 1024 * 1024
-    /// WebView channels whose mount point appeared in the frames drained by the last
-    /// getSessionReplayFrames(). Written and read on the harvest path only.
-    private(set) var webViewChannelIdsInLastHarvest = Set<Int>()
+    /// When each WebView's `<iframe>` was built into or removed from the native events produced by
+    /// the last getSessionReplayFrames(). Written and read on the harvest path only.
+    private(set) var webViewMountTransitionsInLastHarvest = [WebViewMountTransition]()
     
     public init(url: NSString, delegate: NRMASessionReplayDelegate? = nil) {
         self.delegate = delegate
@@ -173,7 +173,7 @@ public class NRMASessionReplay: NSObject {
         webViewLock.lock()
         pendingWebViewEvents.removeAll()
         pendingWebViewEventBytes = 0
-        webViewDocuments.removeAll()
+        webViewStates.removeAll()
         webViewLock.unlock()
     }
 
@@ -383,7 +383,8 @@ public class NRMASessionReplay: NSObject {
             // Reserve capacity for better performance
             processedFrames.reserveCapacity(frames.count * 2) // Estimate for frames + meta events
 
-            self.webViewChannelIdsInLastHarvest = frames.reduce(into: Set<Int>()) { $0.formUnion($1.webViewChannelIds) }
+            var mountTransitions = [WebViewMountTransition]()
+            var mountedWebViews = Set<Int>()
 
             for frame in frames {
                 // Check for size changes and add meta event if needed
@@ -401,9 +402,11 @@ public class NRMASessionReplay: NSObject {
                 // Process frame safely
                 if let newFrame = self.sessionReplayFrameProcessor.processFrame(frame) {
                     processedFrames.append(newFrame)
+                    Self.recordWebViewMounts(for: newFrame, frame: frame, mounted: &mountedWebViews, into: &mountTransitions)
                 }
             }
 
+            self.webViewMountTransitionsInLastHarvest = mountTransitions
             return processedFrames
         }
     }
@@ -620,25 +623,72 @@ public class NRMASessionReplay: NSObject {
     
     // MARK: - WebView replay
 
-    /// Buffers a WebView's wrapped rrweb events for the next harvest. Any thread.
+    /// Records where a native event (re)builds or removes a WebView's `<iframe>`. Each (re)build leaves
+    /// the iframe empty in the replay, so it is a point where the page's document must be attached.
+    ///
+    /// - A full snapshot resets the replayer's mirror and rebuilds every iframe in it.
+    /// - A mutation builds an iframe it adds and destroys one it removes. The diff also emits a
+    ///   remove + add pair for a view that moved, which rebuilds the iframe even though it never left
+    ///   the screen, so this reads the mutation's records rather than comparing frames.
+    private static func recordWebViewMounts(for event: RRWebEventCommon,
+                                            frame: SessionReplayFrame,
+                                            mounted: inout Set<Int>,
+                                            into transitions: inout [WebViewMountTransition]) {
+        let timestamp = event.timestamp
+        if event.type == .fullSnapshot {
+            for channelId in mounted.subtracting(frame.webViewChannelIds).sorted() {
+                transitions.append(.init(timestamp: timestamp, channelId: channelId, mounted: false))
+            }
+            for channelId in frame.webViewChannelIds.sorted() {
+                transitions.append(.init(timestamp: timestamp, channelId: channelId, mounted: true))
+            }
+            mounted = frame.webViewChannelIds
+            return
+        }
+
+        guard let incremental = event as? IncrementalEvent,
+              case .mutation(let mutation) = incremental.data else {
+            return
+        }
+        let candidates = mounted.union(frame.webViewChannelIds)
+        guard !candidates.isEmpty else { return }
+
+        let removed = Set((mutation.removes ?? []).map { $0.id }).intersection(candidates)
+        var added = Set<Int>()
+        for add in mutation.adds ?? [] {
+            if case .element(let node) = add.node, candidates.contains(node.id) {
+                added.insert(node.id)
+            }
+        }
+        for channelId in removed.subtracting(added).sorted() {
+            transitions.append(.init(timestamp: timestamp, channelId: channelId, mounted: false))
+            mounted.remove(channelId)
+        }
+        for channelId in added.sorted() {
+            transitions.append(.init(timestamp: timestamp, channelId: channelId, mounted: true))
+            mounted.insert(channelId)
+        }
+    }
+
+    /// Buffers a WebView's remapped rrweb events for the next harvest. Any thread.
     ///
     /// FULL mode only: ERROR mode's sliding-window prune deletes by age, which could drop a WebView's
     /// document while the mutations that depend on it survive.
     ///
     /// Held in memory only, not written to the frame files, so crash recovery replays the native
     /// screens without WebView content.
-    func addWebViewReplayEvents(_ events: [WebViewReplayEnvelope]) {
+    func addWebViewReplayEvents(_ events: [WebViewReplayEvent]) {
         guard recordingMode == .full, !events.isEmpty else { return }
 
         webViewLock.lock()
         defer { webViewLock.unlock() }
 
         pendingWebViewEvents.append(contentsOf: events)
-        pendingWebViewEventBytes += events.reduce(0) { $0 + $1.innerJSON.count }
+        pendingWebViewEventBytes += events.reduce(0) { $0 + $1.json.count }
 
         var dropped = 0
         while pendingWebViewEventBytes > maxPendingWebViewEventBytes, !pendingWebViewEvents.isEmpty {
-            pendingWebViewEventBytes -= pendingWebViewEvents.removeFirst().innerJSON.count
+            pendingWebViewEventBytes -= pendingWebViewEvents.removeFirst().json.count
             dropped += 1
         }
         if dropped > 0 {
@@ -649,18 +699,16 @@ public class NRMASessionReplay: NSObject {
     /// Forgets a WebView's cached document. Called when it starts a new document.
     func resetWebViewChannel(_ channelId: Int) {
         webViewLock.lock()
-        webViewDocuments[channelId] = nil
+        webViewStates[channelId] = nil
         webViewLock.unlock()
     }
 
-    /// Drains the buffered WebView events and lays them out for one chunk, re-emitting each visible
-    /// WebView's document where the chunk needs it. Harvest path; call after getSessionReplayFrames().
+    /// Drains the buffered WebView events and lays them out for one chunk, attaching each WebView's
+    /// document to its `<iframe>` wherever the chunk's native events build one. Harvest path; call
+    /// after getSessionReplayFrames(), which records where those iframes are built.
     ///
-    /// - Parameters:
-    ///   - chunkStart: the chunk's leading Meta timestamp
-    ///   - nativeFullSnapshotTimestamps: every native full snapshot in the chunk
-    func getSessionReplayWebViewEvents(chunkStart: TimeInterval,
-                                       nativeFullSnapshotTimestamps: [TimeInterval]) -> [WebViewReplayEnvelope] {
+    /// - Parameter chunkStart: the chunk's leading Meta timestamp
+    func getSessionReplayWebViewEvents(chunkStart: TimeInterval) -> [WebViewReplayOutputEvent] {
         #if os(iOS)
         let liveChannels: Set<Int>? = NRMAWebViewReplayBridge.shared.liveChannelIds()
         #else
@@ -676,18 +724,17 @@ public class NRMASessionReplay: NSObject {
 
         // A deallocated WebView will never be shown again; stop holding its DOM.
         if let liveChannels = liveChannels {
-            webViewDocuments = webViewDocuments.filter { liveChannels.contains($0.key) }
+            webViewStates = webViewStates.filter { liveChannels.contains($0.key) }
         }
 
-        guard !pending.isEmpty || !webViewDocuments.isEmpty else {
+        guard !pending.isEmpty || !webViewStates.isEmpty else {
             return []
         }
 
         return WebViewReplayChunkBuilder.build(pending: pending,
-                                               nativeFullSnapshotTimestamps: nativeFullSnapshotTimestamps,
+                                               mountTransitions: webViewMountTransitionsInLastHarvest,
                                                chunkStart: chunkStart,
-                                               reemitChannels: webViewChannelIdsInLastHarvest,
-                                               documents: &webViewDocuments)
+                                               states: &webViewStates)
     }
 
     // MARK: - Error Sampling Mode Management

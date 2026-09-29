@@ -9,163 +9,276 @@ import Foundation
 
 #if os(iOS) || os(tvOS)
 
-/// A WebView's most recent document: the Meta + FullSnapshot pair rrweb emits together.
+/// A moment at which a WebView's `<iframe>` node was built into, or taken out of, the native replay.
 ///
-/// The Meta is load-bearing for visibility, not just sizing. A nested `Replayer` is constructed with an
-/// empty event array, and rrweb creates its iframe with `display: none`; only `handleResize`, fired by
-/// a Meta event, ever sets it visible. A document re-emitted without its Meta builds the whole DOM and
-/// renders nothing.
-struct WebViewReplayDocument {
-    var meta: WebViewReplayEnvelope?
-    var full: WebViewReplayEnvelope
+/// The iframe is rebuilt empty by every native full snapshot (the replayer resets its mirror) and by
+/// every mutation that re-adds it, so each of these is a point where the page's document has to be
+/// attached again.
+struct WebViewMountTransition: Equatable {
+    let timestamp: TimeInterval
+    let channelId: Int
+    let mounted: Bool
 }
 
-/// Decides where each WebView's document must be (re-)placed within one harvest chunk.
+/// What a WebView needs carried from one chunk to the next: chunks are uploaded and replayed
+/// independently, so each one has to attach the page's document afresh.
+struct WebViewReplayChannelState {
+    /// The page's most recent document.
+    var document: WebViewReplayEvent?
+    /// State-changing events since `document`, replayed after every re-attachment. Without them a
+    /// re-attached page shows the DOM as it was at its snapshot, and later mutations reference nodes
+    /// that were added since and no longer exist.
+    var backlog: [WebViewReplayEvent] = []
+    var backlogBytes = 0
+    /// Set when the backlog outgrew its bound. Re-attachments then show the document as snapshotted
+    /// until the page's next FullSnapshot.
+    var backlogOverflowed = false
+
+    /// Bounds the replayed history per page.
+    static let maxBacklogBytes = 2 * 1024 * 1024
+
+    mutating func startDocument(_ event: WebViewReplayEvent) {
+        document = event
+        backlog.removeAll()
+        backlogBytes = 0
+        backlogOverflowed = false
+    }
+
+    mutating func record(_ event: WebViewReplayEvent) {
+        guard document != nil, !backlogOverflowed,
+              case .incremental(let changesState) = event.kind, changesState else {
+            return
+        }
+        backlog.append(event)
+        backlogBytes += event.json.count
+        if backlogBytes > Self.maxBacklogBytes {
+            backlog.removeAll()
+            backlogBytes = 0
+            backlogOverflowed = true
+        }
+    }
+}
+
+/// One event of the chunk, ready to serialize. All of them are ordinary rrweb IncrementalSnapshot
+/// mutations and interactions in native IDs; the replayer needs nothing beyond stock iframe support.
+struct WebViewReplayOutputEvent {
+    let channelId: Int
+    let timestamp: TimeInterval
+    let json: Data
+    /// Events that attach one copy of a document: the graft and the backlog replayed onto it. Shed
+    /// together, since the backlog means nothing without its document.
+    let graftGroup: Int?
+}
+
+/// Lays out one harvest chunk's WebView events against the native stream.
 ///
-/// Two properties of the payload drive this:
-/// - Chunks are uploaded and replayed independently, so the plugin's retained history cannot cross a
-///   chunk boundary. A chunk that carries a WebView's mutations but not its document has nothing to
-///   mount them onto and renders blank.
-/// - A native full snapshot resets the replayer's mirror and rebuilds the tagged mount div, so the
-///   player retires the nested replayer attached to the old node and builds a fresh, empty one. The
-///   Android POC measured that a chunk replays the WebView only if a document sorts after the *last*
-///   native full snapshot in it.
-///
-/// So the document is re-emitted at the start of each chunk and after every native full snapshot
-/// that no document already follows. Unlike Android, which has to infer chunk boundaries from a
-/// harvest clock, iOS rebuilds the native events from raw frames at harvest time, so every native full
-/// snapshot in the chunk is known exactly.
+/// iOS rebuilds the native events from raw frames at harvest time, so every point where a WebView's
+/// iframe is (re)built is known exactly, and the document can be attached right after each one --
+/// no ordering gates or wait buffers needed.
 enum WebViewReplayChunkBuilder {
 
     /// - Parameters:
-    ///   - pending: WebView envelopes received since the last harvest, in arrival order
-    ///   - nativeFullSnapshotTimestamps: every native full snapshot in this chunk
-    ///   - chunkStart: the chunk's leading Meta timestamp. Envelopes are clamped to it: browser batches
+    ///   - pending: translated WebView events received since the last harvest, in arrival order
+    ///   - mountTransitions: when each WebView's iframe was built or removed in this chunk's native events
+    ///   - chunkStart: the chunk's leading Meta timestamp. Events are clamped to it: browser batches
     ///     lag, so events captured during the previous chunk arrive in this one, and must not sort
     ///     ahead of the Meta the player needs first.
-    ///   - reemitChannels: channels whose mount point appears in this chunk. nil re-emits for every
-    ///     channel with a document. A WebView that is alive but off screen has no mount point to
-    ///     rebuild, so re-emitting its document would only cost payload.
-    ///   - documents: each channel's last document, carried in from earlier chunks and updated here
-    /// - Returns: the chunk's WebView envelopes, sorted by timestamp
-    static func build(pending: [WebViewReplayEnvelope],
-                      nativeFullSnapshotTimestamps: [TimeInterval],
+    ///   - states: per-WebView state carried between chunks; updated here
+    /// - Returns: the chunk's WebView events, sorted by timestamp
+    static func build(pending: [WebViewReplayEvent],
+                      mountTransitions: [WebViewMountTransition],
                       chunkStart: TimeInterval,
-                      reemitChannels: Set<Int>?,
-                      documents: inout [Int: WebViewReplayDocument]) -> [WebViewReplayEnvelope] {
-        let fullSnapshots = nativeFullSnapshotTimestamps.sorted()
-
-        var byChannel = [Int: [WebViewReplayEnvelope]]()
-        var channelOrder = [Int]()
-        for var envelope in pending {
-            envelope.timestamp = max(envelope.timestamp, chunkStart)
-            if byChannel[envelope.channelId] == nil {
-                channelOrder.append(envelope.channelId)
-            }
-            byChannel[envelope.channelId, default: []].append(envelope)
+                      states: inout [Int: WebViewReplayChannelState]) -> [WebViewReplayOutputEvent] {
+        var eventsByChannel = [Int: [WebViewReplayEvent]]()
+        for var event in pending {
+            event.timestamp = max(event.timestamp, chunkStart)
+            eventsByChannel[event.channelId, default: []].append(event)
         }
-        for channelId in documents.keys.sorted() where byChannel[channelId] == nil {
-            channelOrder.append(channelId)
+        var transitionsByChannel = [Int: [WebViewMountTransition]]()
+        for transition in mountTransitions {
+            transitionsByChannel[transition.channelId, default: []].append(transition)
         }
 
-        var output = [WebViewReplayEnvelope]()
-        for channelId in channelOrder {
-            let events = (byChannel[channelId] ?? []).nrStableSorted { $0.timestamp < $1.timestamp }
-            let shouldReemit = reemitChannels?.contains(channelId) ?? true
-            output.append(contentsOf: buildChannel(events: events,
-                                                   fullSnapshots: fullSnapshots,
-                                                   chunkStart: chunkStart,
-                                                   shouldReemit: shouldReemit,
-                                                   document: &documents[channelId]))
+        let channels = Set(eventsByChannel.keys).union(transitionsByChannel.keys).union(states.keys).sorted()
+        var graftGroup = 0
+        var output = [WebViewReplayOutputEvent]()
+        for channelId in channels {
+            var state = states[channelId] ?? WebViewReplayChannelState()
+            output.append(contentsOf: buildChannel(
+                channelId: channelId,
+                events: (eventsByChannel[channelId] ?? []).nrStableSorted { $0.timestamp < $1.timestamp },
+                transitions: (transitionsByChannel[channelId] ?? []).nrStableSorted { $0.timestamp < $1.timestamp },
+                state: &state,
+                graftGroup: &graftGroup))
+            states[channelId] = state.document == nil ? nil : state
         }
 
         // Each channel's run is already in timestamp order, so a stable sort interleaves channels
-        // without disturbing any channel's internal order (a document stays ahead of the mutations
-        // that depend on it).
+        // without disturbing any channel's internal order.
         return output.nrStableSorted { $0.timestamp < $1.timestamp }
     }
 
-    private static func buildChannel(events: [WebViewReplayEnvelope],
-                                     fullSnapshots: [TimeInterval],
-                                     chunkStart: TimeInterval,
-                                     shouldReemit: Bool,
-                                     document: inout WebViewReplayDocument?) -> [WebViewReplayEnvelope] {
-        var output = [WebViewReplayEnvelope]()
-        var currentMeta = document?.meta
-        var currentFull = document?.full
-        var lastDocumentAt: TimeInterval? = nil
+    private static func buildChannel(channelId: Int,
+                                     events: [WebViewReplayEvent],
+                                     transitions: [WebViewMountTransition],
+                                     state: inout WebViewReplayChannelState,
+                                     graftGroup: inout Int) -> [WebViewReplayOutputEvent] {
+        var output = [WebViewReplayOutputEvent]()
+        var isMounted = false
+        /// The native ID of the document currently attached to the iframe in the replay, if any.
+        var attachedRootId: Int?
+        /// The iframe was just (re)built empty and needs the document attached.
+        var pendingAttachAt: TimeInterval?
 
-        func reemit(at timestamp: TimeInterval) {
-            guard shouldReemit, let full = currentFull else { return }
-            if let meta = currentMeta {
-                output.append(meta.reemitted(at: timestamp))
+        func attach(_ document: WebViewReplayEvent, at timestamp: TimeInterval, withBacklog: Bool) {
+            guard case .document(let rootId) = document.kind else { return }
+            graftGroup += 1
+            output.append(.init(channelId: channelId, timestamp: timestamp,
+                                json: WebViewReplayEvents.graft(iframeId: channelId, document: document.json, timestamp: timestamp),
+                                graftGroup: graftGroup))
+            if withBacklog {
+                for event in state.backlog {
+                    output.append(.init(channelId: channelId, timestamp: timestamp,
+                                        json: WebViewReplayEvents.incremental(data: event.json, timestamp: timestamp),
+                                        graftGroup: graftGroup))
+                }
             }
-            output.append(full.reemitted(at: timestamp))
-            lastDocumentAt = timestamp
+            attachedRootId = rootId
         }
 
-        // The carried document goes first, so events that arrived late from the previous chunk (now
-        // clamped to chunkStart) apply on top of it rather than ahead of it.
-        reemit(at: chunkStart)
+        /// Attaches lazily, so a new document arriving at the same moment the iframe is rebuilt is
+        /// attached once rather than twice.
+        func flushPendingAttach() {
+            guard let at = pendingAttachAt else { return }
+            pendingAttachAt = nil
+            if isMounted, let document = state.document {
+                attach(document, at: at, withBacklog: true)
+            }
+        }
 
         var eventIndex = 0
-        var snapshotIndex = 0
-        while eventIndex < events.count || snapshotIndex < fullSnapshots.count {
-            // At equal timestamps WebView events are consumed first: a WebView document stamped at the
-            // same ms as a native full snapshot sorts after it in the final chunk (plugin events rank
-            // last), so it already satisfies that snapshot.
-            let takeEvent = eventIndex < events.count &&
-                (snapshotIndex >= fullSnapshots.count || events[eventIndex].timestamp <= fullSnapshots[snapshotIndex])
-            if takeEvent {
-                let event = events[eventIndex]
-                eventIndex += 1
-                output.append(event)
-                if event.isMeta {
-                    currentMeta = event
-                } else if event.isDocument {
-                    currentFull = event
-                    lastDocumentAt = event.timestamp
+        var transitionIndex = 0
+        while eventIndex < events.count || transitionIndex < transitions.count {
+            // At equal timestamps the native change goes first: it sorts ahead of WebView events in
+            // the final chunk, so an iframe built at T is in place for a graft stamped T.
+            let takeTransition = transitionIndex < transitions.count &&
+                (eventIndex >= events.count || transitions[transitionIndex].timestamp <= events[eventIndex].timestamp)
+
+            if takeTransition {
+                let transition = transitions[transitionIndex]
+                transitionIndex += 1
+                flushPendingAttach()
+                isMounted = transition.mounted
+                attachedRootId = nil        // rebuilt empty, or gone
+                pendingAttachAt = transition.mounted ? transition.timestamp : nil
+                continue
+            }
+
+            let event = events[eventIndex]
+            eventIndex += 1
+
+            switch event.kind {
+            case .document:
+                state.startDocument(event)
+                guard isMounted else { continue }
+                if pendingAttachAt != nil {
+                    pendingAttachAt = nil       // the fresh iframe gets the new document directly
+                } else if let previousRoot = attachedRootId {
+                    // Navigation or checkout: tear the previous document off first, so two generations
+                    // of a page never coexist under one iframe.
+                    output.append(.init(channelId: channelId, timestamp: event.timestamp,
+                                        json: WebViewReplayEvents.removal(iframeId: channelId, rootId: previousRoot, timestamp: event.timestamp),
+                                        graftGroup: nil))
                 }
-            } else {
-                let snapshotAt = fullSnapshots[snapshotIndex]
-                snapshotIndex += 1
-                if let placed = lastDocumentAt, placed >= snapshotAt {
-                    continue
+                attach(event, at: event.timestamp, withBacklog: false)
+
+            case .incremental:
+                // Attach first: the backlog replayed onto the document must not already contain this
+                // event, which is emitted right after it.
+                if isMounted {
+                    flushPendingAttach()
                 }
-                reemit(at: snapshotAt)
+                state.record(event)
+                guard isMounted else { continue }
+                if attachedRootId != nil {
+                    output.append(.init(channelId: channelId, timestamp: event.timestamp,
+                                        json: WebViewReplayEvents.incremental(data: event.json, timestamp: event.timestamp),
+                                        graftGroup: nil))
+                }
             }
         }
+        flushPendingAttach()
 
-        document = currentFull.map { WebViewReplayDocument(meta: currentMeta, full: $0) }
         return output
+    }
+}
+
+/// The rrweb events the merge emits, spliced from already-serialized parts: a page's document runs to
+/// hundreds of kilobytes and is re-attached into every chunk, so it is kept as bytes rather than
+/// re-encoded each time.
+enum WebViewReplayEvents {
+
+    /// Attaches a document node to the WebView's iframe: the same single-add mutation rrweb records
+    /// for an iframe's content.
+    static func graft(iframeId: Int, document: Data, timestamp: TimeInterval) -> Data {
+        return mutation(timestamp: timestamp,
+                        removes: "",
+                        addsPrefix: "{\"parentId\":\(iframeId),\"nextId\":null,\"node\":",
+                        node: document,
+                        addsSuffix: "}")
+    }
+
+    static func removal(iframeId: Int, rootId: Int, timestamp: TimeInterval) -> Data {
+        return mutation(timestamp: timestamp,
+                        removes: "{\"parentId\":\(iframeId),\"id\":\(rootId)}",
+                        addsPrefix: "", node: nil, addsSuffix: "")
+    }
+
+    /// An IncrementalSnapshot around an already-remapped `data` member, stamped `timestamp`.
+    static func incremental(data: Data, timestamp: TimeInterval) -> Data {
+        var json = Data("{\"type\":\(RRWebEventType.incrementalSnapshot.rawValue),\"timestamp\":\(Int64(timestamp.rounded())),\"data\":".utf8)
+        json.append(data)
+        json.append(UInt8(ascii: "}"))
+        return json
+    }
+
+    /// Every list present, even when empty: replayers index into all four.
+    private static func mutation(timestamp: TimeInterval, removes: String, addsPrefix: String, node: Data?, addsSuffix: String) -> Data {
+        var json = Data(("{\"type\":\(RRWebEventType.incrementalSnapshot.rawValue),\"timestamp\":\(Int64(timestamp.rounded()))," +
+                         "\"data\":{\"source\":0,\"texts\":[],\"attributes\":[],\"removes\":[\(removes)],\"adds\":[\(addsPrefix)").utf8)
+        if let node = node {
+            json.append(node)
+        }
+        json.append(contentsOf: "\(addsSuffix)]}}".utf8)
+        return json
     }
 }
 
 /// One event in a harvest chunk that carries WebView events alongside native ones.
 enum ReplayChunkEvent {
     case native(AnyRRWebEvent)
-    case webView(WebViewReplayEnvelope)
+    case webView(WebViewReplayOutputEvent)
 
     var timestamp: TimeInterval {
         switch self {
         case .native(let event): return event.base.timestamp
-        case .webView(let envelope): return envelope.timestamp
+        case .webView(let event): return event.timestamp
         }
     }
 
-    var webViewEnvelope: WebViewReplayEnvelope? {
-        if case .webView(let envelope) = self {
-            return envelope
+    var webViewEvent: WebViewReplayOutputEvent? {
+        if case .webView(let event) = self {
+            return event
         }
         return nil
     }
 }
 
-/// Keeps a chunk under the upload size cap by dropping WebView documents.
+/// Keeps a chunk under the upload size cap by dropping attached WebView documents.
 ///
 /// Without this the reporter rejects an oversized chunk *whole*, native events included, so a single
-/// heavy WebView document would cost a full harvest of native replay. Shedding documents instead
-/// degrades the WebView to empty until its next document while the native replay survives.
+/// heavy page would cost a full harvest of native replay. Shedding a document instead leaves that
+/// WebView's iframe empty until the next attachment while the native replay survives.
 enum WebViewReplayPayloadBudget {
 
     struct Piece {
@@ -176,7 +289,7 @@ enum WebViewReplayPayloadBudget {
     /// - Parameters:
     ///   - limit: the compressed-size cap the reporter enforces
     ///   - compressedLength: returns the compressed size of a payload, or nil if it can't be measured
-    /// - Returns: the pieces to send, and how many documents were shed
+    /// - Returns: the pieces to send, and how many document attachments were shed
     static func enforce(_ pieces: [Piece], limit: Int, compressedLength: (Data) -> Int?) -> (pieces: [Piece], shedCount: Int) {
         let json = joinedJSON(pieces)
         guard let compressed = compressedLength(json), compressed > limit, json.count > 0 else {
@@ -189,45 +302,48 @@ enum WebViewReplayPayloadBudget {
         let ratio = Double(compressed) / Double(json.count)
         let budget = Int((Double(limit) / ratio) * 0.95)
 
-        var lastDocumentIndexByChannel = [Int: Int]()
-        var candidates = [Int]()
+        var groupIndices = [Int: [Int]]()
+        var groupBytes = [Int: Int]()
+        var lastGroupByChannel = [Int: Int]()
         for (index, piece) in pieces.enumerated() {
-            if let envelope = piece.event.webViewEnvelope, envelope.isDocument {
-                candidates.append(index)
-                lastDocumentIndexByChannel[envelope.channelId] = index
-            }
+            guard let event = piece.event.webViewEvent, let group = event.graftGroup else { continue }
+            groupIndices[group, default: []].append(index)
+            groupBytes[group, default: 0] += piece.json.count + 1   // + its separating comma
+            lastGroupByChannel[event.channelId] = group
         }
-        guard !candidates.isEmpty else {
+        guard !groupIndices.isEmpty else {
             return (pieces, 0)
         }
-        let finalDocuments = Set(lastDocumentIndexByChannel.values)
+        let finalGroups = Set(lastGroupByChannel.values)
 
-        // Superseded documents go first: each channel's last document is the one the end of the chunk
-        // actually renders. Within each group, largest first, so the fewest documents are lost.
-        candidates.sort { lhs, rhs in
-            let lhsFinal = finalDocuments.contains(lhs)
-            let rhsFinal = finalDocuments.contains(rhs)
+        // Superseded attachments go first: each channel's last one is what the end of the chunk
+        // actually shows. Within each class, largest first, so the fewest are lost.
+        let candidates = groupIndices.keys.sorted { lhs, rhs in
+            let lhsFinal = finalGroups.contains(lhs)
+            let rhsFinal = finalGroups.contains(rhs)
             if lhsFinal != rhsFinal {
                 return !lhsFinal
             }
-            if pieces[lhs].json.count != pieces[rhs].json.count {
-                return pieces[lhs].json.count > pieces[rhs].json.count
+            if groupBytes[lhs] != groupBytes[rhs] {
+                return groupBytes[lhs, default: 0] > groupBytes[rhs, default: 0]
             }
             return lhs < rhs
         }
 
         var total = json.count
         var shed = Set<Int>()
-        for index in candidates {
+        var shedGroups = 0
+        for group in candidates {
             if total <= budget {
                 break
             }
-            total -= pieces[index].json.count + 1   // + its separating comma
-            shed.insert(index)
+            total -= groupBytes[group, default: 0]
+            shed.formUnion(groupIndices[group] ?? [])
+            shedGroups += 1
         }
 
         let kept = pieces.enumerated().filter { !shed.contains($0.offset) }.map { $0.element }
-        return (kept, shed.count)
+        return (kept, shedGroups)
     }
 
     static func joinedJSON(_ pieces: [Piece]) -> Data {

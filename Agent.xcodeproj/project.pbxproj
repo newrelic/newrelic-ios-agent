@@ -1579,11 +1579,12 @@
 		34EA78E02A3924CC0071CC95 /* TestCustomEvents.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78DF2A3924CC0071CC95 /* TestCustomEvents.m */; };
 		568E3CFAF582510B7C44A9F7 /* WebViewReplayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 983FC53417AC294E4DA47EF2 /* WebViewReplayTests.swift */; };
 		59484C16B0623571DD1F4601 /* WebViewReplayChunkBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE5782573F7D8D0AFB1E1384 /* WebViewReplayChunkBuilder.swift */; };
+		610FD5D4B495222747D56B83 /* WebViewReplayRemapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 180B8F7058046596C6B0F25F /* WebViewReplayRemapper.swift */; };
 		68106E0ADF48CC73EAAF2876 /* WKWebViewThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 049A7CB7637A16B4082189E9 /* WKWebViewThingy.swift */; };
 		7E523631EE350C8CBAFD73EE /* NRMAWebViewReplayBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D1C14F5A294D265D1207CED /* NRMAWebViewReplayBridge.swift */; };
 		8B498242383AF7020CD36D72 /* NRMANetworkFacadeTraceHeaderTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 578D57D9E9373167EBE8C0CF /* NRMANetworkFacadeTraceHeaderTests.mm */; };
 		9961AC137948ABF34FDFD5A0 /* NRMAWebViewReplayBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D1C14F5A294D265D1207CED /* NRMAWebViewReplayBridge.swift */; };
-		A4D2A88FD5BAD45F1A92128C /* WebViewReplayEnvelope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173B6E865A6FF73696D6571A /* WebViewReplayEnvelope.swift */; };
+		C3043F0696F822526D01EE08 /* WebViewReplayRemapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 180B8F7058046596C6B0F25F /* WebViewReplayRemapper.swift */; };
 		C94590EE289AC0EC0062A4DE /* SwiftTestHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0209ACA424E7393B00E45C90 /* SwiftTestHelper.swift */; };
 		C94590EF289AC0F00062A4DE /* NRMASwiftInstrumentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC8324E7393200E45C90 /* NRMASwiftInstrumentationTests.swift */; };
 		C94F518D28577E0000E81E01 /* InstrumentationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C94F518C28577E0000E81E01 /* InstrumentationTests.m */; };
@@ -1604,7 +1605,6 @@
 		D4C36C972FC902B7001DD597 /* TestGuidUniqueness.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4C36C952FC902B7001DD597 /* TestGuidUniqueness.mm */; };
 		D4C36C982FC902B7001DD597 /* TestGuidUniqueness.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4C36C952FC902B7001DD597 /* TestGuidUniqueness.mm */; };
 		D4DCC24030192068008B5C59 /* UIHostingViewRecordOrchestratorWidthOffsetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4DCC23F30192068008B5C59 /* UIHostingViewRecordOrchestratorWidthOffsetTests.swift */; };
-		DE226BE6CE3CF324E12AE4EF /* WebViewReplayEnvelope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173B6E865A6FF73696D6571A /* WebViewReplayEnvelope.swift */; };
 		EC258876C7CB1B87428ECD43 /* WebViewReplayChunkBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE5782573F7D8D0AFB1E1384 /* WebViewReplayChunkBuilder.swift */; };
 		F6E79C7325A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
 		F6E79C7425A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
@@ -2589,7 +2589,7 @@
 		02FF4AFB24DC8CB200115469 /* base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = base.h; sourceTree = "<group>"; };
 		02FF4CAC24E3201400115469 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		049A7CB7637A16B4082189E9 /* WKWebViewThingy.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WKWebViewThingy.swift; sourceTree = "<group>"; };
-		173B6E865A6FF73696D6571A /* WebViewReplayEnvelope.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WebViewReplayEnvelope.swift; sourceTree = "<group>"; };
+		180B8F7058046596C6B0F25F /* WebViewReplayRemapper.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WebViewReplayRemapper.swift; sourceTree = "<group>"; };
 		2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRMAURLSessionAsyncTests.swift; sourceTree = "<group>"; };
 		2B03404F2E87366600182A70 /* GetViewRendererByKeyPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetViewRendererByKeyPath.swift; sourceTree = "<group>"; };
 		2B0340672E874A9900182A70 /* ControllerTypeDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControllerTypeDetector.swift; sourceTree = "<group>"; };
@@ -4297,9 +4297,9 @@
 		7A552FA3C792127D271E283C /* WebView */ = {
 			isa = PBXGroup;
 			children = (
-				173B6E865A6FF73696D6571A /* WebViewReplayEnvelope.swift */,
 				CE5782573F7D8D0AFB1E1384 /* WebViewReplayChunkBuilder.swift */,
 				3D1C14F5A294D265D1207CED /* NRMAWebViewReplayBridge.swift */,
+				180B8F7058046596C6B0F25F /* WebViewReplayRemapper.swift */,
 			);
 			name = WebView;
 			path = WebView;
@@ -6047,10 +6047,10 @@
 				02FF48BB24DC61F600115469 /* NRMAClassNode.m in Sources */,
 				F6E79C7925A65347006277FB /* W3CTraceParent.mm in Sources */,
 				2BDCA8AA2A8C41160005740D /* NRMASAM.mm in Sources */,
-				A4D2A88FD5BAD45F1A92128C /* WebViewReplayEnvelope.swift in Sources */,
 				59484C16B0623571DD1F4601 /* WebViewReplayChunkBuilder.swift in Sources */,
 				9961AC137948ABF34FDFD5A0 /* NRMAWebViewReplayBridge.swift in Sources */,
 				68106E0ADF48CC73EAAF2876 /* WKWebViewThingy.swift in Sources */,
+				C3043F0696F822526D01EE08 /* WebViewReplayRemapper.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6433,10 +6433,10 @@
 				02FF4C9824E3201400115469 /* NRMATraceSegment.m in Sources */,
 				02FF4C9924E3201400115469 /* NRMAClassNode.m in Sources */,
 				F6E79C7A25A65347006277FB /* W3CTraceParent.mm in Sources */,
-				DE226BE6CE3CF324E12AE4EF /* WebViewReplayEnvelope.swift in Sources */,
 				EC258876C7CB1B87428ECD43 /* WebViewReplayChunkBuilder.swift in Sources */,
 				7E523631EE350C8CBAFD73EE /* NRMAWebViewReplayBridge.swift in Sources */,
 				2A3313528F60FF991BAC7011 /* WKWebViewThingy.swift in Sources */,
+				610FD5D4B495222747D56B83 /* WebViewReplayRemapper.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
