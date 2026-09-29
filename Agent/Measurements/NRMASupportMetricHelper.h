@@ -44,6 +44,9 @@ static NSMutableArray *deferredMetrics;
 
 + (void) enqueueKMMDetectionMetric;
 
+// WebView session replay: suffix is appended to kNRMAWebViewReplayMetricPrefix, e.g. @"Injected".
++ (void) enqueueWebViewReplayMetric:(NSString*)suffix;
+
 // Events (queue lifecycle) supportability metrics -- Android parity (NR-478730)
 + (void) enqueueEventAddedMetric;
 + (void) enqueueEventOverflowMetric;

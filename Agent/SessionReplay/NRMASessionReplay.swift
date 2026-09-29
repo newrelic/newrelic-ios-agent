@@ -68,6 +68,23 @@ public class NRMASessionReplay: NSObject {
     private var NRMAOriginal__sendEvent: UnsafeMutableRawPointer?
     
     private let url: NSString
+
+    // MARK: WebView replay state
+
+    /// WebView rrweb events received since the last harvest, already wrapped as plugin envelopes.
+    private var pendingWebViewEvents = [WebViewReplayEnvelope]()
+    private var pendingWebViewEventBytes = 0
+    /// Each WebView's most recent document, carried across chunk boundaries so every chunk can
+    /// re-emit it (see WebViewReplayChunkBuilder).
+    private var webViewDocuments = [Int: WebViewReplayDocument]()
+    /// Guards the WebView state above. Events arrive on the bridge's parse queue; harvest drains them
+    /// on the session replay queue.
+    private let webViewLock = NSLock()
+    /// Bounds memory if harvests stall. Documents run to hundreds of KB each.
+    private let maxPendingWebViewEventBytes = 16 * 1024 * 1024
+    /// WebView channels whose mount point appeared in the frames drained by the last
+    /// getSessionReplayFrames(). Written and read on the harvest path only.
+    private(set) var webViewChannelIdsInLastHarvest = Set<Int>()
     
     public init(url: NSString, delegate: NRMASessionReplayDelegate? = nil) {
         self.delegate = delegate
@@ -86,6 +103,10 @@ public class NRMASessionReplay: NSObject {
             withIntermediateDirectories: true,
             attributes: [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication]
         )
+
+        #if os(iOS)
+        NRMAWebViewReplayBridge.shared.sessionReplay = self
+        #endif
     }
     
     public func start() {
@@ -148,6 +169,12 @@ public class NRMASessionReplay: NSObject {
             //NRLOG_AGENT_DEBUG("🧹 [clearAllData] Resetting \(touchCapture.touchEvents.count) touch events")
             touchCapture.resetEvents()
         }
+
+        webViewLock.lock()
+        pendingWebViewEvents.removeAll()
+        pendingWebViewEventBytes = 0
+        webViewDocuments.removeAll()
+        webViewLock.unlock()
     }
 
     /// Resets the in-memory frame buffer and frame counters. MUST be called on
@@ -355,6 +382,8 @@ public class NRMASessionReplay: NSObject {
 
             // Reserve capacity for better performance
             processedFrames.reserveCapacity(frames.count * 2) // Estimate for frames + meta events
+
+            self.webViewChannelIdsInLastHarvest = frames.reduce(into: Set<Int>()) { $0.formUnion($1.webViewChannelIds) }
 
             for frame in frames {
                 // Check for size changes and add meta event if needed
@@ -589,6 +618,78 @@ public class NRMASessionReplay: NSObject {
         }
     }
     
+    // MARK: - WebView replay
+
+    /// Buffers a WebView's wrapped rrweb events for the next harvest. Any thread.
+    ///
+    /// FULL mode only: ERROR mode's sliding-window prune deletes by age, which could drop a WebView's
+    /// document while the mutations that depend on it survive.
+    ///
+    /// Held in memory only, not written to the frame files, so crash recovery replays the native
+    /// screens without WebView content.
+    func addWebViewReplayEvents(_ events: [WebViewReplayEnvelope]) {
+        guard recordingMode == .full, !events.isEmpty else { return }
+
+        webViewLock.lock()
+        defer { webViewLock.unlock() }
+
+        pendingWebViewEvents.append(contentsOf: events)
+        pendingWebViewEventBytes += events.reduce(0) { $0 + $1.innerJSON.count }
+
+        var dropped = 0
+        while pendingWebViewEventBytes > maxPendingWebViewEventBytes, !pendingWebViewEvents.isEmpty {
+            pendingWebViewEventBytes -= pendingWebViewEvents.removeFirst().innerJSON.count
+            dropped += 1
+        }
+        if dropped > 0 {
+            NRLOG_AGENT_DEBUG("[NR-WV-SR] WebView replay buffer over \(maxPendingWebViewEventBytes) bytes; dropped \(dropped) oldest event(s)")
+        }
+    }
+
+    /// Forgets a WebView's cached document. Called when it starts a new document.
+    func resetWebViewChannel(_ channelId: Int) {
+        webViewLock.lock()
+        webViewDocuments[channelId] = nil
+        webViewLock.unlock()
+    }
+
+    /// Drains the buffered WebView events and lays them out for one chunk, re-emitting each visible
+    /// WebView's document where the chunk needs it. Harvest path; call after getSessionReplayFrames().
+    ///
+    /// - Parameters:
+    ///   - chunkStart: the chunk's leading Meta timestamp
+    ///   - nativeFullSnapshotTimestamps: every native full snapshot in the chunk
+    func getSessionReplayWebViewEvents(chunkStart: TimeInterval,
+                                       nativeFullSnapshotTimestamps: [TimeInterval]) -> [WebViewReplayEnvelope] {
+        #if os(iOS)
+        let liveChannels: Set<Int>? = NRMAWebViewReplayBridge.shared.liveChannelIds()
+        #else
+        let liveChannels: Set<Int>? = nil
+        #endif
+
+        webViewLock.lock()
+        defer { webViewLock.unlock() }
+
+        let pending = pendingWebViewEvents
+        pendingWebViewEvents.removeAll()
+        pendingWebViewEventBytes = 0
+
+        // A deallocated WebView will never be shown again; stop holding its DOM.
+        if let liveChannels = liveChannels {
+            webViewDocuments = webViewDocuments.filter { liveChannels.contains($0.key) }
+        }
+
+        guard !pending.isEmpty || !webViewDocuments.isEmpty else {
+            return []
+        }
+
+        return WebViewReplayChunkBuilder.build(pending: pending,
+                                               nativeFullSnapshotTimestamps: nativeFullSnapshotTimestamps,
+                                               chunkStart: chunkStart,
+                                               reemitChannels: webViewChannelIdsInLastHarvest,
+                                               documents: &webViewDocuments)
+    }
+
     // MARK: - Error Sampling Mode Management
     
     /// Sets the recording mode for session replay
@@ -618,6 +719,9 @@ public class NRMASessionReplay: NSObject {
         else if mode == .full {
             NRLOG_AGENT_DEBUG("🎬 [transistionToRecordingMode] Transitioning to FULL mode")
             removeErrorModeMarker()
+            #if os(iOS)
+            NRMAWebViewReplayBridge.shared.recordingBecameFull()
+            #endif
         }
         
         NRLOG_AGENT_DEBUG("🎬 [transistionToRecordingMode] ====================================================")
@@ -640,6 +744,9 @@ public class NRMASessionReplay: NSObject {
 
         // Force next frame to be a full snapshot for clean transition
         sessionReplayFrameProcessor.takeFullSnapshotNext = true
+        #if os(iOS)
+        NRMAWebViewReplayBridge.shared.recordingBecameFull()
+        #endif
         NRLOG_AGENT_DEBUG("🚨 [transitionToFullModeOnError] Next frame will be a full snapshot")
         NRLOG_AGENT_DEBUG("🚨 [transitionToFullModeOnError] =========================================================")
     }

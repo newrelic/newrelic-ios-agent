@@ -57,6 +57,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let uiTesting  = ProcessInfo.processInfo.environment["UITesting"] != nil
         var captureMode = false
         //captureMode = true
+        // Also switchable per launch, e.g. `-NRCaptureMode` in the scheme's launch arguments.
+        if ProcessInfo.processInfo.arguments.contains("-NRCaptureMode") {
+            captureMode = true
+        }
 
         if uiTesting {
             // UITests run their own Swifter stub server on port 8080 in the test process.

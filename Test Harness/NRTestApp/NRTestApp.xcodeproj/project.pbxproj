@@ -92,6 +92,7 @@
 		AA0001332F9000000000AA01 /* ConnectConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001232F9000000000AA01 /* ConnectConfig.swift */; };
 		AA0001602F9000000000AA01 /* VerificationResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001502F9000000000AA01 /* VerificationResult.swift */; };
 		AA0001612F9000000000AA01 /* PayloadVerifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001512F9000000000AA01 /* PayloadVerifiers.swift */; };
+		C4C9C06146B7B0C07FF322DE /* WebViewSwiftUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B12E97D1B003CD044FCD15B /* WebViewSwiftUI.swift */; };
 		CD0001011CD000000000CD00 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001001CD000000000CD00 /* MapViewController.swift */; };
 		CD0001021CD000000000CD00 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001001CD000000000CD00 /* MapViewController.swift */; };
 		CD0001041CD000000000CD00 /* MapViewSwiftUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */; };
@@ -374,6 +375,7 @@
 
 /* Begin PBXFileReference section */
 		2552B1412FAC432B00B0AF8C /* NASAAPI-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "NASAAPI-Info.plist"; sourceTree = "<group>"; };
+		2B12E97D1B003CD044FCD15B /* WebViewSwiftUI.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WebViewSwiftUI.swift; sourceTree = "<group>"; };
 		2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationStackView.swift; sourceTree = "<group>"; };
 		2B16DF912F5A0FAB00BAE24D /* BlockViewExamples.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockViewExamples.swift; sourceTree = "<group>"; };
 		2B2317DE2ADF442100D521E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -612,6 +614,7 @@
 				2BAE5C8A2E860C7D001D2B88 /* TextFieldsView.swift */,
 				2BAE5C8B2E860C7D001D2B88 /* TogglesView.swift */,
 				CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */,
+				2B12E97D1B003CD044FCD15B /* WebViewSwiftUI.swift */,
 			);
 			path = SwiftUI;
 			sourceTree = "<group>";
@@ -1472,6 +1475,7 @@
 				AA0001332F9000000000AA01 /* ConnectConfig.swift in Sources */,
 				AA0001602F9000000000AA01 /* VerificationResult.swift in Sources */,
 				AA0001612F9000000000AA01 /* PayloadVerifiers.swift in Sources */,
+				C4C9C06146B7B0C07FF322DE /* WebViewSwiftUI.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

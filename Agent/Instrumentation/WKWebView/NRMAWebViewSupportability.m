@@ -14,6 +14,17 @@
 static const NSInteger kNRMABrowserAgentMaxAttempts = 8;
 static const NSTimeInterval kNRMABrowserAgentPollInterval = 0.250;
 
+// Reports only a page-owned agent. Session replay injects its own observation-mode agent, which would
+// otherwise read as a detection. Two discriminators, because the sentinel alone is not enough: a page
+// whose own snippet is async may run after ours was injected and overwrite NREUM.info with its real
+// license key, and a license key that is not our sentinel is positive proof of a page-owned agent.
+static NSString *const kNRMABrowserAgentDetectionScript =
+    @"(function(){"
+    @"if(typeof window.newrelic==='undefined'){return false;}"
+    @"if(!window.__nrWvInjected){return true;}"
+    @"return !!(window.NREUM&&window.NREUM.info&&window.NREUM.info.licenseKey!=='NRWV_OBSERVATION_MODE');"
+    @"})()";
+
 @implementation NRMAWebViewSupportability
 
 + (void)recordPageFinished {
@@ -31,7 +42,7 @@ static const NSTimeInterval kNRMABrowserAgentPollInterval = 0.250;
     }
 
     __weak WKWebView *weakWebView = webView;
-    [webView evaluateJavaScript:@"typeof window.newrelic !== 'undefined'"
+    [webView evaluateJavaScript:kNRMABrowserAgentDetectionScript
               completionHandler:^(id result, NSError *error) {
         if (error != nil || weakWebView == nil) {
             return;
