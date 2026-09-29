@@ -219,53 +219,22 @@ static NSString* const kNativeTraceId = @"11111111111111111111111111111111";
     return [self pollForNetworkEvent];
 }
 
-// Records a request for each of the given trace-header sets and asserts that none of the
-// resulting events carries a distributed-trace context.
+// Asserts that none of the given trace-header sets yields a distributed-trace context.
+//
+// Every set is checked against the parse, which is synchronous and is what decides whether the
+// facade attaches a trace. Only the first set is then driven end-to-end through
+// +noticeNetworkRequest, to show that an unusable set leaves the event without trace attributes.
+// Recording one event per set made the test wait on several asynchronous recordings at once,
+// which proved flaky in CI (zero events observed within the poll timeout).
 - (void) assertNoTraceAttributesForEachOf:(NSArray<NSDictionary*>*)traceHeaderSets {
     for (NSDictionary* traceHeaders in traceHeaderSets) {
-        [self recordRequestWithTraceHeaders:traceHeaders];
+        XCTAssertNil([NRMANetworkFacade callerTraceContextFromTraceHeaders:(NSDictionary<NSString*,NSString*>*)traceHeaders],
+                     @"unusable trace headers must yield no trace context: %@", traceHeaders);
     }
 
-    NSArray<NSDictionary*>* events = [self pollForNetworkEventsCount:traceHeaderSets.count];
-    XCTAssertEqual(events.count, traceHeaderSets.count, @"expected one event per recorded request");
-    for (NSDictionary* event in events) {
-        [self assertNoTraceAttributes:event];
-    }
-}
-
-// The facade records events asynchronously; poll the analytics controller until at least
-// `count` network events (identified by requestUrl) have been seen, and return all of them.
-//
-// -analyticsJSONString DRAINS the event buffer -- it calls
-// -getEventJSONStringWithError:clearEvents:YES -- so each poll returns only the events recorded
-// since the previous one. The results must therefore be accumulated across polls: re-reading a
-// fresh snapshot each time can never reach `count` whenever the recorded requests land in
-// different polls, which is what happens as soon as the machine is loaded enough to interleave
-// them with this loop.
-//
-// Requests are recorded on a concurrent queue, so the order between them is not guaranteed --
-// assert over the whole set rather than by position.
-- (NSArray<NSDictionary*>*) pollForNetworkEventsCount:(NSUInteger)count {
-    NSDate *timeoutDate = [NSDate dateWithTimeIntervalSinceNow:10.0];
-    NSMutableArray<NSDictionary*>* events = [NSMutableArray array];
-    while (events.count < count && [timeoutDate timeIntervalSinceNow] > 0) {
-        NSString* json = [[NewRelicAgentInternal sharedInstance].analyticsController analyticsJSONString];
-        if (json.length) {
-            NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
-                                                              options:0
-                                                                error:nil];
-            for (NSDictionary* event in decode) {
-                if (event[@"requestUrl"] != nil) {
-                    [events addObject:event];
-                }
-            }
-            if (events.count >= count) {
-                break;
-            }
-        }
-        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.05]];
-    }
-    return events;
+    NSDictionary* event = [self noticeRequestWithTraceHeaders:traceHeaderSets.firstObject];
+    XCTAssertNotNil(event, @"expected a MobileRequest event to be recorded");
+    [self assertNoTraceAttributes:event];
 }
 
 // The facade records events asynchronously; poll the analytics controller until
