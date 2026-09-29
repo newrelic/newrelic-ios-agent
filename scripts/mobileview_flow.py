@@ -28,6 +28,11 @@ Examples:
     ./scripts/mobileview_flow.py events.json --session 1A2B-3C4D --min-count 2
     ./scripts/mobileview_flow.py events.json --lie-ms 150 --svg flow.svg
     pbpaste | ./scripts/mobileview_flow.py - --include-components --no-timings
+    ./scripts/mobileview_flow.py events.json --include-breadcrumbs
+
+The agent renders the same flow and timeline itself (NRMASessionFlowRenderer, behind
++[NewRelic currentSessionFlowDiagram] and +[NewRelic currentSessionTimeline]). The two are kept
+byte-identical: a change to either output here needs the same change there.
 """
 
 from __future__ import annotations
@@ -41,6 +46,7 @@ from collections import Counter, defaultdict
 
 MOBILE_VIEW = "MobileView"
 MOBILE_VIEW_TIMING = "MobileViewTiming"
+MOBILE_BREADCRUMB = "MobileBreadcrumb"
 START = "__start__"
 
 # The agent's own baseline timing, projected from loadTime. Named here because the lie window is
@@ -175,6 +181,26 @@ def timing_events(rows, session=None):
     return out
 
 
+def breadcrumb_events(rows, session=None):
+    """Keep only MobileBreadcrumb events with a name.
+
+    Only meaningful for raw event-list input -- aggregated NerdGraph-facet or pre-aggregated
+    rows are edge counts between MobileView transitions and have no room for a third event type.
+    """
+    out = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        if row.get("eventType") != MOBILE_BREADCRUMB:
+            continue
+        if not row.get("name"):
+            continue
+        if session and str(row.get("sessionId", "")) != session:
+            continue
+        out.append(row)
+    return out
+
+
 def median(values):
     """Median rather than mean: one pathological cold start should not redefine a screen."""
     if not values:
@@ -211,6 +237,7 @@ class Graph:
         # (from, to) -> timingName -> [values]. The same screen reached two ways is two entries,
         # which is the point: it shows a route being slow rather than a screen being slow.
         self.edge_timings = defaultdict(lambda: defaultdict(list))
+        self.breadcrumbs = Counter()    # (view, name) -> occurrences
 
     def add_edge(self, src, dst, count=1, back=False):
         self.edges[(src, dst)] += count
@@ -227,6 +254,9 @@ class Graph:
     def avg_load(self, view):
         n = self.load_counts[view]
         return self.load_totals[view] / n if n else None
+
+    def add_breadcrumb(self, view, name):
+        self.breadcrumbs[(view, name)] += 1
 
     def add_timing(self, view, name, value, previous=None):
         self.timings[view][name].append(value)
@@ -389,11 +419,79 @@ def add_timings(g, timing_rows, collapse=None):
     return skipped
 
 
+def add_breadcrumbs(g, rows, collapse=None):
+    """Attach each breadcrumb to the screen that was current when it was recorded.
+
+    Returns the number of breadcrumbs skipped for having no currentView (recorded before any
+    view appeared, or with view tracking disabled).
+    """
+    collapse = collapse or {}
+    skipped = 0
+    for row in rows:
+        view = row.get("currentView")
+        if not view:
+            skipped += 1
+            continue
+        g.add_breadcrumb(collapse.get(view, view), row["name"])
+    return skipped
+
+
 # --------------------------------------------------------------------------- rendering
 
 def sanitize(label):
     """Node labels are emitted inside double quotes, so only quotes and pipes need handling."""
     return str(label).replace('"', "'").replace("|", "/").replace("\n", " ")
+
+
+# Widest screen name drawn in full. Dagre sizes a whole rank by its widest node, so one unstripped
+# private type name ("(EmptyViewController in _20674A9E...)") widens every node beside it.
+MAX_LABEL_CHARS = 44
+
+
+def shorten(name, limit=MAX_LABEL_CHARS):
+    """Truncate a screen name for drawing. The stderr table still prints it in full."""
+    name = str(name)
+    return name if len(name) <= limit else name[:limit - 1] + "…"
+
+
+# Lines per folded-leaf box. Boxes stack vertically, so this is how tall one box gets.
+LEAF_BOX_LINES = 13
+
+
+def fold_leaves(g, min_leaves, keep=()):
+    """Find hubs whose plain one-hop screens can be drawn as one grid instead of one node each.
+
+    A home screen that opens thirty demo screens -- each entered from it and left back to it --
+    otherwise renders as thirty nodes stacked in one rank, a column taller than the rest of the
+    diagram combined. Those nodes say nothing their edges do not: they are leaves.
+
+    A leaf of hub H: every edge touching it runs to or from H, it is not part of a component
+    group, and it carries at most one timing and no lie window (a screen with a detailed timing
+    block keeps its own node, because that block is the thing worth reading). Screens in `keep`
+    -- the ones with breadcrumbs drawn off them -- keep their node too, since a breadcrumb needs a
+    node to hang from.
+
+    Returns {hub: [leaf, ...]}, only for hubs with at least min_leaves leaves.
+    """
+    if not min_leaves or min_leaves < 2:
+        return {}
+    neighbours = defaultdict(set)
+    for src, dst in g.edges:
+        neighbours[src].add(dst)
+        neighbours[dst].add(src)
+    owners = set(g.component_of.values())
+    groups = defaultdict(list)
+    for node in sorted(g.nodes):
+        touching = neighbours[node]
+        if len(touching) != 1:
+            continue
+        hub = next(iter(touching))
+        if hub == START or node in owners or node in g.component_of or node in keep:
+            continue
+        if len(g.timing_medians(node)) > 1 or g.lie_window(node) is not None:
+            continue
+        groups[hub].append(node)
+    return {hub: leaves for hub, leaves in groups.items() if len(leaves) >= min_leaves}
 
 
 def frontmatter_title(title):
@@ -416,22 +514,31 @@ def sanitize_edge_label(label):
     return " ".join(text.split())
 
 
-def render(g, slow_ms, lie_ms=None, edge_timings=True, title=None):
+def render(g, slow_ms, lie_ms=None, edge_timings=True, title=None, fold_min=0, breadcrumbs=False):
     ids = {}
     for i, node in enumerate(sorted(g.nodes)):
         ids[node] = f"v{i}"
 
-    lines = ["flowchart LR"]
+    crumb_views = {view for view, _ in g.breadcrumbs} if breadcrumbs else set()
+    leaf_groups = fold_leaves(g, fold_min, keep=crumb_views)
+    folded = {leaf for leaves in leaf_groups.values() for leaf in leaves}
+
+    front = []
     if title:
-        lines.insert(0, "---")
-        lines.insert(1, f"title: {frontmatter_title(title)}")
-        lines.insert(2, "---")
+        front.append(f"title: {frontmatter_title(title)}")
+    if leaf_groups:
+        # A leaf box line ("NavigationLinkLabelLayoutTestCase · TTID 779 ms") is past the default
+        # 200px wrap, and wrapped lines double a box's height. Nothing else here gets that long.
+        front += ["config:", "  flowchart:", "    wrappingWidth: 400"]
+    lines = (["---"] + front + ["---"] if front else []) + ["flowchart LR"]
 
     lines.append("    classDef slow fill:#fde2e2,stroke:#c0392b,stroke-width:2px;")
     lines.append("    classDef entry fill:#eef6ff,stroke:#2c6fbb,stroke-width:1px;")
     # Amber, distinct from slow-red: a screen can paint fast and still lie for a long time, and
     # those are different bugs with different fixes.
     lines.append("    classDef lying fill:#fff4e0,stroke:#c87f0a,stroke-width:2px;")
+    if breadcrumbs and g.breadcrumbs:
+        lines.append("    classDef breadcrumb fill:#fff8e1,stroke:#c9a227,stroke-dasharray: 3 3;")
 
     has_start = any(src == START for src, _ in g.edges)
     if has_start:
@@ -444,7 +551,7 @@ def render(g, slow_ms, lie_ms=None, edge_timings=True, title=None):
         grouped[g.component_of.get(node)].append(node)
 
     def emit_node(node, indent="    "):
-        label = sanitize(node)
+        label = sanitize(shorten(node))
         medians = g.timing_medians(node)
 
         if medians:
@@ -453,7 +560,8 @@ def render(g, slow_ms, lie_ms=None, edge_timings=True, title=None):
                 label += f"<br/>{sanitize(abbrev(name))} {value:.0f} ms"
             lie = g.lie_window(node)
             if lie is not None:
-                label += f"<br/>lie +{lie:.0f} ms"
+                # Signed: TTFD can land before TTID, and "+-26" reads as a typo.
+                label += f"<br/>lie {lie:+.0f} ms"
         else:
             # No timing events in this dump: fall back to the loadTime line, as before.
             avg = g.avg_load(node)
@@ -472,18 +580,70 @@ def render(g, slow_ms, lie_ms=None, edge_timings=True, title=None):
                 lying_nodes.append(ids[node])
 
     for node in grouped.get(None, []):
-        emit_node(node)
+        if node not in folded:
+            emit_node(node)
+
+    # Each hub's leaves render as a stack of boxes, one line per screen, in place of one node each.
+    # Slow screens share their own red boxes, so the colour still says which ones they are.
+    group_ids = {}
+    for gi, (hub, leaves) in enumerate(sorted(leaf_groups.items())):
+        group_id = f"leaves{gi}"
+        group_ids[hub] = group_id
+        lines.append(f'    subgraph {group_id}["{len(leaves)} screens opened from '
+                     f'{sanitize(shorten(hub))}"]')
+        # Unlinked boxes stack along the cross axis: down the page, for an LR graph. That is where a
+        # rank has room -- stacked sideways, they would widen the whole rank they sit in.
+        lines.append("        direction LR")
+        slow = [leaf for leaf in leaves
+                if (g.headline_ms(leaf) is not None and g.headline_ms(leaf) >= slow_ms)]
+        plain = [leaf for leaf in leaves if leaf not in slow]
+        box = 0
+        for members, is_slow in ((slow, True), (plain, False)):
+            for start_at in range(0, len(members), LEAF_BOX_LINES):
+                entries = []
+                for leaf in members[start_at:start_at + LEAF_BOX_LINES]:
+                    entry = sanitize(shorten(leaf))
+                    medians = g.timing_medians(leaf)
+                    if medians:
+                        name, value = medians[0]
+                        entry += f" · {sanitize(abbrev(name))} {value:.0f} ms"
+                    elif g.avg_load(leaf) is not None:
+                        entry += f" · {g.avg_load(leaf):.0f} ms"
+                    visits = g.edges.get((hub, leaf), 0)
+                    if visits > 1:
+                        entry += f" · {visits}x"
+                    entries.append(entry)
+                box_id = f"{group_id}_{box}"
+                box += 1
+                lines.append(f'        {box_id}["{"<br/>".join(entries)}"]')
+                if is_slow:
+                    slow_nodes.append(box_id)
+        lines.append("    end")
 
     # Component segments render nested inside the screen they belong to.
     for owner, members in sorted((o, m) for o, m in grouped.items() if o):
-        owner_label = sanitize(owner)
+        owner_label = sanitize(shorten(owner))
         lines.append(f'    subgraph sg_{abs(hash(owner)) % 100000}["{owner_label}"]')
         lines.append("        direction TB")
         for node in members:
             emit_node(node, indent="        ")
         lines.append("    end")
 
+    # One arrow into each leaf grid and one back out, standing in for an arrow pair per leaf.
+    for hub, leaves in sorted(leaf_groups.items()):
+        out = sum(g.edges.get((hub, leaf), 0) for leaf in leaves)
+        into = sum(g.edges.get((leaf, hub), 0) for leaf in leaves)
+        back = sum(g.back.get((leaf, hub), 0) for leaf in leaves)
+        label = f"{out}x" if out > len(leaves) else ""
+        lines.append(f"    {ids[hub]} -->{f'|{label}|' if label else ''} {group_ids[hub]}")
+        if into:
+            label = f"{into}x" if into > 1 else ""
+            arrow = "-.->" if back >= into else "-->"
+            lines.append(f"    {group_ids[hub]} {arrow}{f'|{label}|' if label else ''} {ids[hub]}")
+
     for (src, dst), count in sorted(g.edges.items(), key=lambda kv: (-kv[1], kv[0])):
+        if src in folded or dst in folded:
+            continue
         src_id = "start" if src == START else ids.get(src)
         dst_id = ids.get(dst)
         if not src_id or not dst_id:
@@ -521,6 +681,20 @@ def render(g, slow_ms, lie_ms=None, edge_timings=True, title=None):
     for node_id in lying_nodes:
         lines.append(f"    class {node_id} lying;")
 
+    if breadcrumbs:
+        crumb_ids = []
+        for i, ((view, name), count) in enumerate(sorted(g.breadcrumbs.items())):
+            view_id = ids.get(view)
+            if not view_id:
+                continue  # view was pruned away or never became a node
+            label = sanitize(shorten(name)) + (f" ×{count}" if count > 1 else "")
+            crumb_id = f"b{i}"
+            lines.append(f'    {crumb_id}(["{label}"])')
+            lines.append(f"    {view_id} -.-> {crumb_id}")
+            crumb_ids.append(crumb_id)
+        for crumb_id in crumb_ids:
+            lines.append(f"    class {crumb_id} breadcrumb;")
+
     return "\n".join(lines)
 
 
@@ -545,7 +719,7 @@ def timing_table(g):
             value = median(per.get(name, []))
             cells.append(f"{value:.0f}" if value is not None else "-")
         lie = g.lie_window(view)
-        cells.append(f"+{lie:.0f}" if lie is not None else "-")
+        cells.append(f"{lie:+.0f}" if lie is not None else "-")
         cells.append(str(sum(len(v) for v in per.values())))
         rows.append(cells)
 
@@ -674,7 +848,7 @@ def sanitize_task(label):
 
 
 def render_timeline(visits, origin, exact_origin, title=None, axis_format="%M:%S"):
-    """Mermaid gantt: one section per visit, on a single shared millisecond x axis.
+    """Mermaid gantt: one section per screen, one bar per visit, on a single shared millisecond axis.
 
     Milestones sit at the moment each timing was *recorded*, not at an offset derived from its
     value, so the chart stays an honest chronology. For markViewTiming the two coincide by
@@ -689,9 +863,17 @@ def render_timeline(visits, origin, exact_origin, title=None, axis_format="%M:%S
     def rel(value):
         return int(value - origin)
 
-    lines = []
+    lines = ["---"]
     if title:
-        lines += ["---", f"title: {frontmatter_title(title)}", "---"]
+        lines.append(f"title: {frontmatter_title(title)}")
+    # Compact packs a section's non-overlapping tasks onto one row. With one section per screen
+    # (below) a screen's visits share a row, so the chart is as tall as the number of screens rather
+    # than the number of tasks -- a 150-visit walk otherwise renders thousands of pixels tall.
+    lines += ["config:", "  gantt:", "    displayMode: compact",
+              # A load bar ends exactly where its visible bar starts, on the same row, and both are
+              # usually too narrow for their text, so the two labels print on top of each other.
+              # The load bar's number moves onto the visible bar's label and its own text is hidden.
+              f"  themeCSS: 'text[id*=\"-{LOAD_TASK_ID}\"] {{ display: none; }}'", "---"]
     lines.append("gantt")
     lines.append("    dateFormat x")
     lines.append(f"    axisFormat {axis_format}")
@@ -705,34 +887,69 @@ def render_timeline(visits, origin, exact_origin, title=None, axis_format="%M:%S
     # Mermaid versions, so a milestone always gets an explicit equal start and end.
     lines.append("    t0 :milestone, 0, 0")
 
-    seen = Counter()
+    # One section per screen, in order of first appearance, holding every visit to it. Visits to one
+    # screen rarely overlap, so compact mode lays them end to end on a single row; ones that do (the
+    # same controller embedded several times) stack onto extra rows.
+    by_screen = defaultdict(list)
     for visit in visits:
-        seen[visit["name"]] += 1
-        nth = seen[visit["name"]]
-        label = visit["name"] if nth == 1 else f"{visit['name']} #{nth}"
-        lines.append(f"    section {sanitize_task(label)}")
+        by_screen[visit["name"]].append(visit)
 
-        appear = rel(visit["appear"])
-        # The construction window the agent measured as loadTime, drawn before the appearance.
-        if visit["load_ms"]:
-            start = appear - int(visit["load_ms"])
-            lines.append(f"    load {int(visit['load_ms'])}ms :done, {start}, {appear}")
-
-        end = rel(visit["end"] or session_end)
-        if end <= appear:
-            # Still on screen when recording stopped; give it a sliver so the bar is visible.
-            end = appear + 1
-        # "crit, done": red outline over a grey fill. A re-appearance genuinely differs from a normal
-        # visible span -- nothing was constructed -- so it should stand out, but `crit` alone paints it
-        # solid red, which reads as a problem. Back-navigation is not a problem.
-        state = "crit, done" if visit["reappeared"] else "active"
-        lines.append(f"    visible :{state}, {appear}, {end}")
-
-        for ts, name, value in sorted(visit["marks"]):
-            mark = f"{abbrev(name)} {value:.0f}ms"
-            lines.append(f"    {sanitize_task(mark)} :milestone, {rel(ts)}, {rel(ts)}")
+    task = 0
+    for name, screen_visits in by_screen.items():
+        lines.append(f"    section {sanitize_task(shorten(name))}")
+        for nth, visit in enumerate(screen_visits, 1):
+            task += 1
+            lines += timeline_visit_tasks(visit, nth if len(screen_visits) > 1 else None,
+                                          rel, session_end, f"{LOAD_TASK_ID}{task}")
 
     return "\n".join(lines)
+
+
+# How far a timeToInitialDisplay mark may sit from the end of the load bar and still be the same
+# instant. The agent derives TTID from loadTime and records it as the view appears.
+TTID_AT_APPEAR_MS = 5
+
+# Task-id prefix for load bars, which the gantt's themeCSS keys on to hide their labels.
+LOAD_TASK_ID = "nrload"
+
+
+def timeline_visit_tasks(visit, nth, rel, session_end, load_id):
+    """Gantt tasks for one visit: its load window, its visible span, and its timing marks.
+
+    nth numbers the visit when its screen has several, so each bar on the shared row says which
+    visit it is.
+    """
+    lines = []
+    appear = rel(visit["appear"])
+    # The construction window the agent measured as loadTime, drawn before the appearance.
+    if visit["load_ms"]:
+        start = appear - int(visit["load_ms"])
+        lines.append(f"    load {int(visit['load_ms'])}ms :done, {load_id}, {start}, {appear}")
+
+    end = rel(visit["end"] or session_end)
+    if end <= appear:
+        # Still on screen when recording stopped; give it a sliver so the bar is visible.
+        end = appear + 1
+    # "crit, done": red outline over a grey fill. A re-appearance genuinely differs from a normal
+    # visible span -- nothing was constructed -- so it should stand out, but `crit` alone paints it
+    # solid red, which reads as a problem. Back-navigation is not a problem.
+    state = "crit, done" if visit["reappeared"] else "active"
+    parts = [f"visit {nth}"] if nth else []
+    if visit["load_ms"]:
+        parts.append(f"load {int(visit['load_ms'])}ms")
+    label = " · ".join(parts) or "visible"
+    lines.append(f"    {label} :{state}, {appear}, {end}")
+
+    for ts, name, value in sorted(visit["marks"]):
+        # The load bar already ends at this instant with this number on it. A diamond there also
+        # lands inside the visible bar, which costs every screen a second row in compact mode.
+        if (name == TIMING_INITIAL_DISPLAY and visit["load_ms"]
+                and abs(rel(ts) - appear) <= TTID_AT_APPEAR_MS):
+            continue
+        mark = f"{abbrev(name)} {value:.0f}ms"
+        lines.append(f"    {sanitize_task(mark)} :milestone, {rel(ts)}, {rel(ts)}")
+
+    return lines
 
 
 def mermaid_renderer():
@@ -762,7 +979,8 @@ def write_svg(mermaid, out_path):
         print("note: no mmdc on PATH; rendering via npx (first run downloads Chromium)",
               file=sys.stderr)
     try:
-        subprocess.run(cmd + ["-i", src, "-o", out_path], check=True)
+        # mmdc's progress chatter goes to stderr: stdout is the Mermaid source, and is piped.
+        subprocess.run(cmd + ["-i", src, "-o", out_path], check=True, stdout=sys.stderr)
     except subprocess.CalledProcessError as exc:
         print(f"error: mermaid render failed ({exc}); the Mermaid source is at {src}",
               file=sys.stderr)
@@ -823,6 +1041,10 @@ def main():
     ap.add_argument("--include-components", action="store_true",
                     help="show component segments nested under their screen "
                          "(default: dropped, since they are not navigation steps)")
+    ap.add_argument("--include-breadcrumbs", action="store_true",
+                    help="annotate each screen with the breadcrumbs recorded while it was "
+                         "current (default: dropped, to keep the flow uncluttered); "
+                         "raw event-list input only, ignored for aggregated input")
     ap.add_argument("--slow-ms", type=float, default=500.0, metavar="MS",
                     help="highlight screens in red whose median full-display time is at least MS, "
                          "falling back to average loadTime when no timings are present "
@@ -834,6 +1056,10 @@ def main():
                     help="ignore MobileViewTiming events and label screens with loadTime only")
     ap.add_argument("--no-edge-timings", action="store_true",
                     help="do not label arrows with the cost of landing on that route")
+    ap.add_argument("--fold-leaves", type=int, default=6, metavar="N",
+                    help="draw a screen's one-hop leaves (entered from it, left back to it, a single "
+                         "timing) as one grid of boxes once it has at least N of them, instead of "
+                         "a node each; 0 draws every leaf as its own node (default: 6)")
     ap.add_argument("--timeline", action="store_true",
                     help="render a chronological Mermaid gantt for one session instead of the flow "
                          "graph: session start, each view's load and visible span, and every timing "
@@ -859,12 +1085,15 @@ def main():
 
     collapse = {}
     timing_rows = []
+    breadcrumb_rows = []
     if not aggregated:
         total = len(rows)
         if not args.include_components:
             collapse = component_owners(rows)
         if not args.no_timings:
             timing_rows = timing_events(rows, session=args.session)
+        if args.include_breadcrumbs:
+            breadcrumb_rows = breadcrumb_events(rows, session=args.session)
         rows = appear_events(rows, session=args.session,
                              include_components=args.include_components)
         note = f" ({len(collapse)} component segments folded into their screen)" if collapse else ""
@@ -873,11 +1102,19 @@ def main():
         if not rows:
             sys.exit("error: no MobileView appear events matched "
                      "(wrong dump, or --session filtered everything out)")
-    elif args.session:
-        print("note: --session ignored; input is already aggregated", file=sys.stderr)
+    else:
+        if args.session:
+            print("note: --session ignored; input is already aggregated", file=sys.stderr)
+        if args.include_breadcrumbs:
+            print("note: --include-breadcrumbs ignored; input is already aggregated",
+                  file=sys.stderr)
 
     g = build_graph(rows, aggregated, ordered_walk=bool(args.session),
                     collapse=collapse)
+    if breadcrumb_rows:
+        skipped = add_breadcrumbs(g, breadcrumb_rows, collapse=collapse)
+        if skipped:
+            print(f"note: {skipped} breadcrumbs skipped (no currentView)", file=sys.stderr)
     g.prune(args.min_count)
     if not g.edges:
         sys.exit(f"error: no edges left (try lowering --min-count, currently {args.min_count})")
@@ -893,9 +1130,11 @@ def main():
     mermaid = render(g, slow_ms=args.slow_ms,
                      lie_ms=None if args.no_timings else args.lie_ms,
                      edge_timings=not args.no_edge_timings,
-                     title=args.title)
+                     title=args.title, fold_min=args.fold_leaves,
+                     breadcrumbs=args.include_breadcrumbs)
     print(mermaid)
-    print(f"{len(g.nodes)} screens, {len(g.edges)} transitions", file=sys.stderr)
+    crumb_note = f", {sum(g.breadcrumbs.values())} breadcrumbs" if args.include_breadcrumbs else ""
+    print(f"{len(g.nodes)} screens, {len(g.edges)} transitions{crumb_note}", file=sys.stderr)
 
     table = timing_table(g)
     if table:

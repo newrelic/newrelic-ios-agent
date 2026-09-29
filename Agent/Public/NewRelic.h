@@ -21,6 +21,7 @@
 #import <NewRelic/NRLogger.h>
 #import <NewRelic/NewRelicCustomInteractionInterface.h>
 #import <NewRelic/NRGCDOverride.h>
+#import <NewRelic/NRSessionFlowDiagramOptions.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -794,6 +795,81 @@ extern "C" {
  * @return YES if the timing was recorded, NO if it was rejected.
  */
 + (BOOL) recordViewTiming:(NSString* _Nonnull)name milliseconds:(double)milliseconds;
+
+/*******************************/
+/** Session flow diagrams     **/
+/*******************************/
+
+#pragma mark - Session flow diagrams
+
+/*!
+ * Mermaid flowchart of the screens visited this session and the transitions between them.
+ *
+ * Every MobileView event carries both ends of a transition -- `viewName` (where the user landed) and
+ * `previousView` (where they came from) -- so the diagram is an aggregation over those pairs, with
+ * no ordering heuristics. Screens are labelled with their MobileViewTiming medians and lie window
+ * (or average loadTime), slow and lying screens are highlighted, each arrow carries the cost of
+ * landing along that route, and a route the user backed out along is drawn dashed.
+ *
+ * The output is Mermaid source, not an image: paste it into GitHub, Confluence, or a PR description,
+ * or render it in a WKWebView with mermaid.js (see the Session Diagram screen in NRTestApp). It is
+ * byte-identical to what `scripts/mobileview_flow.py` draws from the same session's events.
+ *
+ * Accumulation is active whenever NRFeatureFlag_AutomaticMobileViews or
+ * NRFeatureFlag_ManualMobileViews is enabled -- the same flags that produce the events -- and costs
+ * nothing when both are off.
+ *
+ * @return Mermaid source, or nil when no transition has been recorded yet (view tracking is
+ *         disabled, or only one screen has appeared so far).
+ */
++ (NSString* _Nullable) currentSessionFlowDiagram;
+
+/*!
+ * As +currentSessionFlowDiagram, with control over what is drawn.
+ *
+ * @param options Rendering options; pass nil for the defaults. See NRSessionFlowDiagramOptions.
+ */
++ (NSString* _Nullable) currentSessionFlowDiagramWithOptions:(NRSessionFlowDiagramOptions* _Nullable)options;
+
+/*!
+ * Mermaid gantt of this session: one row per screen, one bar per visit, the load window drawn before
+ * each bar and timing marks as diamonds, on one time axis from the start of the session. The same
+ * chart as `scripts/mobileview_flow.py --timeline`.
+ *
+ * @param options Rendering options; pass nil for the defaults (the first 25 visits). See
+ *        NRSessionFlowDiagramOptions.
+ * @return Mermaid source, or nil when no visit has been recorded yet.
+ */
++ (NSString* _Nullable) currentSessionTimelineWithOptions:(NRSessionFlowDiagramOptions* _Nullable)options;
+
+/*!
+ * Session ids that have a finished diagram and timeline, oldest first.
+ *
+ * A session's diagram is archived when the session ends -- the same moment the MobileSession event is
+ * created -- so a diagram remains readable after the session it describes has rolled. The most
+ * recent few are kept; older ones are discarded.
+ */
++ (NSArray<NSString*>* _Nonnull) archivedFlowDiagramSessionIds;
+
+/*!
+ * Mermaid flowchart for a session that has already ended.
+ *
+ * @param sessionId A session id from +archivedFlowDiagramSessionIds.
+ * @param options Rendering options; pass nil for the defaults.
+ * @return Mermaid source, or nil when that session has no archived diagram.
+ */
++ (NSString* _Nullable) flowDiagramForSessionId:(NSString* _Nonnull)sessionId
+                                        options:(NRSessionFlowDiagramOptions* _Nullable)options;
+
+/*!
+ * Mermaid gantt for a session that has already ended.
+ *
+ * @param sessionId A session id from +archivedFlowDiagramSessionIds.
+ * @param options Rendering options; pass nil for the defaults.
+ * @return Mermaid source, or nil when that session has no archived timeline.
+ */
++ (NSString* _Nullable) timelineForSessionId:(NSString* _Nonnull)sessionId
+                                     options:(NRSessionFlowDiagramOptions* _Nullable)options;
 
 /*!
  * Records a JavaScript error as a MobileJSError custom event.

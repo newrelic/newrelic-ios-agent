@@ -107,7 +107,7 @@ cd <repo>
 # Session flow diagram: screens, transitions, per-screen timings
 ./scripts/mobileview_flow.py /tmp/mv/events.json --title "My scenario" --svg /tmp/mv/flow.svg
 
-# Timeline: one bar per visit, load window before it, timing marks as diamonds
+# Timeline: one row per screen, one bar per visit, load window before it, timing marks as diamonds
 ./scripts/mobileview_flow.py /tmp/mv/events.json --timeline --max-visits 100 \
     --title "My scenario timeline" --svg /tmp/mv/timeline.svg
 
@@ -118,6 +118,16 @@ Each command also prints the Mermaid source on stdout; paste it into a PR or Con
 flow command's stderr table (`screen  TTID  TTFD  …  lie  n`) is a quick read of per-screen timings.
 `--include-components` shows child-controller components; `--timeline` defaults to 25 visits.
 
+Both diagrams stay a readable size on a long walk. In the flow, once a screen opens 6 or more
+*leaves* (screens entered from it and left back to it, carrying at most a TTID), those leaves are
+drawn as one stacked grid of boxes, one line per screen, instead of a node each. Slow leaves share
+red boxes. A leaf with a fuller timing block keeps its own node. `--fold-leaves N` changes the
+threshold, and `--fold-leaves 0` draws every screen as its own node. Names longer than 44 characters
+are cut with `…` on the drawing; the stderr table prints them in full. The timeline puts every visit
+to a screen on that screen's row. It hides the TTID diamond that would sit on the end of the load
+bar, because the bar's label already carries the load time. A 150-visit NRTestApp walk renders about
+3200×2700 (flow) and 784×2500 (timeline), against 2800×6800 and 784×8400 before.
+
 ## 6. Validate
 
 A diagram that renders is not a diagram that is right. Check the capture against the route you
@@ -127,7 +137,7 @@ wrote down:
    SwiftUI is not a new visit (one event per visit), while UIKit reports the uncovered screen again
    with `loadTimeUnavailable=noConstructionObserved`.
 2. **Names are screen names.** No `ModifiedContent<…>`, `UIHostingController<…>` or `AnyView`
-   strings. A very long node in `flow.svg` is the giveaway.
+   strings. A name cut short with `…` in `flow.svg` is the giveaway.
 3. **Referrer ids join.** Every `previousViewInstanceId` should match a reported visit:
 
    ```bash
@@ -152,8 +162,39 @@ Each MobileView event is emitted when a visit **ends**. Its `timestamp` is the b
 the visit, so they arrive before the visit's event. Parents contain their children: a component or a
 screen under a modal spans the child's bar.
 
+Each screen has one row (a section), ordered by first appearance, and revisits sit on it as
+`visit 1`, `visit 2`, …. Visits to one screen that overlap in time, such as the embedded
+`ComplexViewController`s on PerformanceContentView, stack onto extra rows.
+
+## Without a collector: the agent's own diagram
+
+The agent draws the same two charts itself, from the events it records, with no collector or dump:
+`+[NewRelic currentSessionFlowDiagram]` / `currentSessionFlowDiagramWithOptions:` and
+`+[NewRelic currentSessionTimelineWithOptions:]` return Mermaid for the session in progress, and
+`archivedFlowDiagramSessionIds` / `flowDiagramForSessionId:options:` / `timelineForSessionId:options:`
+read back the last few sessions after they end. `NRSessionFlowDiagramOptions` carries the script's
+flags (`includeComponents` is `--include-components`, `leafFoldingThreshold` is `--fold-leaves`,
+`maximumTimelineVisits` is `--max-visits`, and so on) with the same defaults.
+
+In NRTestApp, **MobileView · Session Diagram (SVG)** on the home list renders either chart in a web
+view. Its copy button puts the Mermaid on the pasteboard (`xcrun simctl pbpaste <udid>` reads it on
+the Mac).
+
+The two renderers are kept byte-identical: `scripts/mobileview_flow.py` and
+`Agent/MobileViews/NRMASessionFlowRenderer.m` produce the same Mermaid from the same events, apart
+from component subgraph ids (`sg_N`), which Python derives from a per-process random hash. A change to
+either output belongs in both. To check a change, compile `NRMASessionFlowGraph.m`,
+`NRMASessionTimeline.m`, `NRMASessionFlowRenderer.m` and `NRSessionFlowDiagramOptions.m` with clang on
+the Mac, using a stub `NRLogger.h`. Add a small `main` that feeds a dump's rows to the graph's and
+timeline's `record…` methods (dump order for the flow, timestamp order for the timeline). Then diff
+its output against the script's over a few captures and flag combinations. For a live check, capture
+a session as above, copy the agent's Mermaid from the Session Diagram screen, and diff it against the
+script run over the collector's `events.json`. Keep the walk in one session, and only one app talking
+to the collector.
+
 ## Files
 
 - `scripts/mobileview_capture_collector.py`: the fake collector.
 - `scripts/mobileview_flow.py`: the renderer; `--help` lists every flag.
+- `Agent/MobileViews/NRMASessionFlow*.{h,m}`, `NRMASessionTimeline.{h,m}`: the agent's port of it.
 - `Test Harness/HomeSearch`, `Test Harness/NRTestApp`: the scenario apps.

@@ -110,10 +110,15 @@ enum ViewControllerProvider {
     }
 
 #if os(iOS)
-    // Modal presentation styles (.formSheet / .popover) are iOS-only, so both of these MobileViews
-    // demos are guarded to match the screens themselves.
+    // Modal presentation styles (.formSheet / .popover) and WKWebView are iOS-only here, so these
+    // MobileViews demos are guarded to match the screens themselves.
     static var mobileViewModalsViewController: MobileViewModalsViewController {
         let viewController = MobileViewModalsViewController()
+        return viewController
+    }
+
+    static var sessionFlowDiagramViewController: SessionFlowDiagramViewController {
+        let viewController = SessionFlowDiagramViewController()
         return viewController
     }
 

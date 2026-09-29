@@ -16,6 +16,7 @@
 #import "NRMAFlags.h"
 #import "NRMAViewContext.h"
 #import "NRMAViewTiming.h"
+#import "NRMASessionFlowMonitor.h"
 #import "NewRelicInternalUtils.h"
 #import "NRMAExceptionHandler.h"
 #import "NRMATaskQueue.h"
@@ -747,6 +748,13 @@
     // from breadcrumbs. Active whenever automatic or manual view tracking is enabled.
     NSDictionary *breadcrumbAttributes = [NRMAViewContext mergeReferrerAttributesInto:attributes];
 
+    // Attach the breadcrumb to whichever screen was current when it was recorded. Reads
+    // breadcrumbAttributes, not attributes, because currentView is added by the merge above.
+    if ([NRMAFlags shouldEnableAutomaticMobileViews] || [NRMAFlags shouldEnableManualMobileViews]) {
+        [[NRMASessionFlowMonitor sharedInstance] recordBreadcrumbNamed:name
+                                                           attributes:breadcrumbAttributes];
+    }
+
     return [[NewRelicAgentInternal sharedInstance].analyticsController addBreadcrumb:name
                                                                       withAttributes:breadcrumbAttributes];
 }
@@ -806,6 +814,37 @@
     }
 
     return [[NRMAViewTiming sharedInstance] recordTimingNamed:name milliseconds:milliseconds];
+}
+
+#pragma mark - Session flow diagrams
+
+// Reading a diagram after shutdown is allowed on purpose: what was collected before the agent
+// stopped is still the truth about that session, and this is a debugging aid.
+
++ (NSString*) currentSessionFlowDiagram {
+    return [NewRelic currentSessionFlowDiagramWithOptions:nil];
+}
+
++ (NSString*) currentSessionFlowDiagramWithOptions:(NRSessionFlowDiagramOptions*)options {
+    return [[NRMASessionFlowMonitor sharedInstance] mermaidForCurrentSessionWithOptions:options];
+}
+
++ (NSString*) currentSessionTimelineWithOptions:(NRSessionFlowDiagramOptions*)options {
+    return [[NRMASessionFlowMonitor sharedInstance] timelineForCurrentSessionWithOptions:options];
+}
+
++ (NSArray<NSString*>*) archivedFlowDiagramSessionIds {
+    return [[NRMASessionFlowMonitor sharedInstance] archivedSessionIds];
+}
+
++ (NSString*) flowDiagramForSessionId:(NSString*)sessionId
+                              options:(NRSessionFlowDiagramOptions*)options {
+    return [[NRMASessionFlowMonitor sharedInstance] mermaidForSessionId:sessionId options:options];
+}
+
++ (NSString*) timelineForSessionId:(NSString*)sessionId
+                           options:(NRSessionFlowDiagramOptions*)options {
+    return [[NRMASessionFlowMonitor sharedInstance] timelineForSessionId:sessionId options:options];
 }
 
 + (BOOL) recordJavascriptError:(NSString* __nonnull)name

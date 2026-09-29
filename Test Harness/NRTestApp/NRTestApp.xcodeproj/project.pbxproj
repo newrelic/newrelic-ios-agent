@@ -8,7 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		02B45E18AC97EDC067CFD63F /* ModalsDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE0001000000000000002 /* ModalsDemoView.swift */; };
+		0DC330A6BED12FAC31CE2C7B /* SessionFlowDiagramViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4836702212A5D92697D8E9B8 /* SessionFlowDiagramViewController.swift */; };
 		1178E34212C8CB653D0A1898 /* MobileViewAttributesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001C2 /* MobileViewAttributesViewController.swift */; };
+		129065FDBA4539F17CEC8412 /* mermaid.min.js in Resources */ = {isa = PBXBuildFile; fileRef = 5E83E33F2AA80B9013717A59 /* mermaid.min.js */; };
 		195E31092A8CF3C89186D453 /* ManualViewsDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BFEE268301BE61F00FD7A49 /* ManualViewsDemoView.swift */; };
 		2552B1462FAC432D00B0AF8C /* NASAAPI-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2552B1412FAC432B00B0AF8C /* NASAAPI-Info.plist */; };
 		2552B1472FAC432D00B0AF8C /* NASAAPI-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2552B1412FAC432B00B0AF8C /* NASAAPI-Info.plist */; };
@@ -115,12 +117,14 @@
 		AD7807FD8A2F077901675368 /* ViewsAndInteractionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D848C7D2646CBDE17F195C3 /* ViewsAndInteractionsViewController.swift */; };
 		B219E6FE582D6D68871A112E /* AutoInstrumentedDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A67A7F4F0DB59EE620F8CF6E /* AutoInstrumentedDemoView.swift */; };
 		BB4CD17744738F61C09F10D3 /* MobileViewModalsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEFB4D0AB33C1C8760AD7C5 /* MobileViewModalsViewController.swift */; };
+		BDEC30D50005C957DCE048FB /* SessionFlowDiagramViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4836702212A5D92697D8E9B8 /* SessionFlowDiagramViewController.swift */; };
 		C1A950386607A36BDB695E63 /* MobileViewModalsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEFB4D0AB33C1C8760AD7C5 /* MobileViewModalsViewController.swift */; };
 		C9C82CAFAD5787BE3D7DF493 /* ViewsAndInteractionsDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52FE8658C674963EDE1CC225 /* ViewsAndInteractionsDemoView.swift */; };
 		CD0001011CD000000000CD00 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001001CD000000000CD00 /* MapViewController.swift */; };
 		CD0001021CD000000000CD00 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001001CD000000000CD00 /* MapViewController.swift */; };
 		CD0001041CD000000000CD00 /* MapViewSwiftUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */; };
 		CD0001051CD000000000CD00 /* MapViewSwiftUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */; };
+		CF521E1C8083343837CE7D0D /* SessionFlowDiagramViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4836702212A5D92697D8E9B8 /* SessionFlowDiagramViewController.swift */; };
 		CFC9E36B8EEDE1C37A6F26D2 /* BuildFile in Sources */ = {isa = PBXBuildFile; };
 		D46F91D72F69D1DD00FD2EBE /* SwitchTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91D62F69D1DD00FD2EBE /* SwitchTestViewController.swift */; };
 		D46F91DD2F6C6BAB00FD2EBE /* CustomSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91DC2F6C6BAB00FD2EBE /* CustomSwitch.swift */; };
@@ -153,6 +157,7 @@
 		F824A54D29BBB23D000886A6 /* NRAPI-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F824A54C29BBB23D000886A6 /* NRAPI-Info.plist */; };
 		F824A54E29BBB23D000886A6 /* NRAPI-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F824A54C29BBB23D000886A6 /* NRAPI-Info.plist */; };
 		F825FB0929CA509100E1C1DC /* NRTestAppFakeNavigationAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = F825FB0329CA509100E1C1DC /* NRTestAppFakeNavigationAction.swift */; };
+		F8261ED34FD069683B6371A4 /* session-flow.html in Resources */ = {isa = PBXBuildFile; fileRef = BA6DA4981ABCBEBBE6342CCE /* session-flow.html */; };
 		F82697F83018F3A600D0BFB1 /* RandomWalkController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F82697F73018F3A600D0BFB1 /* RandomWalkController.swift */; };
 		F82697FD3018F3D800D0BFB1 /* RandomWalkController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F82697F73018F3A600D0BFB1 /* RandomWalkController.swift */; };
 		F8302AF9296F5EFA003EC291 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302AF8296F5EFA003EC291 /* AppDelegate.swift */; };
@@ -456,9 +461,11 @@
 		2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestConnectorWithLogReporting.json; sourceTree = "<group>"; };
 		2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+UITest.swift"; sourceTree = "<group>"; };
 		2BFEE268301BE61F00FD7A49 /* ManualViewsDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualViewsDemoView.swift; sourceTree = "<group>"; };
+		4836702212A5D92697D8E9B8 /* SessionFlowDiagramViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionFlowDiagramViewController.swift; sourceTree = "<group>"; };
 		4A7FCD36108AFB638093E434 /* CoreDataView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CoreDataView.swift; sourceTree = "<group>"; };
 		52FE8658C674963EDE1CC225 /* ViewsAndInteractionsDemoView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ViewsAndInteractionsDemoView.swift; sourceTree = "<group>"; };
 		5D848C7D2646CBDE17F195C3 /* ViewsAndInteractionsViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ViewsAndInteractionsViewController.swift; sourceTree = "<group>"; };
+		5E83E33F2AA80B9013717A59 /* mermaid.min.js */ = {isa = PBXFileReference; includeInIndex = 1; path = mermaid.min.js; sourceTree = "<group>"; };
 		60678335A23F3298A7E5E74F /* MobileViewRestartedViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileViewRestartedViewController.swift; sourceTree = "<group>"; };
 		8D691DC4A53230310A089A1F /* MobileViewNilNameViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MobileViewNilNameViewController.swift; path = ./MobileViewNilNameViewController.swift; sourceTree = "<group>"; };
 		A67A7F4F0DB59EE620F8CF6E /* AutoInstrumentedDemoView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AutoInstrumentedDemoView.swift; sourceTree = "<group>"; };
@@ -472,6 +479,7 @@
 		ABCDE10010000000000001A2 /* MobileViewAttributesDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileViewAttributesDemoView.swift; sourceTree = "<group>"; };
 		ABCDE10010000000000001C2 /* MobileViewAttributesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileViewAttributesViewController.swift; sourceTree = "<group>"; };
 		B4E8F8DCA37F7A30864E36C9 /* MobileViewComponent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileViewComponent.swift; sourceTree = "<group>"; };
+		BA6DA4981ABCBEBBE6342CCE /* session-flow.html */ = {isa = PBXFileReference; includeInIndex = 1; path = "session-flow.html"; sourceTree = "<group>"; };
 		BFEFB4D0AB33C1C8760AD7C5 /* MobileViewModalsViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileViewModalsViewController.swift; sourceTree = "<group>"; };
 		C0ED90FB8B82A0549540934E /* MobileViewCorrelationProbe.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileViewCorrelationProbe.swift; sourceTree = "<group>"; };
 		CD0001001CD000000000CD00 /* MapViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewController.swift; sourceTree = "<group>"; };
@@ -712,6 +720,16 @@
 			path = Stubs;
 			sourceTree = "<group>";
 		};
+		83506A187ADA228C3A616818 /* SessionFlowWeb */ = {
+			isa = PBXGroup;
+			children = (
+				BA6DA4981ABCBEBBE6342CCE /* session-flow.html */,
+				5E83E33F2AA80B9013717A59 /* mermaid.min.js */,
+			);
+			name = SessionFlowWeb;
+			path = SessionFlowWeb;
+			sourceTree = "<group>";
+		};
 		AA0001402F9000000000AA01 /* CaptureServer */ = {
 			isa = PBXGroup;
 			children = (
@@ -794,6 +812,7 @@
 				2552B1412FAC432B00B0AF8C /* NASAAPI-Info.plist */,
 				F825C6632C790F4F006062A5 /* README.md */,
 				C0ED90FB8B82A0549540934E /* MobileViewCorrelationProbe.swift */,
+				83506A187ADA228C3A616818 /* SessionFlowWeb */,
 			);
 			path = NRTestApp;
 			sourceTree = "<group>";
@@ -866,6 +885,7 @@
 				60678335A23F3298A7E5E74F /* MobileViewRestartedViewController.swift */,
 				F9186DCC3D3FBBF7DA189D72 /* MobileViewTimingViewController.swift */,
 				8D691DC4A53230310A089A1F /* MobileViewNilNameViewController.swift */,
+				4836702212A5D92697D8E9B8 /* SessionFlowDiagramViewController.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -1268,6 +1288,8 @@
 				F8302B05296F5EFB003EC291 /* LaunchScreen.storyboard in Resources */,
 				2552B1462FAC432D00B0AF8C /* NASAAPI-Info.plist in Resources */,
 				F8302B02296F5EFB003EC291 /* Assets.xcassets in Resources */,
+				F8261ED34FD069683B6371A4 /* session-flow.html in Resources */,
+				129065FDBA4539F17CEC8412 /* mermaid.min.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1420,6 +1442,7 @@
 				A67A9C1CC416BDBEB4A12401 /* MobileViewComponent.swift in Sources */,
 				5E0667158763F1148D5D3C91 /* MobileViewTimingViewController.swift in Sources */,
 				E7716AC34CC26F13F403645E /* MobileViewNilNameViewController.swift in Sources */,
+				0DC330A6BED12FAC31CE2C7B /* SessionFlowDiagramViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1549,6 +1572,7 @@
 				6B7A632DDA9119E541B8BB48 /* MobileViewTimingViewController.swift in Sources */,
 				B219E6FE582D6D68871A112E /* AutoInstrumentedDemoView.swift in Sources */,
 				A8C529F4EAEB94A0158F6A42 /* MobileViewNilNameViewController.swift in Sources */,
+				CF521E1C8083343837CE7D0D /* SessionFlowDiagramViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1615,6 +1639,7 @@
 				6901E635D6B2B37C9B292B9F /* MobileViewComponent.swift in Sources */,
 				4B3F377D5E70F791A3FA92D2 /* MobileViewTimingViewController.swift in Sources */,
 				3FE31BC0D267F45C1C1908B0 /* MobileViewNilNameViewController.swift in Sources */,
+				BDEC30D50005C957DCE048FB /* SessionFlowDiagramViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

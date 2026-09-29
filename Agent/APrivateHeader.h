@@ -33,6 +33,10 @@
 #import "NRMAFlags.h"
 #import "NRMAOfflineStorage.h"
 #import "NRMAMobileViewTracker.h"
+#import "NRMASessionFlowGraph.h"
+#import "NRMASessionTimeline.h"
+#import "NRMASessionFlowRenderer.h"
+#import "NRMASessionFlowMonitor.h"
 #import "NRMAViewContext.h"
 #import "NRMAViewTiming.h"
 #endif /* APrivateHeader_h */

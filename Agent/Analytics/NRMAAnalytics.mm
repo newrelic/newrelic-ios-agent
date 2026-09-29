@@ -15,6 +15,7 @@
 #import "NRConstants.h"
 #import "NewRelicInternalUtils.h"
 #import "NRMAFlags.h"
+#import "NRMASessionFlowMonitor.h"
 #import "NRMANetworkRequestData+CppInterface.h"
 #import "NRMANetworkResponseData+CppInterface.h"
 #import <Connectivity/Payload.hpp>
@@ -879,6 +880,22 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 }
 
 /*
+ * Feeds an accepted view event to the session flow diagram, with the timestamp and timeSinceLoad
+ * the event itself carries, so the agent's timeline places it where an event dump would. Only
+ * accepted events: the diagram describes what was sent, as scripts/mobileview_flow.py sees it.
+ */
+static void NRMARecordViewEventInSessionFlow(NSString* eventType, NSDictionary* attributes,
+                                             double timestampMillis, double sessionElapsedSeconds) {
+    if (!([NRMAFlags shouldEnableAutomaticMobileViews] || [NRMAFlags shouldEnableManualMobileViews])) {
+        return;
+    }
+    [[NRMASessionFlowMonitor sharedInstance] recordViewEventOfType:eventType
+                                                        attributes:attributes
+                                                         timestamp:timestampMillis
+                                             sessionElapsedSeconds:sessionElapsedSeconds];
+}
+
+/*
  * Shared body for both built-in view event types. Structured like
  * -addBreadcrumb:withAttributes:, and deliberately symmetric across the two event systems:
  * the whole reason this method exists is that MobileView used to reach -addCustomEvent:,
@@ -892,9 +909,11 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     }
 
     if([NRMAFlags shouldEnableNewEventSystem]){
+        int64_t timestamp = [NRMAAnalytics currentTimeMillis];
+        NSTimeInterval sessionElapsed = [[NSDate date] timeIntervalSinceDate:_sessionStartTime];
         NRMAViewEvent* event = [[NRMAViewEvent alloc] initWithEventType:eventType
-                                                              timestamp:[NRMAAnalytics currentTimeMillis]
-                                            sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
+                                                              timestamp:timestamp
+                                            sessionElapsedTimeInSeconds:sessionElapsed
                                                  withAttributeValidator:_attributeValidator];
         if (event == nil) {
             NRLOG_AGENT_ERROR(@"Unable to create %@ event", eventType);
@@ -907,7 +926,11 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             [event addAttribute:key value:obj];
         }];
 
-        return [_eventManager addEvent:[event autorelease]];
+        BOOL added = [_eventManager addEvent:[event autorelease]];
+        if (added) {
+            NRMARecordViewEventInSessionFlow(eventType, attributes, (double)timestamp, sessionElapsed);
+        }
+        return added;
     } else {
         try {
             auto event = [eventType isEqualToString:kNRMA_RET_mobileViewTiming]
@@ -926,7 +949,14 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 if([self checkBackgroundStatus]){
                     event->addAttribute(kNRMA_Attrib_background.UTF8String, @YES.boolValue);
                 }
-                return [self recordLegacyEventResult:_analyticsController->addEventWithMetrics(event)];
+                BOOL added = [self recordLegacyEventResult:_analyticsController->addEventWithMetrics(event)];
+                if (added) {
+                    // The legacy event stamps its own time; this is the same clock, a moment later.
+                    NRMARecordViewEventInSessionFlow(eventType, attributes,
+                                                     (double)[NRMAAnalytics currentTimeMillis],
+                                                     [[NSDate date] timeIntervalSinceDate:_sessionStartTime]);
+                }
+                return added;
             }
         } catch (std::exception& e){
             NRLOG_AGENT_ERROR(@"Failed to add %@ event: %s", eventType, e.what());
@@ -1293,6 +1323,14 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 }
 
 - (void) endSessionReusable {
+    // The session's screen-flow diagram ends where the MobileSession event begins. Archived here
+    // rather than on backgrounding because this is the single point both paths that end a session --
+    // going to background and the 4-hour restart -- funnel through.
+    //
+    // Archive only, no event: this runs inside the agent's background/foreground mutex, and
+    // recording an event would re-enter the analytics stack mid-teardown.
+    [[NRMASessionFlowMonitor sharedInstance] finalizeCurrentSessionDiagram];
+
     if([NRMAFlags shouldEnableNewEventSystem]){
         if(![self addSessionEndAttribute]) { //has exception handling within
             NRLOG_AGENT_ERROR(@"failed to add session end attribute.");
