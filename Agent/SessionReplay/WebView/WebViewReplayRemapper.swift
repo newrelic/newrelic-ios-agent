@@ -26,7 +26,7 @@ struct WebViewReplayEvent {
         case incremental(changesState: Bool)
         /// The WebView committed a new document: the previous one is gone from the screen. Lets the
         /// replay drop it at that moment instead of showing a stale page until the new one's
-        /// FullSnapshot arrives. `json` is empty.
+        /// FullSnapshot arrives. `json` is an empty document node to attach in its place.
         case navigation
     }
 
@@ -102,7 +102,9 @@ final class WebViewReplayRemapper {
     func navigation(at timestamp: TimeInterval) -> WebViewReplayEvent {
         reset()
         navigationAt = timestamp
-        return WebViewReplayEvent(channelId: channelId, timestamp: timestamp, kind: .navigation, json: Data())
+        // The empty document gets a block of its own, so it can't collide with either page's nodes.
+        return WebViewReplayEvent(channelId: channelId, timestamp: timestamp, kind: .navigation,
+                                  json: WebViewReplayEvents.blankDocument(base: Self.allocateBase()))
     }
 
     /// ms from the last navigation to `document`, reported once per navigation.

@@ -189,25 +189,20 @@ enum WebViewReplayChunkBuilder {
             case .document:
                 state.startDocument(event)
                 guard isMounted else { continue }
-                if pendingAttachAt != nil {
-                    pendingAttachAt = nil       // the fresh iframe gets the new document directly
-                } else if let previousRoot = attachedRootId {
-                    // Navigation or checkout: tear the previous document off first, so two generations
-                    // of a page never coexist under one iframe.
-                    output.append(.init(channelId: channelId, timestamp: event.timestamp,
-                                        json: WebViewReplayEvents.removal(iframeId: channelId, rootId: previousRoot, timestamp: event.timestamp),
-                                        graftGroup: nil))
-                }
+                // The fresh iframe gets the new document directly. On a navigation or checkout the
+                // graft itself replaces the previous document: an iframe's document is not a DOM child
+                // of the iframe, so it cannot be removed, only replaced.
+                pendingAttachAt = nil
                 attach(event, at: event.timestamp, withBacklog: false)
 
             case .navigation:
                 state.endDocument()
                 pendingAttachAt = nil
-                if isMounted, let previousRoot = attachedRootId {
+                if isMounted, attachedRootId != nil {
                     // The old page leaves the replay when it left the screen, rather than lingering
-                    // until the new page's snapshot replaces it.
+                    // until the new page's snapshot replaces it: an empty document takes its place.
                     output.append(.init(channelId: channelId, timestamp: event.timestamp,
-                                        json: WebViewReplayEvents.removal(iframeId: channelId, rootId: previousRoot, timestamp: event.timestamp),
+                                        json: WebViewReplayEvents.graft(iframeId: channelId, document: event.json, timestamp: event.timestamp),
                                         graftGroup: nil))
                 }
                 attachedRootId = nil
@@ -239,19 +234,25 @@ enum WebViewReplayChunkBuilder {
 enum WebViewReplayEvents {
 
     /// Attaches a document node to the WebView's iframe: the same single-add mutation rrweb records
-    /// for an iframe's content.
+    /// for an iframe's content. It replaces whatever document the iframe had. Every list is present,
+    /// even when empty: replayers index into all four.
     static func graft(iframeId: Int, document: Data, timestamp: TimeInterval) -> Data {
-        return mutation(timestamp: timestamp,
-                        removes: "",
-                        addsPrefix: "{\"parentId\":\(iframeId),\"nextId\":null,\"node\":",
-                        node: document,
-                        addsSuffix: "}")
+        var json = Data(("{\"type\":\(RRWebEventType.incrementalSnapshot.rawValue),\"timestamp\":\(Int64(timestamp.rounded()))," +
+                         "\"data\":{\"source\":0,\"texts\":[],\"attributes\":[],\"removes\":[]," +
+                         "\"adds\":[{\"parentId\":\(iframeId),\"nextId\":null,\"node\":").utf8)
+        json.append(document)
+        json.append(contentsOf: "}]}}".utf8)
+        return json
     }
 
-    static func removal(iframeId: Int, rootId: Int, timestamp: TimeInterval) -> Data {
-        return mutation(timestamp: timestamp,
-                        removes: "{\"parentId\":\(iframeId),\"id\":\(rootId)}",
-                        addsPrefix: "", node: nil, addsSuffix: "")
+    /// A document with an empty body, grafted in place of a page that navigated away. Its IDs are the
+    /// first of `base`'s block, laid out as rrweb numbers a page (document, doctype, html, head, body).
+    static func blankDocument(base: Int) -> Data {
+        return Data(("{\"type\":0,\"id\":\(base + 1),\"childNodes\":[" +
+                     "{\"type\":1,\"id\":\(base + 2),\"name\":\"html\",\"publicId\":\"\",\"systemId\":\"\"}," +
+                     "{\"type\":2,\"id\":\(base + 3),\"tagName\":\"html\",\"attributes\":{},\"childNodes\":[" +
+                     "{\"type\":2,\"id\":\(base + 4),\"tagName\":\"head\",\"attributes\":{},\"childNodes\":[]}," +
+                     "{\"type\":2,\"id\":\(base + 5),\"tagName\":\"body\",\"attributes\":{},\"childNodes\":[]}]}]}").utf8)
     }
 
     /// An IncrementalSnapshot around an already-remapped `data` member, stamped `timestamp`.
@@ -259,17 +260,6 @@ enum WebViewReplayEvents {
         var json = Data("{\"type\":\(RRWebEventType.incrementalSnapshot.rawValue),\"timestamp\":\(Int64(timestamp.rounded())),\"data\":".utf8)
         json.append(data)
         json.append(UInt8(ascii: "}"))
-        return json
-    }
-
-    /// Every list present, even when empty: replayers index into all four.
-    private static func mutation(timestamp: TimeInterval, removes: String, addsPrefix: String, node: Data?, addsSuffix: String) -> Data {
-        var json = Data(("{\"type\":\(RRWebEventType.incrementalSnapshot.rawValue),\"timestamp\":\(Int64(timestamp.rounded()))," +
-                         "\"data\":{\"source\":0,\"texts\":[],\"attributes\":[],\"removes\":[\(removes)],\"adds\":[\(addsPrefix)").utf8)
-        if let node = node {
-            json.append(node)
-        }
-        json.append(contentsOf: "\(addsSuffix)]}}".utf8)
         return json
     }
 }

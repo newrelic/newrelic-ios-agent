@@ -134,7 +134,8 @@ class WebViewReplayTests: XCTestCase {
         return WebViewMountTransition(timestamp: timestamp, channelId: iframeId, mounted: mounted)
     }
 
-    /// "graft(tag)", "remove", or the incremental's tag, each "@timestamp".
+    /// "graft(tag)" ("graft(blank)" for the empty document a navigation leaves), "remove", or the
+    /// incremental's tag, each "@timestamp".
     private func describe(_ events: [WebViewReplayOutputEvent]) throws -> [String] {
         return try events.map { event in
             let object = try json(event.json)
@@ -144,7 +145,7 @@ class WebViewReplayTests: XCTestCase {
             XCTAssertEqual(object["timestamp"] as? Int, at)
             if let add = (data["adds"] as? [[String: Any]])?.first, let node = add["node"] as? [String: Any], node["type"] as? Int == 0 {
                 XCTAssertEqual(add["parentId"] as? Int, iframeId, "Attached under the WebView's iframe")
-                return "graft(\(node["tag"] as? String ?? ""))@\(at)"
+                return "graft(\(node["tag"] as? String ?? "blank"))@\(at)"
             }
             if let remove = (data["removes"] as? [[String: Any]])?.first, remove["parentId"] as? Int == iframeId {
                 return "remove@\(at)"
@@ -200,7 +201,8 @@ class WebViewReplayTests: XCTestCase {
                                                   mountTransitions: [mount(1000)],
                                                   chunkStart: 1000,
                                                   states: &states)
-        XCTAssertEqual(try describe(out), ["graft(old)@1100", "a@1200", "remove@1300", "graft(new)@1300"])
+        XCTAssertEqual(try describe(out), ["graft(old)@1100", "a@1200", "graft(new)@1300"],
+                       "The graft replaces the old document; an iframe's document can't be removed from it")
         XCTAssertTrue(states[iframeId]?.backlog.isEmpty ?? false, "A new document starts a new history")
     }
 
@@ -228,7 +230,8 @@ class WebViewReplayTests: XCTestCase {
     }
 
     private func navigation(at timestamp: TimeInterval) -> WebViewReplayEvent {
-        return WebViewReplayEvent(channelId: iframeId, timestamp: timestamp, kind: .navigation, json: Data())
+        return WebViewReplayEvent(channelId: iframeId, timestamp: timestamp, kind: .navigation,
+                                  json: WebViewReplayEvents.blankDocument(base: 1_020_000_000))
     }
 
     func testNavigationTakesTheOldPageOffImmediately() throws {
@@ -240,8 +243,8 @@ class WebViewReplayTests: XCTestCase {
                                                   mountTransitions: [mount(1000), mount(1400)],
                                                   chunkStart: 1000,
                                                   states: &states)
-        XCTAssertEqual(try describe(out), ["graft(old)@1100", "a@1200", "remove@1300", "graft(new)@1500"],
-                       "Removed at the navigation; not re-attached by the rebuild at 1400; the new page attaches when it arrives")
+        XCTAssertEqual(try describe(out), ["graft(old)@1100", "a@1200", "graft(blank)@1300", "graft(new)@1500"],
+                       "Replaced by a blank page at the navigation; not re-attached by the rebuild at 1400; the new page attaches when it arrives")
     }
 
     func testNavigationForgetsTheCarriedDocument() {
@@ -256,6 +259,27 @@ class WebViewReplayTests: XCTestCase {
                                                   states: &states)
         XCTAssertTrue(out.isEmpty, "The old page is never attached to a chunk that starts after it left")
         XCTAssertNil(states[iframeId])
+    }
+
+    func testNavigationCarriesABlankDocumentInItsOwnBlock() throws {
+        let remapper = WebViewReplayRemapper(channelId: iframeId)
+        guard case .document(let oldRoot) = try XCTUnwrap(remapper.translate(try parse("[\(pageSnapshot)]"), receivedAt: 0).first).kind else {
+            return XCTFail("expected a document")
+        }
+        let navigation = remapper.navigation(at: 2000)
+        guard case .document(let newRoot) = try XCTUnwrap(remapper.translate(try parse("[\(pageSnapshot)]"), receivedAt: 0).first).kind else {
+            return XCTFail("expected a document")
+        }
+
+        let blank = try json(navigation.json)
+        XCTAssertEqual(blank["type"] as? Int, 0, "A document node, grafted in the old page's place")
+        let blankRoot = try XCTUnwrap(blank["id"] as? Int)
+        XCTAssertEqual(blankRoot / WebViewReplayRemapper.idsPerDocument, oldRoot / WebViewReplayRemapper.idsPerDocument + 1,
+                       "Its own block, after the old page's")
+        XCTAssertEqual(newRoot / WebViewReplayRemapper.idsPerDocument, blankRoot / WebViewReplayRemapper.idsPerDocument + 1,
+                       "and before the new page's")
+        let html = try XCTUnwrap((blank["childNodes"] as? [[String: Any]])?.last)
+        XCTAssertEqual((html["childNodes"] as? [[String: Any]])?.map { $0["tagName"] as? String }, ["head", "body"])
     }
 
     func testCaptureLatencyIsReportedOncePerNavigation() throws {
