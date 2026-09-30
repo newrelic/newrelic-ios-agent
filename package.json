@@ -5,14 +5,15 @@
     "@wdio/cli": "^9.24.0",
     "@wdio/local-runner": "^9.24.0",
     "@wdio/mocha-framework": "^9.24.0",
-    "appium": "^3.7.0",
+    "appium": "^3.8.0",
     "basic-ftp": "^5.3.1",
     "body-parser": "^2.2.2",
     "dayjs": "^1.11.19",
     "diff": "^5.2.2",
     "undici": "^7.30.0",
     "wdio-lambdatest-service": "^4.0.1",
-    "deepmerge-ts": ">=8.0.0"
+    "deepmerge-ts": ">=8.0.0",
+    "morgan": ">=1.12.1"
 
   },
   "scripts": {
@@ -22,7 +23,9 @@
   "devDependencies": {
     "typescript": "^5.9.3",
     "webdriverio": "^9.24.0",
-    "deepmerge-ts": ">=8.0.0"
+    "deepmerge-ts": ">=8.0.0",
+    "morgan": ">=1.12.1"
+
   },
   "overrides": {
     "ajv": "^8.18.0",
