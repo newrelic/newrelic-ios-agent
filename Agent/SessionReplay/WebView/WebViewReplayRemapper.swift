@@ -24,6 +24,10 @@ struct WebViewReplayEvent {
         /// `changesState` is false for events that only animate the cursor (mouse, touch, selection),
         /// which never need replaying onto a re-attached document.
         case incremental(changesState: Bool)
+        /// The WebView committed a new document: the previous one is gone from the screen. Lets the
+        /// replay drop it at that moment instead of showing a stale page until the new one's
+        /// FullSnapshot arrives. `json` is empty.
+        case navigation
     }
 
     let channelId: Int
@@ -81,6 +85,10 @@ final class WebViewReplayRemapper {
     /// The current document's ID block, or nil before its first FullSnapshot.
     private var base: Int?
 
+    /// When the current document was committed, until its first FullSnapshot arrives. Diagnostics:
+    /// how long a page takes to reach the replay is what capture speed means to a user.
+    private(set) var navigationAt: TimeInterval?
+
     init(channelId: Int) {
         self.channelId = channelId
     }
@@ -88,6 +96,20 @@ final class WebViewReplayRemapper {
     /// A new document is loading. Events until its FullSnapshot have nothing to apply to.
     func reset() {
         base = nil
+    }
+
+    /// A new document was committed at `timestamp` (ms).
+    func navigation(at timestamp: TimeInterval) -> WebViewReplayEvent {
+        reset()
+        navigationAt = timestamp
+        return WebViewReplayEvent(channelId: channelId, timestamp: timestamp, kind: .navigation, json: Data())
+    }
+
+    /// ms from the last navigation to `document`, reported once per navigation.
+    func takeCaptureLatency(for document: WebViewReplayEvent) -> TimeInterval? {
+        guard document.isDocument, let at = navigationAt else { return nil }
+        navigationAt = nil
+        return document.timestamp - at
     }
 
     /// - Parameter receivedAt: ms timestamp for any event that carries no readable timestamp

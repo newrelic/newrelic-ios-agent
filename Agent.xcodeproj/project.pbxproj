@@ -1577,6 +1577,7 @@
 		34EA78CA2A39221E0071CC95 /* NRMACustomEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */; };
 		34EA78CB2A39221E0071CC95 /* NRMACustomEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */; };
 		34EA78E02A3924CC0071CC95 /* TestCustomEvents.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78DF2A3924CC0071CC95 /* TestCustomEvents.m */; };
+		4F7D185024DBBE1E02A7ADAE /* WebViewReplayRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2392CC4AF129E84BA75B0A6 /* WebViewReplayRecorder.swift */; };
 		568E3CFAF582510B7C44A9F7 /* WebViewReplayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 983FC53417AC294E4DA47EF2 /* WebViewReplayTests.swift */; };
 		59484C16B0623571DD1F4601 /* WebViewReplayChunkBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE5782573F7D8D0AFB1E1384 /* WebViewReplayChunkBuilder.swift */; };
 		610FD5D4B495222747D56B83 /* WebViewReplayRemapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 180B8F7058046596C6B0F25F /* WebViewReplayRemapper.swift */; };
@@ -1731,6 +1732,7 @@
 		F8FBFA852A7AE68C00CDC8C5 /* NRMANetworkErrorEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA832A7AE68C00CDC8C5 /* NRMANetworkErrorEvent.m */; };
 		F8FBFB1F2A83CEBD00CDC8C5 /* Constants.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFB1E2A83CEBD00CDC8C5 /* Constants.m */; };
 		F8FBFB202A83CEBD00CDC8C5 /* Constants.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFB1E2A83CEBD00CDC8C5 /* Constants.m */; };
+		FD996B2CF89A061B8B016C51 /* WebViewReplayRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2392CC4AF129E84BA75B0A6 /* WebViewReplayRecorder.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -2724,6 +2726,7 @@
 		C9C28B9E284A6AF70097B433 /* NRMAKeyAttributesTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAKeyAttributesTest.m; sourceTree = "<group>"; };
 		CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAHarvesterConfigurationLifetimeTests.m; sourceTree = "<group>"; };
 		CE5782573F7D8D0AFB1E1384 /* WebViewReplayChunkBuilder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WebViewReplayChunkBuilder.swift; sourceTree = "<group>"; };
+		D2392CC4AF129E84BA75B0A6 /* WebViewReplayRecorder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WebViewReplayRecorder.swift; sourceTree = "<group>"; };
 		D4580CA52F563363003BAD8C /* JSErrorControllerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JSErrorControllerTests.m; sourceTree = "<group>"; };
 		D46F91BF2F69CD5600FD2EBE /* UISwitchThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UISwitchThingy.swift; sourceTree = "<group>"; };
 		D48D55172F4E46B2003BE3AB /* JSErrorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSErrorController.swift; sourceTree = "<group>"; };
@@ -4300,6 +4303,7 @@
 				CE5782573F7D8D0AFB1E1384 /* WebViewReplayChunkBuilder.swift */,
 				3D1C14F5A294D265D1207CED /* NRMAWebViewReplayBridge.swift */,
 				180B8F7058046596C6B0F25F /* WebViewReplayRemapper.swift */,
+				D2392CC4AF129E84BA75B0A6 /* WebViewReplayRecorder.swift */,
 			);
 			name = WebView;
 			path = WebView;
@@ -6051,6 +6055,7 @@
 				9961AC137948ABF34FDFD5A0 /* NRMAWebViewReplayBridge.swift in Sources */,
 				68106E0ADF48CC73EAAF2876 /* WKWebViewThingy.swift in Sources */,
 				C3043F0696F822526D01EE08 /* WebViewReplayRemapper.swift in Sources */,
+				FD996B2CF89A061B8B016C51 /* WebViewReplayRecorder.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6437,6 +6442,7 @@
 				7E523631EE350C8CBAFD73EE /* NRMAWebViewReplayBridge.swift in Sources */,
 				2A3313528F60FF991BAC7011 /* WKWebViewThingy.swift in Sources */,
 				610FD5D4B495222747D56B83 /* WebViewReplayRemapper.swift in Sources */,
+				4F7D185024DBBE1E02A7ADAE /* WebViewReplayRecorder.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -227,6 +227,45 @@ class WebViewReplayTests: XCTestCase {
                        "Held while unmounted, then attached with its history when the iframe comes back")
     }
 
+    private func navigation(at timestamp: TimeInterval) -> WebViewReplayEvent {
+        return WebViewReplayEvent(channelId: iframeId, timestamp: timestamp, kind: .navigation, json: Data())
+    }
+
+    func testNavigationTakesTheOldPageOffImmediately() throws {
+        var states = [Int: WebViewReplayChannelState]()
+        let out = WebViewReplayChunkBuilder.build(pending: [document(at: 1100, tag: "old"), mutation(at: 1200, tag: "a"),
+                                                            navigation(at: 1300),
+                                                            mutation(at: 1350, tag: "orphan"),
+                                                            document(at: 1500, root: 1_010_000_001, tag: "new")],
+                                                  mountTransitions: [mount(1000), mount(1400)],
+                                                  chunkStart: 1000,
+                                                  states: &states)
+        XCTAssertEqual(try describe(out), ["graft(old)@1100", "a@1200", "remove@1300", "graft(new)@1500"],
+                       "Removed at the navigation; not re-attached by the rebuild at 1400; the new page attaches when it arrives")
+    }
+
+    func testNavigationForgetsTheCarriedDocument() {
+        var states = [Int: WebViewReplayChannelState]()
+        var carried = WebViewReplayChannelState()
+        carried.startDocument(document(at: 10))
+        states[iframeId] = carried
+
+        let out = WebViewReplayChunkBuilder.build(pending: [navigation(at: 1000)],
+                                                  mountTransitions: [mount(1000)],
+                                                  chunkStart: 1000,
+                                                  states: &states)
+        XCTAssertTrue(out.isEmpty, "The old page is never attached to a chunk that starts after it left")
+        XCTAssertNil(states[iframeId])
+    }
+
+    func testCaptureLatencyIsReportedOncePerNavigation() throws {
+        let remapper = WebViewReplayRemapper(channelId: iframeId)
+        _ = remapper.navigation(at: 400)
+        let document = try XCTUnwrap(remapper.translate(try parse("[\(pageSnapshot)]"), receivedAt: 0).first)
+        XCTAssertEqual(remapper.takeCaptureLatency(for: document), 600)
+        XCTAssertNil(remapper.takeCaptureLatency(for: document))
+    }
+
     func testBacklogOverflowFallsBackToTheBareDocument() {
         var state = WebViewReplayChannelState()
         state.startDocument(document(at: 1))
@@ -283,6 +322,67 @@ class WebViewReplayTests: XCTestCase {
         let result = WebViewReplayPayloadBudget.enforce(input, limit: 1) { $0.count }
         XCTAssertEqual(result.shedCount, 0)
         XCTAssertEqual(result.pieces.count, input.count)
+    }
+
+    // MARK: - Standalone recorder (pages with their own browser agent)
+
+    func testRecorderSourceMustMatchItsPinnedHash() {
+        XCTAssertNil(WebViewReplayRecorder.verifiedSource(Data("var rrwebRecord=function(){}();".utf8)),
+                     "Anything but the reviewed build is refused")
+    }
+
+    func testBootstrapKeepsTheRecorderOffThePageAndMasksByDefault() {
+        let script = WebViewReplayRecorder.bootstrapScript(source: "var rrwebRecord=function(o){}", handlerName: "nrWebViewReplay")
+        XCTAssertTrue(script.hasPrefix("(function(){"), "The recorder's var is scoped to our function, not window")
+        XCTAssertTrue(script.contains("var module={exports:{}};var exports=module.exports;var define=undefined;"),
+                      "The UMD bundle hands its export back to us, not to window or a page's AMD loader")
+        XCTAssertTrue(script.contains("return module.exports.record;"))
+        XCTAssertTrue(script.contains("window.__nrWvRecording"), "Guarded against starting twice in one document")
+        XCTAssertTrue(script.contains("maskAllInputs:true"))
+        XCTAssertTrue(script.contains("maskTextSelector:'*'"))
+        XCTAssertTrue(script.contains("blockSelector:'[data-nr-block]'"))
+        XCTAssertFalse(script.contains("NREUM"), "The page's own agent is left alone")
+        XCTAssertTrue(script.contains("kind:'events'"), "Same bridge message as the observation agent")
+    }
+
+    func testRecorderFlushesDocumentsImmediatelyAndTakesSnapshotsOnRequest() {
+        let script = WebViewReplayRecorder.bootstrapScript(source: "var rrwebRecord=function(o){}", handlerName: "nrWebViewReplay")
+        XCTAssertTrue(script.contains("if(event.type===2){setTimeout(flush,0);}"))
+        XCTAssertTrue(script.contains("setInterval(flush,1000)"))
+        XCTAssertTrue(script.contains("window.__nrWvTakeFullSnapshot=function(){try{rrwebRecord.takeFullSnapshot(true);}catch(e){}}"))
+        XCTAssertTrue(WebViewReplayRecorder.takeFullSnapshotScript.contains("window.__nrWvTakeFullSnapshot&&"),
+                      "A no-op on pages without the recorder")
+    }
+
+    func testInjectionDecidesImmediatelyUnlessAnAgentMayBeLoading() {
+        let script = NRMAWebViewReplayBridge.injectionScript
+        XCTAssertTrue(script.contains("if(window.NREUM||window.newrelic||document.readyState==='complete'||!agentMayBeLoading()){start();}"))
+        XCTAssertTrue(script.contains("js-agent[.]newrelic[.]com"))
+        XCTAssertTrue(script.contains("indexOf('NREUM')"))
+    }
+
+    func testPagesAreRecordedByTheStandaloneRecorderByDefault() {
+        XCTAssertEqual(NRMAWebViewReplayBridge.captureStrategy, .standaloneRecorder,
+                       "The recorder snapshots immediately and on request; the observation agent can do neither")
+    }
+
+    func testObservationAgentYieldsWhenNoSnapshotArrives() {
+        let script = NRMAWebViewReplayBridge.injectionScript
+        XCTAssertTrue(script.contains("setTimeout(function(){if(!documentSeen){yieldTo('\(NRMAWebViewReplayBridge.noSnapshotReason)');}},\(NRMAWebViewReplayBridge.snapshotWatchdogMs))"),
+                      "A resumed agent session harvests mutations only; the page must not wait on it")
+        XCTAssertTrue(script.contains("if(yielded){return passThrough(h);}"),
+                      "Once the recorder takes over, the agent's payloads are not forwarded as well")
+    }
+
+    func testInjectionWaitsForThePageToSettleAndYieldsToALateAgent() {
+        let script = NRMAWebViewReplayBridge.injectionScript
+        XCTAssertTrue(script.contains("addEventListener('load'"),
+                      "The agent check waits for load: async and tag-manager snippets arrive after document end")
+        XCTAssertTrue(script.contains("setTimeout(start,\(NRMAWebViewReplayBridge.agentLoadBackstopMs))"),
+                      "A page whose load never fires still starts")
+        XCTAssertTrue(script.contains("licenseKey!=='\(NRMAWebViewReplayBridge.observationLicenseKey)'"),
+                      "A page agent that arrives after ours is detected by its real license key")
+        XCTAssertTrue(script.contains("reason:'\(NRMAWebViewReplayBridge.existingAgentReason)'"))
     }
 
     // MARK: - Harvest merge

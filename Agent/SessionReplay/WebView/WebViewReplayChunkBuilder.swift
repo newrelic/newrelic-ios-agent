@@ -44,6 +44,14 @@ struct WebViewReplayChannelState {
         backlogOverflowed = false
     }
 
+    /// The page navigated away: its document is gone and must not be attached again.
+    mutating func endDocument() {
+        document = nil
+        backlog.removeAll()
+        backlogBytes = 0
+        backlogOverflowed = false
+    }
+
     mutating func record(_ event: WebViewReplayEvent) {
         guard document != nil, !backlogOverflowed,
               case .incremental(let changesState) = event.kind, changesState else {
@@ -191,6 +199,18 @@ enum WebViewReplayChunkBuilder {
                                         graftGroup: nil))
                 }
                 attach(event, at: event.timestamp, withBacklog: false)
+
+            case .navigation:
+                state.endDocument()
+                pendingAttachAt = nil
+                if isMounted, let previousRoot = attachedRootId {
+                    // The old page leaves the replay when it left the screen, rather than lingering
+                    // until the new page's snapshot replaces it.
+                    output.append(.init(channelId: channelId, timestamp: event.timestamp,
+                                        json: WebViewReplayEvents.removal(iframeId: channelId, rootId: previousRoot, timestamp: event.timestamp),
+                                        graftGroup: nil))
+                }
+                attachedRootId = nil
 
             case .incremental:
                 // Attach first: the backlog replayed onto the document must not already contain this

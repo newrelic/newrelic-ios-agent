@@ -696,13 +696,6 @@ public class NRMASessionReplay: NSObject {
         }
     }
 
-    /// Forgets a WebView's cached document. Called when it starts a new document.
-    func resetWebViewChannel(_ channelId: Int) {
-        webViewLock.lock()
-        webViewStates[channelId] = nil
-        webViewLock.unlock()
-    }
-
     /// Drains the buffered WebView events and lays them out for one chunk, attaching each WebView's
     /// document to its `<iframe>` wherever the chunk's native events build one. Harvest path; call
     /// after getSessionReplayFrames(), which records where those iframes are built.
@@ -731,10 +724,15 @@ public class NRMASessionReplay: NSObject {
             return []
         }
 
-        return WebViewReplayChunkBuilder.build(pending: pending,
-                                               mountTransitions: webViewMountTransitionsInLastHarvest,
-                                               chunkStart: chunkStart,
-                                               states: &webViewStates)
+        let events = WebViewReplayChunkBuilder.build(pending: pending,
+                                                     mountTransitions: webViewMountTransitionsInLastHarvest,
+                                                     chunkStart: chunkStart,
+                                                     states: &webViewStates)
+        #if os(iOS)
+        // Give the next chunk a current document rather than this one's plus its growing history.
+        NRMAWebViewReplayBridge.shared.requestFreshDocuments()
+        #endif
+        return events
     }
 
     // MARK: - Error Sampling Mode Management
