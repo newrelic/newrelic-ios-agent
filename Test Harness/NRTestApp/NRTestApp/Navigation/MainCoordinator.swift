@@ -166,6 +166,13 @@ class MainCoordinator: Coordinator {
 #endif
     }
 
+    func showCrashTestUIKitViewController() {
+#if os(iOS)
+        let crashVC = ViewControllerProvider.crashTestUIKitViewController
+        navigationController.pushViewController(crashVC, animated: true)
+#endif
+    }
+
     func recordEventBatchWithInvalidAttributes() {
         enum SomeEnum {
             case someCase

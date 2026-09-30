@@ -14,6 +14,9 @@ struct SwiftUIContentView: View {
                     NavigationLink(destination: ButtonsView()) {
                         Text("Buttons")
                     }
+                    NavigationLink(destination: CrashTestSwiftUIView()) {
+                        Text("Crashes")
+                    }
                     NavigationLink(destination: CoreDataView()) {
                         Text("Core Data")
                     }
