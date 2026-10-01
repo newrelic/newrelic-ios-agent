@@ -138,11 +138,17 @@ internal enum SwiftUIScreenResolver {
     ///
     /// `ignoringModifier` is for the modifier itself: one with no usable name of its own takes its
     /// host's, and that host may well carry it visibly (`Screen().padding().NRMobileView()`).
+    ///
+    /// `acceptingSoleAppBranch` is for naming a NavigationStack's root after its enclosing host, the
+    /// one caller that knows which branch of a lazy conditional is on screen (see
+    /// `stackRootIdentity`).
     internal static func screenIdentity(for controller: UIViewController,
-                                        ignoringModifier: Bool = false) -> SwiftUIScreenIdentity? {
+                                        ignoringModifier: Bool = false,
+                                        acceptingSoleAppBranch: Bool = false) -> SwiftUIScreenIdentity? {
         guard let root = rootViewValue(of: controller) else { return nil }
 
-        let outcome = resolveContentType(from: root, stopAtModifier: !ignoringModifier)
+        let outcome = resolveContentType(from: root, stopAtModifier: !ignoringModifier,
+                                         acceptingSoleAppBranch: acceptingSoleAppBranch)
         // Coexistence rule: where the modifier is present it wins outright. It carries an
         // explicit name and custom attributes this resolver cannot know, so reporting the host
         // as well would double-count the screen.
@@ -326,7 +332,8 @@ internal enum SwiftUIScreenResolver {
     /// `.NRMobileView(...)` marker sits in the *modifier* position of a `ModifiedContent` whose
     /// *content* is the app view -- returning early would find the app view first and miss the
     /// suppression signal entirely.
-    private static func resolveContentType(from root: Any, stopAtModifier: Bool) -> ContentTypeOutcome {
+    private static func resolveContentType(from root: Any, stopAtModifier: Bool,
+                                           acceptingSoleAppBranch: Bool = false) -> ContentTypeOutcome {
         var outcome = ContentTypeOutcome()
         var queue: [(value: Any, depth: Int)] = [(root, 0)]
         var visited = 0
@@ -352,7 +359,8 @@ internal enum SwiftUIScreenResolver {
             // itself the screen -- naming it would report "LazyView<MyApp.Detail>" -- and the type
             // it builds is only in its generic parameters, so this is the one place that type can
             // be recovered at all.
-            if let destination = lazyDestinationTypeName(from: qualified) {
+            if let destination = lazyDestinationTypeName(from: qualified,
+                                                         acceptingSoleAppBranch: acceptingSoleAppBranch) {
                 if outcome.lazyDestinationTypeName == nil {
                     outcome.lazyDestinationTypeName = destination
                 }
@@ -364,7 +372,9 @@ internal enum SwiftUIScreenResolver {
 
             for child in Mirror(reflecting: value).children {
                 let childName = String(reflecting: type(of: child.value))
-                guard child.value is any View || isErasureStorage(childName) else { continue }
+                guard child.value is any View
+                        || isErasureStorage(childName)
+                        || isConditionalStorage(childName) else { continue }
                 queue.append((child.value, depth + 1))
             }
         }
@@ -377,6 +387,15 @@ internal enum SwiftUIScreenResolver {
     /// every erased screen -- which is to say at every NavigationStack destination and sheet.
     private static func isErasureStorage(_ qualifiedName: String) -> Bool {
         qualifiedName.contains("AnyViewStorage")
+    }
+
+    /// The other non-`View` link: `if`/`else` in a view builder compiles to `_ConditionalContent`,
+    /// which holds the branch on screen in a `Storage` enum. Its one payload is that branch's view,
+    /// so descending is safe -- unlike the type's generic parameters, it cannot name the branch that
+    /// is not showing. Without this, a SwiftUI app's window root stopped resolving at the first
+    /// `if`: SyncUps' WindowGroup is `if isTesting { EmptyView() } else { AppView(...) }`.
+    private static func isConditionalStorage(_ qualifiedName: String) -> Bool {
+        qualifiedName.contains("_ConditionalContent<") && qualifiedName.hasSuffix(">.Storage")
     }
 
     // MARK: - Type classification
@@ -468,7 +487,12 @@ internal enum SwiftUIScreenResolver {
     /// `ModifiedContent<ParameterizedLazyView<Route, Screen>, SomeModifier>` also contains the
     /// wrapper's name, and its own last type argument is the modifier -- so a substring match would
     /// name every such screen after a SwiftUI modifier.
-    internal static func lazyDestinationTypeName(from qualifiedName: String) -> String? {
+    ///
+    /// `acceptingSoleAppBranch` relaxes the conditional rule below for a caller that knows the
+    /// branch on screen is an app type: a conditional whose branches hold exactly one is named
+    /// after it.
+    internal static func lazyDestinationTypeName(from qualifiedName: String,
+                                                 acceptingSoleAppBranch: Bool = false) -> String? {
         guard let open = qualifiedName.firstIndex(of: "<"), qualifiedName.hasSuffix(">") else {
             return nil
         }
@@ -485,10 +509,37 @@ internal enum SwiftUIScreenResolver {
         // `_ConditionalContent<A, B>` is what a destination closure containing an `if` compiles to.
         // It names both branches and cannot say which is on screen, so naming it would attribute
         // every visit to whichever branch was written first.
-        guard !candidate.contains("_ConditionalContent") else { return nil }
+        if candidate.contains("_ConditionalContent") {
+            guard acceptingSoleAppBranch, isConditionalContentType(candidate) else { return nil }
+            let appBranches = conditionalBranches(of: candidate).filter {
+                isAppModuleType($0) && !isAgentWrapperType($0)
+            }
+            return appBranches.count == 1 ? appBranches[0] : nil
+        }
         guard isAppModuleType(candidate), !isAgentWrapperType(candidate) else { return nil }
 
         return candidate
+    }
+
+    /// True when the type *itself* is a `_ConditionalContent`, as opposed to merely containing one
+    /// somewhere in its generic parameters (`ModifiedContent<_ConditionalContent<…>, …>`).
+    private static func isConditionalContentType(_ qualifiedName: String) -> Bool {
+        guard let open = qualifiedName.firstIndex(of: "<") else { return false }
+        let head = String(qualifiedName[qualifiedName.startIndex..<open])
+        return (head.components(separatedBy: ".").last ?? head) == "_ConditionalContent"
+    }
+
+    /// The leaf branches of a `_ConditionalContent`, flattening the nesting that `if / else if / else`
+    /// compiles to.
+    private static func conditionalBranches(of qualifiedName: String) -> [String] {
+        guard isConditionalContentType(qualifiedName),
+              let open = qualifiedName.firstIndex(of: "<"), qualifiedName.hasSuffix(">") else {
+            return [qualifiedName]
+        }
+        let inner = String(qualifiedName[qualifiedName.index(after: open)..<qualifiedName.index(before: qualifiedName.endIndex)])
+        return topLevelTypeArguments(of: inner).flatMap {
+            conditionalBranches(of: $0.trimmingCharacters(in: .whitespaces))
+        }
     }
 
     /// Splits a generic argument list at top-level commas only. A route that is itself generic --
@@ -583,7 +634,47 @@ internal enum SwiftUIScreenResolver {
         guard isSwiftUIHost(controller),
               isNavigationParticipating(controller),
               !isClaimedByModifier(controller) else { return nil }
-        return screenIdentity(for: controller)
+        return screenIdentity(for: controller) ?? stackRootIdentity(for: controller)
+    }
+
+    /// The name for the root screen of a NavigationStack, taken from the view that encloses the stack.
+    ///
+    /// The stack's root gets a host of its own -- the first child of the stack's navigation
+    /// controller -- and that host is the right one to report: it disappears when a screen is pushed
+    /// over it and reappears when that screen is popped, exactly like a UIKit root controller. But it
+    /// stores no app type. SwiftUI hands the root view to the stack as variadic children that live
+    /// only in the view graph, so all reflection finds is
+    /// `_VariadicView.Tree<_VStackLayout, _VariadicView_Children>`. In an app whose top-level view
+    /// *is* a NavigationStack (TCA's SyncUps, isowords) the home screen was therefore never reported,
+    /// and every screen opened from it named whatever had been reported last as its referrer.
+    ///
+    /// The host enclosing the stack does carry an app type, so the root takes that name. Only when
+    /// that host is not a screen itself, though: if it is reported -- pushed in UIKit, presented as a
+    /// sheet, a tab -- or owned by `.NRMobileView`, its visit already spans the stack's root, and
+    /// naming the root after it as well would report one screen twice.
+    ///
+    /// In a SwiftUI `App` that type is not even stored: the window root holds the WindowGroup's
+    /// content as a `LazyView` over a closure, and SyncUps' is
+    /// `LazyView<_ConditionalContent<EmptyView, AppView>>`. A conditional is normally unnameable
+    /// because either branch could be showing, but here the branch on screen contains this stack, so
+    /// it is an app type. Exactly one app-type branch is therefore an answer, and more than one is not.
+    private static func stackRootIdentity(for controller: UIViewController) -> SwiftUIScreenIdentity? {
+        // A navigation controller specifically, not any container: the first tab of a TabView is
+        // also a first child, and borrowing the enclosing name there would label one tab of many.
+        guard let stack = controller.parent,
+              stack is UINavigationController
+                || String(describing: type(of: stack)).contains("NavigationController"),
+              stack.children.first === controller else { return nil }
+
+        var ancestor = stack.parent
+        while let candidate = ancestor, !isSwiftUIHost(candidate) {
+            ancestor = candidate.parent
+        }
+        guard let enclosing = ancestor,
+              !isClaimedByModifier(enclosing),
+              automaticScreen(for: enclosing) == nil else { return nil }
+
+        return screenIdentity(for: enclosing, acceptingSoleAppBranch: true)
     }
 
     /// Strips the outermost module prefix, ignoring dots inside generic parameters.

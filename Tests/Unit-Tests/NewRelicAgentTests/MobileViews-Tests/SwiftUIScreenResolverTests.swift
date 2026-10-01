@@ -105,6 +105,39 @@ struct ParameterizedLazyView<Route, Content: View>: View {
     var body: some View { Text("lazy") }
 }
 
+/// The shape of an app whose screen *is* a NavigationStack -- TCA's SyncUps, isowords: the stack's root
+/// screen is built inside `body`, so the only app type the agent can reach is this enclosing one.
+@available(iOS 16, tvOS 16, *)
+struct StackAppScreen: View {
+    @State var path: [Int]
+    init(path: [Int] = []) { _path = State(initialValue: path) }
+
+    var body: some View {
+        NavigationStack(path: $path) {
+            StackListScreen()
+                .navigationDestination(for: Int.self) { _ in StackDetailScreen() }
+        }
+    }
+}
+
+struct StackListScreen: View {
+    var body: some View { List { Text("row") } }
+}
+
+struct StackDetailScreen: View {
+    var body: some View { Text("detail") }
+}
+
+/// A top-level TabView with untagged tabs, whose tab hosts store nothing nameable.
+struct TabsAppScreen: View {
+    var body: some View {
+        TabView {
+            Text("first").tabItem { Text("1") }
+            Text("second").tabItem { Text("2") }
+        }
+    }
+}
+
 /// Non-generic over AnyView because that is what the real classes are: the probe found every
 /// erasing idiom producing a host over `AnyView`, never over a concrete type.
 @available(iOS 13, tvOS 13, *)
@@ -400,6 +433,27 @@ final class SwiftUIScreenResolverTests: XCTestCase {
 
     // A lazy wrapper over a SwiftUI primitive is decoration -- a navigation title's Text arrives
     // this way -- not a screen.
+    // The stack-root path may name a lazy conditional, but only when exactly one branch is an app
+    // type -- the one branch that can contain the stack. Anywhere else a conditional stays unnamed.
+    func testLazyConditionalWithOneAppBranchIsNamedOnlyWhenAsked() {
+        let name = "SwiftUI.LazyView<SwiftUI._ConditionalContent<SwiftUI.EmptyView, MyApp.AppView>>"
+        XCTAssertNil(SwiftUIScreenResolver.lazyDestinationTypeName(from: name))
+        XCTAssertEqual(SwiftUIScreenResolver.lazyDestinationTypeName(from: name, acceptingSoleAppBranch: true),
+                       "MyApp.AppView")
+    }
+
+    func testLazyConditionalWithTwoAppBranchesIsNeverNamed() {
+        XCTAssertNil(SwiftUIScreenResolver.lazyDestinationTypeName(
+            from: "SwiftUI.LazyView<SwiftUI._ConditionalContent<MyApp.A, MyApp.B>>", acceptingSoleAppBranch: true))
+    }
+
+    // `if / else if / else` nests one conditional inside another.
+    func testLazyConditionalBranchesAreReadThroughNesting() {
+        XCTAssertEqual(SwiftUIScreenResolver.lazyDestinationTypeName(
+            from: "SwiftUI.LazyView<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<SwiftUI.EmptyView, SwiftUI.Text>, MyApp.AppView>>",
+            acceptingSoleAppBranch: true), "MyApp.AppView")
+    }
+
     func testLazyDestinationOverSwiftUIPrimitiveIsNotNamed() {
         XCTAssertNil(SwiftUIScreenResolver.lazyDestinationTypeName(from: "SwiftUI.LazyView<SwiftUI.Text>"))
     }
@@ -535,6 +589,142 @@ final class SwiftUIScreenResolverTests: XCTestCase {
         XCTAssertFalse(viewClass.contains("unknown context"),
                        "viewClass must not carry a build-specific address, got \(viewClass)")
         XCTAssertEqual(viewClass, "Agent_Tests.PrivateSettingsScreen")
+    }
+
+    // MARK: - Conditional content
+
+    // `if`/`else` in a view builder compiles to `_ConditionalContent`, which keeps the branch on
+    // screen in a `Storage` enum rather than a View. A SwiftUI app's window root is commonly exactly
+    // this -- SyncUps' WindowGroup is `if isTesting { EmptyView() } else { AppView(...) }` -- and
+    // pruning to View values stopped the walk dead at the enum.
+    func testResolvesTheActiveBranchOfConditionalContent() {
+        let showCheckout = ProcessInfo.processInfo.environment["NR_NO_SUCH_VARIABLE"] != nil
+        let host = UIHostingController(rootView: AnyView(Group {
+            if showCheckout { CheckoutScreen() } else { ProductScreen() }
+        }))
+
+        XCTAssertEqual(SwiftUIScreenResolver.screenIdentity(for: host)?.viewName, "ProductScreen")
+    }
+
+    // MARK: - A NavigationStack's root screen
+    //
+    // The stack's root gets a host of its own (a NavigationStackHostingController, first child of
+    // the stack's navigation controller), and that host is what appears and disappears as screens
+    // are pushed and popped. But its content is not stored: SwiftUI hands the root view to the stack
+    // as variadic children that live only in the view graph. Reflection finds
+    // `_VariadicView.Tree<_VStackLayout, _VariadicView_Children>` and nothing else, so the app's
+    // home screen was never reported -- and every screen reached from it named whatever was reported
+    // last as its referrer. The enclosing host does store an app type, so the root is named after it.
+    //
+    // These need a real window: the stack's controllers are only built once SwiftUI lays it out.
+
+    @available(iOS 16, tvOS 16, *)
+    private func hostingHierarchy<Content: View>(_ content: Content) -> (UIWindow, [UIViewController]) {
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+        window.rootViewController = UIHostingController(rootView: content)
+        window.makeKeyAndVisible()
+        RunLoop.main.run(until: Date().addingTimeInterval(0.5))
+
+        var all: [UIViewController] = []
+        func collect(_ controller: UIViewController) {
+            all.append(controller)
+            controller.children.forEach(collect)
+        }
+        collect(window.rootViewController!)
+        return (window, all)
+    }
+
+    @available(iOS 16, tvOS 16, *)
+    private func stackHosts(in controllers: [UIViewController]) -> [UIViewController] {
+        controllers.filter { String(describing: type(of: $0)).hasPrefix("NavigationStackHostingController") }
+    }
+
+    func testNavigationStackRootIsNamedAfterTheEnclosingView() throws {
+        guard #available(iOS 16, tvOS 16, *) else { throw XCTSkip("NavigationStack needs iOS 16") }
+        let (window, controllers) = hostingHierarchy(StackAppScreen())
+        defer { window.isHidden = true }
+
+        let root = try XCTUnwrap(stackHosts(in: controllers).first, "the stack's root host was never built")
+        XCTAssertEqual(NRMASwiftUIScreenResolver.screen(for: root)?.viewName, "StackAppScreen")
+    }
+
+    // The SyncUps window root: the enclosing view sits behind a conditional.
+    func testNavigationStackRootIsNamedThroughConditionalContent() throws {
+        guard #available(iOS 16, tvOS 16, *) else { throw XCTSkip("NavigationStack needs iOS 16") }
+        let isTesting = ProcessInfo.processInfo.environment["NR_NO_SUCH_VARIABLE"] != nil
+        let (window, controllers) = hostingHierarchy(AnyView(Group {
+            if isTesting { EmptyView() } else { StackAppScreen() }
+        }))
+        defer { window.isHidden = true }
+
+        let root = try XCTUnwrap(stackHosts(in: controllers).first, "the stack's root host was never built")
+        XCTAssertEqual(NRMASwiftUIScreenResolver.screen(for: root)?.viewName, "StackAppScreen")
+    }
+
+    // A SwiftUI `App`'s window root does not store its content at all: the WindowGroup's content is
+    // a `LazyView` over a closure, so the enclosing type exists only as a generic parameter, and
+    // SyncUps' is `LazyView<_ConditionalContent<EmptyView, AppView>>`. A conditional cannot normally
+    // be named, but this host is known to contain the stack, and of those branches only the app type
+    // can. This is the shape the real app had; a stored conditional (above) is not.
+    func testNavigationStackRootIsNamedThroughALazyConditionalWindowRoot() throws {
+        guard #available(iOS 16, tvOS 16, *) else { throw XCTSkip("NavigationStack needs iOS 16") }
+        let isTesting = ProcessInfo.processInfo.environment["NR_NO_SUCH_VARIABLE"] != nil
+        let content: () -> _ConditionalContent<EmptyView, StackAppScreen> = {
+            isTesting ? ViewBuilder.buildEither(first: EmptyView()) : ViewBuilder.buildEither(second: StackAppScreen())
+        }
+        let (window, controllers) = hostingHierarchy(AnyView(LazyView(build: content)))
+        defer { window.isHidden = true }
+
+        let root = try XCTUnwrap(stackHosts(in: controllers).first, "the stack's root host was never built")
+        XCTAssertEqual(NRMASwiftUIScreenResolver.screen(for: root)?.viewName, "StackAppScreen")
+    }
+
+    // Only the root borrows a name. A pushed destination has a host of its own and keeps the name
+    // its own content gives it.
+    func testPushedDestinationKeepsItsOwnName() throws {
+        guard #available(iOS 16, tvOS 16, *) else { throw XCTSkip("NavigationStack needs iOS 16") }
+        let (window, controllers) = hostingHierarchy(StackAppScreen(path: [1]))
+        defer { window.isHidden = true }
+
+        let hosts = stackHosts(in: controllers)
+        XCTAssertEqual(hosts.count, 2, "expected the root and one pushed destination")
+        let destination = try XCTUnwrap(hosts.last)
+        XCTAssertEqual(NRMASwiftUIScreenResolver.screen(for: destination)?.viewName, "StackDetailScreen")
+    }
+
+    // When the enclosing host is itself reported -- here it is pushed onto a UIKit navigation
+    // controller -- its visit already spans the stack's root. Naming the root after it as well would
+    // report one screen twice.
+    func testNavigationStackRootInsideAReportedScreenIsNotReported() throws {
+        guard #available(iOS 16, tvOS 16, *) else { throw XCTSkip("NavigationStack needs iOS 16") }
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+        let outer = UIHostingController(rootView: StackAppScreen())
+        window.rootViewController = UINavigationController(rootViewController: outer)
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        RunLoop.main.run(until: Date().addingTimeInterval(0.5))
+
+        XCTAssertEqual(NRMASwiftUIScreenResolver.screen(for: outer)?.viewName, "StackAppScreen")
+
+        var all: [UIViewController] = []
+        func collect(_ controller: UIViewController) { all.append(controller); controller.children.forEach(collect) }
+        collect(outer)
+        let root = try XCTUnwrap(stackHosts(in: all).first, "the stack's root host was never built")
+        XCTAssertNil(NRMASwiftUIScreenResolver.screen(for: root))
+    }
+
+    // The first tab of a TabView is also the first child of its container. Only a navigation
+    // controller's root borrows the enclosing name; a tab doing so would label one tab of many.
+    func testFirstTabDoesNotBorrowTheEnclosingName() throws {
+        guard #available(iOS 16, tvOS 16, *) else { throw XCTSkip("needs iOS 16") }
+        let (window, controllers) = hostingHierarchy(TabsAppScreen())
+        defer { window.isHidden = true }
+
+        let tabs = controllers.filter { $0.parent.map { String(describing: type(of: $0)).contains("TabBarController") } ?? false }
+        XCTAssertFalse(tabs.isEmpty, "the TabView's tab controllers were never built")
+        for tab in tabs {
+            XCTAssertNotEqual(NRMASwiftUIScreenResolver.screen(for: tab)?.viewName, "TabsAppScreen")
+        }
     }
 
     // MARK: - Applies only to SwiftUI hosts
