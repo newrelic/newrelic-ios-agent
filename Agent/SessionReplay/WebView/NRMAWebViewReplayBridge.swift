@@ -152,7 +152,8 @@ public class NRMAWebViewReplayBridge: NSObject {
         lock.lock()
         defer { lock.unlock() }
         channels = channels.filter { $0.value.webView != nil }
-        return Set(channels.keys)
+        embeddedChannels = embeddedChannels.filter { $0.value.view != nil }
+        return Set(channels.keys).union(embeddedChannels.keys)
     }
 
     /// Main thread. Resolves the channel and blocked state through `ViewDetails`, which is also what
@@ -182,6 +183,7 @@ public class NRMAWebViewReplayBridge: NSObject {
             let waiting = self.channels.values.filter { $0.awaitingInjection }.compactMap { $0.webView }
             self.lock.unlock()
             waiting.forEach { self.inject(into: $0) }
+            self.requestEmbeddedFullSnapshots()
         }
     }
 
@@ -198,7 +200,84 @@ public class NRMAWebViewReplayBridge: NSObject {
             for webView in webViews {
                 webView.evaluateJavaScript(WebViewReplayRecorder.takeFullSnapshotScript, completionHandler: nil)
             }
+            self.requestEmbeddedFullSnapshots()
         }
+    }
+
+    // MARK: - Embedded renderers (Flutter)
+
+    /// Posted, with the renderer's view as `object`, when its next events should start with a fresh
+    /// FullSnapshot: after every harvest (so each chunk gets a current document), when recording
+    /// becomes FULL, and when events arrive with no document to attach them to.
+    public static let embeddedFullSnapshotRequest = Notification.Name("com.newrelic.sessionReplay.requestFullSnapshot")
+
+    private final class EmbeddedChannel {
+        weak var view: UIView?
+        /// Used only on `parseQueue`.
+        let remapper: WebViewReplayRemapper
+        var lastSnapshotRequest: TimeInterval = 0
+        init(_ view: UIView, channelId: Int) {
+            self.view = view
+            self.remapper = WebViewReplayRemapper(channelId: channelId)
+        }
+    }
+
+    private var embeddedChannels = [Int: EmbeddedChannel]()
+
+    /// Main thread. The channel is the view's stable node ID: the `<iframe>` node
+    /// `EmbeddedRendererThingy` records for it, which the renderer's document is grafted under.
+    private func embeddedChannel(for view: UIView) -> (id: Int, isBlocked: Bool, channel: EmbeddedChannel) {
+        let details = ViewDetails(view: view)
+        let channelId = EmbeddedRendererThingy.channelId(forViewId: details.viewId)
+        lock.lock()
+        defer { lock.unlock() }
+        if embeddedChannels[channelId]?.view !== view {
+            embeddedChannels[channelId] = EmbeddedChannel(view, channelId: channelId)
+        }
+        return (channelId, details.blockView ?? false, embeddedChannels[channelId]!)
+    }
+
+    /// Main thread.
+    private func requestEmbeddedFullSnapshots() {
+        lock.lock()
+        let views = embeddedChannels.values.compactMap { $0.view }
+        lock.unlock()
+        for view in views {
+            NotificationCenter.default.post(name: Self.embeddedFullSnapshotRequest, object: view)
+        }
+    }
+
+    /// rrweb events (a JSON array) produced by a renderer that draws `view` itself. Main thread.
+    /// FULL mode only, like WebViews.
+    @objc(recordEmbeddedEvents:forView:)
+    public static func recordEmbeddedEvents(_ text: String, for view: UIView) -> Bool {
+        return shared.receiveEmbeddedEvents(text, from: view)
+    }
+
+    private func receiveEmbeddedEvents(_ text: String, from view: UIView) -> Bool {
+        guard isRecordingFull else { return false }
+        let embedded = embeddedChannel(for: view)
+        guard !embedded.isBlocked else { return false }
+        let receivedAt = (Date().timeIntervalSince1970 * 1000).rounded()
+        parseQueue.async { [weak self] in
+            guard let events = WebViewReplayPayloadParser.extractEvents(from: text), !events.isEmpty else {
+                return
+            }
+            let translated = embedded.channel.remapper.translate(events, receivedAt: receivedAt)
+            if translated.isEmpty {
+                // Incrementals with no document yet (e.g. the renderer's snapshot was sent before
+                // recording became FULL). Ask for one, at most every 2 s.
+                if receivedAt - embedded.channel.lastSnapshotRequest > 2000 {
+                    embedded.channel.lastSnapshotRequest = receivedAt
+                    DispatchQueue.main.async {
+                        NotificationCenter.default.post(name: Self.embeddedFullSnapshotRequest, object: view)
+                    }
+                }
+                return
+            }
+            self?.sessionReplay?.addWebViewReplayEvents(translated)
+        }
+        return true
     }
 
     // MARK: - Messages

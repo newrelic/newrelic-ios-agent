@@ -21,6 +21,7 @@
 #import <NewRelic/NRLogger.h>
 #import <NewRelic/NewRelicCustomInteractionInterface.h>
 #import <NewRelic/NRGCDOverride.h>
+@class UIView;
 
 #ifdef __cplusplus
 extern "C" {
@@ -968,6 +969,57 @@ extern "C" {
  * @return YES if recording was paused, NO if not recording or replay is disabled
  */
 + (BOOL) pauseReplay;
+
+/*!
+ * Ingest already-serialized rrweb session-replay events produced off-agent
+ * (e.g. by the New Relic Flutter agent) into the native session-replay
+ * uploader. The JSON string must encode an array of rrweb events. Events are
+ * gzipped and enqueued to the SessionReplay endpoint using the resolved
+ * session configuration. Ignored when the current recording mode is Off.
+ * Payloads exceeding the ~1MB compressed limit are dropped by the uploader;
+ * callers should chunk/batch accordingly.
+ *
+ * @param eventsJSON A JSON string encoding an array of rrweb events.
+ * @return YES if the batch was accepted for upload, NO otherwise.
+ */
++ (BOOL) recordSessionReplayEvents:(NSString*_Nonnull) eventsJSON;
+
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+/*!
+ * rrweb events produced by a renderer that draws `view` itself
+ * (a FlutterView). Native session replay keeps recording and grafts these events under the view's
+ * <iframe> node, the same way WebView content is grafted. FULL mode only.
+ * Posts "com.newrelic.sessionReplay.requestFullSnapshot" (object: view) when the renderer should
+ * send a fresh FullSnapshot.
+ */
++ (BOOL) recordSessionReplayEvents:(NSString*_Nonnull) eventsJSON forView:(UIView*_Nonnull) view NS_SWIFT_NAME(recordSessionReplayEvents(_:for:));
+#endif
+
+/*!
+ * Returns the resolved session-replay configuration for consumers that produce
+ * their own frames (e.g. the New Relic Flutter agent): the remote-config values
+ * merged with the effective recording mode. Before /connect resolves (or when
+ * session replay is disabled) this reports {enabled: NO, recordingMode: "off"}.
+ *
+ * Keys: enabled (BOOL), mode (NSString), recordingMode ("off"|"error"|"full"),
+ * samplingRate, errorSamplingRate (double), maskApplicationText,
+ * maskUserInputText, maskAllImages, maskAllUserTouches (BOOL), and the
+ * maskedClasses/unmaskedClasses/maskedKeys/unmaskedKeys string arrays.
+ *
+ * @return A dictionary describing the current session-replay configuration.
+ */
++ (NSDictionary*_Nonnull) sessionReplayConfiguration;
+
+/*!
+ * Declares that session-replay frames are supplied by an external source (e.g.
+ * the New Relic Flutter agent) via recordSessionReplayEvents. When enabled, the
+ * native agent does NOT run its own capture loop — otherwise it would record the
+ * opaque host view (e.g. FlutterView) as blank frames that pollute the replay.
+ * Ingest and upload remain active. Call once, early (before /connect resolves).
+ *
+ * @param external YES to suppress native capture in favor of external frames.
+ */
++ (void) setSessionReplayExternalCaptureSource:(BOOL) external;
 
 @end
 
