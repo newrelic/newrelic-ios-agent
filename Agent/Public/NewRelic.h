@@ -21,6 +21,7 @@
 #import <NewRelic/NRLogger.h>
 #import <NewRelic/NewRelicCustomInteractionInterface.h>
 #import <NewRelic/NRGCDOverride.h>
+@class UIView;
 
 #ifdef __cplusplus
 extern "C" {
@@ -982,6 +983,17 @@ extern "C" {
  * @return YES if the batch was accepted for upload, NO otherwise.
  */
 + (BOOL) recordSessionReplayEvents:(NSString*_Nonnull) eventsJSON;
+
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+/*!
+ * rrweb events produced by a renderer that draws `view` itself
+ * (a FlutterView). Native session replay keeps recording and grafts these events under the view's
+ * <iframe> node, the same way WebView content is grafted. FULL mode only.
+ * Posts "com.newrelic.sessionReplay.requestFullSnapshot" (object: view) when the renderer should
+ * send a fresh FullSnapshot.
+ */
++ (BOOL) recordSessionReplayEvents:(NSString*_Nonnull) eventsJSON forView:(UIView*_Nonnull) view NS_SWIFT_NAME(recordSessionReplayEvents(_:for:));
+#endif
 
 /*!
  * Returns the resolved session-replay configuration for consumers that produce

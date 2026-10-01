@@ -26,6 +26,9 @@
 #import "NewRelic.h"
 #import "NRMAHarvestController.h"
 #import "NRMAURLTransformer.h"
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+#import <NewRelic/NewRelic-Swift.h>
+#endif
 #import "NRMAHTTPUtilities.h"
 #import "Constants.h"
 #import <NewRelic/NewRelic-Swift.h>
@@ -937,6 +940,18 @@
     }
     return [[NewRelicAgentInternal sharedInstance] recordSessionReplayEvents:eventsJSON];
 }
+
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
++ (BOOL) recordSessionReplayEvents:(NSString*) eventsJSON forView:(UIView*) view {
+    if (eventsJSON.length == 0 || view == nil || [NewRelicAgentInternal sharedInstance].isShutdown) {
+        return NO;
+    }
+    if (@available(iOS 13.0, *)) {
+        return [NRMAWebViewReplayBridge recordEmbeddedEvents:eventsJSON forView:view];
+    }
+    return NO;
+}
+#endif
 
 + (NSDictionary*) sessionReplayConfiguration {
     return [[NewRelicAgentInternal sharedInstance] sessionReplayConfiguration];
