@@ -230,6 +230,9 @@ public class SessionReplayReporter: NSObject {
 
        if error == nil && !errorCode {
            NRLOG_AGENT_DEBUG("Session replay frames uploaded successfully.")
+           if self.failureCount > 0 {
+               NRMASupportMetricHelper.enqueueRetrySuccessMetric("SessionReplay")
+           }
            self.sessionReplayFramesUploadArray.removeFirst()
            self.failureCount = 0
            self.pendingUploads -= 1
@@ -248,6 +251,7 @@ public class SessionReplayReporter: NSObject {
 
        if self.failureCount > self.kNRMAMaxUploadRetry {
            NRLOG_AGENT_DEBUG("Session replay frames failed to upload. error: \(String(describing: error)), response: \(String(describing: response))")
+           NRMASupportMetricHelper.enqueueRetryFailedMetric("SessionReplay")
 
            // Check if we should persist to offline storage
            if NRMAFlags.shouldEnableOfflineStorage(),
