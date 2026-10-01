@@ -364,9 +364,37 @@ class WebViewReplayTests: XCTestCase {
         XCTAssertTrue(script.contains("window.__nrWvRecording"), "Guarded against starting twice in one document")
         XCTAssertTrue(script.contains("maskAllInputs:true"))
         XCTAssertTrue(script.contains("maskTextSelector:'*'"))
-        XCTAssertTrue(script.contains("blockSelector:'[data-nr-block]'"))
+        XCTAssertTrue(script.contains("blockSelector:'[data-nr-block],img,picture'"), "Images masked, as native images are by default")
         XCTAssertFalse(script.contains("NREUM"), "The page's own agent is left alone")
         XCTAssertTrue(script.contains("kind:'events'"), "Same bridge message as the observation agent")
+    }
+
+    func testBootstrapFollowsTheMaskingConfiguration() {
+        let unmasked = WebViewReplayRecorder.bootstrapScript(source: "", handlerName: "nrWebViewReplay",
+                                                             masking: .init(maskText: false, maskInputs: false, maskImages: false))
+        XCTAssertTrue(unmasked.contains("maskAllInputs:false"))
+        XCTAssertTrue(unmasked.contains("maskTextSelector:null"), "No text masked")
+        XCTAssertTrue(unmasked.contains("blockSelector:'[data-nr-block]'"), "Images recorded; explicitly blocked elements still are not")
+        XCTAssertTrue(unmasked.contains("blockClass:'nr-block'"))
+        XCTAssertTrue(unmasked.contains("maskTextClass:'nr-mask'"), "A page's own mask class is still honored")
+
+        let imagesOnly = WebViewReplayRecorder.bootstrapScript(source: "", handlerName: "nrWebViewReplay",
+                                                               masking: .init(maskText: false, maskInputs: false, maskImages: true))
+        XCTAssertTrue(imagesOnly.contains("blockSelector:'[data-nr-block],img,picture'"), "Masked images replay as placeholders")
+        XCTAssertTrue(imagesOnly.contains("maskTextSelector:null"))
+    }
+
+    func testMaskingResolvesLikeNativeViews() {
+        XCTAssertEqual(WebViewReplayMasking(isMasked: nil, maskApplicationText: false, maskUserInputText: false, maskAllImages: false),
+                       .init(maskText: false, maskInputs: false, maskImages: false), "Custom mode with nothing masked")
+        XCTAssertEqual(WebViewReplayMasking(isMasked: nil, maskApplicationText: nil, maskUserInputText: nil, maskAllImages: nil),
+                       .all, "Masked until there is a configuration")
+        XCTAssertEqual(WebViewReplayMasking(isMasked: nil, maskApplicationText: false, maskUserInputText: true, maskAllImages: false),
+                       .init(maskText: false, maskInputs: true, maskImages: false))
+        XCTAssertEqual(WebViewReplayMasking(isMasked: true, maskApplicationText: false, maskUserInputText: false, maskAllImages: false),
+                       .all, "A mask rule on the WebView wins")
+        XCTAssertEqual(WebViewReplayMasking(isMasked: false, maskApplicationText: true, maskUserInputText: true, maskAllImages: true),
+                       .init(maskText: false, maskInputs: false, maskImages: false), "So does an unmask rule")
     }
 
     func testRecorderFlushesDocumentsImmediatelyAndTakesSnapshotsOnRequest() {

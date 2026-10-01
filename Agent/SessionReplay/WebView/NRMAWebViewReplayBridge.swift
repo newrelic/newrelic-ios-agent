@@ -289,6 +289,8 @@ public class NRMAWebViewReplayBridge: NSObject {
     private func startRecorder(in webView: WKWebView) {
         guard isRecordingFull, !channel(for: webView).isBlocked else { return }
         let expectedURL = webView.url
+        // Resolved per page, so a masking configuration change applies from the next page load.
+        let masking = WebViewReplayMasking(viewDetails: ViewDetails(view: webView))
         WebViewReplayRecorderSource.shared.load { [weak self, weak webView] source in
             guard let self = self, let webView = webView, self.isRecordingFull else { return }
             guard let source = source else {
@@ -298,7 +300,7 @@ public class NRMAWebViewReplayBridge: NSObject {
             // The first download can take a moment; don't start recording a page the WebView has
             // since navigated away from. The new page reports in with its own `ready`.
             guard webView.url == expectedURL else { return }
-            let script = WebViewReplayRecorder.bootstrapScript(source: source, handlerName: Self.messageHandlerName)
+            let script = WebViewReplayRecorder.bootstrapScript(source: source, handlerName: Self.messageHandlerName, masking: masking)
             webView.evaluateJavaScript(script) { _, error in
                 if let error = error {
                     NRLOG_AGENT_DEBUG("[NR-WV-SR] recorder script failed: \(error.localizedDescription)")

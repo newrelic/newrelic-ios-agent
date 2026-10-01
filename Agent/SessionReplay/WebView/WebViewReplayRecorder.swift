@@ -60,10 +60,10 @@ enum WebViewReplayRecorder {
     /// bundle; `module`, `exports` and `define` are shadowed inside our function so it always hands
     /// its export back to us -- never to the page's `window`, and never to a page's AMD loader.
     ///
-    /// Privacy options mirror the browser agent's session replay defaults: all text and inputs
-    /// masked, and its block/mask/ignore selectors honored, so a page is no more exposed here than it
-    /// would be under its own agent.
-    static func bootstrapScript(source: String, handlerName: String) -> String {
+    /// Text, inputs and images are masked as `masking` says, which follows the same session replay
+    /// configuration as native views. The browser agent's block/mask/ignore classes are always
+    /// honored, and rrweb masks password inputs regardless.
+    static func bootstrapScript(source: String, handlerName: String, masking: WebViewReplayMasking = .all) -> String {
         return """
         (function(){
         var H=window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.\(handlerName);
@@ -90,9 +90,9 @@ enum WebViewReplayRecorder {
         if(event.type===2){setTimeout(flush,0);}
         else if(buffer.length>=\(maxBufferedEvents)){flush();}
         },
-        maskAllInputs:true,
-        maskTextSelector:'*',
-        blockSelector:'[data-nr-block]',
+        maskAllInputs:\(masking.maskInputs),
+        maskTextSelector:\(masking.maskText ? "'*'" : "null"),
+        blockSelector:'\(masking.maskImages ? "[data-nr-block],img,picture" : "[data-nr-block]")',
         blockClass:'nr-block',
         maskTextClass:'nr-mask',
         ignoreClass:'nr-ignore',
@@ -108,6 +108,43 @@ enum WebViewReplayRecorder {
         }catch(e){post({kind:'skipped',reason:'recorder-failed ('+(e&&e.message)+')'});}
         })();
         """
+    }
+}
+
+/// How a WebView's page is masked, resolved the way native views resolve theirs: an explicit mask or
+/// unmask rule on the WebView (accessibility identifier or class name) wins outright, then its per-view
+/// `maskApplicationText` / `maskUserInputText` / `maskAllImages`, then the session replay
+/// configuration. Masked when there is no configuration yet. Under the Default masking mode the
+/// configuration forces all three on and unmask overrides are dropped, so the page is fully masked.
+struct WebViewReplayMasking: Equatable {
+    var maskText: Bool
+    var maskInputs: Bool
+    var maskImages: Bool
+
+    static let all = WebViewReplayMasking(maskText: true, maskInputs: true, maskImages: true)
+
+    init(maskText: Bool, maskInputs: Bool, maskImages: Bool) {
+        self.maskText = maskText
+        self.maskInputs = maskInputs
+        self.maskImages = maskImages
+    }
+
+    init(viewDetails: ViewDetails) {
+        let configuration = NRMAHarvestController.configuration()
+        self.init(isMasked: viewDetails.isMasked,
+                  maskApplicationText: viewDetails.maskApplicationText ?? configuration?.session_replay_maskApplicationText,
+                  maskUserInputText: viewDetails.maskUserInputText ?? configuration?.session_replay_maskUserInputText,
+                  maskAllImages: viewDetails.maskAllImages ?? configuration?.session_replay_maskAllImages)
+    }
+
+    /// - Parameters:
+    ///   - isMasked: an explicit mask (true) or unmask (false) rule on the WebView, if any
+    ///   - maskApplicationText, maskUserInputText, maskAllImages: the per-view override, else the
+    ///     configured value; nil when neither is known
+    init(isMasked: Bool?, maskApplicationText: Bool?, maskUserInputText: Bool?, maskAllImages: Bool?) {
+        self.maskText = isMasked ?? maskApplicationText ?? true
+        self.maskInputs = isMasked ?? maskUserInputText ?? true
+        self.maskImages = isMasked ?? maskAllImages ?? true
     }
 }
 
