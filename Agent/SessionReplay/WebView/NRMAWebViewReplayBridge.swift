@@ -118,6 +118,22 @@ public class NRMAWebViewReplayBridge: NSObject {
         }
     }
 
+    /// Asks the observation agent in every WebView for a fresh FullSnapshot. Called when the native
+    /// harvest produces a full snapshot: the replayed WebView then gets a current document instead of
+    /// the one from when its page loaded. The recorder harvests a Meta + FullSnapshot immediately
+    /// rather than on its interval, so it reaches native within moments.
+    func requestFullSnapshots() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self, self.isRecordingFull else { return }
+            self.lock.lock()
+            let webViews = self.channels.values.compactMap { $0.webView }
+            self.lock.unlock()
+            for webView in webViews where !self.channel(for: webView).isBlocked {
+                webView.evaluateJavaScript(Self.takeFullSnapshotScript, completionHandler: nil)
+            }
+        }
+    }
+
     // MARK: - Messages
 
     fileprivate func didReceive(_ message: WKScriptMessage) {
@@ -209,6 +225,23 @@ public class NRMAWebViewReplayBridge: NSObject {
     static let readyScript = #"""
     (function(){try{window.webkit.messageHandlers.nrWebViewReplay.postMessage({kind:'ready'});}catch(e){}})();
     """#
+
+    /// Calls `takeFullSnapshot()` on the session replay recorder of the agent this bridge injected.
+    /// Never touches a page-owned agent: it runs only in documents we injected into, and skips any
+    /// agent advertising a license key other than ours. The recorder's own method is a no-op unless
+    /// it is recording.
+    static let takeFullSnapshotScript = """
+    (function(){try{
+    if(!window.__nrWvInjected){return;}
+    var agents=window.NREUM&&window.NREUM.initializedAgents;if(!agents){return;}
+    Object.keys(agents).forEach(function(id){try{
+    var a=agents[id];var key=a&&a.info&&a.info.licenseKey;
+    if(key&&key!=='\(observationLicenseKey)'){return;}
+    var sr=a.features&&a.features.session_replay;var r=sr&&sr.featAggregate&&sr.featAggregate.recorder;
+    if(r&&typeof r.takeFullSnapshot==='function'){r.takeFullSnapshot();}
+    }catch(e){}});
+    }catch(e){}})();
+    """
 
     /// Injects the browser agent in observation mode and registers a beforeHarvest hook that forwards
     /// session_replay payloads to native. Sentinel-guarded, so repeat evaluations are no-ops.

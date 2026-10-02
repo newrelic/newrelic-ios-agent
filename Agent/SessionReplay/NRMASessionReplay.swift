@@ -85,6 +85,9 @@ public class NRMASessionReplay: NSObject {
     /// WebView channels whose mount point appeared in the frames drained by the last
     /// getSessionReplayFrames(). Written and read on the harvest path only.
     private(set) var webViewChannelIdsInLastHarvest = Set<Int>()
+    /// The WebView channels each native full snapshot in the last getSessionReplayFrames() shows, by
+    /// its timestamp. Written and read on the harvest path only.
+    private(set) var webViewChannelsByFullSnapshotInLastHarvest = [TimeInterval: Set<Int>]()
     
     public init(url: NSString, delegate: NRMASessionReplayDelegate? = nil) {
         self.delegate = delegate
@@ -384,6 +387,7 @@ public class NRMASessionReplay: NSObject {
             processedFrames.reserveCapacity(frames.count * 2) // Estimate for frames + meta events
 
             self.webViewChannelIdsInLastHarvest = frames.reduce(into: Set<Int>()) { $0.formUnion($1.webViewChannelIds) }
+            var channelsByFullSnapshot = [TimeInterval: Set<Int>]()
 
             for frame in frames {
                 // Check for size changes and add meta event if needed
@@ -401,9 +405,13 @@ public class NRMASessionReplay: NSObject {
                 // Process frame safely
                 if let newFrame = self.sessionReplayFrameProcessor.processFrame(frame) {
                     processedFrames.append(newFrame)
+                    if newFrame.type == .fullSnapshot {
+                        channelsByFullSnapshot[newFrame.timestamp, default: []].formUnion(frame.webViewChannelIds)
+                    }
                 }
             }
 
+            self.webViewChannelsByFullSnapshotInLastHarvest = channelsByFullSnapshot
             return processedFrames
         }
     }
@@ -667,6 +675,14 @@ public class NRMASessionReplay: NSObject {
         let liveChannels: Set<Int>? = nil
         #endif
 
+        #if os(iOS)
+        // Native full snapshots are built here, at harvest, from frames already captured, so the
+        // WebViews can only be asked for theirs now. The fresh document lands early in the next chunk.
+        if !nativeFullSnapshotTimestamps.isEmpty {
+            NRMAWebViewReplayBridge.shared.requestFullSnapshots()
+        }
+        #endif
+
         webViewLock.lock()
         defer { webViewLock.unlock() }
 
@@ -687,6 +703,7 @@ public class NRMASessionReplay: NSObject {
                                                nativeFullSnapshotTimestamps: nativeFullSnapshotTimestamps,
                                                chunkStart: chunkStart,
                                                reemitChannels: webViewChannelIdsInLastHarvest,
+                                               fullSnapshotChannels: webViewChannelsByFullSnapshotInLastHarvest,
                                                documents: &webViewDocuments)
     }
 

@@ -32,7 +32,8 @@ struct WebViewReplayDocument {
 ///   native full snapshot in it.
 ///
 /// So the document is re-emitted at the start of each chunk and after every native full snapshot
-/// that no document already follows. Unlike Android, which has to infer chunk boundaries from a
+/// that shows the WebView and that no document already follows -- except when the chunk's first event
+/// for that WebView is a fresh document, which would replace a re-emitted copy at once. Unlike Android, which has to infer chunk boundaries from a
 /// harvest clock, iOS rebuilds the native events from raw frames at harvest time, so every native full
 /// snapshot in the chunk is known exactly.
 enum WebViewReplayChunkBuilder {
@@ -46,12 +47,16 @@ enum WebViewReplayChunkBuilder {
     ///   - reemitChannels: channels whose mount point appears in this chunk. nil re-emits for every
     ///     channel with a document. A WebView that is alive but off screen has no mount point to
     ///     rebuild, so re-emitting its document would only cost payload.
+    ///   - fullSnapshotChannels: the channels each native full snapshot shows, keyed by its timestamp.
+    ///     A full snapshot rebuilds only the mount points it contains, so a WebView that was off screen
+    ///     at that moment gets no copy there. nil, or a missing timestamp, treats every channel as shown.
     ///   - documents: each channel's last document, carried in from earlier chunks and updated here
     /// - Returns: the chunk's WebView envelopes, sorted by timestamp
     static func build(pending: [WebViewReplayEnvelope],
                       nativeFullSnapshotTimestamps: [TimeInterval],
                       chunkStart: TimeInterval,
                       reemitChannels: Set<Int>?,
+                      fullSnapshotChannels: [TimeInterval: Set<Int>]? = nil,
                       documents: inout [Int: WebViewReplayDocument]) -> [WebViewReplayEnvelope] {
         let fullSnapshots = nativeFullSnapshotTimestamps.sorted()
 
@@ -72,8 +77,9 @@ enum WebViewReplayChunkBuilder {
         for channelId in channelOrder {
             let events = (byChannel[channelId] ?? []).nrStableSorted { $0.timestamp < $1.timestamp }
             let shouldReemit = reemitChannels?.contains(channelId) ?? true
+            let shownAt = fullSnapshots.filter { fullSnapshotChannels?[$0]?.contains(channelId) ?? true }
             output.append(contentsOf: buildChannel(events: events,
-                                                   fullSnapshots: fullSnapshots,
+                                                   fullSnapshots: shownAt,
                                                    chunkStart: chunkStart,
                                                    shouldReemit: shouldReemit,
                                                    document: &documents[channelId]))
@@ -95,8 +101,14 @@ enum WebViewReplayChunkBuilder {
         var currentFull = document?.full
         var lastDocumentAt: TimeInterval? = nil
 
+        // A fresh document leads this chunk -- e.g. one requested at the last harvest. Anything
+        // re-emitted ahead of it would be replaced at once, so the WebView instead stays empty for the
+        // moment until it lands, rather than costing a second copy of the document.
+        let freshDocumentLeads = events.first.map { $0.isMeta || $0.isDocument } ?? false
+        var consumedEvents = 0
+
         func reemit(at timestamp: TimeInterval) {
-            guard shouldReemit, let full = currentFull else { return }
+            guard shouldReemit, !(freshDocumentLeads && consumedEvents == 0), let full = currentFull else { return }
             if let meta = currentMeta {
                 output.append(meta.reemitted(at: timestamp))
             }
@@ -119,6 +131,7 @@ enum WebViewReplayChunkBuilder {
             if takeEvent {
                 let event = events[eventIndex]
                 eventIndex += 1
+                consumedEvents += 1
                 output.append(event)
                 if event.isMeta {
                     currentMeta = event

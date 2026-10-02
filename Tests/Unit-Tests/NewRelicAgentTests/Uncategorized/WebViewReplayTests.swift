@@ -154,6 +154,52 @@ class WebViewReplayTests: XCTestCase {
         XCTAssertNotNil(documents[7])
     }
 
+    func testFreshDocumentLeadingChunkReplacesCarriedCopy() {
+        var documents: [Int: WebViewReplayDocument] = [7: WebViewReplayDocument(meta: envelope(meta, at: 10, tag: "old-m"),
+                                                                                full: envelope(full, at: 10, tag: "old-d"))]
+        // Requested at the last harvest, landing just after this chunk starts.
+        let pending = [envelope(meta, at: 1001, tag: "new-m"), envelope(full, at: 1001, tag: "new-d"), envelope(incremental, at: 1200)]
+
+        let out = WebViewReplayChunkBuilder.build(pending: pending,
+                                                  nativeFullSnapshotTimestamps: [1000],
+                                                  chunkStart: 1000,
+                                                  reemitChannels: [7],
+                                                  documents: &documents)
+
+        XCTAssertFalse(out.contains { $0.isReemit }, "The carried copy would be replaced at once")
+        XCTAssertEqual(out.map { $0.innerType }, [meta, full, incremental])
+        XCTAssertEqual(documents[7]?.full.timestamp, 1001)
+    }
+
+    func testCarriedCopyStillLeadsWhenChunkStartsWithChanges() {
+        var documents: [Int: WebViewReplayDocument] = [7: WebViewReplayDocument(meta: nil, full: envelope(full, at: 10))]
+        let pending = [envelope(incremental, at: 1100), envelope(meta, at: 1300), envelope(full, at: 1300)]
+
+        let out = WebViewReplayChunkBuilder.build(pending: pending,
+                                                  nativeFullSnapshotTimestamps: [1000],
+                                                  chunkStart: 1000,
+                                                  reemitChannels: [7],
+                                                  documents: &documents)
+
+        XCTAssertEqual(out.map { $0.innerType }, [full, incremental, meta, full])
+        XCTAssertTrue(out[0].isReemit, "Changes ahead of the fresh document need the carried one to apply to")
+    }
+
+    func testNoReemitAtFullSnapshotThatDoesNotShowWebView() {
+        var documents = [Int: WebViewReplayDocument]()
+        let pending = [envelope(meta, at: 1100), envelope(full, at: 1100), envelope(incremental, at: 1200)]
+
+        let out = WebViewReplayChunkBuilder.build(pending: pending,
+                                                  nativeFullSnapshotTimestamps: [1000, 1500, 1800],
+                                                  chunkStart: 1000,
+                                                  reemitChannels: [7],
+                                                  fullSnapshotChannels: [1000: [7], 1500: [], 1800: [7]],
+                                                  documents: &documents)
+
+        XCTAssertEqual(out.filter { $0.isReemit }.map { $0.timestamp }, [1800, 1800],
+                       "Off screen at 1500, so only the snapshot that shows it gets a copy")
+    }
+
     func testChannelsInterleaveWithoutReordering() {
         var documents = [Int: WebViewReplayDocument]()
         let pending = [envelope(full, at: 1100, channel: 1, tag: "a1"),
