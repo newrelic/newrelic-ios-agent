@@ -651,7 +651,7 @@ withTimestamp:(NSNumber *) timestamp {
             if (!error && !errorCode) {
                 NRLOG_AGENT_VERBOSE(@"Logs uploaded successfully.");
                 if (self->failureCount > 0) {
-                    [NRMASupportMetricHelper enqueueRetrySuccessMetric:@"LogReporting"];
+                    [NRMASupportMetricHelper enqueueRetrySuccessMetric:@"logs"];
                 }
                 // Remove the first element from the upload queue.
                 [self->uploadQueue removeObjectAtIndex:0];
@@ -674,7 +674,7 @@ withTimestamp:(NSNumber *) timestamp {
             }
             
             if (self->failureCount > kNRMAMaxLogUploadRetry) {
-                [NRMASupportMetricHelper enqueueRetryFailedMetric:@"LogReporting"];
+                [NRMASupportMetricHelper enqueueRetryFailedMetric:@"logs"];
                 [self->uploadQueue removeObjectAtIndex:0];
                 self->failureCount = 0;
             }

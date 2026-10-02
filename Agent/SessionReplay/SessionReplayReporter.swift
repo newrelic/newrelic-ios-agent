@@ -94,7 +94,7 @@ public class SessionReplayReporter: NSObject {
              if upload.sessionReplayFramesData.count > kNRMAMaxPayloadSizeLimit {
                  NRLOG_AGENT_DEBUG("Unable to send session replay frames because payload is larger than 1 MB. \(upload.sessionReplayFramesData.count) bytes.")
                  self.isUploading = false
-                 NRMASupportMetricHelper.enqueueMaxPayloadSizeLimitMetric("SessionReplay")
+                 NRMASupportMetricHelper.enqueueMaxPayloadSizeLimitMetric("blobs")
                  self.sessionReplayFramesUploadArray.removeFirst()
                  self.pendingUploads -= 1
                  
@@ -231,7 +231,7 @@ public class SessionReplayReporter: NSObject {
        if error == nil && !errorCode {
            NRLOG_AGENT_DEBUG("Session replay frames uploaded successfully.")
            if self.failureCount > 0 {
-               NRMASupportMetricHelper.enqueueRetrySuccessMetric("SessionReplay")
+               NRMASupportMetricHelper.enqueueRetrySuccessMetric("blobs")
            }
            self.sessionReplayFramesUploadArray.removeFirst()
            self.failureCount = 0
