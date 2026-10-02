@@ -313,6 +313,9 @@ didCompleteWithError:(nullable NSError*)error {
         [self handledErroredTask:task payload:payload];
     } else {
         NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - Handled exception upload completed successfully");
+        if (payload.attempts > 0) {
+            [NRMASupportMetricHelper enqueueRetrySuccessMetric:@"f"];
+        }
         @synchronized(self.payloadByTaskId) {
             [self.payloadByTaskId removeObjectForKey:key];
         }
@@ -430,6 +433,7 @@ didCompleteWithError:(nullable NSError*)error {
         }
     } else {
         NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - Handled exception report max upload attempts reached. abandoning report.");
+        [NRMASupportMetricHelper enqueueRetryFailedMetric:@"f"];
         @synchronized(self.payloadByTaskId) {
             [self.payloadByTaskId removeObjectForKey:oldKey];
         }

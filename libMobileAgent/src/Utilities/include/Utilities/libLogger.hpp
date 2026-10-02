@@ -31,7 +31,7 @@ namespace NewRelic {
                         unsigned line,
                         const char* method,
                         const char* format,
-                        ...);
+                        ...) __attribute__((format(printf, 5, 6)));
 
         static void setLogger(std::shared_ptr<LoggerBridge> bridge);
     };

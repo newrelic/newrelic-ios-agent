@@ -67,6 +67,13 @@
     [NRMAHarvestController configuration].at_capture = [[NRMATraceConfigurations alloc] init];
     [NRMAHarvestController configuration].at_capture.maxTotalTraceCount = 1000;
 
+    // The `config` object above only reaches the (unused) instance mock; production code
+    // reads the process-wide +[NRMAHarvestController configuration]. Zero the minimum
+    // utilization there too, otherwise any earlier test that installs a default harvester
+    // configuration (min utilization 0.3) makes NRMAActivityTrace -shouldRecord drop these
+    // mostly-idle traces and every assertion here sees a nil measurement.
+    [NRMAHarvestController configuration].activity_trace_min_utilization = 0;
+
     [[[harvestConfigurationObject stub] andReturn:config] configuration];
 
 

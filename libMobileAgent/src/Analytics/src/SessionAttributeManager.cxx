@@ -375,7 +375,7 @@ bool SessionAttributeManager::removeSessionAttribute(const char *name) {
             return false;
         }
     } catch (...) {
-        LLOG_ERROR("unable to remove session attribute \"%s\", unknown error.");
+        LLOG_ERROR("unable to remove session attribute \"%s\", unknown error.", name);
         return false;
     }
 }

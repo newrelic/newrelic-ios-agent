@@ -621,10 +621,57 @@ extern "C" {
                     andFailureCode:(NSInteger)iOSFailureCode;
 
 /*******************************************************************************
+ * Manually record a failed transactional network request whose distributed trace
+ * the caller owns.
+ *
+ * Pass the trace context returned by +generateDistributedTracingContext (or its
+ * `id` / `guid` / `trace.id` entries) so the resulting MobileRequestError event is
+ * reported against that trace instead of a natively generated one. Cross-platform
+ * agents that both make and report the request should use these overloads; native
+ * instrumentation does not need them.
+ *
+ * W3C headers (traceparent / tracestate) are also accepted, for callers that only
+ * have the wire representation.
+ *******************************************************************************/
+
++ (void)noticeNetworkFailureForURL:(NSURL* _Null_unspecified)url
+                        httpMethod:(NSString* _Null_unspecified)httpMethod
+                         withTimer:(NRTimer* _Null_unspecified)timer
+                      traceHeaders:(NSDictionary* _Nullable)traceHeaders
+                    andFailureCode:(NSInteger)iOSFailureCode;
+
++ (void)noticeNetworkFailureForURL:(NSURL* _Null_unspecified)url
+                        httpMethod:(NSString* _Null_unspecified)httpMethod
+                         startTime:(double)startTime
+                           endTime:(double)endTime
+                      traceHeaders:(NSDictionary* _Nullable)traceHeaders
+                    andFailureCode:(NSInteger)iOSFailureCode;
+
+/*******************************************************************************
  * Generates Distributed Tracing headers for use if not
  * automatically instrumenting network connections
  *******************************************************************************/
 + (NSDictionary<NSString*,NSString*>* _Nonnull)generateDistributedTracingHeaders;
+
+/*******************************************************************************
+ * Generates a new distributed trace and returns everything needed to both
+ * propagate and report it, in one dictionary:
+ *
+ *   traceparent, tracestate    W3C headers to set on the outbound request
+ *   trace.id, id, guid         the trace's identity, to hand back through the
+ *                              traceHeaders: parameter of
+ *                              +noticeNetworkRequestForURL:... or
+ *                              +noticeNetworkFailureForURL:...
+ *
+ * Prefer this over +generateDistributedTracingHeaders when the caller both makes
+ * the request and reports it -- a cross-platform agent, say. One call yields one
+ * trace, and the returned identity is applied to the reported event directly,
+ * rather than being recovered by re-parsing the W3C headers.
+ *
+ * Equivalent to the Android agent's TraceContext: -asTraceAttributes plus
+ * -getHeaders, from a single trace.
+ *******************************************************************************/
++ (NSDictionary<NSString*,NSString*>* _Nonnull)generateDistributedTracingContext;
 
 /*******************************************************************************
  * Add a NSArray of NSStrings of the header
@@ -704,12 +751,14 @@ extern "C" {
 
 /*!
  Change the maximum length of time before the SDK sends queued events to New Relic.
- 
+
  @param seconds The number of seconds to wait before sending any events to New Relic.
- 
- The default timeout before sending events is 600 seconds (10 minutes). If the user 
- keeps your app open for longer than that, any stored events will be transmitted and the timer resets. 
- 
+
+ The default timeout before sending events is 60 seconds. If the user
+ keeps your app open for longer than that, any stored events will be transmitted and the timer resets.
+
+ @note The allowed range is 60 to 600 seconds. Values outside this range will be reset to the nearest bound and a warning will be logged.
+
  @note events transmitted before the end of session will not have a `sessionDuration` attribute.
  */
 + (void) setMaxEventBufferTime:(unsigned int)seconds;
@@ -717,13 +766,15 @@ extern "C" {
 
 /*!
  Change the maximum number of events that will be stored in memory.
- 
+
  @param size the maximum number of events to store in memory
- 
+
  By default the SDK will store up to 1000 events in memory. If more events are
-  recorded before `maxEventBufferTime` seconds elapse, events are sampled using 
+  recorded before `maxEventBufferTime` seconds elapse, events are sampled using
   a Reservoir Sampling algorithm. http://en.wikipedia.org/wiki/Reservoir_sampling
  If `maxEventBufferTime` seconds elapse, the existing event buffer will be transmitted and then emptied.
+
+ @note The minimum allowed value is 64. Values lower than 64 will be reset to 64 and a warning will be logged. Values above 1000 are allowed but not recommended; a warning will be logged.
  */
 + (void) setMaxEventPoolSize:(unsigned int)size;
 
