@@ -277,7 +277,7 @@ class MobileErrorsUploader: NSObject {
     private func handleSuccessfulRequest(_ request: URLRequest) {
         NRLOG_AGENT_DEBUG("Mobile Errors Uploader: Upload completed successfully")
         if retryCount(for: request) > 0 {
-            NRMASupportMetricHelper.enqueueRetrySuccessMetric("JSError")
+            NRMASupportMetricHelper.enqueueRetrySuccessMetric("errors")
         }
         removeFromRetryTracker(request)
 
@@ -303,7 +303,7 @@ class MobileErrorsUploader: NSObject {
             NRLOG_AGENT_DEBUG("Mobile Errors Uploader: Added request to retry queue")
         } else {
             NRLOG_AGENT_DEBUG("Mobile Errors Uploader: Max retries reached, discarding request")
-            NRMASupportMetricHelper.enqueueRetryFailedMetric("JSError")
+            NRMASupportMetricHelper.enqueueRetryFailedMetric("errors")
             removeFromRetryTracker(request)
 
             // Notify failure callback
