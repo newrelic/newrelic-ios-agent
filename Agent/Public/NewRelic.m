@@ -14,6 +14,9 @@
 #import "NRMAMeasurements.h"
 #import "NewRelicAgentInternal.h"
 #import "NRMAFlags.h"
+#import "NRMAViewContext.h"
+#import "NRMAViewTiming.h"
+#import "NRMASessionFlowMonitor.h"
 #import "NewRelicInternalUtils.h"
 #import "NRMAExceptionHandler.h"
 #import "NRMATaskQueue.h"
@@ -782,8 +785,107 @@
         return false;
     }
 
+    // Stamp the referrer (currentView / previousView) so navigation paths can be reconstructed
+    // from breadcrumbs. Active whenever automatic or manual view tracking is enabled.
+    NSDictionary *breadcrumbAttributes = [NRMAViewContext mergeReferrerAttributesInto:attributes];
+
+    // Attach the breadcrumb to whichever screen was current when it was recorded. Reads
+    // breadcrumbAttributes, not attributes, because currentView is added by the merge above.
+    if ([NRMAFlags shouldEnableAutomaticMobileViews] || [NRMAFlags shouldEnableManualMobileViews]) {
+        [[NRMASessionFlowMonitor sharedInstance] recordBreadcrumbNamed:name
+                                                           attributes:breadcrumbAttributes];
+    }
+
     return [[NewRelicAgentInternal sharedInstance].analyticsController addBreadcrumb:name
-                                                                      withAttributes:attributes];
+                                                                      withAttributes:breadcrumbAttributes];
+}
+
++ (void) setCurrentView:(NSString* __nonnull)name
+             attributes:(NSDictionary* __nullable)attributes
+{
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return;
+    }
+
+    if (![NRMAFlags shouldEnableManualMobileViews]) {
+        NRLOG_AGENT_VERBOSE(@"setCurrentView: ignored because NRFeatureFlag_ManualViews is disabled.");
+        return;
+    }
+
+    if (name.length == 0) {
+        NRLOG_AGENT_VERBOSE(@"setCurrentView: ignored because name must be a non-empty string.");
+        return;
+    }
+
+    // SPA / route-change model: close out the previous manual view (emitting its timeVisible),
+    // make `name` current, and emit its appearance stamped with the prior view as referrer.
+    [[NRMAViewContext sharedInstance] setCurrentManualView:name attributes:attributes];
+}
+
++ (void) beginViewLoad
+{
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return;
+    }
+
+    // The ManualViews flag gate lives in NRMAViewContext alongside the state this writes, so a
+    // begin recorded while the feature is off cannot be consumed by a later setCurrentView:.
+    [[NRMAViewContext sharedInstance] beginManualViewLoad];
+}
+
++ (BOOL) markViewTiming:(NSString* __nonnull)name
+{
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return NO;
+    }
+
+    // Validation, capping, and the flag gate all live in NRMAViewTiming so they are testable
+    // without a running agent.
+    return [[NRMAViewTiming sharedInstance] markTimingNamed:name];
+}
+
++ (BOOL) recordViewTiming:(NSString* __nonnull)name milliseconds:(double)milliseconds
+{
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return NO;
+    }
+
+    return [[NRMAViewTiming sharedInstance] recordTimingNamed:name milliseconds:milliseconds];
+}
+
+#pragma mark - Session flow diagrams
+
+// Reading a diagram after shutdown is allowed on purpose: what was collected before the agent
+// stopped is still the truth about that session, and this is a debugging aid.
+
++ (NSString*) currentSessionFlowDiagram {
+    return [NewRelic currentSessionFlowDiagramWithOptions:nil];
+}
+
++ (NSString*) currentSessionFlowDiagramWithOptions:(NRSessionFlowDiagramOptions*)options {
+    return [[NRMASessionFlowMonitor sharedInstance] mermaidForCurrentSessionWithOptions:options];
+}
+
++ (NSString*) currentSessionTimelineWithOptions:(NRSessionFlowDiagramOptions*)options {
+    return [[NRMASessionFlowMonitor sharedInstance] timelineForCurrentSessionWithOptions:options];
+}
+
++ (NSArray<NSString*>*) archivedFlowDiagramSessionIds {
+    return [[NRMASessionFlowMonitor sharedInstance] archivedSessionIds];
+}
+
++ (NSString*) flowDiagramForSessionId:(NSString*)sessionId
+                              options:(NRSessionFlowDiagramOptions*)options {
+    return [[NRMASessionFlowMonitor sharedInstance] mermaidForSessionId:sessionId options:options];
+}
+
++ (NSString*) timelineForSessionId:(NSString*)sessionId
+                           options:(NRSessionFlowDiagramOptions*)options {
+    return [[NRMASessionFlowMonitor sharedInstance] timelineForSessionId:sessionId options:options];
 }
 
 + (BOOL) recordJavascriptError:(NSString* __nonnull)name

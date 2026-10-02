@@ -14,7 +14,8 @@
     "wdio-lambdatest-service": "^4.0.1"
   },
   "scripts": {
-    "test:wdio-ios": "./node_modules/.bin/wdio LambdaTest/wdio-config-ios.js"
+    "test:wdio-ios": "./node_modules/.bin/wdio LambdaTest/wdio-config-ios.js",
+    "test:wdio-ios-realdevice": "./node_modules/.bin/wdio LambdaTest/wdio-config-ios-realdevice.js"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

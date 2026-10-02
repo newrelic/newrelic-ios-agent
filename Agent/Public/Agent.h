@@ -29,6 +29,7 @@ FOUNDATION_EXPORT const unsigned char AgentVersionString[];
 #import <NewRelic/NRConstants.h>
 #import <NewRelic/NewRelicCustomInteractionInterface.h>
 #import <NewRelic/NewRelicFeatureFlags.h>
+#import <NewRelic/NRSessionFlowDiagramOptions.h>
 #import <NewRelic/NRCustomMetrics.h>
 #import <NewRelic/NRLogger.h>
 #import <NewRelic/NRCustomMetrics.h>
