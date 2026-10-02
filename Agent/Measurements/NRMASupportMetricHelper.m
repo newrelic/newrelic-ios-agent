@@ -321,6 +321,14 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
 
 // End KMP Detection
 
++ (void) enqueueWebViewReplayMetric:(NSString*)suffix {
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:@"%@/%@", kNRMAWebViewReplayMetricPrefix, suffix]
+                                                              value:@1
+                                                              scope:nil]];
+    }
+}
+
 // Events (queue lifecycle) supportability metrics -- Android parity (NR-478730)
 + (void) enqueueEventAddedMetric {
     @synchronized (deferredMetrics) {
