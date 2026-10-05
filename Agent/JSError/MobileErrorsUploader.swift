@@ -86,6 +86,7 @@ class MobileErrorsUploader: NSObject {
     // MARK: - Public Methods
 
     func sendPayload(_ payload: [String: Any],
+                     platform: String,
                      sessionId: String?,
                      entityGuid: String?,
                      accountId: NSNumber?,
@@ -113,7 +114,7 @@ class MobileErrorsUploader: NSObject {
         // Add required query parameters
         urlComponents.queryItems = [
             URLQueryItem(name: "protocol_version", value: "1"),
-            URLQueryItem(name: "platform", value: "reactnative")
+            URLQueryItem(name: "platform", value: platform)
         ]
 
         guard let url = urlComponents.url else {
@@ -263,8 +264,21 @@ class MobileErrorsUploader: NSObject {
         retryTrackerLock.unlock()
     }
 
+    private func retryCount(for request: URLRequest) -> Int {
+        guard let url = request.url?.absoluteString else { return 0 }
+
+        retryTrackerLock.lock()
+        let count = (retryTracker[url] as? NSNumber)?.intValue ?? 0
+        retryTrackerLock.unlock()
+
+        return count
+    }
+
     private func handleSuccessfulRequest(_ request: URLRequest) {
         NRLOG_AGENT_DEBUG("Mobile Errors Uploader: Upload completed successfully")
+        if retryCount(for: request) > 0 {
+            NRMASupportMetricHelper.enqueueRetrySuccessMetric("errors")
+        }
         removeFromRetryTracker(request)
 
         // Notify success callback
@@ -289,6 +303,7 @@ class MobileErrorsUploader: NSObject {
             NRLOG_AGENT_DEBUG("Mobile Errors Uploader: Added request to retry queue")
         } else {
             NRLOG_AGENT_DEBUG("Mobile Errors Uploader: Max retries reached, discarding request")
+            NRMASupportMetricHelper.enqueueRetryFailedMetric("errors")
             removeFromRetryTracker(request)
 
             // Notify failure callback

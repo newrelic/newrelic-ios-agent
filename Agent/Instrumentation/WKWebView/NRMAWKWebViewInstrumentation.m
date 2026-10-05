@@ -105,6 +105,10 @@ void (*NRMA__WKWebView_dealloc)(id self, SEL _cmd);
         SEL setNavigationDelegateSelector = @selector(setNavigationDelegate:);
         method_setImplementation(class_getInstanceMethod(clazz, setNavigationDelegateSelector), (IMP)NRMA__WKWebView_setNavigationDelegate);
 
+        SEL deallocSelector = @selector(dealloc);
+        if (NRMA__WKWebView_dealloc) {
+            method_setImplementation(class_getInstanceMethod(clazz, deallocSelector), (IMP)NRMA__WKWebView_dealloc);
+        }
     }
 #endif
 }

@@ -20,7 +20,9 @@
 
 @interface NRMAHarvestController : NSObject
 
-+ (NRMAHarvestController* _Nullable) harvestController;
+// NS_SWIFT_NAME is required: this method's name matches the class name, so Swift's importer would
+// otherwise treat it as a factory and map it to init(), returning a new instance, not the singleton.
++ (NRMAHarvestController* _Nullable) harvestController NS_SWIFT_NAME(shared());
 
 + (void) setPeriod:(long long)period;
 

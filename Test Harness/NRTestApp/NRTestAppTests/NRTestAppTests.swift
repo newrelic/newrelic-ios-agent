@@ -90,6 +90,13 @@ final class NRTestAppTests: XCTestCase, URLAuthenticationChallengeSender {
     func testUtilFailedNWRequest() throws {
         XCTAssertNoThrow(utilViewModel.noticeFailedNWRequest())
     }
+
+    // NR-622029 — reporting with caller-supplied trace headers must not throw for either event
+    // type, including on the NSNull `newrelic` entry the Flutter bridge passes.
+    func testUtilNoticeFlutterStyleDistributedTracedRequest() throws {
+        XCTAssertNoThrow(utilViewModel.noticeFlutterStyleDistributedTracedRequest())
+        XCTAssertNoThrow(utilViewModel.noticeFlutterStyleDistributedTracedRequest(statusCode: 403))
+    }
     
     func testUtilURLSessionDataTask() throws {
         XCTAssertNoThrow(utilViewModel.doDataTask())

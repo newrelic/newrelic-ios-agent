@@ -112,6 +112,17 @@ namespace NewRelic {
         HexStore::HexStore(const char* storePath) : storePath(storePath) {}
 
         void HexStore::store(const std::shared_ptr<Report::HexReport>& report) {
+            // Serialize BEFORE touching the filesystem. finalize() can throw --
+            // std::bad_alloc when the device is low on memory, std::invalid_argument
+            // on a report missing its exception/app info. When the file was opened
+            // first, every such failure left a 0-byte .fbad behind for readAll() to
+            // detect and reap. Serializing first means a failed report costs nothing
+            // on disk. The throw itself propagates to the crash boundary in
+            // NRMAHandledExceptions, which drops the report. See issue #884.
+            flatbuffers::FlatBufferBuilder builder{};
+            auto agentData = report->finalize(builder);
+            builder.Finish(agentData);
+
             // Bound the on-disk backlog before we add another file. Cheap single
             // dirent walk; protects against an indefinitely-offline app from
             // exhausting disk + file descriptors.
@@ -130,9 +141,6 @@ namespace NewRelic {
                 }
                 return;
             }
-            flatbuffers::FlatBufferBuilder builder{};
-            auto agentData = report->finalize(builder);
-            builder.Finish(agentData);
             auto size = std::fwrite(builder.GetBufferPointer(), sizeof(uint8_t),
                                     builder.GetSize(), file.get());
             if (size < builder.GetSize()) {
