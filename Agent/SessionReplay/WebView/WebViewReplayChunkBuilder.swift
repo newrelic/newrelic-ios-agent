@@ -84,6 +84,11 @@ struct WebViewReplayOutputEvent {
 /// iframe is (re)built is known exactly, and the document can be attached right after each one --
 /// no ordering gates or wait buffers needed.
 enum WebViewReplayChunkBuilder {
+    
+    /// How soon after the iframe is (re)built a new document must land for the carried one to be
+    /// skipped. The snapshot requested after every harvest typically lands within a second of the
+    /// next chunk's start; until it does, the WebView shows empty rather than costing a second copy.
+    static let freshDocumentWindowMs: TimeInterval = 2000
 
     /// - Parameters:
     ///   - pending: translated WebView events received since the last harvest, in arrival order
@@ -163,6 +168,18 @@ enum WebViewReplayChunkBuilder {
                 attach(document, at: at, withBacklog: true)
             }
         }
+        
+        // For each event, when the next document arrives, if one does before the page navigates away.
+        var nextDocumentAt = [TimeInterval?](repeating: nil, count: events.count)
+        var upcoming: TimeInterval?
+        for index in events.indices.reversed() {
+            switch events[index].kind {
+            case .document: upcoming = events[index].timestamp
+            case .navigation: upcoming = nil
+            case .incremental: break
+            }
+            nextDocumentAt[index] = upcoming
+        }
 
         var eventIndex = 0
         var transitionIndex = 0
@@ -208,6 +225,14 @@ enum WebViewReplayChunkBuilder {
                 attachedRootId = nil
 
             case .incremental:
+                // A new document lands moments after the iframe was rebuilt -- typically the one
+                  // requested at the last harvest. It already reflects this change, so attaching the
+                  // carried copy just to apply it would send the page twice.
+                  if isMounted, let rebuiltAt = pendingAttachAt, let documentAt = nextDocumentAt[eventIndex - 1],
+                     documentAt - rebuiltAt <= Self.freshDocumentWindowMs,
+                     transitionIndex >= transitions.count || transitions[transitionIndex].timestamp > documentAt {
+                      continue
+                  }
                 // Attach first: the backlog replayed onto the document must not already contain this
                 // event, which is emitted right after it.
                 if isMounted {
