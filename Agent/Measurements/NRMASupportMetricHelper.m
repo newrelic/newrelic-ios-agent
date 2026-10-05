@@ -289,6 +289,25 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
 
 // End JS Error
 
+// Retry
++ (void) enqueueRetrySuccessMetric:(NSString*)endpoint {
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMARetrySuccessMetricFormatString, endpoint]
+                                                              value:@1
+                                                              scope:nil]];
+    }
+}
+
++ (void) enqueueRetryFailedMetric:(NSString*)endpoint {
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMARetryFailedMetricFormatString, endpoint]
+                                                              value:@1
+                                                              scope:nil]];
+    }
+}
+
+// End Retry
+
 // KMP Detection (Kotlin Multiplatform)
 + (void) enqueueKMMDetectionMetric {
     @synchronized (deferredMetrics) {

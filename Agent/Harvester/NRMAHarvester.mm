@@ -437,10 +437,15 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
         } else {
             // On a 429 we deliberately retain the buffer so it can be sent after
             // the backoff window; the backoff guard above prevents an immediate resend.
+            self.consecutiveFailureCount += 1;
             [self fireOnHarvestFailure];
         }
     } else {
         // success
+        if (self.consecutiveFailureCount > 0) {
+            [NRMASupportMetricHelper enqueueRetrySuccessMetric:@"data"];
+        }
+        self.consecutiveFailureCount = 0;
         // A successful (2xx) harvest clears any active rate-limit backoff.
         [self resetRateLimitBackoff];
         [self.harvestData clear];

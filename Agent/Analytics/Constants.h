@@ -18,7 +18,6 @@ extern NSString *const kNRMA_RA_appName;
 extern NSString *const kNRMA_RA_uuid;
 extern NSString *const kNRMA_RA_sessionDuration;
 extern NSString *const kNRMA_RA_sessionElapsedTime;
-extern NSString *const kNRMA_RA_payload;
 extern NSString *const kNRMA_RA_InteractionDuration;
 extern NSString *const kNRMA_RA_osName;
 extern NSString *const kNRMA_RA_osVersion;
@@ -103,3 +102,9 @@ extern NSString *const kNRMA_Collector_hex_url;
 static int kNRMA_Attrib_Max_Name_Length = 256;
 static int kNRMA_Attrib_Max_Value_Size_Bytes = 4096;
 static int kNRMA_Attrib_Max_Number_Attributes = 128;
+
+// Event buffer/pool size limits
+static unsigned int kNRMA_MinEventBufferTimeSeconds = 60;
+static unsigned int kNRMA_MaxEventBufferTimeSeconds = 600;
+static unsigned int kNRMA_MinEventPoolSize = 64;
+static unsigned int kNRMA_MaxEventPoolSize = 1000;
