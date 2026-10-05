@@ -107,6 +107,9 @@ struct SwiftUIContentView: View {
                     NavigationLink(destination: WebViewSwiftUI()) {
                         Text("Web View")
                     }
+                    NavigationLink(destination: MultiWebViewSwiftUI()) {
+                        Text("Multiple Web Views")
+                    }
                     #endif
                 }
                 .navigationBarTitle("SwiftUI Elements")

@@ -243,6 +243,9 @@ public class NRMAWebViewReplayBridge: NSObject {
     }catch(e){}})();
     """
 
+    /// How many times one page may ask for a snapshot it has not delivered.
+    static let maxSnapshotAsks = 3
+
     /// Injects the browser agent in observation mode and registers a beforeHarvest hook that forwards
     /// session_replay payloads to native. Sentinel-guarded, so repeat evaluations are no-ops.
     ///
@@ -254,6 +257,11 @@ public class NRMAWebViewReplayBridge: NSObject {
     /// - `harvest.interval` is 5s: at the default 30s the first replay harvest looks like a failure.
     /// - `inline_stylesheet` stays on while fonts and images are shed: the player cannot reach the
     ///   customer's origin, so without inlined stylesheets the page would replay unstyled.
+    ///
+    /// A page's first replay harvest can carry changes without the snapshot they apply to: resuming a
+    /// session on a same-origin load, the agent harvests only mutations. Until a harvest carries a
+    /// FullSnapshot, the hook asks the recorder for one (deferred, so not from inside the harvest);
+    /// the recorder harvests a Meta + FullSnapshot immediately rather than on its interval.
     ///
     /// The hook never returns null. Per the beforeHarvest contract null CANCELS the harvest, while
     /// undefined sends the original unmodified, so every exit returns the payload or undefined.
@@ -274,7 +282,23 @@ public class NRMAWebViewReplayBridge: NSObject {
     window.NREUM.loader_config={licenseKey:'\(observationLicenseKey)',applicationID:'0',agentID:'0',trustKey:'0'};
     window.NREUM.init={observation_mode:{enabled:true},harvest:{interval:5},session_trace:{enabled:true},
     session_replay:{enabled:true,sampling_rate:100,error_sampling_rate:100,inline_stylesheet:true,collect_fonts:false,inline_images:false}};
-    var hookSeen=false;var srSeen=false;
+    var hookSeen=false;var srSeen=false;var docSeen=false;var snapshotAsks=0;
+    var hasDocument=function(events){
+    try{
+    if(typeof events==='string'){events=JSON.parse(events);}
+    if(events&&!Array.isArray(events)&&Array.isArray(events.body)){events=events.body;}
+    if(!Array.isArray(events)){return false;}
+    for(var i=0;i<events.length;i++){if(events[i]&&events[i].type===2){return true;}}
+    }catch(e){}
+    return false;
+    };
+    var takeSnapshot=function(){try{
+    var agents=window.NREUM&&window.NREUM.initializedAgents;if(!agents){return;}
+    Object.keys(agents).forEach(function(id){try{
+    var sr=agents[id].features&&agents[id].features.session_replay;var r=sr&&sr.featAggregate&&sr.featAggregate.recorder;
+    if(r&&typeof r.takeFullSnapshot==='function'){r.takeFullSnapshot();}
+    }catch(e){}});
+    }catch(e){}};
     var passThrough=function(h){return (h&&h.payload!=null)?h.payload:undefined;};
     var isBinary=function(v){try{
     if(!v||typeof v!=='object'){return false;}
@@ -296,6 +320,10 @@ public class NRMAWebViewReplayBridge: NSObject {
     if(!srSeen){srSeen=true;post({kind:'observed',info:'first session_replay harvest: shape='+shape+' chars='+(out?out.length:-1)});}
     if(out){post({kind:'events',body:out});}
     else{post({kind:'skipped',reason:'replay-body-unreadable ('+shape+')'});}
+    if(out&&!docSeen){
+    docSeen=hasDocument(body||out);
+    if(!docSeen&&snapshotAsks<\(maxSnapshotAsks)){snapshotAsks++;setTimeout(takeSnapshot,0);post({kind:'observed',info:'replay harvest without a document; snapshot requested'});}
+    }
     }catch(e){}
     return passThrough(h);
     };
