@@ -54,6 +54,7 @@ typedef enum {
 // rateLimitBackoffCount is the number of consecutive 429s driving exponential escalation.
 @property(atomic, assign) NSTimeInterval rateLimitBackoffUntil;
 @property(atomic, assign) NSInteger rateLimitBackoffCount;
+
 - (void) execute;
 - (void) setAgentConfiguration:(NRMAAgentConfiguration*)agentConfiguration;
 - (void) configureHarvester:(NRMAHarvesterConfiguration*)harvestConfiguration;

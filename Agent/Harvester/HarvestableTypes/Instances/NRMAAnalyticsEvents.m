@@ -6,6 +6,7 @@
 #import "NRMAAnalyticsEvents.h"
 #import "NRMAHarvestableEvent.h"
 #import "NRMAHarvestController.h"
+
 @implementation NRMAAnalyticsEvents
 - (instancetype) init
 {
