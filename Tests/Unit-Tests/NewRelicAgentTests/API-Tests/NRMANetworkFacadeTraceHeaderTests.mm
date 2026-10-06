@@ -26,6 +26,7 @@
 #import "NRMAPayload.h"
 #import "NRTimer.h"
 #import "NRMAAnalytics.h"
+#import "NewRelicInternalUtils.h"
 #import <Connectivity/Payload.hpp>
 
 static NewRelicAgentInternal* _sharedInstance;
@@ -53,6 +54,7 @@ static NewRelicAgentInternal* _sharedInstance;
     NRMAFeatureFlags _originalFlags;
 }
 @property id mockNewRelicInternals;
+@property id mockInternalUtils;
 @end
 
 @implementation NRMANetworkFacadeTraceHeaderTests
@@ -69,6 +71,14 @@ static NewRelicAgentInternal* _sharedInstance;
     _sharedInstance.analyticsController = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0.0];
     [[[[self.mockNewRelicInternals stub] classMethod] andReturn:_sharedInstance] sharedInstance];
 
+    // The facade's recording path dispatches to a background queue and calls
+    // +getCurrentWanType, which hits CoreTelephony via XPC. That real round-trip proved
+    // flaky under CI load (the recording can land after -pollForNetworkEvent's timeout),
+    // so stub it to return synchronously for every test in this file.
+    self.mockInternalUtils = [OCMockObject mockForClass:[NewRelicInternalUtils class]];
+    [[[[self.mockInternalUtils stub] classMethod] andReturn:@"wifi"] getCurrentWanType];
+    [[[[self.mockInternalUtils stub] classMethod] andReturn:@"wifi"] connectionType];
+
     NRMAAgentConfiguration *config = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:kNRMA_ENABLED_STAGING_APP_TOKEN]
                                                                      collectorAddress:KNRMA_TEST_COLLECTOR_HOST
                                                                          crashAddress:nil];
@@ -83,6 +93,7 @@ static NewRelicAgentInternal* _sharedInstance;
 
 - (void)tearDown {
     [self.mockNewRelicInternals stopMocking];
+    [self.mockInternalUtils stopMocking];
     [NRMAFlags setFeatureFlags:_originalFlags];
 
     // setUp installs a real, fully configured harvester into the process-wide
