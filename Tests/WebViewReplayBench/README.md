@@ -45,7 +45,11 @@ from `Documents/NRCapture/`. `UDID=` picks the simulator (default: the booted on
   - Chunk building and encoding are close; both hit the 1 MB chunk cap at the same native activity.
   - Iframe moves: the POC re-attaches the document at each one, two-streams ignores them. Whether
     two-streams then shows a blank WebView is a Phase 4 question.
-- [ ] **Phase 1 -- realistic corpus.** ~12 real multi-MB pages recorded with mitmproxy and replayed
+- [~] **Phase 1 -- realistic corpus.** Static half done: `corpus/capture.sh` snapshots real pages with
+  SingleFile into `corpus/pages/` (4-15 MB each, one 106 MB outlier); `corpus/serve.sh` serves them
+  at `localhost:8765` for the "Captured snapshots" section of NRTestApp's Web View Corpus screen.
+  Still to do: the mitmproxy-recorded dynamic pages (snapshots have no scripts, so no mutation).
+  Original plan: ~12 real multi-MB pages recorded with mitmproxy and replayed
   deterministically; plus SingleFile static snapshots for 5-20 MB documents.
 - [ ] **Phase 2 -- real fixtures.** Capture each branch's real bridge payloads from those pages
   (Playwright WebKit with a stubbed `window.webkit.messageHandlers`) and feed them to this bench;
