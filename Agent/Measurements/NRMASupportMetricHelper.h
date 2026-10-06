@@ -42,6 +42,9 @@ static NSMutableArray *deferredMetrics;
 + (void) enqueueJSErrorUploadThrottledMetric;
 + (void) enqueueJSErrorFailedUploadMetric;
 
++ (void) enqueueRetrySuccessMetric:(NSString*)endpoint;
++ (void) enqueueRetryFailedMetric:(NSString*)endpoint;
+
 + (void) enqueueKMMDetectionMetric;
 
 // WebView session replay: suffix is appended to kNRMAWebViewReplayMetricPrefix, e.g. @"Injected".

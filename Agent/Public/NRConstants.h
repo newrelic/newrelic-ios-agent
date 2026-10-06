@@ -209,6 +209,11 @@ typedef NSString NRMetricUnit;
 // ("Supportability/AgentHealth/Crash/Offline/Rejected") for cross-platform parity.
 #define kNRMACrashOfflineRejectedMetric     kNRAgentHealthPrefix @"/Crash/Offline/Rejected"
 
+// Retry - emitted by each endpoint's own bounded retry loop.
+// Endpoint, e.g. "f", "JSError", "SessionReplay", "LogReporting".
+#define kNRMARetrySuccessMetricFormatString kNRAgentHealthPrefix @"/%@/Retry/Success"
+#define kNRMARetryFailedMetricFormatString  kNRAgentHealthPrefix @"/%@/Retry/Failed"
+
 // Events (queue lifecycle) — matches the Android agent's MetricNames.SUPPORTABILITY_EVENT_*
 // constants for cross-platform parity (NR-478730). Flat literal names (no platform
 // placeholder substitution), unlike most Supportability metrics in this file, so the
