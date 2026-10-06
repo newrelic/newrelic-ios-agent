@@ -407,8 +407,9 @@
 }
 
 - (void)testDetectionRecordsMetricWhenBrowserAgentPresent {
-    WKWebView *webView = [[WKWebView alloc] init];
-    [webView loadHTMLString:@"<script>window.newrelic = {}</script>" baseURL:nil];
+    // A non-zero frame keeps the WebView from being treated as having nothing to display.
+    WKWebView *webView = [[WKWebView alloc] initWithFrame:CGRectMake(0, 0, 320, 480)];
+    [webView loadHTMLString:@"<html><body><script>window.newrelic = {}</script></body></html>" baseURL:nil];
 
     // CI runners (e.g. GitHub Actions macOS) can be slow to spin up WebKit's WebContent
     // process on a cold start, so give the initial load a generous timeout rather than

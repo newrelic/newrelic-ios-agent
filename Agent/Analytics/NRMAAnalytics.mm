@@ -1012,9 +1012,8 @@ static void NRMARecordViewEventInSessionFlow(NSString* eventType, NSDictionary* 
             [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
                 [event addAttribute:key value:obj];
             }];
-            [_eventManager addEvent:[event autorelease]];
+            return [_eventManager addEvent:[event autorelease]];
             
-            return YES;
         } else {
             auto event = _analyticsController->newCustomEvent(eventType.UTF8String);
             
