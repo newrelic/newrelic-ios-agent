@@ -1,0 +1,68 @@
+[
+ {
+  "branch": "two-streams-webview-msr",
+  "bridgeBytes": 136845,
+  "kind": "memory",
+  "outBytes": 65342,
+  "peakDeltaBytes": 1818624,
+  "rev": "ac0f1978",
+  "shape": "agent",
+  "size": "small",
+  "variant": "twostreams"
+ },
+ {
+  "branch": "two-streams-webview-msr",
+  "bridgeBytes": 65468,
+  "kind": "memory",
+  "outBytes": 65342,
+  "peakDeltaBytes": 1753088,
+  "rev": "ac0f1978",
+  "shape": "rrweb",
+  "size": "small",
+  "variant": "twostreams"
+ },
+ {
+  "branch": "two-streams-webview-msr",
+  "bridgeBytes": 1373121,
+  "kind": "memory",
+  "outBytes": 655778,
+  "peakDeltaBytes": 4587520,
+  "rev": "ac0f1978",
+  "shape": "agent",
+  "size": "medium",
+  "variant": "twostreams"
+ },
+ {
+  "branch": "two-streams-webview-msr",
+  "bridgeBytes": 657388,
+  "kind": "memory",
+  "outBytes": 655778,
+  "peakDeltaBytes": 3899392,
+  "rev": "ac0f1978",
+  "shape": "rrweb",
+  "size": "medium",
+  "variant": "twostreams"
+ },
+ {
+  "branch": "two-streams-webview-msr",
+  "bridgeBytes": 5513353,
+  "kind": "memory",
+  "outBytes": 2633466,
+  "peakDeltaBytes": 10747904,
+  "rev": "ac0f1978",
+  "shape": "agent",
+  "size": "large",
+  "variant": "twostreams"
+ },
+ {
+  "branch": "two-streams-webview-msr",
+  "bridgeBytes": 2639952,
+  "kind": "memory",
+  "outBytes": 2633466,
+  "peakDeltaBytes": 10747904,
+  "rev": "ac0f1978",
+  "shape": "rrweb",
+  "size": "large",
+  "variant": "twostreams"
+ }
+]

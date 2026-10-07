@@ -868,6 +868,7 @@
 		02FF4C9724E3201400115469 /* NRMAHTTPUtilities.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF4ACC24DC657B00115469 /* NRMAHTTPUtilities.mm */; };
 		02FF4C9824E3201400115469 /* NRMATraceSegment.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF49D424DC636100115469 /* NRMATraceSegment.m */; };
 		02FF4C9924E3201400115469 /* NRMAClassNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48B124DC61F600115469 /* NRMAClassNode.m */; };
+		2A3313528F60FF991BAC7011 /* WKWebViewThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 049A7CB7637A16B4082189E9 /* WKWebViewThingy.swift */; };
 		2B02DB86293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */; };
 		2B02DB87293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */; };
 		2B0340632E87366900182A70 /* GetViewRendererByKeyPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B03404F2E87366600182A70 /* GetViewRendererByKeyPath.swift */; };
@@ -1576,7 +1577,15 @@
 		34EA78CA2A39221E0071CC95 /* NRMACustomEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */; };
 		34EA78CB2A39221E0071CC95 /* NRMACustomEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */; };
 		34EA78E02A3924CC0071CC95 /* TestCustomEvents.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78DF2A3924CC0071CC95 /* TestCustomEvents.m */; };
+		4F7D185024DBBE1E02A7ADAE /* WebViewReplayRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2392CC4AF129E84BA75B0A6 /* WebViewReplayRecorder.swift */; };
+		568E3CFAF582510B7C44A9F7 /* WebViewReplayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 983FC53417AC294E4DA47EF2 /* WebViewReplayTests.swift */; };
+		59484C16B0623571DD1F4601 /* WebViewReplayChunkBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE5782573F7D8D0AFB1E1384 /* WebViewReplayChunkBuilder.swift */; };
+		610FD5D4B495222747D56B83 /* WebViewReplayRemapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 180B8F7058046596C6B0F25F /* WebViewReplayRemapper.swift */; };
+		68106E0ADF48CC73EAAF2876 /* WKWebViewThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 049A7CB7637A16B4082189E9 /* WKWebViewThingy.swift */; };
+		7E523631EE350C8CBAFD73EE /* NRMAWebViewReplayBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D1C14F5A294D265D1207CED /* NRMAWebViewReplayBridge.swift */; };
 		8B498242383AF7020CD36D72 /* NRMANetworkFacadeTraceHeaderTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 578D57D9E9373167EBE8C0CF /* NRMANetworkFacadeTraceHeaderTests.mm */; };
+		9961AC137948ABF34FDFD5A0 /* NRMAWebViewReplayBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D1C14F5A294D265D1207CED /* NRMAWebViewReplayBridge.swift */; };
+		C3043F0696F822526D01EE08 /* WebViewReplayRemapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 180B8F7058046596C6B0F25F /* WebViewReplayRemapper.swift */; };
 		C94590EE289AC0EC0062A4DE /* SwiftTestHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0209ACA424E7393B00E45C90 /* SwiftTestHelper.swift */; };
 		C94590EF289AC0F00062A4DE /* NRMASwiftInstrumentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC8324E7393200E45C90 /* NRMASwiftInstrumentationTests.swift */; };
 		C94F518D28577E0000E81E01 /* InstrumentationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C94F518C28577E0000E81E01 /* InstrumentationTests.m */; };
@@ -1597,6 +1606,7 @@
 		D4C36C972FC902B7001DD597 /* TestGuidUniqueness.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4C36C952FC902B7001DD597 /* TestGuidUniqueness.mm */; };
 		D4C36C982FC902B7001DD597 /* TestGuidUniqueness.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4C36C952FC902B7001DD597 /* TestGuidUniqueness.mm */; };
 		D4DCC24030192068008B5C59 /* UIHostingViewRecordOrchestratorWidthOffsetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4DCC23F30192068008B5C59 /* UIHostingViewRecordOrchestratorWidthOffsetTests.swift */; };
+		EC258876C7CB1B87428ECD43 /* WebViewReplayChunkBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE5782573F7D8D0AFB1E1384 /* WebViewReplayChunkBuilder.swift */; };
 		F6E79C7325A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
 		F6E79C7425A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
 		F6E79C7525A65347006277FB /* W3CTraceState.h in Headers */ = {isa = PBXBuildFile; fileRef = F6E79C6E25A65346006277FB /* W3CTraceState.h */; };
@@ -1722,6 +1732,7 @@
 		F8FBFA852A7AE68C00CDC8C5 /* NRMANetworkErrorEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA832A7AE68C00CDC8C5 /* NRMANetworkErrorEvent.m */; };
 		F8FBFB1F2A83CEBD00CDC8C5 /* Constants.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFB1E2A83CEBD00CDC8C5 /* Constants.m */; };
 		F8FBFB202A83CEBD00CDC8C5 /* Constants.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFB1E2A83CEBD00CDC8C5 /* Constants.m */; };
+		FD996B2CF89A061B8B016C51 /* WebViewReplayRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2392CC4AF129E84BA75B0A6 /* WebViewReplayRecorder.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -2579,6 +2590,8 @@
 		02FF4AFA24DC8CB200115469 /* reflection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = reflection.h; sourceTree = "<group>"; };
 		02FF4AFB24DC8CB200115469 /* base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = base.h; sourceTree = "<group>"; };
 		02FF4CAC24E3201400115469 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		049A7CB7637A16B4082189E9 /* WKWebViewThingy.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WKWebViewThingy.swift; sourceTree = "<group>"; };
+		180B8F7058046596C6B0F25F /* WebViewReplayRemapper.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WebViewReplayRemapper.swift; sourceTree = "<group>"; };
 		2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRMAURLSessionAsyncTests.swift; sourceTree = "<group>"; };
 		2B03404F2E87366600182A70 /* GetViewRendererByKeyPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetViewRendererByKeyPath.swift; sourceTree = "<group>"; };
 		2B0340672E874A9900182A70 /* ControllerTypeDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControllerTypeDetector.swift; sourceTree = "<group>"; };
@@ -2702,14 +2715,18 @@
 		34EA78C62A39221E0071CC95 /* NRMACustomEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMACustomEvent.h; sourceTree = "<group>"; };
 		34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMACustomEvent.m; sourceTree = "<group>"; };
 		34EA78DF2A3924CC0071CC95 /* TestCustomEvents.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestCustomEvents.m; sourceTree = "<group>"; };
+		3D1C14F5A294D265D1207CED /* NRMAWebViewReplayBridge.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NRMAWebViewReplayBridge.swift; sourceTree = "<group>"; };
 		578D57D9E9373167EBE8C0CF /* NRMANetworkFacadeTraceHeaderTests.mm */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.objcpp; path = NRMANetworkFacadeTraceHeaderTests.mm; sourceTree = "<group>"; };
 		59AA4543706D6BB36459A6C5 /* NewRelicAgent.podspec.template */ = {isa = PBXFileReference; lastKnownFileType = file.podspec; name = NewRelicAgent.podspec.template; path = cocoapods/NewRelicAgent.podspec.template; sourceTree = "<group>"; };
 		59AA4F6AF53601FEA41A1303 /* dev_build_xcframework.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = dev_build_xcframework.sh; sourceTree = "<group>"; };
+		983FC53417AC294E4DA47EF2 /* WebViewReplayTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WebViewReplayTests.swift; sourceTree = "<group>"; };
 		C15109B42FC49AA5B0AE1D31 /* SessionReplayHarvestEndToEndTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayHarvestEndToEndTests.swift; sourceTree = "<group>"; };
 		C94F518C28577E0000E81E01 /* InstrumentationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InstrumentationTests.m; sourceTree = "<group>"; };
 		C94F51A02857832B00E81E01 /* NRMAActivityNameGeneratorTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAActivityNameGeneratorTest.m; sourceTree = "<group>"; };
 		C9C28B9E284A6AF70097B433 /* NRMAKeyAttributesTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAKeyAttributesTest.m; sourceTree = "<group>"; };
 		CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAHarvesterConfigurationLifetimeTests.m; sourceTree = "<group>"; };
+		CE5782573F7D8D0AFB1E1384 /* WebViewReplayChunkBuilder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WebViewReplayChunkBuilder.swift; sourceTree = "<group>"; };
+		D2392CC4AF129E84BA75B0A6 /* WebViewReplayRecorder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WebViewReplayRecorder.swift; sourceTree = "<group>"; };
 		D4580CA52F563363003BAD8C /* JSErrorControllerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JSErrorControllerTests.m; sourceTree = "<group>"; };
 		D46F91BF2F69CD5600FD2EBE /* UISwitchThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UISwitchThingy.swift; sourceTree = "<group>"; };
 		D48D55172F4E46B2003BE3AB /* JSErrorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSErrorController.swift; sourceTree = "<group>"; };
@@ -3223,6 +3240,7 @@
 				F8AC3EA72938FDDB002B4AA8 /* NRMAFakeDataHelper.h */,
 				2B4226E529DB99740068BB8A /* NRMAHTTPUtilitiesTests.m */,
 				F83A77AF2B48810900B3D180 /* NRMAOfflineStorageTests.m */,
+				983FC53417AC294E4DA47EF2 /* WebViewReplayTests.swift */,
 			);
 			path = Uncategorized;
 			sourceTree = "<group>";
@@ -4159,6 +4177,7 @@
 				3493DF4D2D54310900BF5BED /* UILabelThingy.swift */,
 				341E84BD2D9CAABC00968D7D /* UIImageViewThingy.swift */,
 				3493DF492D4C4E6000BF5BED /* SessionReplayViewThingy.swift */,
+				049A7CB7637A16B4082189E9 /* WKWebViewThingy.swift */,
 			);
 			path = ViewCaptors;
 			sourceTree = "<group>";
@@ -4203,6 +4222,7 @@
 				344E494C2D934CF8008174A1 /* SessionReplayFrameProcessor.swift */,
 				341E84D32D9DDB1B00968D7D /* SessionReplayTouchEventProcessor.swift */,
 				340A8CE32DAD8EAB00BC2B01 /* IncrementalDiffGenerator.swift */,
+				7A552FA3C792127D271E283C /* WebView */,
 			);
 			path = SessionReplay;
 			sourceTree = "<group>";
@@ -4275,6 +4295,18 @@
 				59AA4F6AF53601FEA41A1303 /* dev_build_xcframework.sh */,
 			);
 			path = scripts;
+			sourceTree = "<group>";
+		};
+		7A552FA3C792127D271E283C /* WebView */ = {
+			isa = PBXGroup;
+			children = (
+				CE5782573F7D8D0AFB1E1384 /* WebViewReplayChunkBuilder.swift */,
+				3D1C14F5A294D265D1207CED /* NRMAWebViewReplayBridge.swift */,
+				180B8F7058046596C6B0F25F /* WebViewReplayRemapper.swift */,
+				D2392CC4AF129E84BA75B0A6 /* WebViewReplayRecorder.swift */,
+			);
+			name = WebView;
+			path = WebView;
 			sourceTree = "<group>";
 		};
 		C9C28B8A284A6A750097B433 /* HybridSupport-Tests */ = {
@@ -5751,6 +5783,7 @@
 				0209AC2124E7071F00E45C90 /* MachineMeasurementsTest.m in Sources */,
 				0209ABF424E706FA00E45C90 /* NRThreadInfoTests.m in Sources */,
 				8B498242383AF7020CD36D72 /* NRMANetworkFacadeTraceHeaderTests.mm in Sources */,
+				568E3CFAF582510B7C44A9F7 /* WebViewReplayTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6018,6 +6051,11 @@
 				02FF48BB24DC61F600115469 /* NRMAClassNode.m in Sources */,
 				F6E79C7925A65347006277FB /* W3CTraceParent.mm in Sources */,
 				2BDCA8AA2A8C41160005740D /* NRMASAM.mm in Sources */,
+				59484C16B0623571DD1F4601 /* WebViewReplayChunkBuilder.swift in Sources */,
+				9961AC137948ABF34FDFD5A0 /* NRMAWebViewReplayBridge.swift in Sources */,
+				68106E0ADF48CC73EAAF2876 /* WKWebViewThingy.swift in Sources */,
+				C3043F0696F822526D01EE08 /* WebViewReplayRemapper.swift in Sources */,
+				FD996B2CF89A061B8B016C51 /* WebViewReplayRecorder.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6400,6 +6438,11 @@
 				02FF4C9824E3201400115469 /* NRMATraceSegment.m in Sources */,
 				02FF4C9924E3201400115469 /* NRMAClassNode.m in Sources */,
 				F6E79C7A25A65347006277FB /* W3CTraceParent.mm in Sources */,
+				EC258876C7CB1B87428ECD43 /* WebViewReplayChunkBuilder.swift in Sources */,
+				7E523631EE350C8CBAFD73EE /* NRMAWebViewReplayBridge.swift in Sources */,
+				2A3313528F60FF991BAC7011 /* WKWebViewThingy.swift in Sources */,
+				610FD5D4B495222747D56B83 /* WebViewReplayRemapper.swift in Sources */,
+				4F7D185024DBBE1E02A7ADAE /* WebViewReplayRecorder.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -147,6 +147,7 @@ enum TagType: String, Codable {
     case image = "img"
     case svg = "svg"
     case path = "path"
+    case iframe = "iframe"
 }
 
 class ElementNodeData: SerializedNodeData {
