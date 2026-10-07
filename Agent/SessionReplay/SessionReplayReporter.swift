@@ -58,10 +58,13 @@ public class SessionReplayReporter: NSObject {
         }
    }
     
+    // backgroundTaskId is only read and written on the main queue. Checking it before hopping there
+    // races: several uploads enqueued back to back (one split harvest) would each begin a task, and
+    // all but the last would never be ended.
     private func beginBackgroundTaskIfNeeded() {
-        guard backgroundTaskId == .invalid else { return }
-        
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self, self.backgroundTaskId == .invalid else { return }
+            
             self.backgroundTaskId = UIApplication.shared.beginBackgroundTask { [weak self] in
                 NRLOG_AGENT_DEBUG("Session replay background task expiring")
                 self?.endBackgroundTaskIfNeeded()
@@ -70,9 +73,9 @@ public class SessionReplayReporter: NSObject {
     }
     
     private func endBackgroundTaskIfNeeded() {
-        guard backgroundTaskId != .invalid else { return }
-        
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self, self.backgroundTaskId != .invalid else { return }
+            
             UIApplication.shared.endBackgroundTask(self.backgroundTaskId)
             self.backgroundTaskId = .invalid
         }
@@ -381,6 +384,53 @@ public class SessionReplayReporter: NSObject {
         ]
 
         return urlComponents?.url
+    }
+
+    /// The value of one of an upload URL's replay attributes (the `attributes` query item uploadURL() builds).
+    static func replayAttribute(_ name: String, of url: URL) -> String? {
+        guard let attributes = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+                .queryItems?.first(where: { $0.name == "attributes" })?.value else {
+            return nil
+        }
+        for pair in attributes.components(separatedBy: "&") {
+            let keyValue = pair.split(separator: "=", maxSplits: 1, omittingEmptySubsequences: false)
+            if keyValue.first.map(String.init) == name {
+                return keyValue.count > 1 ? String(keyValue[1]) : ""
+            }
+        }
+        return nil
+    }
+
+    /// `url` with some of its replay attributes set (added if missing) and some removed. Every other
+    /// attribute is kept exactly as is, values containing `=` included.
+    static func rewritingReplayAttributes(of url: URL, setting values: [String: String], removing removed: Set<String> = []) -> URL? {
+        guard var urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              var queryItems = urlComponents.queryItems,
+              let index = queryItems.firstIndex(where: { $0.name == "attributes" }) else {
+            return nil
+        }
+
+        var pairs = [String]()
+        var written = Set<String>()
+        for pair in (queryItems[index].value ?? "").components(separatedBy: "&") where !pair.isEmpty {
+            let key = pair.split(separator: "=", maxSplits: 1, omittingEmptySubsequences: false).first.map(String.init) ?? pair
+            if removed.contains(key) {
+                continue
+            }
+            if let value = values[key] {
+                pairs.append("\(key)=\(value)")
+                written.insert(key)
+            } else {
+                pairs.append(pair)
+            }
+        }
+        for (key, value) in values.sorted(by: { $0.key < $1.key }) where !written.contains(key) {
+            pairs.append("\(key)=\(value)")
+        }
+
+        queryItems[index] = URLQueryItem(name: "attributes", value: pairs.joined(separator: "&"))
+        urlComponents.queryItems = queryItems
+        return urlComponents.url
     }
 }
 

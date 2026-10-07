@@ -73,8 +73,8 @@ struct WebViewReplayOutputEvent {
     let channelId: Int
     let timestamp: TimeInterval
     let json: Data
-    /// Events that attach one copy of a document: the graft and the backlog replayed onto it. Shed
-    /// together, since the backlog means nothing without its document.
+    /// Events that attach one copy of a document: the graft and the backlog replayed onto it. Kept in
+    /// the same upload when a chunk is split, since the backlog means nothing without its document.
     let graftGroup: Int?
 }
 
@@ -289,7 +289,7 @@ enum WebViewReplayEvents {
     }
 }
 
-/// One event in a harvest chunk that carries WebView events alongside native ones.
+/// One event in a harvest chunk: a native event, or a WebView event carried alongside them.
 enum ReplayChunkEvent {
     case native(AnyRRWebEvent)
     case webView(WebViewReplayOutputEvent)
@@ -306,93 +306,6 @@ enum ReplayChunkEvent {
             return event
         }
         return nil
-    }
-}
-
-/// Keeps a chunk under the upload size cap by dropping attached WebView documents.
-///
-/// Without this the reporter rejects an oversized chunk *whole*, native events included, so a single
-/// heavy page would cost a full harvest of native replay. Shedding a document instead leaves that
-/// WebView's iframe empty until the next attachment while the native replay survives.
-enum WebViewReplayPayloadBudget {
-
-    struct Piece {
-        let event: ReplayChunkEvent
-        let json: Data
-    }
-
-    /// - Parameters:
-    ///   - limit: the compressed-size cap the reporter enforces
-    ///   - compressedLength: returns the compressed size of a payload, or nil if it can't be measured
-    /// - Returns: the pieces to send, and how many document attachments were shed
-    static func enforce(_ pieces: [Piece], limit: Int, compressedLength: (Data) -> Int?) -> (pieces: [Piece], shedCount: Int) {
-        let json = joinedJSON(pieces)
-        guard let compressed = compressedLength(json), compressed > limit, json.count > 0 else {
-            return (pieces, 0)
-        }
-
-        // Derive an uncompressed budget from this chunk's own measured ratio: replay payloads compress
-        // anywhere from 10% to 41%, so a fixed assumption would shed too eagerly or not enough. 5%
-        // headroom absorbs the ratio drifting as content is removed.
-        let ratio = Double(compressed) / Double(json.count)
-        let budget = Int((Double(limit) / ratio) * 0.95)
-
-        var groupIndices = [Int: [Int]]()
-        var groupBytes = [Int: Int]()
-        var lastGroupByChannel = [Int: Int]()
-        for (index, piece) in pieces.enumerated() {
-            guard let event = piece.event.webViewEvent, let group = event.graftGroup else { continue }
-            groupIndices[group, default: []].append(index)
-            groupBytes[group, default: 0] += piece.json.count + 1   // + its separating comma
-            lastGroupByChannel[event.channelId] = group
-        }
-        guard !groupIndices.isEmpty else {
-            return (pieces, 0)
-        }
-        let finalGroups = Set(lastGroupByChannel.values)
-
-        // Superseded attachments go first: each channel's last one is what the end of the chunk
-        // actually shows. Within each class, largest first, so the fewest are lost.
-        let candidates = groupIndices.keys.sorted { lhs, rhs in
-            let lhsFinal = finalGroups.contains(lhs)
-            let rhsFinal = finalGroups.contains(rhs)
-            if lhsFinal != rhsFinal {
-                return !lhsFinal
-            }
-            if groupBytes[lhs] != groupBytes[rhs] {
-                return groupBytes[lhs, default: 0] > groupBytes[rhs, default: 0]
-            }
-            return lhs < rhs
-        }
-
-        var total = json.count
-        var shed = Set<Int>()
-        var shedGroups = 0
-        for group in candidates {
-            if total <= budget {
-                break
-            }
-            total -= groupBytes[group, default: 0]
-            shed.formUnion(groupIndices[group] ?? [])
-            shedGroups += 1
-        }
-
-        let kept = pieces.enumerated().filter { !shed.contains($0.offset) }.map { $0.element }
-        return (kept, shedGroups)
-    }
-
-    static func joinedJSON(_ pieces: [Piece]) -> Data {
-        var data = Data()
-        data.reserveCapacity(pieces.reduce(2) { $0 + $1.json.count + 1 })
-        data.append(UInt8(ascii: "["))
-        for (index, piece) in pieces.enumerated() {
-            if index > 0 {
-                data.append(UInt8(ascii: ","))
-            }
-            data.append(piece.json)
-        }
-        data.append(UInt8(ascii: "]"))
-        return data
     }
 }
 

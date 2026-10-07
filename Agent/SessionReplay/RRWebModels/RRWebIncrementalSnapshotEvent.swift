@@ -21,9 +21,23 @@ enum RRWebIncrementalData: RRWebEventData {
     case mouseInteraction(RRWebMouseInteractionData)
     case touchMove(RRWebTouchMoveData)
     
-//    enum CodingKeys: CodingKey {
-//        case source
-//    }
+    enum CodingKeys: CodingKey {
+        case source
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let source = try container.decode(RRWebIncrementalSource.self, forKey: .source)
+        
+        switch source {
+        case .mutation:
+            self = .mutation(try RRWebMutationData(from: decoder))
+        case .mouseInteraction:
+            self = .mouseInteraction(try RRWebMouseInteractionData(from: decoder))
+        case .touchMove:
+            self = .touchMove(try RRWebTouchMoveData(from: decoder))
+        }
+    }
     
     func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
@@ -157,10 +171,18 @@ enum RRWebMouseInteractionType: Int, Codable {
 
 struct RRWebMouseInteractionData: Codable {
     let type: RRWebMouseInteractionType
-    let source: RRWebIncrementalSource = .mouseInteraction
+    let source: RRWebIncrementalSource
     let id: Int
     let x: CGFloat
     let y: CGFloat
+    
+    init(type: RRWebMouseInteractionType, id: Int, x: CGFloat, y: CGFloat) {
+        self.type = type
+        self.source = .mouseInteraction
+        self.id = id
+        self.x = x
+        self.y = y
+    }
 }
 
 struct RRWebTouchPosition: Codable {
@@ -171,6 +193,11 @@ struct RRWebTouchPosition: Codable {
 }
 
 struct RRWebTouchMoveData: Codable {
-    let source: RRWebIncrementalSource = .touchMove
+    let source: RRWebIncrementalSource
     let positions: [RRWebTouchPosition]
+    
+    init(positions: [RRWebTouchPosition]) {
+        self.source = .touchMove
+        self.positions = positions
+    }
 }

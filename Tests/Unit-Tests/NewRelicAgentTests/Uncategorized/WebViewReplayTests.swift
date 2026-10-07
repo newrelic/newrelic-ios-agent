@@ -353,48 +353,10 @@ class WebViewReplayTests: XCTestCase {
         XCTAssertFalse(state.backlogOverflowed)
     }
 
-    // MARK: - Payload budget
-
-    private func pieces(_ events: [WebViewReplayOutputEvent], native: Int = 0) -> [WebViewReplayPayloadBudget.Piece] {
-        var result = [WebViewReplayPayloadBudget.Piece]()
-        for index in 0..<native {
-            result.append(.init(event: .native(makeMetaAnyRRWebEvent(timestamp: TimeInterval(index))), json: Data(repeating: 0x20, count: 10)))
-        }
-        for event in events {
-            result.append(.init(event: .webView(event), json: event.json))
-        }
-        return result
-    }
+    // MARK: - Chunk output
 
     private func output(group: Int?, size: Int, at timestamp: TimeInterval = 1) -> WebViewReplayOutputEvent {
         return WebViewReplayOutputEvent(channelId: iframeId, timestamp: timestamp, json: Data(repeating: 0x20, count: size), graftGroup: group)
-    }
-
-    func testBudgetLeavesChunkUnderLimitAlone() {
-        let input = pieces([output(group: 1, size: 50)], native: 2)
-        let result = WebViewReplayPayloadBudget.enforce(input, limit: 1_000_000) { $0.count }
-        XCTAssertEqual(result.shedCount, 0)
-        XCTAssertEqual(result.pieces.count, input.count)
-    }
-
-    func testBudgetShedsWholeSupersededAttachmentFirst() {
-        let input = pieces([output(group: 1, size: 400), output(group: 1, size: 100), output(group: nil, size: 5),
-                            output(group: 2, size: 50)], native: 2)
-        let total = WebViewReplayPayloadBudget.joinedJSON(input).count
-
-        let result = WebViewReplayPayloadBudget.enforce(input, limit: total - 1) { $0.count }
-
-        XCTAssertEqual(result.shedCount, 1)
-        XCTAssertEqual(result.pieces.compactMap { $0.event.webViewEvent?.graftGroup }, [2],
-                       "Group 1's graft and backlog go together; the final attachment survives")
-        XCTAssertEqual(result.pieces.count, 4, "Native events and ungrouped WebView events are never shed")
-    }
-
-    func testBudgetWithNothingToShedReturnsInput() {
-        let input = pieces([output(group: nil, size: 50)], native: 1)
-        let result = WebViewReplayPayloadBudget.enforce(input, limit: 1) { $0.count }
-        XCTAssertEqual(result.shedCount, 0)
-        XCTAssertEqual(result.pieces.count, input.count)
     }
 
     // MARK: - Standalone recorder (pages with their own browser agent)
@@ -521,17 +483,19 @@ class WebViewReplayTests: XCTestCase {
                                              touches: [],
                                              webViewEvents: [graft])
 
-        let encoded = try XCTUnwrap(manager.encodeReplayChunk(chunk))
+        let payloads = try XCTUnwrap(manager.encodeReplayChunk(chunk))
+        XCTAssertEqual(payloads.count, 1)
+        let encoded = try XCTUnwrap(payloads.first)
         XCTAssertEqual(encoded.firstTimestamp, 1000)
         XCTAssertEqual(encoded.lastTimestamp, 3000)
 
-        let pieces = chunk.map { event -> WebViewReplayPayloadBudget.Piece in
+        let pieces = chunk.map { event -> ReplayPayloadSplitter.Piece in
             switch event {
-            case .native(let native): return .init(event: event, json: try! JSONEncoder().encode(native))
-            case .webView(let webViewEvent): return .init(event: event, json: webViewEvent.json)
+            case .native(let native): return .init(json: try! JSONEncoder().encode(native), timestamp: event.timestamp)
+            case .webView(let webViewEvent): return .init(json: webViewEvent.json, timestamp: event.timestamp)
             }
         }
-        let array = try XCTUnwrap(try JSONSerialization.jsonObject(with: WebViewReplayPayloadBudget.joinedJSON(pieces)) as? [[String: Any]])
+        let array = try XCTUnwrap(try JSONSerialization.jsonObject(with: ReplayPayloadSplitter.joinedJSON(pieces)) as? [[String: Any]])
         XCTAssertEqual(array.map { $0["type"] as? Int }, [4, 2, 3])
     }
 

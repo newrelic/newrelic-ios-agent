@@ -223,7 +223,7 @@ public class SessionReplayManager: NSObject {
         harvestseconds += 1
         sessionReplay.takeFrame()
         
-        if harvestseconds == harvestPeriod {
+        if harvestseconds >= harvestPeriod {
             harvest()
         }
     }
@@ -279,16 +279,19 @@ public class SessionReplayManager: NSObject {
         let webViewEvents = self.sessionReplay.getSessionReplayWebViewEvents(
             chunkStart: boxedFrames.first?.base.timestamp ?? 0)
 
-        guard let upload = buildReplayUpload(frames: boxedFrames, touches: boxedTouches, webViewEvents: webViewEvents) else {
+        let uploads = buildReplayUploads(frames: boxedFrames, touches: boxedTouches, webViewEvents: webViewEvents)
+        guard !uploads.isEmpty else {
             return
         }
-        self.sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
+        for upload in uploads {
+            self.sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
+        }
 
         self.sessionReplay.isFirstChunk = false
     }
 
     /// Merges and sorts frame/touch events into upload order. Extracted out of
-    /// buildReplayUpload() so the real merge+sort logic -- where the "First
+    /// buildReplayUploads() so the real merge+sort logic -- where the "First
     /// event didn't include meta" defect lived -- is directly testable on its
     /// own, without needing a resolvable harvester configuration (required
     /// further down the pipeline to build the actual upload URL).
@@ -335,60 +338,18 @@ public class SessionReplayManager: NSObject {
     }
 
     /// Merges/sorts/encodes a chunk from already-boxed events, returning the
-    /// resulting upload (or nil if there was nothing to send). Extracted out of
-    /// harvestSessionReplayFramesAndTouches() so the real merge+sort+encode path
-    /// is directly testable with synthetic events, without needing to dispatch
-    /// (or mock) an actual upload -- this is still the real production logic,
-    /// called above with genuinely captured frames/touches.
-    func buildReplayUpload(frames: [AnyRRWebEvent], touches: [AnyRRWebEvent], webViewEvents: [WebViewReplayOutputEvent] = []) -> SessionReplayData? {
-        if !webViewEvents.isEmpty {
-            let chunk = mergeReplayChunk(frames: frames, touches: touches, webViewEvents: webViewEvents)
-            guard let encoded = encodeReplayChunk(chunk) else {
-                return nil
-            }
-            return self.createReplayUpload(encoded: (data: encoded.data, uncompressedSize: encoded.uncompressedSize),
-                                           firstTimestamp: encoded.firstTimestamp,
-                                           lastTimestamp: encoded.lastTimestamp)
+    /// resulting uploads (empty if there was nothing to send) -- more than one
+    /// when the chunk had to be split to fit the upload size cap. Extracted out
+    /// of harvestSessionReplayFramesAndTouches() so the real merge+sort+encode
+    /// path is directly testable with synthetic events, without needing to
+    /// dispatch (or mock) an actual upload -- this is still the real production
+    /// logic, called above with genuinely captured frames/touches.
+    func buildReplayUploads(frames: [AnyRRWebEvent], touches: [AnyRRWebEvent], webViewEvents: [WebViewReplayOutputEvent] = []) -> [SessionReplayData] {
+        let chunk = mergeReplayChunk(frames: frames, touches: touches, webViewEvents: webViewEvents)
+        guard let payloads = encodeReplayChunk(chunk) else {
+            return []
         }
-
-        let container = mergeAndSortReplayEvents(frames: frames, touches: touches)
-
-        let firstTimestamp = TimeInterval(container.first?.base.timestamp ?? 0)
-        let lastTimestamp  = TimeInterval(container.last?.base.timestamp ?? 0)
-
-        return self.createReplayUpload(container: container,
-                                        firstTimestamp: firstTimestamp,
-                                        lastTimestamp: lastTimestamp)
-    }
-
-    /// Encodes and gzips a merged/sorted event container to the exact bytes
-    /// that would be uploaded, plus the pre-gzip size (needed for the upload
-    /// URL's metadata). Extracted out of createReplayUpload() so the real
-    /// encode+gzip path is directly testable without needing a resolvable
-    /// harvester configuration, which createReplayUpload() separately
-    /// requires (via uploadURL()) to build the final upload URL.
-    func encodeReplayPayload(container: [AnyRRWebEvent]) -> (data: Data, uncompressedSize: Int)? {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = .withoutEscapingSlashes
-
-        var jsonData: Data
-        do {
-            jsonData = try encoder.encode(container)
-        } catch {
-            NRLOG_AGENT_DEBUG("Failed to encode session replay events to JSON: \(error)")
-            return nil
-        }
-
-        let uncompressedDataSize = jsonData.count
-
-        do {
-            let gzippedData = try jsonData.gzipped()
-            jsonData = gzippedData
-        } catch {
-            NRLOG_AGENT_DEBUG("Failed to gzip session replay data: \(error.localizedDescription)")
-        }
-
-        return (jsonData, uncompressedDataSize)
+        return createReplayUploads(payloads)
     }
 
     /// Merges WebView events into the native merge order.
@@ -429,77 +390,101 @@ public class SessionReplayManager: NSObject {
         return chunk
     }
 
-    /// Encodes and gzips a chunk that carries WebView events. Native events go through the same
-    /// JSONEncoder as encodeReplayPayload(); WebView events are spliced in as already-serialized JSON
-    /// rather than re-encoded. If the compressed chunk is over the upload cap, attached WebView
-    /// documents are shed before the reporter would reject the whole chunk.
-    func encodeReplayChunk(_ chunk: [ReplayChunkEvent]) -> (data: Data, uncompressedSize: Int, firstTimestamp: TimeInterval, lastTimestamp: TimeInterval)? {
+    /// Encodes and gzips a merged chunk into the exact bytes that would be uploaded, split into as
+    /// many payloads as it takes to keep each under the upload cap (see ReplayPayloadSplitter).
+    /// Native events are JSON-encoded; WebView events are spliced in as already-serialized JSON
+    /// rather than re-encoded. Extracted out of buildReplayUploads() so the real encode+gzip+split
+    /// path is directly testable without needing a resolvable harvester configuration, which
+    /// building the upload URLs (via uploadURL()) separately requires.
+    func encodeReplayChunk(_ chunk: [ReplayChunkEvent], limit: Int = Int(kNRMAMaxPayloadSizeLimit)) -> [ReplayPayloadSplitter.Payload]? {
+        guard let pieces = replayPayloadPieces(chunk) else {
+            return nil
+        }
+
+        let result = ReplayPayloadSplitter.split(pieces, limit: limit, compress: Self.gzippedReplayPayload)
+        if result.payloads.count > 1 {
+            NRLOG_AGENT_DEBUG("Session replay chunk over the \(limit) byte cap; split into \(result.payloads.count) uploads.")
+        }
+        for index in result.dropped {
+            if let webViewEvent = chunk[index].webViewEvent {
+                NRLOG_AGENT_DEBUG("[NR-WV-SR] WebView event over the \(limit) byte cap on its own; dropped. Native replay is preserved.")
+                NRMASupportMetricHelper.enqueueWebViewReplayMetric(webViewEvent.graftGroup != nil ? "DocumentShed" : "EventDropped")
+            } else {
+                NRLOG_AGENT_DEBUG("Session replay event over the \(limit) byte cap on its own; dropped.")
+                NRMASupportMetricHelper.enqueueMaxPayloadSizeLimitMetric("blobs")
+            }
+        }
+        return result.payloads
+    }
+
+    /// One splitter piece per chunk event, marking where an upload must not start: between a Meta
+    /// and the FullSnapshot laid out against it, and inside a WebView document attachment, whose
+    /// backlog means nothing without the graft it replays onto.
+    private func replayPayloadPieces(_ chunk: [ReplayChunkEvent]) -> [ReplayPayloadSplitter.Piece]? {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .withoutEscapingSlashes
 
-        var pieces = [WebViewReplayPayloadBudget.Piece]()
+        var pieces = [ReplayPayloadSplitter.Piece]()
         pieces.reserveCapacity(chunk.count)
-        for event in chunk {
+        var graftGroupBounds = [Int: (first: Int, last: Int)]()
+        for (index, event) in chunk.enumerated() {
             switch event {
             case .native(let nativeEvent):
+                var piece: ReplayPayloadSplitter.Piece
                 do {
-                    pieces.append(.init(event: event, json: try encoder.encode(nativeEvent)))
+                    piece = .init(json: try encoder.encode(nativeEvent), timestamp: event.timestamp)
                 } catch {
                     NRLOG_AGENT_DEBUG("Failed to encode session replay events to JSON: \(error)")
                     return nil
                 }
+                if nativeEvent.base.type == .fullSnapshot, index > 0,
+                   case .native(let previous) = chunk[index - 1], previous.base.type == .meta {
+                    piece.canStartUpload = false
+                }
+                pieces.append(piece)
             case .webView(let webViewEvent):
-                pieces.append(.init(event: event, json: webViewEvent.json))
+                pieces.append(.init(json: webViewEvent.json, timestamp: event.timestamp))
+                if let group = webViewEvent.graftGroup {
+                    graftGroupBounds[group] = (graftGroupBounds[group]?.first ?? index, index)
+                }
             }
         }
 
-        let budgeted = WebViewReplayPayloadBudget.enforce(pieces, limit: Int(kNRMAMaxPayloadSizeLimit)) { json in
-            try? json.gzipped().count
-        }
-        if budgeted.shedCount > 0 {
-            NRLOG_AGENT_DEBUG("[NR-WV-SR] chunk over the \(kNRMAMaxPayloadSizeLimit) byte cap; shed \(budgeted.shedCount) WebView document(s). Native replay is preserved.")
-            for _ in 0..<budgeted.shedCount {
-                NRMASupportMetricHelper.enqueueWebViewReplayMetric("DocumentShed")
+        for bounds in graftGroupBounds.values where bounds.last > bounds.first {
+            for index in (bounds.first + 1)...bounds.last {
+                pieces[index].canStartUpload = false
             }
         }
+        return pieces
+    }
 
-        var jsonData = WebViewReplayPayloadBudget.joinedJSON(budgeted.pieces)
-        let uncompressedDataSize = jsonData.count
-
+    /// The bytes to upload for a payload's JSON: gzipped, or the JSON as is if gzip fails.
+    private static func gzippedReplayPayload(_ json: Data) -> Data {
         do {
-            jsonData = try jsonData.gzipped()
+            return try json.gzipped()
         } catch {
             NRLOG_AGENT_DEBUG("Failed to gzip session replay data: \(error.localizedDescription)")
+            return json
         }
-
-        let firstTimestamp = budgeted.pieces.first?.event.timestamp ?? 0
-        let lastTimestamp = budgeted.pieces.last?.event.timestamp ?? 0
-        return (jsonData, uncompressedDataSize, firstTimestamp, lastTimestamp)
     }
 
-    private func createReplayUpload(container: [AnyRRWebEvent], firstTimestamp: TimeInterval, lastTimestamp: TimeInterval) -> SessionReplayData? {
-        guard let encoded = encodeReplayPayload(container: container) else {
-            return nil
+    private func createReplayUploads(_ payloads: [ReplayPayloadSplitter.Payload]) -> [SessionReplayData] {
+        var uploads = [SessionReplayData]()
+        for payload in payloads {
+            // Construct upload URL. Only the first upload of a split chunk can be the session's first.
+            guard let url = sessionReplayReporter.uploadURL(
+                uncompressedDataSize: payload.uncompressedSize,
+                firstTimestamp: payload.firstTimestamp,
+                lastTimestamp: payload.lastTimestamp,
+                isFirstChunk: self.sessionReplay.isFirstChunk && uploads.isEmpty,
+                isGZipped: payload.data.isGzipped
+            ) else {
+                NRLOG_AGENT_DEBUG("Failed to construct upload URL for session replay.")
+                break
+            }
+            uploads.append(SessionReplayData(sessionReplayFramesData: payload.data, url: url))
         }
-        return createReplayUpload(encoded: encoded, firstTimestamp: firstTimestamp, lastTimestamp: lastTimestamp)
-    }
-
-    private func createReplayUpload(encoded: (data: Data, uncompressedSize: Int), firstTimestamp: TimeInterval, lastTimestamp: TimeInterval) -> SessionReplayData? {
-        let (jsonData, uncompressedDataSize) = encoded
-
-        // Construct upload URL
-        guard let url = sessionReplayReporter.uploadURL(
-            uncompressedDataSize: uncompressedDataSize,
-            firstTimestamp: firstTimestamp,
-            lastTimestamp: lastTimestamp,
-            isFirstChunk: self.sessionReplay.isFirstChunk,
-            isGZipped: jsonData.isGzipped
-        ) else {
-            NRLOG_AGENT_DEBUG("Failed to construct upload URL for session replay.")
-            return nil
-        }
-
-        return SessionReplayData(sessionReplayFramesData: jsonData, url: url)
+        return uploads
     }
     
     // REPLAY PERSISTENCE
@@ -565,112 +550,22 @@ public class SessionReplayManager: NSObject {
                 return
             }
             
-            let frameFiles = try FileManager.default.contentsOfDirectory(at: sessionDirectory, includingPropertiesForKeys: nil)
-                .filter { $0.pathExtension == "json" && $0.lastPathComponent.hasPrefix("frame_") }
-                .sorted { (url1, url2) -> Bool in
-                    let name1 = url1.deletingPathExtension().lastPathComponent
-                    let name2 = url2.deletingPathExtension().lastPathComponent
-                    
-                    let number1 = Int(name1.replacingOccurrences(of: "frame_", with: "")) ?? 0
-                    let number2 = Int(name2.replacingOccurrences(of: "frame_", with: "")) ?? 0
-                    
-                    return number1 < number2
-                }
+            let pieces = try persistedReplayPieces(sessionDirectory: sessionDirectory)
             
-            if frameFiles.isEmpty {
-                NRLOG_AGENT_DEBUG("No frame files found for session ID: \(sessionId)")
-                try? FileManager.default.removeItem(at: urlFile)
-                try? FileManager.default.removeItem(at: sessionDirectory)
-                return
-            }
-            
-            // Read and combine all frame files, starting from the first full frame
-            var frameContents: [String] = []
-            var foundFirstFullFrame = false
-
-            for frameFile in frameFiles {
-                do {
-                    // remove outer [] from frameFile if they exist
-                    let frameContent = try String(contentsOf: frameFile).trimmingCharacters(in: .whitespacesAndNewlines)
-
-                    var frameContentWithOuterBracketsRemoved = frameContent
-                    if frameContent.hasPrefix("[") && frameContent.hasSuffix("]") {
-                        frameContentWithOuterBracketsRemoved = String(frameContent.dropFirst().dropLast()).trimmingCharacters(in: .whitespacesAndNewlines)
-                    }
-
-                    if !frameContentWithOuterBracketsRemoved.isEmpty {
-                        // Check if this is a full frame (type = 2) if we haven't found one yet
-                        if !foundFirstFullFrame {
-                            // Parse the original content (with brackets) to check for full frames
-                            if let data = frameContent.data(using: .utf8),
-                               let jsonArray = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
-                                // Check if any frame in this file is a full snapshot (type = 2)
-                                let hasFullFrame = jsonArray.contains { frame in
-                                    if let type = frame["type"] as? Int {
-                                        // NRLOG_AGENT_DEBUG("Frame type found: \(type) in file \(frameFile.lastPathComponent)")
-                                        
-                                        return type == 2 //  fullSnapshot
-
-                                    }
-                                    return false
-                                }
-
-                                if hasFullFrame {
-                                    foundFirstFullFrame = true
-                                    frameContents.append(frameContentWithOuterBracketsRemoved)
-                                } else {
-                                    NRLOG_AGENT_DEBUG("Skipping frame file \(frameFile.lastPathComponent) - no full snapshot found yet")
-                                }
-                            } else {
-                                NRLOG_AGENT_DEBUG("Failed to parse frame file \(frameFile.lastPathComponent) to check type")
-                            }
-                        } else {
-                            // We've found a full frame, include all subsequent frames
-                            frameContents.append(frameContentWithOuterBracketsRemoved)
-                        }
-                    }
-                } catch {
-                    NRLOG_AGENT_DEBUG("Failed to read frame file \(frameFile.lastPathComponent): \(error)")
-                }
-            }
-            
-            if frameContents.isEmpty {
-                if !foundFirstFullFrame {
-                    NRLOG_AGENT_DEBUG("No full snapshot frame found for session ID: \(sessionId)")
-                } else {
-                    NRLOG_AGENT_DEBUG("No valid frame content found for session ID: \(sessionId)")
-                }
+            if pieces.isEmpty {
+                NRLOG_AGENT_DEBUG("No full snapshot frame found for session ID: \(sessionId)")
                 try FileManager.default.removeItem(at: sessionDirectory)
                 try? FileManager.default.removeItem(at: urlFile)
                 return
             }
             
-            // Construct JSON array from frame contents
-            
-            let jsonArrayString = "[" + frameContents.joined(separator: ",") + "]"
-            
-            guard let jsonData = jsonArrayString.data(using: .utf8) else {
-                NRLOG_AGENT_DEBUG("Failed to convert JSON string to data for session ID: \(sessionId)")
-                return
-            }
-            //if let jsonString = String(data: jsonData, encoding: .utf8) {
-            //    NRLOG_AGENT_DEBUG(jsonString)
-            //\
-            //}
-            
             // END DATA CONSTRUCTION
             
-            var finalData = jsonData
-            do {
-                let gzippedData = try jsonData.gzipped()
-                finalData = gzippedData
-            } catch {
-                NRLOG_AGENT_DEBUG("Failed to gzip session replay data for session ID \(sessionId): \(error.localizedDescription)")
+            let uploads = persistedReplayUploads(pieces: pieces, persistedURL: url)
+            for upload in uploads {
+                sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
             }
-            
-            let upload = SessionReplayData(sessionReplayFramesData: finalData, url: url)
-            sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
-            NRLOG_AGENT_DEBUG("Enqueued previous session replay for session ID: \(sessionId)")
+            NRLOG_AGENT_DEBUG("Enqueued \(uploads.count) previous session replay upload(s) for session ID: \(sessionId)")
             
             // Remove processed files
             try FileManager.default.removeItem(at: sessionDirectory)
@@ -679,6 +574,102 @@ public class SessionReplayManager: NSObject {
         } catch {
             NRLOG_AGENT_DEBUG("Failed to process session replay file for session ID \(sessionId): \(error)")
         }
+    }
+    
+    /// Reads a persisted session's frame files, in order, starting from the first one holding a full
+    /// snapshot (nothing before it can be replayed). Each frame file becomes one splitter piece: its
+    /// events exactly as written, without the enclosing brackets, so a split persisted session is
+    /// only ever cut between captured frames, and nothing is decoded and re-encoded.
+    func persistedReplayPieces(sessionDirectory: URL) throws -> [ReplayPayloadSplitter.Piece] {
+        let frameFiles = try FileManager.default.contentsOfDirectory(at: sessionDirectory, includingPropertiesForKeys: nil)
+            .filter { $0.pathExtension == "json" && $0.lastPathComponent.hasPrefix("frame_") }
+            .sorted { (url1, url2) -> Bool in
+                let name1 = url1.deletingPathExtension().lastPathComponent
+                let name2 = url2.deletingPathExtension().lastPathComponent
+                
+                let number1 = Int(name1.replacingOccurrences(of: "frame_", with: "")) ?? 0
+                let number2 = Int(name2.replacingOccurrences(of: "frame_", with: "")) ?? 0
+                
+                return number1 < number2
+            }
+        
+        let decoder = JSONDecoder()
+        var pieces = [ReplayPayloadSplitter.Piece]()
+        var foundFirstFullFrame = false
+        
+        for frameFile in frameFiles {
+            do {
+                let frameContent = try Data(contentsOf: frameFile)
+                // Decoding the headers also validates the file: a frame cut short by the crash would
+                // otherwise make the whole upload it lands in unreadable.
+                let events = try decoder.decode([PersistedReplayEventHeader].self, from: frameContent)
+                guard let firstEvent = events.first, let lastEvent = events.last,
+                      let elements = Self.jsonArrayElements(frameContent) else {
+                    continue
+                }
+                
+                if !foundFirstFullFrame {
+                    guard events.contains(where: { $0.type == RRWebEventType.fullSnapshot.rawValue }) else {
+                        NRLOG_AGENT_DEBUG("Skipping frame file \(frameFile.lastPathComponent) - no full snapshot found yet")
+                        continue
+                    }
+                    foundFirstFullFrame = true
+                }
+                
+                pieces.append(.init(json: elements, firstTimestamp: firstEvent.timestamp, lastTimestamp: lastEvent.timestamp))
+            } catch {
+                NRLOG_AGENT_DEBUG("Skipping unreadable frame file \(frameFile.lastPathComponent): \(error)")
+            }
+        }
+        return pieces
+    }
+    
+    /// Uploads for a persisted session: split to fit the upload cap like a live harvest, each sent to
+    /// the persisted URL with its own size and timestamps. Only the first can be the session's first.
+    func persistedReplayUploads(pieces: [ReplayPayloadSplitter.Piece], persistedURL: URL, limit: Int = Int(kNRMAMaxPayloadSizeLimit)) -> [SessionReplayData] {
+        let result = ReplayPayloadSplitter.split(pieces, limit: limit, compress: Self.gzippedReplayPayload)
+        if result.payloads.count > 1 {
+            NRLOG_AGENT_DEBUG("Previous session replay over the \(limit) byte cap; split into \(result.payloads.count) uploads.")
+        }
+        for _ in result.dropped {
+            NRLOG_AGENT_DEBUG("Previous session replay frame over the \(limit) byte cap on its own; dropped.")
+            NRMASupportMetricHelper.enqueueMaxPayloadSizeLimitMetric("blobs")
+        }
+        
+        let isFirstChunk = SessionReplayReporter.replayAttribute("isFirstChunk", of: persistedURL) == String(true)
+        var uploads = [SessionReplayData]()
+        for payload in result.payloads {
+            var attributes = [
+                "isFirstChunk": String(isFirstChunk && uploads.isEmpty),
+                "decompressedBytes": String(payload.uncompressedSize),
+                "replay.firstTimestamp": String(Int(payload.firstTimestamp)),
+                "replay.lastTimestamp": String(Int(payload.lastTimestamp))
+            ]
+            var removed = Set<String>()
+            if payload.data.isGzipped {
+                attributes["content_encoding"] = "gzip"
+            } else {
+                removed.insert("content_encoding")
+            }
+            guard let url = SessionReplayReporter.rewritingReplayAttributes(of: persistedURL, setting: attributes, removing: removed) else {
+                NRLOG_AGENT_DEBUG("Failed to construct upload URL for previous session replay.")
+                break
+            }
+            uploads.append(SessionReplayData(sessionReplayFramesData: payload.data, url: url))
+        }
+        return uploads
+    }
+    
+    /// The elements of a serialized JSON array, without its brackets.
+    private static func jsonArrayElements(_ json: Data) -> Data? {
+        let isWhitespace = { (byte: UInt8) in byte == 0x20 || byte == 0x0A || byte == 0x0D || byte == 0x09 }
+        guard let first = json.firstIndex(where: { !isWhitespace($0) }),
+              let last = json.lastIndex(where: { !isWhitespace($0) }),
+              first < last, json[first] == UInt8(ascii: "["), json[last] == UInt8(ascii: "]") else {
+            return nil
+        }
+        let elements = json[json.index(after: first)..<last]
+        return elements.contains(where: { !isWhitespace($0) }) ? Data(elements) : nil
     }
     
     private func getSessionReplayDirectory() -> URL? {
@@ -706,3 +697,119 @@ extension SessionReplayManager: NRMASessionReplayDelegate {
     }
 }
 #endif
+
+/// The fields of a persisted replay event that crash recovery needs to place it (see persistedReplayPieces).
+struct PersistedReplayEventHeader: Decodable {
+    let type: Int
+    let timestamp: TimeInterval
+}
+
+/// Splits one chunk's events into as many uploads as it takes to keep each under the upload cap.
+///
+/// The reporter drops an over-cap upload whole, so an oversized chunk would otherwise lose every event
+/// in it. A session's uploads are replayed in order, so cutting a chunk loses nothing as long as order is
+/// kept: an over-cap range is cut in two near its byte midpoint and each half is tried again, until every
+/// range fits. Only an event that is over the cap on its own is dropped.
+enum ReplayPayloadSplitter {
+
+    struct Piece {
+        /// One or more serialized events, comma-separated, without the enclosing array brackets.
+        let json: Data
+        let firstTimestamp: TimeInterval
+        let lastTimestamp: TimeInterval
+        /// False when this piece depends on the one before it, so an upload must not start here.
+        /// Honored when there is any other place to cut.
+        var canStartUpload = true
+
+        init(json: Data, firstTimestamp: TimeInterval, lastTimestamp: TimeInterval, canStartUpload: Bool = true) {
+            self.json = json
+            self.firstTimestamp = firstTimestamp
+            self.lastTimestamp = lastTimestamp
+            self.canStartUpload = canStartUpload
+        }
+
+        init(json: Data, timestamp: TimeInterval, canStartUpload: Bool = true) {
+            self.init(json: json, firstTimestamp: timestamp, lastTimestamp: timestamp, canStartUpload: canStartUpload)
+        }
+    }
+
+    struct Payload {
+        /// The bytes to upload: `compress`'s output for the payload's JSON array.
+        let data: Data
+        /// The size of the JSON array before compression.
+        let uncompressedSize: Int
+        let firstTimestamp: TimeInterval
+        let lastTimestamp: TimeInterval
+    }
+
+    /// - Parameters:
+    ///   - limit: the size cap the reporter enforces, applied to `compress`'s output
+    ///   - compress: the bytes to upload for a payload's JSON array
+    /// - Returns: the payloads, in order, and the indices of pieces dropped for being over the cap on their own
+    static func split(_ pieces: [Piece], limit: Int, compress: (Data) -> Data) -> (payloads: [Payload], dropped: [Int]) {
+        // offsets[i] is where pieces[i] starts in the pieces' concatenated JSON.
+        var offsets = [Int]()
+        offsets.reserveCapacity(pieces.count + 1)
+        offsets.append(0)
+        for piece in pieces {
+            offsets.append(offsets[offsets.count - 1] + piece.json.count)
+        }
+
+        var payloads = [Payload]()
+        var dropped = [Int]()
+        func process(_ range: Range<Int>) {
+            guard !range.isEmpty else { return }
+            let json = joinedJSON(pieces[range])
+            let data = compress(json)
+            if data.count <= limit {
+                payloads.append(Payload(data: data,
+                                        uncompressedSize: json.count,
+                                        firstTimestamp: pieces[range.lowerBound].firstTimestamp,
+                                        lastTimestamp: pieces[range.upperBound - 1].lastTimestamp))
+                return
+            }
+            guard range.count > 1 else {
+                dropped.append(range.lowerBound)
+                return
+            }
+            let cut = cutIndex(range, pieces: pieces, offsets: offsets)
+            process(range.lowerBound..<cut)
+            process(cut..<range.upperBound)
+        }
+        process(0..<pieces.count)
+        return (payloads, dropped)
+    }
+
+    /// Where to cut `range` in two: the place nearest its byte midpoint where an upload may start, or
+    /// the place nearest its byte midpoint if there is none. Cutting by bytes rather than by count
+    /// matters because one full snapshot can outweigh every other event in the chunk.
+    private static func cutIndex(_ range: Range<Int>, pieces: [Piece], offsets: [Int]) -> Int {
+        let midpoint = (offsets[range.lowerBound] + offsets[range.upperBound]) / 2
+        var nearest = range.lowerBound + 1
+        var nearestAllowed: Int?
+        for index in (range.lowerBound + 1)..<range.upperBound {
+            let distance = abs(offsets[index] - midpoint)
+            if distance < abs(offsets[nearest] - midpoint) {
+                nearest = index
+            }
+            if pieces[index].canStartUpload, nearestAllowed.map({ distance < abs(offsets[$0] - midpoint) }) ?? true {
+                nearestAllowed = index
+            }
+        }
+        return nearestAllowed ?? nearest
+    }
+
+    static func joinedJSON<Pieces: Collection>(_ pieces: Pieces) -> Data where Pieces.Element == Piece {
+        var data = Data()
+        data.reserveCapacity(pieces.reduce(2) { $0 + $1.json.count + 1 })
+        data.append(UInt8(ascii: "["))
+        for (index, piece) in pieces.enumerated() {
+            if index > 0 {
+                data.append(UInt8(ascii: ","))
+            }
+            data.append(piece.json)
+        }
+        data.append(UInt8(ascii: "]"))
+        return data
+    }
+}
