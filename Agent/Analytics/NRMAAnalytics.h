@@ -62,6 +62,13 @@
 + (NSString*) getLastSessionsEvents;
 - (void) clearLastSessionsAnalytics;
 
+// Confirms the most recent -analyticsJSONString batch was actually delivered
+// (sent successfully, or durably persisted for offline retry) so the
+// persistent event store can safely drop it. Must NOT be called for a plain,
+// non-persisted failure -- that batch needs to survive a possible force-quit
+// so it can still be recovered and resent on the next launch.
+- (void) confirmLastHarvestEventsSent;
+
 - (BOOL) checkOfflineStatus;
 - (BOOL) checkBackgroundStatus;
 //this utilizes setSessionAttribute:value: which validates the user input 'name'.

@@ -1171,6 +1171,12 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     }
 }
 
+- (void) confirmLastHarvestEventsSent {
+    if ([NRMAFlags shouldEnableNewEventSystem]) {
+        [_eventManager confirmEventsSent];
+    }
+}
+
 //Harvest Aware methods
 
 - (void) sessionWillEnd {

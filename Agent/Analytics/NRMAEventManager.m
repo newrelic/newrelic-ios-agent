@@ -36,6 +36,13 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
     NSUInteger eventsEvicted;
 
     PersistentEventStore *_persistentStore;
+
+    // Events already handed off in a JSON payload (see
+    // -getEventJSONStringWithError:clearEvents:) but not yet confirmed sent.
+    // Kept out of _persistentStore removal until -confirmEventsSent runs, so a
+    // force-quit while a harvest is in flight doesn't lose data that was only
+    // ever *attempted*, not delivered.
+    NSMutableArray<NRMAAnalyticEventProtocol> *_pendingConfirmationEvents;
 }
 
 - (nonnull instancetype)initWithPersistentStore:(PersistentEventStore *)store {
@@ -47,6 +54,7 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
         totalAttemptedInserts = 0;
         oldestEventTimestamp = 0;
         _persistentStore = store;
+        _pendingConfirmationEvents = [[NSMutableArray<NRMAAnalyticEventProtocol> alloc] init];
     }
     return self;
 }
@@ -150,6 +158,7 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
 - (void)empty {
     @synchronized (events) {
         [events removeAllObjects];
+        [_pendingConfirmationEvents removeAllObjects];
         [_persistentStore clearAll];
         totalAttemptedInserts = 0;
     }
@@ -167,21 +176,38 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
             for(id<NRMAAnalyticEventProtocol> event in events) {
                 [jsonEvents addObject:[event JSONObject]];
             }
-            
+
             NSData *eventJsonData = [NRMAJSON dataWithJSONObject:jsonEvents
                                                          options:0
                                                            error:error];
             eventJsonString = [[NSString alloc] initWithData:eventJsonData
                                                     encoding:NSUTF8StringEncoding];
-            [self empty];
+
+            if (clearEvents) {
+                // This batch has only been serialized into an outgoing payload,
+                // not delivered. Rotate it out of the live buffer (so new events
+                // accumulate fresh), but leave it in the *persistent* store --
+                // marked pending -- until -confirmEventsSent tells us the harvest
+                // actually succeeded (or was durably offline-persisted). That keeps
+                // the on-disk backup intact for crash/force-quit recovery for as
+                // long as delivery is unconfirmed.
+                [_pendingConfirmationEvents addObjectsFromArray:events];
+                [events removeAllObjects];
+            }
         } @catch (NSException *e) {
             NRLOG_AGENT_ERROR(@"FAILED TO CREATE EVENT JSON: %@", e.reason);
         }
     }
-    if (clearEvents){
-        [self empty];
-    }
     return eventJsonString;
+}
+
+- (void)confirmEventsSent {
+    @synchronized (events) {
+        for (id<NRMAAnalyticEventProtocol> event in _pendingConfirmationEvents) {
+            [_persistentStore removeObjectForKey:[self createKeyForEvent:event]];
+        }
+        [_pendingConfirmationEvents removeAllObjects];
+    }
 }
 
 + (NSString *)getLastSessionEventsFromFilename:(NSString *)filename {

@@ -349,4 +349,56 @@
     XCTAssertEqual([dropSut getEventsEvictedCount], 1);
 }
 
+- (void)testUnconfirmedHarvestAttemptLeavesPersistedEventsIntact {
+    // A force-quit between an *attempted* harvest and -confirmEventsSent must
+    // not lose data: the on-disk backup has to survive until delivery is
+    // actually confirmed, not merely attempted.
+    NSString *filename = @"fbstest_confirmEventsSent";
+    [[NSFileManager defaultManager] removeItemAtPath:filename error:nil];
+
+    PersistentEventStore *persistentStore = [[PersistentEventStore alloc] initWithFilename:filename
+                                                                             andMinimumDelay:.025];
+    NRMAEventManager *manager = [[NRMAEventManager alloc] initWithPersistentStore:persistentStore];
+
+    NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 1"
+                                                                timestamp:3
+                                              sessionElapsedTimeInSeconds:20
+                                                   withAttributeValidator:agreeableAttributeValidator];
+    [manager addEvent:event];
+
+    // Wait for the add's debounced save to actually land on disk.
+    NSPredicate *addedPredicate = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
+        return [PersistentEventStore getLastSessionEventsFromFilename:filename].count == 1;
+    }];
+    [self waitForExpectations:@[[[XCTNSPredicateExpectation alloc] initWithPredicate:addedPredicate object:nil]] timeout:5];
+
+    // When: the event is pulled out for a harvest attempt, but not confirmed sent.
+    NSError *error = nil;
+    NSString *json = [manager getEventJSONStringWithError:&error clearEvents:YES];
+    XCTAssertNotNil(json);
+
+    // Then: a simulated force-quit here must still find it recoverable on disk.
+    XCTAssertEqual([PersistentEventStore getLastSessionEventsFromFilename:filename].count, 1,
+                    @"an unconfirmed harvest attempt must not clear the persistent backup");
+
+    // The in-memory buffer must still have rotated, though, so the next batch
+    // doesn't re-send what's already pending confirmation.
+    NSString *secondJson = [manager getEventJSONStringWithError:&error clearEvents:YES];
+    NSArray *secondDecode = [NSJSONSerialization JSONObjectWithData:[secondJson dataUsingEncoding:NSUTF8StringEncoding]
+                                                              options:0
+                                                                error:nil];
+    XCTAssertEqual(secondDecode.count, 0);
+
+    // When: delivery is confirmed.
+    [manager confirmEventsSent];
+
+    // Then: only now does the persistent backup drop the confirmed batch.
+    NSPredicate *clearedPredicate = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
+        return [PersistentEventStore getLastSessionEventsFromFilename:filename].count == 0;
+    }];
+    [self waitForExpectations:@[[[XCTNSPredicateExpectation alloc] initWithPredicate:clearedPredicate object:nil]] timeout:5];
+
+    [[NSFileManager defaultManager] removeItemAtPath:filename error:nil];
+}
+
 @end

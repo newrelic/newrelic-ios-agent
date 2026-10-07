@@ -79,6 +79,12 @@
  
  - NRFeatureFlag_OfflineStorage
     Enabled by default. Enable (default) or disable flag to enable the storage of offline payloads.
+
+ - NRFeatureFlag_EventPersistence
+    Disabled by default. When enabled, the agent sends the previous session's
+    persisted events and attributes (the same data used by the crash reporter)
+    to the data endpoint on launch, recovering analytics that were buffered but
+    never harvested before the app terminated.
 */
 
 
@@ -106,5 +112,6 @@ typedef NS_OPTIONS(unsigned long long, NRMAFeatureFlags){
     NRFeatureFlag_OfflineStorage                        = 1 << 21, // Disabled by default
     NRFeatureFlag_BackgroundReporting                   = 1 << 22, // Disabled by default
     NRFeatureFlag_AutoCollectLogs                       = 1 << 23, // Disabled by default
-    NRFeatureFlag_JSErrorEvents                         = 1 << 24  // Enabled by default
+    NRFeatureFlag_JSErrorEvents                         = 1 << 24, // Enabled by default
+    NRFeatureFlag_EventPersistence                      = 1 << 25  // Disabled by default
 };

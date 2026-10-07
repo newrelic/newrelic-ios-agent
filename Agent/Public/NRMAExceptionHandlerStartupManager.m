@@ -10,6 +10,8 @@
 #import "NRMAExceptionHandlerManager.h"
 #import "NRMAAnalytics.h"
 #import "NRMACrashDataUploader.h"
+#import "NRMAFlags.h"
+#import "NRMAPreviousSessionUploader.h"
 
 @implementation NRMAExceptionHandlerStartupManager
 
@@ -19,6 +21,15 @@
             self.attributeJson = [NRMAAnalytics getLastSessionsAttributes];
 
             self.eventJson = [NRMAAnalytics getLastSessionsEvents];
+
+            // The previous session's persisted analytics are read exactly once
+            // here (for the old event system this read clears the duplication
+            // store). Hand the same data to the uploader so it can be sent to
+            // the data endpoint on launch without re-reading and double-consuming.
+            if ([NRMAFlags shouldEnableSendLastSessionData]) {
+                [[NRMAPreviousSessionUploader sharedInstance] setLastSessionAttributeJSON:self.attributeJson
+                                                                               eventJSON:self.eventJson];
+            }
         }
     });
 }

@@ -25,6 +25,7 @@
 #import "NewRelicAgentInternal.h"
 #import "NewRelicInternalUtils.h"
 #import "NRAutoLogCollector.h"
+#import "NRMAPreviousSessionUploader.h"
 
 #define kNRSupportabilityResponseCode kNRSupportabilityPrefix @"/Collector/ResponseStatusCodes"
 
@@ -376,6 +377,16 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
         NRLOG_AGENT_VERBOSE(@"Harvester: rate-limit backoff active, skipping upload for %.0f more seconds.", self.rateLimitBackoffUntil - now);
         return;
     }
+    
+    // Send the previous session's persisted analytics (events + attributes) as a
+    // dedicated harvest tagged with the previous session's attributes. The
+    // uploader is idempotent (sends at most once per launch) and retries on each
+    // harvest until the previous session's data — captured asynchronously at
+    // launch — is available.
+    if ([NRMAFlags shouldEnableSendLastSessionData]) {
+        [[NRMAPreviousSessionUploader sharedInstance] uploadWithConnection:connection
+                                                                 dataToken:configuration.data_token];
+    }
 
     NRMAHarvestResponse* response = nil;
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
@@ -434,6 +445,9 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
         if([self checkOfflineAndPersist:response]) {
             // If the harvest was persisted for offline storage clear the harvest.
             [self.harvestData clear];
+            // Durably persisted for retry -- safe to drop the event store's own
+            // backup copy of this batch now.
+            [[NewRelicAgentInternal sharedInstance].analyticsController confirmLastHarvestEventsSent];
         } else {
             // On a 429 we deliberately retain the buffer so it can be sent after
             // the backoff window; the backoff guard above prevents an immediate resend.
@@ -449,6 +463,9 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
         // A successful (2xx) harvest clears any active rate-limit backoff.
         [self resetRateLimitBackoff];
         [self.harvestData clear];
+        // Confirmed delivered -- safe to drop the event store's own backup copy
+        // of this batch now.
+        [[NewRelicAgentInternal sharedInstance].analyticsController confirmLastHarvestEventsSent];
         // If there was a successful harvest upload send the persisted offline payloads.
         [connection sendOfflineStorage];
     }

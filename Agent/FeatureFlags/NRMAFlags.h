@@ -59,6 +59,8 @@
 
 + (BOOL) shouldEnableAutoCollectLogs;
 
++ (BOOL) shouldEnableSendLastSessionData;
+
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags;
 
 // Private Setting
