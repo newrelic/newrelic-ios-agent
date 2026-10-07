@@ -220,6 +220,17 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
     }
 }
 
++ (void) enqueueSessionReplayEventPaginatedMetric {
+    NSString* nativePlatform = [NewRelicInternalUtils osName];
+    NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
+
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat: kNRMASessionReplayMetricEventPaginated, nativePlatform, platform]
+                                                              value:@1
+                                                              scope:nil]];
+    }
+}
+
 + (void) enqueueSessionReplayConfigEnabledMetric:(BOOL)enabled {
     @synchronized (deferredMetrics) {
         [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMASessionReplayConfigEnabled

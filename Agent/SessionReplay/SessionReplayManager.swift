@@ -401,16 +401,18 @@ public class SessionReplayManager: NSObject {
             return nil
         }
 
-        let result = ReplayPayloadSplitter.split(pieces, limit: limit, compress: Self.gzippedReplayPayload)
+        let result = ReplayPayloadSplitter.split(pieces, limit: limit, compress: Self.gzippedReplayPayload,
+                                                 paginate: ReplayEventPaginator.paginate)
         if result.payloads.count > 1 {
             NRLOG_AGENT_DEBUG("Session replay chunk over the \(limit) byte cap; split into \(result.payloads.count) uploads.")
         }
+        Self.reportPaginated(result.paginated.count)
         for index in result.dropped {
             if let webViewEvent = chunk[index].webViewEvent {
-                NRLOG_AGENT_DEBUG("[NR-WV-SR] WebView event over the \(limit) byte cap on its own; dropped. Native replay is preserved.")
+                NRLOG_AGENT_DEBUG("[NR-WV-SR] WebView event over the \(limit) byte cap could not be broken up; dropped in whole or part. Native replay is preserved.")
                 NRMASupportMetricHelper.enqueueWebViewReplayMetric(webViewEvent.graftGroup != nil ? "DocumentShed" : "EventDropped")
             } else {
-                NRLOG_AGENT_DEBUG("Session replay event over the \(limit) byte cap on its own; dropped.")
+                NRLOG_AGENT_DEBUG("Session replay event over the \(limit) byte cap could not be broken up; dropped in whole or part.")
                 NRMASupportMetricHelper.enqueueMaxPayloadSizeLimitMetric("blobs")
             }
         }
@@ -456,6 +458,13 @@ public class SessionReplayManager: NSObject {
             }
         }
         return pieces
+    }
+
+    private static func reportPaginated(_ count: Int) {
+        for _ in 0..<count {
+            NRLOG_AGENT_DEBUG("Session replay event over the upload cap on its own; broken into smaller events.")
+            NRMASupportMetricHelper.enqueueSessionReplayEventPaginatedMetric()
+        }
     }
 
     /// The bytes to upload for a payload's JSON: gzipped, or the JSON as is if gzip fails.
@@ -627,12 +636,14 @@ public class SessionReplayManager: NSObject {
     /// Uploads for a persisted session: split to fit the upload cap like a live harvest, each sent to
     /// the persisted URL with its own size and timestamps. Only the first can be the session's first.
     func persistedReplayUploads(pieces: [ReplayPayloadSplitter.Piece], persistedURL: URL, limit: Int = Int(kNRMAMaxPayloadSizeLimit)) -> [SessionReplayData] {
-        let result = ReplayPayloadSplitter.split(pieces, limit: limit, compress: Self.gzippedReplayPayload)
+        let result = ReplayPayloadSplitter.split(pieces, limit: limit, compress: Self.gzippedReplayPayload,
+                                                 paginate: ReplayEventPaginator.paginate)
         if result.payloads.count > 1 {
             NRLOG_AGENT_DEBUG("Previous session replay over the \(limit) byte cap; split into \(result.payloads.count) uploads.")
         }
+        Self.reportPaginated(result.paginated.count)
         for _ in result.dropped {
-            NRLOG_AGENT_DEBUG("Previous session replay frame over the \(limit) byte cap on its own; dropped.")
+            NRLOG_AGENT_DEBUG("Previous session replay frame over the \(limit) byte cap could not be broken up; dropped in whole or part.")
             NRMASupportMetricHelper.enqueueMaxPayloadSizeLimitMetric("blobs")
         }
         
@@ -709,7 +720,8 @@ struct PersistedReplayEventHeader: Decodable {
 /// The reporter drops an over-cap upload whole, so an oversized chunk would otherwise lose every event
 /// in it. A session's uploads are replayed in order, so cutting a chunk loses nothing as long as order is
 /// kept: an over-cap range is cut in two near its byte midpoint and each half is tried again, until every
-/// range fits. Only an event that is over the cap on its own is dropped.
+/// range fits. A piece over the cap on its own is handed to `paginate` to be broken into smaller ones
+/// (see ReplayEventPaginator), and dropped only if it can't be.
 enum ReplayPayloadSplitter {
 
     struct Piece {
@@ -742,11 +754,22 @@ enum ReplayPayloadSplitter {
         let lastTimestamp: TimeInterval
     }
 
+    struct Result {
+        /// In replay order.
+        var payloads = [Payload]()
+        /// Pieces over the cap on their own that were broken into smaller ones.
+        var paginated = [Int]()
+        /// Pieces over the cap on their own that were dropped, in whole or (if paginated) in part.
+        var dropped = [Int]()
+    }
+
     /// - Parameters:
     ///   - limit: the size cap the reporter enforces, applied to `compress`'s output
     ///   - compress: the bytes to upload for a payload's JSON array
-    /// - Returns: the payloads, in order, and the indices of pieces dropped for being over the cap on their own
-    static func split(_ pieces: [Piece], limit: Int, compress: (Data) -> Data) -> (payloads: [Payload], dropped: [Int]) {
+    ///   - paginate: breaks a piece that is over the cap on its own into smaller pieces that replay to
+    ///     the same result, each aiming at the given uncompressed size; nil if it can't be broken up
+    static func split(_ pieces: [Piece], limit: Int, compress: (Data) -> Data,
+                      paginate: (Piece, Int) -> [Piece]? = { _, _ in nil }) -> Result {
         // offsets[i] is where pieces[i] starts in the pieces' concatenated JSON.
         var offsets = [Int]()
         offsets.reserveCapacity(pieces.count + 1)
@@ -755,21 +778,32 @@ enum ReplayPayloadSplitter {
             offsets.append(offsets[offsets.count - 1] + piece.json.count)
         }
 
-        var payloads = [Payload]()
-        var dropped = [Int]()
+        var result = Result()
         func process(_ range: Range<Int>) {
             guard !range.isEmpty else { return }
             let json = joinedJSON(pieces[range])
             let data = compress(json)
             if data.count <= limit {
-                payloads.append(Payload(data: data,
-                                        uncompressedSize: json.count,
-                                        firstTimestamp: pieces[range.lowerBound].firstTimestamp,
-                                        lastTimestamp: pieces[range.upperBound - 1].lastTimestamp))
+                result.payloads.append(Payload(data: data,
+                                               uncompressedSize: json.count,
+                                               firstTimestamp: pieces[range.lowerBound].firstTimestamp,
+                                               lastTimestamp: pieces[range.upperBound - 1].lastTimestamp))
                 return
             }
             guard range.count > 1 else {
-                dropped.append(range.lowerBound)
+                let index = range.lowerBound
+                // Aim each part at half the cap, by this piece's own compression ratio.
+                let partSize = max(1, Int(Double(json.count) * Double(limit) / Double(data.count) / 2))
+                guard let parts = paginate(pieces[index], partSize), parts.count > 1 else {
+                    result.dropped.append(index)
+                    return
+                }
+                let paginated = split(parts, limit: limit, compress: compress, paginate: paginate)
+                result.payloads.append(contentsOf: paginated.payloads)
+                result.paginated.append(index)
+                if !paginated.dropped.isEmpty {
+                    result.dropped.append(index)
+                }
                 return
             }
             let cut = cutIndex(range, pieces: pieces, offsets: offsets)
@@ -777,7 +811,7 @@ enum ReplayPayloadSplitter {
             process(cut..<range.upperBound)
         }
         process(0..<pieces.count)
-        return (payloads, dropped)
+        return result
     }
 
     /// Where to cut `range` in two: the place nearest its byte midpoint where an upload may start, or
@@ -811,5 +845,323 @@ enum ReplayPayloadSplitter {
         }
         data.append(UInt8(ascii: "]"))
         return data
+    }
+}
+
+/// Breaks one piece that is over the upload cap on its own into smaller pieces that replay to the same
+/// result, so the splitter can spread it over several uploads instead of dropping it.
+///
+/// - A piece of several events (a persisted frame file) is cut into its events, byte for byte.
+/// - A FullSnapshot keeps its document's spine and is followed by IncrementalSnapshot mutations, at the
+///   same timestamp, adding back the subtrees taken out of it.
+/// - A mutation's added subtrees are broken up the same way and spread over several mutations.
+///
+/// A subtree taken out goes back in front of its next sibling, which is always in place by then, so
+/// document order is kept. The document and `<html>` keep their children, so the player's document
+/// stays well formed. A single node that carries most of the bytes (one huge text node, say) can't
+/// be broken up, and the splitter drops it.
+enum ReplayEventPaginator {
+
+    /// - Parameter partSize: the uncompressed size each part should aim at
+    /// - Returns: the parts in replay order, or nil if the piece can't be broken up
+    static func paginate(_ piece: ReplayPayloadSplitter.Piece, partSize: Int) -> [ReplayPayloadSplitter.Piece]? {
+        var array = Data("[".utf8)
+        array.append(piece.json)
+        array.append(UInt8(ascii: "]"))
+        guard let events = (try? JSONSerialization.jsonObject(with: array)) as? [[String: Any]], !events.isEmpty else {
+            return nil
+        }
+
+        if events.count > 1 {
+            let elements = topLevelElements(of: piece.json)
+            guard elements.count == events.count else {
+                return nil
+            }
+            return zip(events, elements).enumerated().map { index, pair -> ReplayPayloadSplitter.Piece in
+                let followsMeta = index > 0 && eventType(events[index - 1]) == RRWebEventType.meta.rawValue
+                return .init(json: pair.1,
+                             timestamp: timestamp(of: pair.0) ?? piece.firstTimestamp,
+                             canStartUpload: index == 0 ? piece.canStartUpload
+                                                        : !(followsMeta && eventType(pair.0) == RRWebEventType.fullSnapshot.rawValue))
+            }
+        }
+
+        let event = events[0]
+        let parts: [[String: Any]]?
+        switch eventType(event) {
+        case RRWebEventType.fullSnapshot.rawValue:
+            parts = paginateFullSnapshot(event, partSize: partSize)
+        case RRWebEventType.incrementalSnapshot.rawValue:
+            parts = paginateMutation(event, partSize: partSize)
+        default:
+            parts = nil
+        }
+        guard let parts = parts, parts.count > 1 else {
+            return nil
+        }
+
+        var pieces = [ReplayPayloadSplitter.Piece]()
+        pieces.reserveCapacity(parts.count)
+        for (index, part) in parts.enumerated() {
+            guard let json = serialized(part) else {
+                return nil
+            }
+            pieces.append(.init(json: json, timestamp: timestamp(of: part) ?? piece.firstTimestamp,
+                                canStartUpload: index == 0 ? piece.canStartUpload : true))
+        }
+        return pieces
+    }
+
+    // MARK: - Events
+
+    private static func paginateFullSnapshot(_ event: [String: Any], partSize: Int) -> [[String: Any]]? {
+        guard var data = event["data"] as? [String: Any],
+              let root = data["node"] as? [String: Any],
+              let flattened = flatten(root, partSize: partSize),
+              !flattened.adds.isEmpty,
+              let batches = batched(flattened.adds, partSize: partSize) else {
+            return nil
+        }
+
+        data["node"] = flattened.node
+        var snapshot = event
+        snapshot["data"] = data
+        return [snapshot] + batches.map { batch in
+            mutation(at: event["timestamp"], adds: batch, removes: [], texts: [], attributes: [])
+        }
+    }
+
+    private static func paginateMutation(_ event: [String: Any], partSize: Int) -> [[String: Any]]? {
+        guard let data = event["data"] as? [String: Any],
+              data["source"] as? Int == RRWebIncrementalSource.mutation.rawValue,
+              let adds = data["adds"] as? [[String: Any]], !adds.isEmpty else {
+            return nil
+        }
+
+        var expanded = [[String: Any]]()
+        for add in dependencyOrdered(adds) {
+            guard let node = add["node"] as? [String: Any], let flattened = flatten(node, partSize: partSize) else {
+                return nil
+            }
+            var kept = add
+            kept["node"] = flattened.node
+            expanded.append(kept)
+            expanded.append(contentsOf: flattened.adds)
+        }
+        guard let batches = batched(expanded, partSize: partSize), batches.count > 1 else {
+            return nil
+        }
+
+        // The player applies a mutation's removes before its adds, and its texts and attributes after
+        // them, so those go with the first and last batches.
+        return batches.enumerated().map { index, batch in
+            var part = event
+            var partData = data
+            partData["adds"] = batch
+            partData["removes"] = index == 0 ? (data["removes"] ?? []) : []
+            partData["texts"] = index == batches.count - 1 ? (data["texts"] ?? []) : []
+            partData["attributes"] = index == batches.count - 1 ? (data["attributes"] ?? []) : []
+            part["data"] = partData
+            return part
+        }
+    }
+
+    private static func mutation(at timestamp: Any?, adds: [[String: Any]], removes: [Any], texts: [Any], attributes: [Any]) -> [String: Any] {
+        return ["type": RRWebEventType.incrementalSnapshot.rawValue,
+                "timestamp": timestamp ?? 0,
+                "data": ["source": RRWebIncrementalSource.mutation.rawValue,
+                         "adds": adds, "removes": removes, "texts": texts, "attributes": attributes]]
+    }
+
+    // MARK: - Nodes
+
+    private struct Flattened {
+        /// The node with the children it keeps.
+        let node: [String: Any]
+        /// Its serialized size with those children.
+        let size: Int
+        /// Adds putting back what was taken out of it, in an order the player can apply.
+        let adds: [[String: Any]]
+    }
+
+    /// Takes the largest subtrees out of `node` until what's left is within `partSize`. A child that
+    /// is itself too big stays, with its own largest subtrees taken out of it in turn.
+    private static func flatten(_ node: [String: Any], partSize: Int) -> Flattened? {
+        var shallow = node
+        let children = shallow.removeValue(forKey: "childNodes") as? [[String: Any]] ?? []
+        guard let shallowSize = serialized(shallow)?.count else {
+            return nil
+        }
+        guard !children.isEmpty else {
+            return Flattened(node: node, size: shallowSize, adds: [])
+        }
+
+        var results = [Flattened]()
+        results.reserveCapacity(children.count)
+        for child in children {
+            guard let result = flatten(child, partSize: partSize) else {
+                return nil
+            }
+            results.append(result)
+        }
+
+        // + `,"childNodes":[]` and the commas between children
+        var size = shallowSize + 15 + results.reduce(0) { $0 + $1.size + 1 }
+        var takenOut = Set<Int>()
+        if size > partSize && !keepsChildren(node) {
+            for index in results.indices.sorted(by: { results[$0].size > results[$1].size }) where size > partSize {
+                takenOut.insert(index)
+                size -= results[index].size + 1
+            }
+        }
+
+        var adds = [[String: Any]]()
+        let nodeId = node["id"] ?? NSNull()
+        // Last first, so each one's next sibling is already back in place.
+        for index in results.indices.reversed() where takenOut.contains(index) {
+            let nextId = index + 1 < children.count ? (children[index + 1]["id"] ?? NSNull()) : NSNull()
+            adds.append(["parentId": nodeId, "nextId": nextId, "node": results[index].node])
+            adds.append(contentsOf: results[index].adds)
+        }
+        for index in results.indices where !takenOut.contains(index) {
+            adds.append(contentsOf: results[index].adds)
+        }
+
+        shallow["childNodes"] = results.indices.filter { !takenOut.contains($0) }.map { results[$0].node }
+        return Flattened(node: shallow, size: size, adds: adds)
+    }
+
+    /// The document and `<html>` keep their children: the player builds a document's structure itself
+    /// and doesn't expect it to arrive piecemeal.
+    private static func keepsChildren(_ node: [String: Any]) -> Bool {
+        return node["type"] as? Int == SerializedNodeType.document.rawValue ||
+            (node["type"] as? Int == SerializedNodeType.element.rawValue && node["tagName"] as? String == TagType.html.rawValue)
+    }
+
+    /// `adds` reordered, as little as possible, so none comes before an add that puts in its parent or
+    /// next sibling. The player resolves that order itself within one mutation, but not across mutations.
+    private static func dependencyOrdered(_ adds: [[String: Any]]) -> [[String: Any]] {
+        var addIndexById = [Int: Int]()
+        func register(_ node: [String: Any], for index: Int) {
+            if let id = node["id"] as? Int {
+                addIndexById[id] = index
+            }
+            for child in node["childNodes"] as? [[String: Any]] ?? [] {
+                register(child, for: index)
+            }
+        }
+        for (index, add) in adds.enumerated() {
+            if let node = add["node"] as? [String: Any] {
+                register(node, for: index)
+            }
+        }
+
+        let dependencies = adds.enumerated().map { index, add -> [Int] in
+            [add["parentId"] as? Int, add["nextId"] as? Int].compactMap { id in
+                id.flatMap { addIndexById[$0] }.flatMap { $0 == index ? nil : $0 }
+            }
+        }
+        guard dependencies.contains(where: { !$0.isEmpty }) else {
+            return adds
+        }
+
+        var placed = [Bool](repeating: false, count: adds.count)
+        var ordered = [[String: Any]]()
+        ordered.reserveCapacity(adds.count)
+        var progressed = true
+        while ordered.count < adds.count && progressed {
+            progressed = false
+            for index in adds.indices where !placed[index] && dependencies[index].allSatisfy({ placed[$0] }) {
+                placed[index] = true
+                ordered.append(adds[index])
+                progressed = true
+            }
+        }
+        // A cycle can't be ordered; leave the rest as it was.
+        ordered.append(contentsOf: adds.indices.filter { !placed[$0] }.map { adds[$0] })
+        return ordered
+    }
+
+    /// Consecutive runs of `adds`, each within `partSize` unless a single add is bigger.
+    private static func batched(_ adds: [[String: Any]], partSize: Int) -> [[[String: Any]]]? {
+        var batches = [[[String: Any]]]()
+        var batch = [[String: Any]]()
+        var batchSize = 0
+        for add in adds {
+            guard let size = serialized(add)?.count else {
+                return nil
+            }
+            if !batch.isEmpty && batchSize + size + 1 > partSize {
+                batches.append(batch)
+                batch = []
+                batchSize = 0
+            }
+            batch.append(add)
+            batchSize += size + 1
+        }
+        if !batch.isEmpty {
+            batches.append(batch)
+        }
+        return batches
+    }
+
+    // MARK: - JSON
+
+    private static func serialized(_ object: Any) -> Data? {
+        return try? JSONSerialization.data(withJSONObject: object, options: [.withoutEscapingSlashes])
+    }
+
+    private static func eventType(_ event: [String: Any]) -> Int? {
+        return event["type"] as? Int
+    }
+
+    private static func timestamp(of event: [String: Any]) -> TimeInterval? {
+        return (event["timestamp"] as? NSNumber)?.doubleValue
+    }
+
+    /// The bytes of each element of a JSON array's contents (`json` without its brackets), as written.
+    static func topLevelElements(of json: Data) -> [Data] {
+        var elements = [Data]()
+        var depth = 0
+        var inString = false
+        var escaped = false
+        var start = json.startIndex
+        for index in json.indices {
+            let byte = json[index]
+            if inString {
+                if escaped {
+                    escaped = false
+                } else if byte == UInt8(ascii: "\\") {
+                    escaped = true
+                } else if byte == UInt8(ascii: "\"") {
+                    inString = false
+                }
+                continue
+            }
+            switch byte {
+            case UInt8(ascii: "\""):
+                inString = true
+            case UInt8(ascii: "{"), UInt8(ascii: "["):
+                depth += 1
+            case UInt8(ascii: "}"), UInt8(ascii: "]"):
+                depth -= 1
+            case UInt8(ascii: ",") where depth == 0:
+                elements.append(trimmed(json[start..<index]))
+                start = json.index(after: index)
+            default:
+                break
+            }
+        }
+        elements.append(trimmed(json[start..<json.endIndex]))
+        return elements.filter { !$0.isEmpty }
+    }
+
+    private static func trimmed(_ bytes: Data) -> Data {
+        let isWhitespace = { (byte: UInt8) in byte == 0x20 || byte == 0x0A || byte == 0x0D || byte == 0x09 }
+        guard let first = bytes.firstIndex(where: { !isWhitespace($0) }),
+              let last = bytes.lastIndex(where: { !isWhitespace($0) }) else {
+            return Data()
+        }
+        return Data(bytes[first...last])
     }
 }

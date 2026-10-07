@@ -188,6 +188,7 @@ typedef NSString NRMetricUnit;
 #define kNRMASessionReplayMetricFailedUpload    kNRMASessionReplay @"/FailedUpload"
 #define kNRMASessionReplayMetricURLTooLarge       kNRMASessionReplay @"/UrlTooLarge"
 #define kNRMASessionReplayMetricSuccessfulSize    kNRMASessionReplay @"/Size/Uncompressed"
+#define kNRMASessionReplayMetricEventPaginated    kNRMASessionReplay @"/EventPaginated"
 
 // Session Replay Configuration
 #define kNRMASessionReplayConfigEnabled              @"Supportability/Mobile/iOS/Config/SessionReplay/Enabled"

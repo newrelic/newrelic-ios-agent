@@ -33,6 +33,8 @@ static NSMutableArray *deferredMetrics;
 + (void) enqueueSessionReplaySuccessMetric:(long)size;
 + (void) enqueueSessionReplayFailedMetric;
 + (void) enqueueSessionReplayURLTooLargeMetric;
+// One replay event over the payload cap on its own was broken into several smaller events.
++ (void) enqueueSessionReplayEventPaginatedMetric;
 + (void) enqueueSessionReplayConfigEnabledMetric:(BOOL)enabled;
 + (void) enqueueSessionReplayConfigSamplingRateMetric:(double)samplingRate;
 + (void) enqueueSessionReplayConfigErrorSamplingRateMetric:(double)errorSamplingRate;

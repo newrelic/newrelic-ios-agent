@@ -145,7 +145,7 @@ class ReplayPayloadSplitterTests: XCTestCase {
         return .init(json: Data(json.utf8), timestamp: timestamp, canStartUpload: canStartUpload)
     }
 
-    private func split(_ pieces: [ReplayPayloadSplitter.Piece], limit: Int) -> (payloads: [ReplayPayloadSplitter.Payload], dropped: [Int]) {
+    private func split(_ pieces: [ReplayPayloadSplitter.Piece], limit: Int) -> ReplayPayloadSplitter.Result {
         return ReplayPayloadSplitter.split(pieces, limit: limit) { $0 }
     }
 
@@ -405,5 +405,260 @@ class SessionReplayPayloadSplitTests: XCTestCase {
         XCTAssertEqual(attributes, "a=2&b=x=y&c=3")
         XCTAssertNil(SessionReplayReporter.replayAttribute("content_encoding", of: rewritten))
         XCTAssertNil(SessionReplayReporter.replayAttribute("missing", of: rewritten))
+    }
+}
+
+/// Applies FullSnapshots and mutation adds/removes the way the rrweb player does, but strictly: an add
+/// whose parent or next sibling isn't in place yet fails rather than being deferred, as it would be
+/// across separate mutation events.
+fileprivate final class ReplayMirror {
+    private final class Node {
+        var fields: [String: Any]
+        var children: [Node] = []
+        init(_ fields: [String: Any]) { self.fields = fields }
+        var id: Int? { fields["id"] as? Int }
+    }
+
+    struct Failure: Error, CustomStringConvertible { let description: String }
+
+    private var root: Node?
+    private var nodesById = [Int: Node]()
+    private var parentById = [Int: Int]()
+
+    func apply(_ event: [String: Any]) throws {
+        let data = event["data"] as? [String: Any] ?? [:]
+        switch event["type"] as? Int {
+        case RRWebEventType.fullSnapshot.rawValue:
+            nodesById = [:]
+            parentById = [:]
+            root = build(try XCTUnwrap(data["node"] as? [String: Any]), parent: nil)
+        case RRWebEventType.incrementalSnapshot.rawValue where data["source"] as? Int == 0:
+            for remove in data["removes"] as? [[String: Any]] ?? [] {
+                let id = remove["id"] as? Int ?? -1
+                guard let parent = nodesById[remove["parentId"] as? Int ?? -1] else { throw Failure(description: "remove from missing parent") }
+                parent.children.removeAll { $0.id == id }
+            }
+            for add in data["adds"] as? [[String: Any]] ?? [] {
+                guard let parentId = add["parentId"] as? Int, let parent = nodesById[parentId] else {
+                    throw Failure(description: "add into missing parent \(add["parentId"] ?? "nil")")
+                }
+                let node = build(try XCTUnwrap(add["node"] as? [String: Any]), parent: parentId)
+                if let nextId = add["nextId"] as? Int {
+                    guard let index = parent.children.firstIndex(where: { $0.id == nextId }) else {
+                        throw Failure(description: "add before missing sibling \(nextId)")
+                    }
+                    parent.children.insert(node, at: index)
+                } else {
+                    parent.children.append(node)
+                }
+            }
+        default:
+            break
+        }
+    }
+
+    private func build(_ json: [String: Any], parent: Int?) -> Node {
+        var fields = json
+        let children = fields.removeValue(forKey: "childNodes") as? [[String: Any]] ?? []
+        let node = Node(fields)
+        if let id = node.id {
+            nodesById[id] = node
+            parentById[id] = parent
+        }
+        node.children = children.map { build($0, parent: node.id) }
+        return node
+    }
+
+    var tree: NSDictionary? {
+        return root.map { ReplayMirror.normalized(dictionary(of: $0)) }
+    }
+
+    private func dictionary(of node: Node) -> [String: Any] {
+        var fields = node.fields
+        fields["childNodes"] = node.children.map { dictionary(of: $0) }
+        return fields
+    }
+
+    /// The tree with empty `childNodes` left out, so trees that differ only in that compare equal.
+    static func normalized(_ node: [String: Any]) -> NSDictionary {
+        var fields = node
+        let children = fields.removeValue(forKey: "childNodes") as? [[String: Any]] ?? []
+        if !children.isEmpty {
+            fields["childNodes"] = children.map { normalized($0) }
+        }
+        return fields as NSDictionary
+    }
+}
+
+class ReplayEventPaginationTests: XCTestCase {
+
+    private func makeManager() -> SessionReplayManager {
+        let reporter = SessionReplayReporter(applicationToken: "test-token", url: "mobile-collector.newrelic.com" as NSString)
+        return SessionReplayManager(reporter: reporter, url: "mobile-collector.newrelic.com" as NSString)
+    }
+
+    private func serialized(_ object: Any) throws -> Data {
+        return try JSONSerialization.data(withJSONObject: object, options: [.withoutEscapingSlashes])
+    }
+
+    private func element(_ id: Int, _ tag: String, _ attributes: [String: String] = [:], _ children: [[String: Any]] = []) -> [String: Any] {
+        return ["type": 2, "id": id, "tagName": tag, "attributes": attributes, "childNodes": children]
+    }
+
+    /// A native-shaped snapshot of `rows` image rows -- what an image-heavy screen with image masking
+    /// off produces. The images' base64 barely compresses, so this is far over a small cap.
+    private func imageHeavySnapshot(rows: Int, imageBytes: Int) -> [String: Any] {
+        var nextId = 100
+        func id() -> Int { nextId += 1; return nextId }
+        let list = (0..<rows).map { row -> [String: Any] in
+            element(id(), "div", ["id": "row\(row)"], [
+                element(id(), "img", ["src": "data:image/png;base64,\(incompressibleText(imageBytes, seed: UInt64(row)))"]),
+                ["type": 3, "id": id(), "isStyle": false, "textContent": "Row \(row)"],
+            ])
+        }
+        let css: [String: Any] = ["type": 3, "id": 5, "isStyle": true, "textContent": "#row0 { color: red; }"]
+        return ["type": 0, "id": 1, "childNodes": [
+            ["type": 1, "id": 2, "name": "html", "publicId": "", "systemId": ""],
+            element(3, "html", [:], [
+                element(4, "head", [:], [element(6, "style", [:], [css])]),
+                element(7, "body", [:], [element(8, "div", ["id": "root"], [element(9, "div", ["id": "list"], list)])]),
+            ]),
+        ]]
+    }
+
+    private func events(in payloads: [ReplayPayloadSplitter.Payload], gzipped: Bool = true) throws -> [[[String: Any]]] {
+        return try payloads.map { try jsonArray(gzipped ? gunzip($0.data) : $0.data) }
+    }
+
+    func testOversizedFullSnapshotIsPaginatedIntoUploadsThatRebuildIt() throws {
+        let manager = makeManager()
+        let root = imageHeavySnapshot(rows: 60, imageBytes: 4_000)
+        let snapshotJSON = try serialized(["type": 2, "timestamp": 1000,
+                                           "data": ["node": root, "initialOffset": ["top": 0, "left": 0]]] as [String: Any])
+        let snapshot = try XCTUnwrap(try JSONDecoder().decode([AnyRRWebEvent].self, from: Data("[".utf8) + snapshotJSON + Data("]".utf8)).first)
+        let chunk: [ReplayChunkEvent] = [.native(makeMetaAnyRRWebEvent(timestamp: 1000)), .native(snapshot),
+                                         .native(makeTouchAnyRRWebEvent(timestamp: 1200))]
+        let limit = 60_000  // the snapshot alone gzips to ~3x this
+
+        let payloads = try XCTUnwrap(manager.encodeReplayChunk(chunk, limit: limit))
+
+        XCTAssertGreaterThan(payloads.count, 2)
+        for payload in payloads {
+            XCTAssertLessThanOrEqual(payload.data.count, limit)
+        }
+        let uploaded = try events(in: payloads).flatMap { $0 }
+        XCTAssertEqual(uploaded.first?["type"] as? Int, RRWebEventType.meta.rawValue)
+        XCTAssertEqual(uploaded.dropFirst().first?["type"] as? Int, RRWebEventType.fullSnapshot.rawValue)
+        XCTAssertEqual(uploaded.last?["timestamp"] as? Int, 1200, "Events after the snapshot keep their place")
+        let pages = uploaded.dropFirst(2).dropLast()
+        XCTAssertFalse(pages.isEmpty)
+        for page in pages {
+            XCTAssertEqual(page["type"] as? Int, RRWebEventType.incrementalSnapshot.rawValue)
+            XCTAssertEqual(page["timestamp"] as? Int, 1000, "Every page lands at the snapshot's own moment")
+        }
+
+        let mirror = ReplayMirror()
+        for event in uploaded {
+            try mirror.apply(event)
+        }
+        XCTAssertEqual(mirror.tree, ReplayMirror.normalized(root), "The pages rebuild exactly the original document")
+    }
+
+    func testPaginatedMutationAddsParentsBeforeChildrenAcrossPages() throws {
+        // The child's add is listed before its parent's: fine within one mutation, but not across two.
+        let child: [String: Any] = element(21, "img", ["src": incompressibleText(3_000, seed: 1)])
+        let parent: [String: Any] = element(20, "div", ["pad": incompressibleText(3_000, seed: 2)])
+        let mutation: [String: Any] = ["type": 3, "timestamp": 500, "data": [
+            "source": 0,
+            "removes": [["parentId": 10, "id": 11]],
+            "adds": [["parentId": 20, "nextId": NSNull(), "node": child],
+                     ["parentId": 10, "nextId": NSNull(), "node": parent]],
+            "texts": [["id": 12, "value": "after"]],
+            "attributes": [],
+        ]]
+        let piece = ReplayPayloadSplitter.Piece(json: try serialized(mutation), timestamp: 500)
+
+        let result = ReplayPayloadSplitter.split([piece], limit: 4_000, compress: { $0 }, paginate: ReplayEventPaginator.paginate)
+
+        XCTAssertEqual(result.paginated, [0])
+        XCTAssertTrue(result.dropped.isEmpty)
+        let pages = try events(in: result.payloads, gzipped: false).flatMap { $0 }
+        XCTAssertEqual(pages.count, 2)
+        let data = pages.map { $0["data"] as? [String: Any] ?? [:] }
+        XCTAssertEqual((data[0]["adds"] as? [[String: Any]])?.first?["parentId"] as? Int, 10, "The parent goes in first")
+        XCTAssertEqual((data[0]["removes"] as? [Any])?.count, 1, "Removes apply before any add")
+        XCTAssertEqual((data[1]["texts"] as? [Any])?.count, 1, "Texts apply after every add")
+        XCTAssertEqual((data[0]["texts"] as? [Any])?.count, 0)
+
+        let body: [String: Any] = ["type": 2, "data": ["node": element(10, "body", [:], [element(11, "div"), ["type": 3, "id": 12, "isStyle": false, "textContent": "before"]])]]
+        let mirror = ReplayMirror()
+        try mirror.apply(body)
+        for page in pages {
+            try mirror.apply(page)
+        }
+
+        let inOriginalOrder = ReplayMirror()
+        try inOriginalOrder.apply(body)
+        XCTAssertThrowsError(try inOriginalOrder.apply(["type": 3, "data": ["source": 0, "adds": [["parentId": 20, "nextId": NSNull(), "node": child]]]]),
+                             "Pages in the original order would add the child before its parent exists")
+    }
+
+    func testOversizedFrameFileIsCutIntoItsEventsAsWritten() throws {
+        // Commas, brackets, braces and escaped quotes inside strings must not be mistaken for structure.
+        let events = [
+            #"{"type":3,"timestamp":1,"data":{"source":0,"texts":[{"id":1,"value":"a, [b] {c} \"d,\" "#
+                + incompressibleText(900, seed: 1) + #""}]}}"#,
+            #"{"type":3,"timestamp":2,"data":{"source":0,"texts":[{"id":1,"value":"\\"#
+                + incompressibleText(900, seed: 2) + #""}]}}"#,
+            #"{"type":3,"timestamp":3,"data":{"source":0,"texts":[{"id":1,"value":""#
+                + incompressibleText(900, seed: 3) + #""}]}}"#,
+        ]
+        let piece = ReplayPayloadSplitter.Piece(json: Data(events.joined(separator: ", \n").utf8), firstTimestamp: 1, lastTimestamp: 3)
+
+        let result = ReplayPayloadSplitter.split([piece], limit: 2_000, compress: { $0 }, paginate: ReplayEventPaginator.paginate)
+
+        XCTAssertEqual(result.paginated, [0])
+        XCTAssertTrue(result.dropped.isEmpty)
+        let uploaded = result.payloads.flatMap { payload in
+            ReplayEventPaginator.topLevelElements(of: payload.data.dropFirst().dropLast()).map { String(decoding: $0, as: UTF8.self) }
+        }
+        XCTAssertEqual(uploaded, events, "Each event is uploaded byte for byte as it was persisted")
+        XCTAssertEqual(result.payloads.first?.firstTimestamp, 1)
+        XCTAssertEqual(result.payloads.last?.lastTimestamp, 3)
+    }
+
+    func testSingleNodeOverTheCapCannotBePaginatedAndIsDropped() throws {
+        let mutation: [String: Any] = ["type": 3, "timestamp": 1, "data": [
+            "source": 0, "removes": [], "texts": [], "attributes": [],
+            "adds": [["parentId": 1, "nextId": NSNull(), "node": ["type": 3, "id": 2, "isStyle": false,
+                                                                 "textContent": incompressibleText(5_000, seed: 1)]]],
+        ]]
+        let pieces = [ReplayPayloadSplitter.Piece(json: Data(#"{"type":4,"timestamp":0,"data":{}}"#.utf8), timestamp: 0),
+                      ReplayPayloadSplitter.Piece(json: try serialized(mutation), timestamp: 1)]
+
+        let result = ReplayPayloadSplitter.split(pieces, limit: 2_000, compress: { $0 }, paginate: ReplayEventPaginator.paginate)
+
+        XCTAssertEqual(result.dropped, [1])
+        XCTAssertTrue(result.paginated.isEmpty)
+        XCTAssertEqual(result.payloads.count, 1, "The rest of the chunk still goes")
+    }
+
+    func testDocumentAndHtmlKeepTheirChildren() throws {
+        let root = imageHeavySnapshot(rows: 10, imageBytes: 2_000)
+        let snapshot: [String: Any] = ["type": 2, "timestamp": 1, "data": ["node": root, "initialOffset": ["top": 0, "left": 0]]]
+        let piece = ReplayPayloadSplitter.Piece(json: try serialized(snapshot), timestamp: 1)
+
+        let parts = try XCTUnwrap(ReplayEventPaginator.paginate(piece, partSize: 100))
+
+        let skeleton = try XCTUnwrap(try JSONSerialization.jsonObject(with: parts[0].json) as? [String: Any])
+        let document = try XCTUnwrap((skeleton["data"] as? [String: Any])?["node"] as? [String: Any])
+        let html = try XCTUnwrap((document["childNodes"] as? [[String: Any]])?.last)
+        XCTAssertEqual((document["childNodes"] as? [Any])?.count, 2, "doctype and html stay")
+        XCTAssertEqual((html["childNodes"] as? [[String: Any]])?.compactMap { $0["tagName"] as? String }, ["head", "body"])
+        let addParents = try parts.dropFirst().flatMap { part -> [Int] in
+            let event = try XCTUnwrap(try JSONSerialization.jsonObject(with: part.json) as? [String: Any])
+            return ((event["data"] as? [String: Any])?["adds"] as? [[String: Any]] ?? []).compactMap { $0["parentId"] as? Int }
+        }
+        XCTAssertFalse(addParents.contains(1) || addParents.contains(3), "Nothing is added into the document or <html>")
     }
 }
