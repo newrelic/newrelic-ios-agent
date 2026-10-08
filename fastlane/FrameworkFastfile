@@ -47,7 +47,8 @@ platform :ios do
   lane :cpDsymToolsToFramework do 
     Dir.chdir("..") do
       sh("mkdir -p NewRelic.xcframework/Resources/")
-      sh("cp -r dsym-upload-tools/ NewRelic.xcframework/Resources/")
+      # Copy the tools without their development-only files (listed in scripts/dsym-upload-tools-release.exclude).
+      sh("rsync -a --exclude-from scripts/dsym-upload-tools-release.exclude dsym-upload-tools/ NewRelic.xcframework/Resources/")
     end
   end
   desc "Codesign xcframework"
