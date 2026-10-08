@@ -249,6 +249,11 @@ public class NRMAWebViewReplayBridge: NSObject {
     /// Injects the browser agent in observation mode and registers a beforeHarvest hook that forwards
     /// session_replay payloads to native. Sentinel-guarded, so repeat evaluations are no-ops.
     ///
+    /// Always injects, even when the page already runs its own browser agent: the page's `NREUM` and
+    /// `newrelic` globals are detached (kept on `__nrWvPrevNREUM`/`__nrWvPrevNewrelic`) so the freshly
+    /// loaded agent initialises from our config instead of the page's. The page's agent keeps running
+    /// from its own closures.
+    ///
     /// Configuration that is load-bearing (all found on Android devices):
     /// - `session_trace` must stay enabled: replay couples to trace through session identity, and with
     ///   trace disabled replay never records.
@@ -275,9 +280,14 @@ public class NRMAWebViewReplayBridge: NSObject {
     var post=function(m){try{H.postMessage(m);}catch(e){}};
     try{
     if(window.__nrWvInjected){return;}
-    if(window.NREUM||window.newrelic){post({kind:'skipped',reason:'existing-agent'});return;}
     window.__nrWvInjected=true;
-    window.NREUM=window.NREUM||{};
+    if(window.NREUM||window.newrelic){
+    window.__nrWvPrevNREUM=window.NREUM;window.__nrWvPrevNewrelic=window.newrelic;
+    try{delete window.NREUM;}catch(e){window.NREUM=undefined;}
+    try{delete window.newrelic;}catch(e){window.newrelic=undefined;}
+    post({kind:'observed',info:'page already had a browser agent; overriding with injected agent'});
+    }
+    window.NREUM={};
     window.NREUM.info={beacon:'bam.nr-data.net',errorBeacon:'bam.nr-data.net',licenseKey:'\(observationLicenseKey)',applicationID:'0',sa:1};
     window.NREUM.loader_config={licenseKey:'\(observationLicenseKey)',applicationID:'0',agentID:'0',trustKey:'0'};
     window.NREUM.init={observation_mode:{enabled:true},harvest:{interval:5},session_trace:{enabled:true},
