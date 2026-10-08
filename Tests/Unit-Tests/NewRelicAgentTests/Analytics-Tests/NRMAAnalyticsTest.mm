@@ -296,6 +296,38 @@
     XCTAssertTrue([decode[@"lastInteraction"] isEqualToString:@"Display Banana"]);
 }
 
+- (void) testConcurrentNRSessionAttributesAndHarvestJSON {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    dispatch_group_t group = dispatch_group_create();
+    dispatch_semaphore_t readerStarted = dispatch_semaphore_create(0);
+    dispatch_semaphore_t writersDone = dispatch_semaphore_create(0);
+
+    dispatch_group_async(group, dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+        XCTAssertNotNil([analytics sessionAttributeJSONString]);
+        dispatch_semaphore_signal(readerStarted);
+
+        while (dispatch_semaphore_wait(writersDone, DISPATCH_TIME_NOW) != 0) {
+            XCTAssertNotNil([analytics sessionAttributeJSONString]);
+        }
+    });
+
+    XCTAssertEqual(dispatch_semaphore_wait(readerStarted, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC)), 0);
+    dispatch_apply(2000, dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^(size_t i) {
+        [analytics setNRSessionAttribute:@"memUsageMb" value:@(i)];
+        [analytics setLastInteraction:[NSString stringWithFormat:@"Display %zu", i]];
+        [analytics setNRSessionAttribute:[NSString stringWithFormat:@"nrAttr%zu", i % 20] value:@"value"];
+    });
+    dispatch_semaphore_signal(writersDone);
+    XCTAssertEqual(dispatch_group_wait(group, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC)), 0);
+
+    NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:[[analytics sessionAttributeJSONString] dataUsingEncoding:NSUTF8StringEncoding]
+                                                           options:0
+                                                             error:nil];
+    XCTAssertNotNil(decode[@"memUsageMb"]);
+    XCTAssertNotNil(decode[@"lastInteraction"]);
+    XCTAssertNotNil(decode[@"nrAttr0"]);
+}
+
 - (void) testRequestEventNetworkError {
     NRTimer* timer = [NRTimer new];
 
