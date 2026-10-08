@@ -535,6 +535,8 @@ SessionAttributeManager::SessionAttributeManager(PersistentStore<std::string,Bas
         std::map<std::string, std::shared_ptr<AttributeBase>> tempMap = std::map<std::string, std::shared_ptr<AttributeBase>>(
                 _sessionAttributes);
 
+        // Private attributes are mutated under this lock.
+        std::lock_guard<std::mutex> privateAttributeLock(_privateAttributesLock);
         tempMap.insert(_privateSessionAttributes.cbegin(), _privateSessionAttributes.cend());
 
         return tempMap;
