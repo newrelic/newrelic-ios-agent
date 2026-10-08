@@ -179,13 +179,20 @@ platform :ios do
   desc "Run dSYM Upload Tools test"
   lane :runDsymUploadToolsTests do
     Dir.chdir("..") do
+        # Unit tests. --scratch-path keeps the .build folder out of dsym-upload-tools, which is copied to customers.
+        buildPath = File.join(ENV['TMPDIR'] || '/tmp', 'nr-dsym-upload-tools-build')
+        sh("swift test --package-path ./dsym-upload-tools --scratch-path \"#{buildPath}\"")
+
         # shouldn't fail with non-0 exit code, but will get a 401 due to invalid app token.
-        sh("export DWARF_DSYM_FOLDER_PATH=\".\" && /usr/bin/xcrun --sdk macosx swift \"./dsym-upload-tools/run-symbol-tool.swift\" \"API-KEY\" --debug")
+        # --foreground runs the tool in the wrapper's process, so its output and exit status reach the lane.
+        sh("export DWARF_DSYM_FOLDER_PATH=\".\" && ./dsym-upload-tools/run-symbol-tool \"API-KEY\" --foreground --debug")
 
         # shouldn't fail
         sh("./dsym-upload-tools/run-symbol-tool \"API-KEY\"")
 
         # NR-417639: verify the optional -appVersion argument overrides the reported app version.
+        # This goes through the legacy `xcrun swift run-symbol-tool.swift` entry point, which also checks
+        # that it still forwards to the wrapper for build phases that call it directly.
         # A block is passed to sh so a non-zero exit (e.g. when no dSYM is present locally) does not
         # fail the lane; the resolved-version line is printed before dSYM processing regardless.
         appVersionOutput = ""

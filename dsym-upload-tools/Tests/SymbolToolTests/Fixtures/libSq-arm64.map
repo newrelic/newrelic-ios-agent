@@ -1,0 +1,34 @@
+# uuid LIBUUID
+# architecture arm64
+# vmaddr 0x0000000000000000
+# vmaddr 0x0000000000004000
+# vmaddr 0x0000000000005000
+0x00000000000002d0 sum_squares (lib.c:3)
+0x00000000000002e0 sum_squares (lib.c:3)
+0x00000000000002e4 sum_squares (lib.c:3)
+0x00000000000002e8 sum_squares (lib.c:3)
+0x00000000000002ec sum_squares (lib.c:3)
+0x00000000000002f0 sum_squares (lib.c:3)
+0x00000000000002f4 sum_squares (lib.c:3)
+0x0000000000000300 sum_squares (lib.c:3)
+0x0000000000000304 sum_squares (lib.c:3)
+0x0000000000000308 sum_squares (lib.c:3)
+0x0000000000000314 sum_squares (lib.c:3)
+0x0000000000000318 sum_squares (lib.c:3)
+0x0000000000000324 sum_squares (lib.c:3)
+0x0000000000000328 sum_squares (lib.c:3)
+0x000000000000032c sum_squares (lib.c:3)
+0x0000000000000338 square (lib.c:2)
+0x0000000000000340 square (lib.c:2)
+0x0000000000000344 square (lib.c:2)
+0x0000000000000348 square (lib.c:2)
+0x000000000000034c square (lib.c:2)
+0x0000000000005000 __debug_line
+0x0000000000005096 __debug_aranges
+0x00000000000050c6 __debug_addr
+0x00000000000050e6 __debug_info
+0x0000000000005163 __debug_abbrev
+0x00000000000051e2 __debug_str
+0x00000000000052ae __debug_str_offs
+0x00000000000052e6 __debug_line_str
+0x00000000000052fc __debug_names
