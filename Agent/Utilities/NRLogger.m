@@ -629,9 +629,9 @@ withTimestamp:(NSNumber *) timestamp {
         NSData *formattedData = [self->uploadQueue firstObject];
         
         if (self->debugLogs) {
-            NSArray* decode = [NSJSONSerialization JSONObjectWithData:formattedData
-                                                                   options:0
-                                                                     error:nil];
+            NSArray* decode = [NRMAJSON JSONObjectWithData:formattedData
+                                                     options:0
+                                                       error:nil];
             NSLog(@"Uploading log data:\n %@", decode);
         }
 
