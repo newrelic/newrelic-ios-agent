@@ -10,6 +10,7 @@
 #import "NRMAExceptionHandlerManager.h"
 #import "NRMAAnalytics.h"
 #import "NRMACrashDataUploader.h"
+#import "NRMAJSON.h"
 
 @implementation NRMAExceptionHandlerStartupManager
 
@@ -34,9 +35,9 @@
             @try {
                 if (self.eventJson != nil && [self.eventJson length] > 0) {
 
-                    events = [NSJSONSerialization JSONObjectWithData:[self.eventJson dataUsingEncoding:NSUTF8StringEncoding]
-                                                             options:0
-                                                               error:&serializationError];
+                    events = [NRMAJSON JSONObjectWithData:[self.eventJson dataUsingEncoding:NSUTF8StringEncoding]
+                                                    options:0
+                                                      error:&serializationError];
                 }
                 if (serializationError != nil) {
                     NRLOG_AGENT_VERBOSE(@"Failed to load last session's events for crash: %@",serializationError.localizedDescription);
@@ -48,9 +49,9 @@
             @try {
                 if (self.attributeJson != nil && [self.attributeJson length] > 0) {
 
-                    attributes = [NSJSONSerialization JSONObjectWithData:[self.attributeJson dataUsingEncoding:NSUTF8StringEncoding]
-                                                                 options:0
-                                                                   error:&serializationError];
+                    attributes = [NRMAJSON JSONObjectWithData:[self.attributeJson dataUsingEncoding:NSUTF8StringEncoding]
+                                                        options:0
+                                                          error:&serializationError];
                 }
                 if (serializationError != nil) {
                     NRLOG_AGENT_VERBOSE(@"Failed to load last session's attribute for crash: %@",serializationError.localizedDescription);
