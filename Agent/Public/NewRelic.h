@@ -21,6 +21,7 @@
 #import <NewRelic/NRLogger.h>
 #import <NewRelic/NewRelicCustomInteractionInterface.h>
 #import <NewRelic/NRGCDOverride.h>
+#import <NewRelic/NRSessionFlowDiagramOptions.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -723,6 +724,199 @@ extern "C" {
 
 + (BOOL) recordBreadcrumb:(NSString* _Nonnull)name
                attributes:(NSDictionary* _Nullable)attributes;
+
+/*!
+ * Manually set the currently-displayed view (screen).
+ *
+ * Marks `name` as the current view using a browser route-change model: the previously set current
+ * view is closed out first -- that visit has ended, so its "MobileView" event is recorded now, with
+ * its timeVisible -- and then `name` becomes current with the prior view recorded as its referrer
+ * (previousView). Breadcrumbs and MobileView events recorded while `name` is current carry it as
+ * currentView.
+ *
+ * One MobileView event is recorded per visit, when the view is closed out rather than when it is
+ * set: a visit cannot be described until it has ended. `name` therefore produces its event on the
+ * *next* setCurrentView: call, or when the app is backgrounded, whichever comes first.
+ *
+ * Use this when automatic instrumentation does not capture a view correctly, to rename views for
+ * business reasons, or to name cross-platform (e.g. React Native) screens that would otherwise
+ * collapse to a single generic host view controller.
+ *
+ * Requires NRFeatureFlag_ManualViews to be enabled. Independent of NRFeatureFlag_AutomaticViews.
+ *
+ * @param name The display name of the view (screen). Must be a non-empty string.
+ * @param attributes Optional custom attributes merged into this view's MobileView event -- which is
+ *        recorded when the view is closed out, so they are held until then. Reserved keys
+ *        (viewClass, viewName, viewInstanceId, previousView, timeVisible, uiFramework, agentName) are
+ *        not overridden.
+ */
++ (void) setCurrentView:(NSString* _Nonnull)name
+             attributes:(NSDictionary* _Nullable)attributes;
+
+/*!
+ * Marks the start of loading the next manually-set view, so it gets a "timeToInitialDisplay"
+ * baseline the way automatically-tracked views do.
+ *
+ * Call it where the work of building the screen begins — the navigation action, the start of the
+ * fetch — and the next setCurrentView: closes it:
+ *
+ *     [NewRelic beginViewLoad];                        // user tapped through to the screen
+ *     ... build it, fetch it ...
+ *     [NewRelic setCurrentView:@"ProductDetail" attributes:nil];   // it is now on screen
+ *
+ * Optional, and only useful for manual views. The agent cannot observe a manual view's lifecycle:
+ * setCurrentView: is called when the screen is already showing, so without this the load start and
+ * the appear instant are the same and the baseline would be identically zero. Rather than record a
+ * zero — which counts as a real value in every percentile and cannot be told apart from a genuinely
+ * instant load — the agent records no baseline for manual views unless you call this.
+ *
+ * It also sets the origin for markViewTiming: on that view, so "timeToFullDisplay" measured after a
+ * beginViewLoad encloses the baseline and "timeToFullDisplay" minus "timeToInitialDisplay" is the
+ * interval the screen looked finished but was not. Without it, marks measure from the setCurrentView:
+ * instant instead, and the view has no baseline to compare them against.
+ *
+ * A begin with no matching setCurrentView: goes stale rather than attaching to whatever screen is
+ * set much later. Calling it twice before a setCurrentView: keeps only the later start.
+ *
+ * Requires NRFeatureFlag_ManualViews to be enabled.
+ */
++ (void) beginViewLoad;
+
+/*!
+ * Records how long something took on the current view, as a "MobileViewTiming" event.
+ *
+ * The duration is measured from the moment the runtime began building the current view until now,
+ * which is what screen-timing metrics such as Time to Full Display and Time to Interactive actually
+ * are. Call it at the point the screen genuinely reached that state:
+ *
+ *     // after the real content, not the placeholder, is on screen
+ *     [NewRelic markViewTiming:@"timeToFullDisplay"];
+ *
+ * That is the same origin the agent measures its own "timeToInitialDisplay" from, which is the point:
+ * the two intervals share a start, so the mark encloses the baseline and
+ * "timeToFullDisplay" minus "timeToInitialDisplay" is the interval during which the screen looked
+ * finished but was not.
+ *
+ * When the agent has no trustworthy construction start for the view — the screen resurfaced without
+ * being rebuilt, a tab was selected, the agent started mid-construction, or a manual view's
+ * beginViewLoad was never called — the duration is measured from the appear instant instead, and is
+ * therefore short by however long that screen took to build. Such a view also has no
+ * "timeToInitialDisplay" row, so the two cannot be wrongly subtracted; to tell the cases apart, check
+ * the "MobileView" appear event for the same viewInstanceId, which carries loadTime exactly when a
+ * construction start was available and loadTimeUnavailable when it was not.
+ *
+ * The event carries the current view's viewName and viewInstanceId, so it joins back to that
+ * specific visit, and previousView, so timings can be compared by the route taken into the screen.
+ *
+ * "timeToInitialDisplay" is recorded by the agent and is reserved; it cannot be used here.
+ *
+ * Requires NRFeatureFlag_AutomaticMobileViews or NRFeatureFlag_ManualMobileViews.
+ *
+ * @param name What was timed, e.g. @"timeToFullDisplay". Non-empty, at most 128 characters.
+ * @return YES if the timing was recorded. NO if view tracking is disabled, no view is currently
+ *         being tracked (there is no start point to measure from — use
+ *         recordViewTiming:milliseconds: instead), the name is invalid or reserved, or too many
+ *         timings have already been recorded for this view.
+ */
++ (BOOL) markViewTiming:(NSString* _Nonnull)name;
+
+/*!
+ * Records a "MobileViewTiming" event with a duration you have already measured.
+ *
+ * Use this when the current view's appear time is not the right starting point — a prefetch that
+ * began before navigation, or a duration measured by your own code or another SDK:
+ *
+ *     [NewRelic recordViewTiming:@"timeToFirstByte" milliseconds:214];
+ *
+ * Unlike markViewTiming:, this succeeds even when no view is being tracked; the event is simply
+ * recorded without view identity.
+ *
+ * Because you measured the interval, the agent cannot say which instant it started from. Do not
+ * subtract "timeToInitialDisplay" from such a row unless you know you measured from the same start.
+ *
+ * Requires NRFeatureFlag_AutomaticMobileViews or NRFeatureFlag_ManualMobileViews.
+ *
+ * @param name What was timed. Non-empty, at most 128 characters. "timeToInitialDisplay" is reserved.
+ * @param milliseconds The duration in milliseconds. Must be finite, not negative, and at most
+ *        600000 (10 minutes) — a larger value usually means seconds were passed by mistake.
+ * @return YES if the timing was recorded, NO if it was rejected.
+ */
++ (BOOL) recordViewTiming:(NSString* _Nonnull)name milliseconds:(double)milliseconds;
+
+/*******************************/
+/** Session flow diagrams     **/
+/*******************************/
+
+#pragma mark - Session flow diagrams
+
+/*!
+ * Mermaid flowchart of the screens visited this session and the transitions between them.
+ *
+ * Every MobileView event carries both ends of a transition -- `viewName` (where the user landed) and
+ * `previousView` (where they came from) -- so the diagram is an aggregation over those pairs, with
+ * no ordering heuristics. Screens are labelled with their MobileViewTiming medians and lie window
+ * (or average loadTime), slow and lying screens are highlighted, each arrow carries the cost of
+ * landing along that route, and a route the user backed out along is drawn dashed.
+ *
+ * The output is Mermaid source, not an image: paste it into GitHub, Confluence, or a PR description,
+ * or render it in a WKWebView with mermaid.js (see the Session Diagram screen in NRTestApp). It is
+ * byte-identical to what `scripts/mobileview_flow.py` draws from the same session's events.
+ *
+ * Accumulation is active whenever NRFeatureFlag_AutomaticMobileViews or
+ * NRFeatureFlag_ManualMobileViews is enabled -- the same flags that produce the events -- and costs
+ * nothing when both are off.
+ *
+ * @return Mermaid source, or nil when no transition has been recorded yet (view tracking is
+ *         disabled, or only one screen has appeared so far).
+ */
++ (NSString* _Nullable) currentSessionFlowDiagram;
+
+/*!
+ * As +currentSessionFlowDiagram, with control over what is drawn.
+ *
+ * @param options Rendering options; pass nil for the defaults. See NRSessionFlowDiagramOptions.
+ */
++ (NSString* _Nullable) currentSessionFlowDiagramWithOptions:(NRSessionFlowDiagramOptions* _Nullable)options;
+
+/*!
+ * Mermaid gantt of this session: one row per screen, one bar per visit, the load window drawn before
+ * each bar and timing marks as diamonds, on one time axis from the start of the session. The same
+ * chart as `scripts/mobileview_flow.py --timeline`.
+ *
+ * @param options Rendering options; pass nil for the defaults (the first 25 visits). See
+ *        NRSessionFlowDiagramOptions.
+ * @return Mermaid source, or nil when no visit has been recorded yet.
+ */
++ (NSString* _Nullable) currentSessionTimelineWithOptions:(NRSessionFlowDiagramOptions* _Nullable)options;
+
+/*!
+ * Session ids that have a finished diagram and timeline, oldest first.
+ *
+ * A session's diagram is archived when the session ends -- the same moment the MobileSession event is
+ * created -- so a diagram remains readable after the session it describes has rolled. The most
+ * recent few are kept; older ones are discarded.
+ */
++ (NSArray<NSString*>* _Nonnull) archivedFlowDiagramSessionIds;
+
+/*!
+ * Mermaid flowchart for a session that has already ended.
+ *
+ * @param sessionId A session id from +archivedFlowDiagramSessionIds.
+ * @param options Rendering options; pass nil for the defaults.
+ * @return Mermaid source, or nil when that session has no archived diagram.
+ */
++ (NSString* _Nullable) flowDiagramForSessionId:(NSString* _Nonnull)sessionId
+                                        options:(NRSessionFlowDiagramOptions* _Nullable)options;
+
+/*!
+ * Mermaid gantt for a session that has already ended.
+ *
+ * @param sessionId A session id from +archivedFlowDiagramSessionIds.
+ * @param options Rendering options; pass nil for the defaults.
+ * @return Mermaid source, or nil when that session has no archived timeline.
+ */
++ (NSString* _Nullable) timelineForSessionId:(NSString* _Nonnull)sessionId
+                                     options:(NRSessionFlowDiagramOptions* _Nullable)options;
 
 /*!
  * Records a JavaScript error as a MobileJSError custom event.

@@ -11,6 +11,10 @@
 //     the virtual config's 10 parallel sessions would queue or fail here.
 //   - Longer timeouts throughout. Real hardware boots slower, and specs like
 //     swiftui-other-components.test.js run a long chain of interactions.
+//   - The `app` capability is an `lt://APP...` URL, NOT the custom_id the virtual
+//     pipeline uses. Real-device sessions identify builds by that URL; given a
+//     custom_id they cannot resolve, LambdaTest hangs rather than erroring and the
+//     client aborts with UND_ERR_HEADERS_TIMEOUT after connectionRetryTimeout.
 //   - appiumVersion is deliberately NOT pinned, so LambdaTest picks its
 //     real-device default instead of inheriting the virtual run's 2.16.2.
 //   - one extra spec, tests-realdevice/crash-reporting.test.js, runs last: it taps
@@ -102,8 +106,8 @@ exports.config = {
         noReset: false,
         platformName: "ios",
         // Overridable so a dispatch can retarget hardware without editing this file.
-        deviceName: process.env.LT_DEVICE_NAME || "iPhone 15",
-        platformVersion: process.env.LT_PLATFORM_VERSION || "18",
+        deviceName: process.env.LT_DEVICE_NAME || "iPhone 17",
+        platformVersion: process.env.LT_PLATFORM_VERSION || "26.0",
         isRealMobile: true,
         app: appId,
         idleTimeout: 300,
