@@ -137,6 +137,7 @@ typedef NSString NRMetricUnit;
 #define kNRMAKMMDetectionMetric @"Supportability/Mobile/iOS/HybridPlatform/KMP"
 
 #define kNRMAWebViewBrowserAgentDetectedMetric @"Supportability/Mobile/iOS/WebView/BrowserAgentDetected"
+#define kNRMAWebViewReplayMetricPrefix @"Supportability/Mobile/iOS/WebView/Replay"
 
 #define kNRMABytesOutConnectAPIString     @"/connect/Output/Bytes"
 #define kNRMABytesOutDataAPIString        @"/data/Output/Bytes"

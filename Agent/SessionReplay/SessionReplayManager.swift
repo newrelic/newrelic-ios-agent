@@ -276,7 +276,11 @@ public class SessionReplayManager: NSObject {
         let boxedFrames = frames.map(AnyRRWebEvent.init)
         let boxedTouches = touches.map(AnyRRWebEvent.init)
 
-        guard let upload = buildReplayUpload(frames: boxedFrames, touches: boxedTouches) else {
+        let webViewEvents = self.sessionReplay.getSessionReplayWebViewEvents(
+            chunkStart: boxedFrames.first?.base.timestamp ?? 0,
+            nativeFullSnapshotTimestamps: boxedFrames.filter { $0.base.type == .fullSnapshot }.map { $0.base.timestamp })
+
+        guard let upload = buildReplayUpload(frames: boxedFrames, touches: boxedTouches, webViewEvents: webViewEvents) else {
             return
         }
         self.sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
@@ -337,7 +341,17 @@ public class SessionReplayManager: NSObject {
     /// is directly testable with synthetic events, without needing to dispatch
     /// (or mock) an actual upload -- this is still the real production logic,
     /// called above with genuinely captured frames/touches.
-    func buildReplayUpload(frames: [AnyRRWebEvent], touches: [AnyRRWebEvent]) -> SessionReplayData? {
+    func buildReplayUpload(frames: [AnyRRWebEvent], touches: [AnyRRWebEvent], webViewEvents: [WebViewReplayEnvelope] = []) -> SessionReplayData? {
+        if !webViewEvents.isEmpty {
+            let chunk = mergeReplayChunk(frames: frames, touches: touches, webViewEvents: webViewEvents)
+            guard let encoded = encodeReplayChunk(chunk) else {
+                return nil
+            }
+            return self.createReplayUpload(encoded: (data: encoded.data, uncompressedSize: encoded.uncompressedSize),
+                                           firstTimestamp: encoded.firstTimestamp,
+                                           lastTimestamp: encoded.lastTimestamp)
+        }
+
         let container = mergeAndSortReplayEvents(frames: frames, touches: touches)
 
         let firstTimestamp = TimeInterval(container.first?.base.timestamp ?? 0)
@@ -378,10 +392,101 @@ public class SessionReplayManager: NSObject {
         return (jsonData, uncompressedDataSize)
     }
 
+    /// Merges WebView plugin envelopes into the native merge order.
+    ///
+    /// Native events keep exactly the order mergeAndSortReplayEvents() gives them, leading Meta and
+    /// FullSnapshot anchored first. WebView envelopes (already in timestamp order) are merged into the
+    /// rest by timestamp, after native events at the same ms: a WebView document stamped with a native
+    /// full snapshot's timestamp must land after the snapshot that rebuilds its mount point.
+    func mergeReplayChunk(frames: [AnyRRWebEvent], touches: [AnyRRWebEvent], webViewEvents: [WebViewReplayEnvelope]) -> [ReplayChunkEvent] {
+        let native = mergeAndSortReplayEvents(frames: frames, touches: touches)
+        guard !webViewEvents.isEmpty else {
+            return native.map { .native($0) }
+        }
+
+        var anchorCount = 0
+        if !frames.isEmpty {
+            anchorCount = (frames.count > 1 && frames[1].base.type == .fullSnapshot) ? 2 : 1
+        }
+
+        var chunk = [ReplayChunkEvent]()
+        chunk.reserveCapacity(native.count + webViewEvents.count)
+        chunk.append(contentsOf: native.prefix(anchorCount).map { .native($0) })
+
+        let rest = native.dropFirst(anchorCount)
+        var nativeIndex = rest.startIndex
+        var webViewIndex = webViewEvents.startIndex
+        while nativeIndex < rest.endIndex || webViewIndex < webViewEvents.endIndex {
+            let takeNative = nativeIndex < rest.endIndex &&
+                (webViewIndex >= webViewEvents.endIndex || rest[nativeIndex].base.timestamp <= webViewEvents[webViewIndex].timestamp)
+            if takeNative {
+                chunk.append(.native(rest[nativeIndex]))
+                nativeIndex += 1
+            } else {
+                chunk.append(.webView(webViewEvents[webViewIndex]))
+                webViewIndex += 1
+            }
+        }
+        return chunk
+    }
+
+    /// Encodes and gzips a chunk that carries WebView envelopes. Native events go through the same
+    /// JSONEncoder as encodeReplayPayload(); envelopes are spliced in as already-serialized JSON rather
+    /// than re-encoded. If the compressed chunk is over the upload cap, WebView documents are shed
+    /// before the reporter would reject the whole chunk.
+    func encodeReplayChunk(_ chunk: [ReplayChunkEvent]) -> (data: Data, uncompressedSize: Int, firstTimestamp: TimeInterval, lastTimestamp: TimeInterval)? {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .withoutEscapingSlashes
+
+        var pieces = [WebViewReplayPayloadBudget.Piece]()
+        pieces.reserveCapacity(chunk.count)
+        for event in chunk {
+            switch event {
+            case .native(let nativeEvent):
+                do {
+                    pieces.append(.init(event: event, json: try encoder.encode(nativeEvent)))
+                } catch {
+                    NRLOG_AGENT_DEBUG("Failed to encode session replay events to JSON: \(error)")
+                    return nil
+                }
+            case .webView(let envelope):
+                pieces.append(.init(event: event, json: envelope.encoded()))
+            }
+        }
+
+        let budgeted = WebViewReplayPayloadBudget.enforce(pieces, limit: Int(kNRMAMaxPayloadSizeLimit)) { json in
+            try? json.gzipped().count
+        }
+        if budgeted.shedCount > 0 {
+            NRLOG_AGENT_DEBUG("[NR-WV-SR] chunk over the \(kNRMAMaxPayloadSizeLimit) byte cap; shed \(budgeted.shedCount) WebView document(s). Native replay is preserved.")
+            for _ in 0..<budgeted.shedCount {
+                NRMASupportMetricHelper.enqueueWebViewReplayMetric("DocumentShed")
+            }
+        }
+
+        var jsonData = WebViewReplayPayloadBudget.joinedJSON(budgeted.pieces)
+        let uncompressedDataSize = jsonData.count
+
+        do {
+            jsonData = try jsonData.gzipped()
+        } catch {
+            NRLOG_AGENT_DEBUG("Failed to gzip session replay data: \(error.localizedDescription)")
+        }
+
+        let firstTimestamp = budgeted.pieces.first?.event.timestamp ?? 0
+        let lastTimestamp = budgeted.pieces.last?.event.timestamp ?? 0
+        return (jsonData, uncompressedDataSize, firstTimestamp, lastTimestamp)
+    }
+
     private func createReplayUpload(container: [AnyRRWebEvent], firstTimestamp: TimeInterval, lastTimestamp: TimeInterval) -> SessionReplayData? {
-        guard let (jsonData, uncompressedDataSize) = encodeReplayPayload(container: container) else {
+        guard let encoded = encodeReplayPayload(container: container) else {
             return nil
         }
+        return createReplayUpload(encoded: encoded, firstTimestamp: firstTimestamp, lastTimestamp: lastTimestamp)
+    }
+
+    private func createReplayUpload(encoded: (data: Data, uncompressedSize: Int), firstTimestamp: TimeInterval, lastTimestamp: TimeInterval) -> SessionReplayData? {
+        let (jsonData, uncompressedDataSize) = encoded
 
         // Construct upload URL
         guard let url = sessionReplayReporter.uploadURL(
