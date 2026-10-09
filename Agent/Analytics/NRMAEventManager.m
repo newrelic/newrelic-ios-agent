@@ -173,13 +173,14 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
                                                            error:error];
             eventJsonString = [[NSString alloc] initWithData:eventJsonData
                                                     encoding:NSUTF8StringEncoding];
-            [self empty];
         } @catch (NSException *e) {
             NRLOG_AGENT_ERROR(@"FAILED TO CREATE EVENT JSON: %@", e.reason);
         }
-    }
-    if (clearEvents){
-        [self empty];
+        // Clear under the same lock the events were read under. Clearing after releasing it
+        // also wiped any event -addEvent: inserted in between, which was never serialized.
+        if (clearEvents) {
+            [self empty];
+        }
     }
     return eventJsonString;
 }
