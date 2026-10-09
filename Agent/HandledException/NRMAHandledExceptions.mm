@@ -13,6 +13,7 @@
 #import "NewRelicInternalUtils.h"
 #import "NRMAExceptionReportAdaptor.h"
 #import "NRLogger.h"
+#import "NRMAJSON.h"
 #import "HexUploadPublisher.hpp"
 #import "NRMAHarvestController.h"
 #import "NRMAAppToken.h"
@@ -544,9 +545,9 @@ static const int kNRMARecordErrorAgentFrames = 2;
     if (sessionAttributes == nil || [sessionAttributes length] == 0) {
         return resultMap;
     }
-    NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[sessionAttributes dataUsingEncoding:NSUTF8StringEncoding]
-                                                               options:0
-                                                                 error:nil];
+    NSDictionary* dictionary = [NRMAJSON JSONObjectWithData:[sessionAttributes dataUsingEncoding:NSUTF8StringEncoding]
+                                                      options:0
+                                                        error:nil];
 
     for (NSString *key in dictionary) {
         id value = [dictionary objectForKey:key];

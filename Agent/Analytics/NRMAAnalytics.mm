@@ -5,6 +5,7 @@
 #import "NRMALoggerBridge.hpp"
 
 #import "NRLogger.h"
+#import "NRMAJSON.h"
 #import "NRMAHarvestableAnalytics.h"
 #import <iomanip>
 #import <exception>
@@ -148,9 +149,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
             NSString* attributes = [self sessionAttributeJSONString];
             if (attributes != nil && [attributes length] > 0) {
-                NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
-                                                                           options:0
-                                                                             error:nil];
+                NSDictionary* dictionary = [NRMAJSON JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
+                                                                  options:0
+                                                                    error:nil];
                 if (dictionary[kNRMA_RA_upgradeFrom]) {
                     [_sessionAttributeManager removeNRSessionAttributeNamed:kNRMA_RA_upgradeFrom];
                 }
@@ -190,9 +191,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             //of these attributes if it should occur.
             NSString* attributes = [self sessionAttributeJSONString];
             if (attributes != nil && [attributes length] > 0) {
-                NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
-                                                                           options:0
-                                                                             error:nil];
+                NSDictionary* dictionary = [NRMAJSON JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
+                                                                  options:0
+                                                                    error:nil];
                 if (dictionary[kNRMA_RA_upgradeFrom]) {
                     _analyticsController->removeSessionAttribute([kNRMA_RA_upgradeFrom UTF8String]);
                 }

@@ -298,6 +298,37 @@
     XCTAssertTrue([decode[@"lastInteraction"] isEqualToString:@"Display Banana"]);
 }
 
+// Private (NR) session attributes are written from many threads (memUsageMb, lastInteraction,
+// session start attributes) while the harvest thread serializes them. This used to race on
+// the private attribute map and crash in SessionAttributeManager::generateJSONObject.
+- (void) testConcurrentNRSessionAttributesAndHarvestJSON {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    __block volatile BOOL writersDone = NO;
+
+    dispatch_group_t group = dispatch_group_create();
+    dispatch_group_async(group, dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+        while (!writersDone) {
+            XCTAssertNotNil([analytics sessionAttributeJSONString]);
+        }
+    });
+
+    dispatch_apply(2000, dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^(size_t i) {
+        [analytics setNRSessionAttribute:@"memUsageMb" value:@(i)];
+        [analytics setLastInteraction:[NSString stringWithFormat:@"Display %zu", i]];
+        [analytics setNRSessionAttribute:[NSString stringWithFormat:@"nrAttr%zu", i % 20] value:@"value"];
+    });
+    writersDone = YES;
+
+    XCTAssertEqual(dispatch_group_wait(group, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC)), 0);
+
+    NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:[[analytics sessionAttributeJSONString] dataUsingEncoding:NSUTF8StringEncoding]
+                                                           options:0
+                                                             error:nil];
+    XCTAssertNotNil(decode[@"memUsageMb"]);
+    XCTAssertNotNil(decode[@"lastInteraction"]);
+    XCTAssertNotNil(decode[@"nrAttr0"]);
+}
+
 - (void) testRequestEventNetworkError {
     NRTimer* timer = [NRTimer new];
 

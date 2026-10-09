@@ -25,7 +25,6 @@
 #import "NRMAClassDataContainer.h"
 #import "NRMAFlags.h"
 
-#define NRMAMethodStoragePrefix @"NRMAMethodOverride_"
 #define CONFIGURATION_FILE_NAME @"newrelic_profiler"
 #define CONFIGURATION_FILE_TYPE @"plist"
 #define PROFILER_METRIC_NAME_PREFIX @"Mobile/iOS/Profiler/"
