@@ -13,6 +13,7 @@
 #import "AttributeValidatorProtocol.h"
 #import "Constants.h"
 #import "NRMAAnalytics.h"
+#import "NRMAJSON.h"
 
 @interface NRMASAM ()
 @end
@@ -224,12 +225,9 @@
 
 // Includes Public and Private Attributes
 - (NSString*) sessionAttributeJSONString {
-    // Take a snapshot under the locks, then serialize outside them.
-    // NSJSONSerialization is instrumented by the method profiler, which tries to
-    // acquire kNRMAStartAndEndTracingLock. If the TraceController simultaneously
-    // holds that lock and calls setNRSessionAttribute (via the memory-vitals
-    // notification), the two threads deadlock. Narrowing the critical section to
-    // just the copy eliminates the lock-ordering inversion.
+    // Take a snapshot under the locks, then serialize outside them. This also
+    // keeps the critical section minimal in general, so retain it even though
+    // -dataWithJSONObject:below no longer re-enters tracing (see below).
     NSDictionary *snapshot;
     @synchronized (attributeDict) {
         @synchronized (privateAttributeDict) {
@@ -239,12 +237,20 @@
         }
     }
 
+    // +isValidJSONObject: isn't instrumented by the method profiler (only
+    // dataWithJSONObject:/JSONObjectWithData:/etc. are), so calling
+    // NSJSONSerialization directly here is fine.
     if (![NSJSONSerialization isValidJSONObject:snapshot]) {
         return nil;
     }
 
+    // NRMAJSON, not NSJSONSerialization directly: dataWithJSONObject:options:error:
+    // is instrumented by the method profiler for app-interaction tracing, which
+    // (via kNRMAStartAndEndTracingLock) previously could deadlock against the
+    // TraceController calling back into setNRSessionAttribute. NRMAJSON bypasses
+    // that instrumentation for the agent's own internal JSON usage.
     NSError *error;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:snapshot options:0 error:&error];
+    NSData *jsonData = [NRMAJSON dataWithJSONObject:snapshot options:0 error:&error];
     if (!jsonData) {
         NRLOG_AGENT_VERBOSE(@"Failed to create session attribute json w/ error = %@", error);
         return nil;

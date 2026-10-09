@@ -8,3 +8,5 @@ downloadLink: 'https://download.newrelic.com/ios_agent/NewRelic_XCFramework_Agen
 ### New in this release
 
 ### Fixed in this release
+
+* Fixed the main thread blocking, and apps being terminated by the iOS watchdog (`0x8BADF00D`), once the event buffer was full and the app kept making network requests. The agent held a lock while it rewrote its on-disk copy of buffered events, and threads recording events, including the main thread, waited on that lock. Events dropped from a full buffer were also never removed from that copy, so it grew and was rewritten in full for every new event. Writes now happen without holding the lock, are batched, and dropped events are removed. This issue was present in 7.7.8 and earlier.
