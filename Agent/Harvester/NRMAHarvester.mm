@@ -24,6 +24,7 @@
 #import "Constants.h"
 #import "NewRelicAgentInternal.h"
 #import "NewRelicInternalUtils.h"
+#import <NewRelic/NewRelic-Swift.h>
 #import "NRAutoLogCollector.h"
 
 #define kNRSupportabilityResponseCode kNRSupportabilityPrefix @"/Collector/ResponseStatusCodes"
@@ -437,15 +438,10 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
         } else {
             // On a 429 we deliberately retain the buffer so it can be sent after
             // the backoff window; the backoff guard above prevents an immediate resend.
-            self.consecutiveFailureCount += 1;
             [self fireOnHarvestFailure];
         }
     } else {
         // success
-        if (self.consecutiveFailureCount > 0) {
-            [NRMASupportMetricHelper enqueueRetrySuccessMetric:@"data"];
-        }
-        self.consecutiveFailureCount = 0;
         // A successful (2xx) harvest clears any active rate-limit backoff.
         [self resetRateLimitBackoff];
         [self.harvestData clear];
@@ -927,6 +923,10 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
 
 - (void) setMaxOfflineStorageSize:(NSUInteger) size {
     [connection setMaxOfflineStorageSize:size];
+}
+
+- (void) backgroundFlush {
+    [connection.httpClient backgroundFlush];
 }
 
 - (void) handleLoggingConfigurationUpdate {

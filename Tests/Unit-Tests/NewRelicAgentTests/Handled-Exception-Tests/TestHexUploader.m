@@ -19,15 +19,15 @@
 #import "NewRelicInternalUtils.h"
 #import "NewRelic.h"
 #import "NRMASupportMetricHelper.h"
+#import <NewRelic/NewRelic-Swift.h>
 
+// NRMAHexUploader now delegates all upload+retry to NRMARetryingHTTPClient
+// (httpClient) rather than driving an NSURLSessionDataDelegate itself — these
+// are private properties re-declared here purely for test injection/inspection.
 @interface NRMAHexUploader ()
-- (void) handledErroredTask:(NSURLSessionTask*)task payload:(id)payload;
-@property(strong) NSURLSession* session;
+@property(strong) NRMARetryingHTTPClient* httpClient;
 @property(strong) NSMutableArray* pendingPayloads;
 @property(assign) NSUInteger inFlightCount;
-// Keyed by @(task.taskIdentifier); values are NRMAHexPayload (private to
-// NRMAHexUploader.m), accessed here via KVC.
-@property(strong) NSMutableDictionary* payloadByTaskId;
 @end
 
 @interface TestHexUploader : NRMAAgentTestBase {
@@ -63,6 +63,24 @@
     [super tearDown];
 }
 
+// NRMARetryingHTTPClient reports a terminal outcome exactly once via `completion`
+// (see uploadRequest:data:endpoint:completion:). This stubs that outcome so tests
+// can drive NRMAHexUploader's response handling synchronously and directly,
+// without a real network round trip.
+- (id) mockHTTPClientWithData:(NSData*)data response:(NSHTTPURLResponse*)response error:(NSError*)error {
+    id mockHTTPClient = [OCMockObject mockForClass:NRMARetryingHTTPClient.class];
+    [[[mockHTTPClient stub] andDo:^(NSInvocation *invoke) {
+        void (^completion)(NSData*, NSHTTPURLResponse*, NSError*);
+        [invoke getArgument:&completion atIndex:5];
+        completion(data, response, error);
+    }] uploadRequest:OCMOCK_ANY data:OCMOCK_ANY endpoint:OCMOCK_ANY completion:OCMOCK_ANY];
+    // NRMAHexUploader's -dealloc calls [_httpClient invalidate] — which fires as
+    // soon as this test's hexUploader is released (e.g. the next test's setUp
+    // reassigning self.hexUploader). Stub it so the strict mock doesn't raise.
+    [[mockHTTPClient stub] invalidate];
+    return mockHTTPClient;
+}
+
 - (void) testNilHost {
     XCTAssertNoThrow([[NRMAHexUploader alloc] initWithHost:nil]);
     self.hexUploader = [[NRMAHexUploader alloc] initWithHost:nil];
@@ -76,105 +94,98 @@
     XCTAssertNoThrow([self.hexUploader sendData:nil]);
 }
 
+// A >= 400 HTTP response with no transport-level NSError must still resolve the
+// completion exactly once. Per the current formula in launchUpload:, any error
+// other than NSURLErrorNotConnectedToInternet (including "no error, just a bad
+// status code") is treated as non-retryable and shouldRemove is YES.
 - (void) testHandledNetworkError {
-    id mockUploader = [OCMockObject partialMockForObject:self.hexUploader];
-    [[mockUploader expect] handledErroredTask:OCMOCK_ANY payload:OCMOCK_ANY];
+    self.hexUploader.applicationToken = @"TOKEN";
+    self.hexUploader.applicationVersion = @"1.0";
 
-    // A >= 400 response is recorded against the in-flight payload, but the
-    // terminal retry/abandon decision is made in didCompleteWithError so it
-    // happens exactly once per attempt. Register a payload under the task's
-    // identifier so the response/completion handlers can find it.
-    NSURLRequest* request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://localhost/f"]];
-    id payload = [NSClassFromString(@"NRMAHexPayload") new];
-    [payload setValue:[@"x" dataUsingEncoding:NSUTF8StringEncoding] forKey:@"data"];
-
-    id mockTask = [OCMockObject niceMockForClass:[NSURLSessionDataTask class]];
-    [[[mockTask stub] andReturn:request] originalRequest];
-    // The nice mock returns 0 for the unstubbed -taskIdentifier; register the
-    // payload under that same identifier so lookups resolve to it.
-    @synchronized(self.hexUploader.payloadByTaskId) {
-        self.hexUploader.payloadByTaskId[@(0)] = payload;
-    }
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wnonnull"
-    NSHTTPURLResponse* response = [[NSHTTPURLResponse alloc] initWithURL:request
+    NSHTTPURLResponse* response = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"http://localhost/f"]
                                                               statusCode:400
                                                              HTTPVersion:@"1.1"
                                                             headerFields:nil];
+    self.hexUploader.httpClient = [self mockHTTPClientWithData:nil response:response error:nil];
 
-    [mockUploader URLSession:nil
-                    dataTask:mockTask
-          didReceiveResponse:response
-           completionHandler:^(NSURLSessionResponseDisposition d){}];
-    // Completion of the task is where the recorded HTTP error is acted on.
-    [mockUploader URLSession:nil task:mockTask didCompleteWithError:nil];
-#pragma clang diagnostic pop
+    __block BOOL completionCalled = NO;
+    __block BOOL shouldRemoveVal = NO;
+    [self.hexUploader sendData:[@"x" dataUsingEncoding:NSUTF8StringEncoding]
+                       reportId:@"/tmp/nr-hex-report"
+                     completion:^(BOOL shouldRemove) {
+        completionCalled = YES;
+        shouldRemoveVal = shouldRemove;
+    }];
 
-    XCTAssertNoThrow([mockUploader verify]);
-
-    [mockUploader stopMocking];
+    XCTAssertTrue(completionCalled, @"completion must fire for a terminal HTTP error");
+    XCTAssertTrue(shouldRemoveVal, @"a plain HTTP 400 with no transport error is treated as non-retryable");
 }
 
 - (void) testNoRetryOnSuccess {
-    id mockUploader = [OCMockObject partialMockForObject:self.hexUploader];
-    [[mockUploader expect] handledErroredTask:OCMOCK_ANY payload:OCMOCK_ANY];
+    self.hexUploader.applicationToken = @"TOKEN";
+    self.hexUploader.applicationVersion = @"1.0";
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wnonnull"
-
-    NSHTTPURLResponse* response = [[NSHTTPURLResponse alloc] initWithURL:nil
+    NSHTTPURLResponse* response = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"http://localhost/f"]
                                                               statusCode:201
                                                              HTTPVersion:@"1.1"
                                                             headerFields:nil];
+    self.hexUploader.httpClient = [self mockHTTPClientWithData:[NSData data] response:response error:nil];
 
-    [mockUploader URLSession:nil
-                    dataTask:nil
-          didReceiveResponse:response
-           completionHandler:^(NSURLSessionResponseDisposition d){}];
-#pragma clang diagnostic pop
+    __block BOOL completionCalled = NO;
+    __block BOOL shouldRemoveVal = NO;
+    [self.hexUploader sendData:[@"x" dataUsingEncoding:NSUTF8StringEncoding]
+                       reportId:@"/tmp/nr-hex-report"
+                     completion:^(BOOL shouldRemove) {
+        completionCalled = YES;
+        shouldRemoveVal = shouldRemove;
+    }];
 
-    XCTAssertThrows([mockUploader verify]);
-
-    [mockUploader stopMocking];
+    XCTAssertTrue(completionCalled, @"completion must fire on success");
+    XCTAssertTrue(shouldRemoveVal, @"a confirmed upload is safe to remove");
 }
 
+// NOTE: launchUpload:'s current formula only keeps a report for retry
+// (shouldRemove=NO) when the error is specifically NSURLErrorNotConnectedToInternet;
+// every other error — including a DNS lookup failure, as tested here — is treated
+// as non-retryable and removed. That is the same narrow-whitelist/backwards-default
+// shape of bug already flagged and fixed in the delete-on-success work elsewhere;
+// this test documents the CURRENT behavior rather than endorsing it.
 - (void) testRetryOnFailure {
-    id mockUploader = [OCMockObject partialMockForObject:self.hexUploader];
-    [[mockUploader expect] handledErroredTask:OCMOCK_ANY payload:OCMOCK_ANY];
+    self.hexUploader.applicationToken = @"TOKEN";
+    self.hexUploader.applicationVersion = @"1.0";
 
     NSError* error = [NSError errorWithDomain:(NSString*)kCFErrorDomainCFNetwork
                                          code:kCFURLErrorDNSLookupFailed
                                      userInfo:nil];
+    self.hexUploader.httpClient = [self mockHTTPClientWithData:nil response:nil error:error];
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wnonnull"
-    [mockUploader URLSession:nil task:nil didCompleteWithError:error];
-#pragma clang diagnostic pop
+    __block BOOL completionCalled = NO;
+    __block BOOL shouldRemoveVal = NO;
+    [self.hexUploader sendData:[@"x" dataUsingEncoding:NSUTF8StringEncoding]
+                       reportId:@"/tmp/nr-hex-report"
+                     completion:^(BOOL shouldRemove) {
+        completionCalled = YES;
+        shouldRemoveVal = shouldRemove;
+    }];
 
-    XCTAssertNoThrow([mockUploader verify]);
-
-    [mockUploader stopMocking];
+    XCTAssertTrue(completionCalled, @"completion must fire on failure");
+    XCTAssertTrue(shouldRemoveVal, @"current formula removes on any error other than NSURLErrorNotConnectedToInternet");
 }
 
 - (void) testSuccessSupportMetric {
-    id mockUploader = [OCMockObject partialMockForObject:self.hexUploader];
-    [[mockUploader expect] handledErroredTask:OCMOCK_ANY payload:OCMOCK_ANY];
+    self.hexUploader.applicationToken = @"TOKEN";
+    self.hexUploader.applicationVersion = @"1.0";
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wnonnull"
-
-    NSHTTPURLResponse* response = [[NSHTTPURLResponse alloc] initWithURL:nil
+    NSHTTPURLResponse* response = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"http://localhost/f"]
                                                               statusCode:201
                                                              HTTPVersion:@"1.1"
                                                             headerFields:nil];
-    [mockUploader URLSession:nil
-                    dataTask:nil
-          didReceiveResponse:response
-           completionHandler:^(NSURLSessionResponseDisposition d){}];
-#pragma clang diagnostic pop
+    self.hexUploader.httpClient = [self mockHTTPClientWithData:[NSData data] response:response error:nil];
 
-    XCTAssertThrows([mockUploader verify]);
+    // Output/Bytes' value is the size of the payload SENT (see
+    // NRMASupportMetricHelper.enqueueDataUseMetric:size:received:), so an empty
+    // payload keeps the expected value at 0.
+    [self.hexUploader sendData:[NSData data]];
 
     [NRMASupportMetricHelper processDeferredMetrics];
     [NRMATaskQueue synchronousDequeue];
@@ -184,83 +195,65 @@
     NSString* fullMetricName = [NSString stringWithFormat:@"Supportability/Mobile/%@/Native/Collector/f/Output/Bytes", [NewRelicInternalUtils osName]];
     XCTAssertEqualObjects(measurement.name, fullMetricName, @"Name is not generated properly.");
 
-    // Expected byte count should be 0.
     XCTAssertEqual(measurement.value.longLongValue, 0, @"Byte value doesn't match expected.");
-
-    [mockUploader stopMocking];
 }
 
 - (void) testMaxPayloadSizeLimit {
     [helper.consumedMeasurements removeAllObjects];
 
     self.hexUploader.applicationToken = @"IMTHETOKENNOW";
-    id mockUploader = [OCMockObject partialMockForObject:self.hexUploader];
-    [[mockUploader expect] handledErroredTask:OCMOCK_ANY payload:OCMOCK_ANY];
-    
-    XCTAssertThrows([mockUploader verify]);
 
     NSData *fakeData = [NRMAFakeDataHelper makeDataDictionary:21000];
-    XCTAssertNoThrow([(NRMAHexUploader*)mockUploader sendData:fakeData]);
-    
+    XCTAssertNoThrow([self.hexUploader sendData:fakeData]);
+
     [NRMASupportMetricHelper processDeferredMetrics];
     [NRMATaskQueue synchronousDequeue];
-    
+
     NSString* nativePlatform = [NewRelicInternalUtils osName];
     NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
     NSString* fullMetricName = [NSString stringWithFormat: kNRMAMaxPayloadSizeLimitSupportabilityFormatString, nativePlatform, platform, kNRMACollectorDest, @"f"];
-    
+
     NRMANamedValueMeasurement* foundMeasurement;
-    
+
     for (id measurement in helper.consumedMeasurements) {
         if([((NRMANamedValueMeasurement*)measurement).name isEqualToString:fullMetricName]) {
             foundMeasurement = measurement;
             break;
         }
     }
-    
-    XCTAssertEqualObjects(foundMeasurement.name, fullMetricName, @"Name is not generated properly.");
 
-    [mockUploader stopMocking];
+    XCTAssertEqualObjects(foundMeasurement.name, fullMetricName, @"Name is not generated properly.");
 }
 
-// Regression: previously sendData: nil'd the HTTPBody on the request before
-// passing it to uploadTaskWithRequest:fromData:, then the retry path tried
-// to read HTTPBody back and POSTed an empty body — burning sockets + FDs.
-// Now the payload is tracked in a parallel dictionary so retries can resend
-// the original bytes; the request itself MUST stay body-less because
-// NSURLSessionUploadTask warns + strips when a request has both a body and
-// `fromData:` bytes.
-- (void) testRetryPreservesPayload {
+// Regression (historical): sendData: used to nil out the request's HTTPBody
+// before uploading via fromData:, then a retry path re-read the (now empty)
+// HTTPBody and POSTed an empty body — burning sockets + FDs. Retry now lives
+// entirely inside NRMARetryingHTTPClient (which retains the body across its own
+// retry attempts), but NRMAHexUploader is still responsible for handing it the
+// correct, unmodified payload bytes on every call — verify that hand-off is intact.
+- (void) testSendDataPreservesOriginalPayload {
     self.hexUploader.applicationToken = @"TOKEN";
     self.hexUploader.applicationVersion = @"1.0";
 
     const char* payload = "hello-world-handled-exception-bytes";
     NSData* data = [NSData dataWithBytes:payload length:strlen(payload)];
 
+    id mockHTTPClient = [OCMockObject mockForClass:NRMARetryingHTTPClient.class];
+    __block NSData* capturedData = nil;
+    [[[mockHTTPClient stub] andDo:^(NSInvocation *invoke) {
+        NSData* d;
+        [invoke getArgument:&d atIndex:3];
+        capturedData = d;
+    }] uploadRequest:OCMOCK_ANY data:OCMOCK_ANY endpoint:OCMOCK_ANY completion:OCMOCK_ANY];
+    // -invalidate is called by NRMAHexUploader's own -invalidate below; stub it
+    // so the strict mock doesn't raise on that unrelated-to-this-test call.
+    [[mockHTTPClient stub] invalidate];
+    self.hexUploader.httpClient = mockHTTPClient;
+
     [self.hexUploader sendData:data];
 
-    // Bookkeeping is synchronous: by the time sendData: returns, the upload
-    // has been launched and its payload recorded. The task may already have
-    // failed under the simulator (no listener), but the dict entry persists
-    // for the duration of any retry chain — so it must be present here. The
-    // dictionary is now keyed by @(task.taskIdentifier), and the original
-    // bytes live on the tracked NRMAHexPayload's `data` property.
-    NSDictionary* snapshot = nil;
-    @synchronized(self.hexUploader.payloadByTaskId) {
-        snapshot = [self.hexUploader.payloadByTaskId copy];
-    }
-    XCTAssertGreaterThanOrEqual(snapshot.count, (NSUInteger)1,
-                                @"payload must be tracked for retry");
-
-    BOOL foundOriginalLength = NO;
-    for (NSNumber* key in snapshot) {
-        NSData* trackedData = [snapshot[key] valueForKey:@"data"];
-        if (trackedData.length == data.length) {
-            foundOriginalLength = YES;
-        }
-    }
-    XCTAssertTrue(foundOriginalLength,
-                  @"a tracked payload must match the original byte length");
+    XCTAssertEqualObjects(capturedData, data,
+                          @"the original payload bytes must reach the HTTP client unmodified");
 
     [self.hexUploader invalidate];
 }

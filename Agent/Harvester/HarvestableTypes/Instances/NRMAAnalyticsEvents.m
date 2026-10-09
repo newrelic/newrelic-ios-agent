@@ -6,7 +6,7 @@
 #import "NRMAAnalyticsEvents.h"
 #import "NRMAHarvestableEvent.h"
 #import "NRMAHarvestController.h"
-#import "NRMASupportMetricHelper.h"
+
 @implementation NRMAAnalyticsEvents
 - (instancetype) init
 {
@@ -90,8 +90,6 @@
         }
         if ([removalArray count]) {
             [_events removeObjectsInArray:removalArray];
-            // These events have exhausted their retry attempts and are being abandoned.
-            [NRMASupportMetricHelper enqueueRetryFailedMetric:@"data"];
         }
     }
 }

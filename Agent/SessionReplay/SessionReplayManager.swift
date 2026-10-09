@@ -209,6 +209,10 @@ public class SessionReplayManager: NSObject {
             sessionReplay.clearAllData()
         }
     }
+
+    @objc public func backgroundFlush() {
+        sessionReplayReporter.backgroundFlush()
+    }
     
     @objc func sessionReplayTick() {
         if isRunning() &&
