@@ -23,6 +23,9 @@ import WebKit
 ///    `injectionScript`, which loads the experimental loader and registers a `beforeHarvest` hook.
 /// 3. The hook posts each `session_replay` body as `events`; they are wrapped per channel on a
 ///    background queue and buffered on `NRMASessionReplay` until the next harvest.
+///
+/// A page that already runs its own browser agent is left alone: instead of the agent, only the
+/// rrweb recorder is loaded, and its events are batched and posted as `events` directly.
 @available(iOS 13.0, *)
 public class NRMAWebViewReplayBridge: NSObject {
 
@@ -36,6 +39,14 @@ public class NRMAWebViewReplayBridge: NSObject {
 
     /// Experimental browser agent build -- the only one exposing observation_mode and beforeHarvest.
     static let loaderURL = "https://js-agent.newrelic.com/experiments/dev/before-send-hook/nr-loader-spa.min.js"
+
+    /// Standalone rrweb recorder, loaded instead of the agent when the page already has one. Defines
+    /// the `rrwebRecord` global.
+    static let rrwebRecordURL = "https://cdn.jsdelivr.net/npm/rrweb@2.0.0-alpha.4/dist/record/rrweb-record.min.js"
+
+    /// How often the standalone recorder posts its buffered events. Matches the injected agent's
+    /// harvest interval.
+    static let rrwebFlushIntervalMs = 5000
 
     /// Set by `NRMASessionReplay` on init.
     weak var sessionReplay: NRMASessionReplay?
@@ -152,6 +163,9 @@ public class NRMAWebViewReplayBridge: NSObject {
         case "hooked":
             NRLOG_AGENT_DEBUG("[NR-WV-SR] beforeHarvest hook registered")
             NRMASupportMetricHelper.enqueueWebViewReplayMetric("Injected")
+        case "recording":
+            NRLOG_AGENT_DEBUG("[NR-WV-SR] page has its own browser agent; standalone rrweb recorder started")
+            NRMASupportMetricHelper.enqueueWebViewReplayMetric("InjectedRrweb")
         case "skipped":
             let reason = body["reason"] as? String ?? "unknown"
             NRLOG_AGENT_DEBUG("[NR-WV-SR] injection skipped: \(reason)")
@@ -229,10 +243,11 @@ public class NRMAWebViewReplayBridge: NSObject {
     /// Calls `takeFullSnapshot()` on the session replay recorder of the agent this bridge injected.
     /// Never touches a page-owned agent: it runs only in documents we injected into, and skips any
     /// agent advertising a license key other than ours. The recorder's own method is a no-op unless
-    /// it is recording.
+    /// it is recording. In a document running the standalone recorder, asks that recorder instead.
     static let takeFullSnapshotScript = """
     (function(){try{
     if(!window.__nrWvInjected){return;}
+    if(window.__nrWvStandalone){var rr=window.__nrWvRrweb;if(rr&&typeof rr.takeFullSnapshot==='function'){rr.takeFullSnapshot(true);}return;}
     var agents=window.NREUM&&window.NREUM.initializedAgents;if(!agents){return;}
     Object.keys(agents).forEach(function(id){try{
     var a=agents[id];var key=a&&a.info&&a.info.licenseKey;
@@ -246,13 +261,58 @@ public class NRMAWebViewReplayBridge: NSObject {
     /// How many times one page may ask for a snapshot it has not delivered.
     static let maxSnapshotAsks = 3
 
+    /// Records the page with a standalone rrweb recorder. Evaluated by `injectionScript` in place of
+    /// the agent when the page already runs its own browser agent, so the page's `NREUM`/`newrelic`
+    /// globals and its own harvests are never touched.
+    ///
+    /// Events are buffered and posted as a JSON array every `rrwebFlushIntervalMs`, and when the page
+    /// is hidden. A FullSnapshot is posted as soon as it is taken, as the agent's recorder does, so the
+    /// first document reaches native within moments. rrweb always opens with a Meta + FullSnapshot, so
+    /// the agent path's snapshot asks are not needed here.
+    ///
+    /// Options mirror the browser agent's session replay defaults: all text and inputs masked, the
+    /// agent's block/mask classes honoured, stylesheets inlined, fonts and images shed.
+    ///
+    /// Loading rrweb defines `window.rrwebRecord`; a page-owned one is restored after load and ours
+    /// is kept on `__nrWvRrweb`.
+    static let standaloneRecorderScript = """
+    window.__nrWvStandalone=true;
+    var buf=[];
+    var flush=function(){
+    if(!buf.length){return;}
+    var events=buf;buf=[];var out=null;
+    try{out=JSON.stringify(events);}catch(e){post({kind:'skipped',reason:'rrweb-batch-unserializable ('+(e&&e.message)+')'});}
+    if(out){post({kind:'events',body:out});}
+    };
+    var prevRecord=window.rrwebRecord;
+    var s=document.createElement('script');
+    s.src='\(rrwebRecordURL)';
+    s.type='text/javascript';
+    s.onerror=function(){post({kind:'skipped',reason:'rrweb-load-failed'});};
+    s.onload=function(){
+    try{
+    var rec=window.rrwebRecord;
+    if(prevRecord!==undefined){window.rrwebRecord=prevRecord;}
+    if(typeof rec!=='function'){post({kind:'skipped',reason:'rrweb-unavailable (typeof rrwebRecord='+(typeof rec)+')'});return;}
+    window.__nrWvRrweb=rec;
+    rec({
+    emit:function(ev){buf.push(ev);if(ev&&ev.type===2){setTimeout(flush,0);}},
+    blockClass:'nr-block',blockSelector:'[data-nr-block]',maskTextClass:'nr-mask',maskTextSelector:'*',
+    maskAllInputs:true,inlineStylesheet:true,collectFonts:false,inlineImages:false
+    });
+    setInterval(flush,\(rrwebFlushIntervalMs));
+    document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden'){flush();}});
+    window.addEventListener('pagehide',flush);
+    post({kind:'recording'});
+    }catch(e){post({kind:'skipped',reason:'rrweb-start-failed ('+(e&&e.message)+')'});}
+    };
+    (document.head||document.documentElement).appendChild(s);
+    """
+
     /// Injects the browser agent in observation mode and registers a beforeHarvest hook that forwards
     /// session_replay payloads to native. Sentinel-guarded, so repeat evaluations are no-ops.
     ///
-    /// Always injects, even when the page already runs its own browser agent: the page's `NREUM` and
-    /// `newrelic` globals are detached (kept on `__nrWvPrevNREUM`/`__nrWvPrevNewrelic`) so the freshly
-    /// loaded agent initialises from our config instead of the page's. The page's agent keeps running
-    /// from its own closures.
+    /// If the page already runs its own browser agent, runs `standaloneRecorderScript` instead.
     ///
     /// Configuration that is load-bearing (all found on Android devices):
     /// - `session_trace` must stay enabled: replay couples to trace through session identity, and with
@@ -282,10 +342,8 @@ public class NRMAWebViewReplayBridge: NSObject {
     if(window.__nrWvInjected){return;}
     window.__nrWvInjected=true;
     if(window.NREUM||window.newrelic){
-    window.__nrWvPrevNREUM=window.NREUM;window.__nrWvPrevNewrelic=window.newrelic;
-    try{delete window.NREUM;}catch(e){window.NREUM=undefined;}
-    try{delete window.newrelic;}catch(e){window.newrelic=undefined;}
-    post({kind:'observed',info:'page already had a browser agent; overriding with injected agent'});
+    \(standaloneRecorderScript)
+    return;
     }
     window.NREUM={};
     window.NREUM.info={beacon:'bam.nr-data.net',errorBeacon:'bam.nr-data.net',licenseKey:'\(observationLicenseKey)',applicationID:'0',sa:1};
