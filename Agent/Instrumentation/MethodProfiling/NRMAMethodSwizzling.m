@@ -8,6 +8,22 @@
 #import <objc/runtime.h>
 #import "NRLogger.h"
 
+SEL NRMAUninstrumentedSelector(Class c, SEL selector)
+{
+    if (c == nil || selector == nil) {
+        return selector;
+    }
+
+    NSString *aliasName = [NRMAMethodStoragePrefix stringByAppendingString:NSStringFromSelector(selector)];
+    SEL aliasSelector = NSSelectorFromString(aliasName);
+
+    if (class_getClassMethod(c, aliasSelector) || class_getInstanceMethod(c, aliasSelector)) {
+        return aliasSelector;
+    }
+
+    return selector;
+}
+
 void* NRMASwapImplementations(Class c, SEL selector, IMP newImplementation)
 {
     Method method = class_getInstanceMethod(c, selector);
