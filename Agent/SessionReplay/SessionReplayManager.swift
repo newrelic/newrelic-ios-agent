@@ -114,7 +114,15 @@ public class SessionReplayManager: NSObject {
     @objc public func onError(_ error: Error?) {
         sessionReplayQueue.async { [weak self] in
             guard let self = self else { return }
-            
+
+            // POC (2026-10-08): upload the external (e.g. Flutter) error-mode buffer.
+            // Keyed off our own flag, not sessionReplayMode, which can stay .off for
+            // external sources (native capture never starts).
+            if !self.externalErrorTriggered {
+                self.externalErrorTriggered = true
+                self.flushExternalErrorBuffer()
+            }
+
             if self.sessionReplayMode == .error {
                 
                 // ensure the buffered data is marked for upload.
@@ -218,6 +226,14 @@ public class SessionReplayManager: NSObject {
         
         // Reset the isFirstChunk for new session
         self.sessionReplay.isFirstChunk = true
+
+        // POC: the external error-mode buffer belongs to the old session. Clear its disk
+        // copy now, while currentSessionId() still names the old session.
+        if !externalBuffer.isEmpty { clearPersistedExternalBuffer() }
+        sessionReplayQueue.async { [weak self] in
+            self?.externalBuffer.removeAll()
+            self?.externalErrorTriggered = false
+        }
     }
     
     @objc public func manualRecordReplay() -> Bool {
@@ -486,6 +502,139 @@ public class SessionReplayManager: NSObject {
     /// never blocked.
     /// - Returns: true if the batch was accepted for processing.
     @objc public func recordSessionReplayEvents(_ eventsJSON: String) -> Bool {
+        return recordSessionReplayEvents(eventsJSON, bufferForErrorMode: false)
+    }
+
+    // MARK: - POC (2026-10-08): native error buffer for external rrweb. Not reviewed.
+    // Parallel to rawFrames (which holds native view-tree frames): a rolling window
+    // of already-serialized rrweb events, uploaded once on error. In memory only —
+    // no crash persistence yet.
+
+    private var externalBuffer: [[String: Any]] = []
+    private var externalErrorTriggered = false
+    private let externalBufferWindowMs: Double = 15_000
+    private let externalBufferMaxEvents = 20_000
+    private static let rrwebTypeMeta = 4
+
+    /// Drops events older than the window, but keeps the slice starting at the last
+    /// Meta at or before the cutoff so the buffered slice is always renderable.
+    private func pruneExternalBuffer(nowMs: Double) {
+        let cutoff = nowMs - externalBufferWindowMs
+        var start: Int? = nil
+        for (i, event) in externalBuffer.enumerated() {
+            let ts = (event["timestamp"] as? NSNumber)?.doubleValue ?? .greatestFiniteMagnitude
+            if (event["type"] as? NSNumber)?.intValue == SessionReplayManager.rrwebTypeMeta && ts <= cutoff {
+                start = i
+            }
+            if ts > cutoff { break }
+        }
+        if let start = start, start > 0 {
+            externalBuffer.removeFirst(start)
+        }
+        if externalBuffer.count > externalBufferMaxEvents {
+            externalBuffer.removeFirst(externalBuffer.count - externalBufferMaxEvents)
+        }
+    }
+
+    // Crash persistence: the buffer is mirrored to disk in the same layout the native
+    // error buffer uses (<frames>/<sessionId>/frame_N.json + <sessionId>_upload_url.txt
+    // + the .errorMode marker), so checkForPreviousSessionFiles() uploads it on the next
+    // launch after a crash, and a clean exit clears it as a stale error-mode buffer.
+
+    private func externalBufferFiles() -> (folder: URL, frame: URL, url: URL, marker: URL)? {
+        guard let root = getSessionReplayDirectory(),
+              let sessionId = NewRelicAgentInternal.sharedInstance()?.currentSessionId() else {
+            return nil
+        }
+        let folder = root.appendingPathComponent("\(sessionId)/")
+        return (folder,
+                folder.appendingPathComponent("frame_0.json"),
+                root.appendingPathComponent("\(sessionId)_upload_url.txt"),
+                root.appendingPathComponent(kNRMA_SessionReplayErrorMode_marker))
+    }
+
+    private func persistExternalBuffer() {
+        guard !externalBuffer.isEmpty,
+              let files = externalBufferFiles(),
+              let jsonData = try? JSONSerialization.data(withJSONObject: externalBuffer) else { return }
+        let bounds = SessionReplayManager.timestampBounds(jsonData)
+        let now = Date().timeIntervalSince1970 * 1000
+        guard let uploadUrl = sessionReplayReporter.uploadURL(
+            uncompressedDataSize: jsonData.count,
+            firstTimestamp: bounds?.0 ?? now,
+            lastTimestamp: bounds?.1 ?? now,
+            isFirstChunk: sessionReplay.isFirstChunk,
+            isGZipped: true) else { return }
+        do {
+            try FileManager.default.createDirectory(
+                at: files.folder, withIntermediateDirectories: true,
+                attributes: [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication])
+            try jsonData.write(to: files.frame, options: .atomic)
+            try uploadUrl.absoluteString.write(to: files.url, atomically: true, encoding: .utf8)
+            if !FileManager.default.fileExists(atPath: files.marker.path) {
+                FileManager.default.createFile(atPath: files.marker.path, contents: nil)
+            }
+        } catch {
+            NSLog("🧪[SR-NATIVE-BUFFER] failed to persist buffer: \(error)")
+        }
+    }
+
+    private func clearPersistedExternalBuffer() {
+        guard let files = externalBufferFiles() else { return }
+        try? FileManager.default.removeItem(at: files.folder)
+        try? FileManager.default.removeItem(at: files.url)
+        try? FileManager.default.removeItem(at: files.marker)
+    }
+
+    private func flushExternalErrorBuffer() {
+        clearPersistedExternalBuffer() // uploading now; nothing left to recover
+        guard !externalBuffer.isEmpty,
+              let jsonData = try? JSONSerialization.data(withJSONObject: externalBuffer) else {
+            NSLog("🧪[SR-NATIVE-BUFFER] error — nothing buffered to flush")
+            return
+        }
+        let count = externalBuffer.count
+        externalBuffer.removeAll()
+        let bounds = SessionReplayManager.timestampBounds(jsonData)
+        let now = Date().timeIntervalSince1970 * 1000
+        let (payload, uncompressedDataSize) = compressReplayPayload(jsonData)
+        guard let upload = buildUpload(payload: payload,
+                                       uncompressedDataSize: uncompressedDataSize,
+                                       firstTimestamp: bounds?.0 ?? now,
+                                       lastTimestamp: bounds?.1 ?? now,
+                                       isFirstChunk: sessionReplay.isFirstChunk) else {
+            return
+        }
+        NSLog("🧪[SR-NATIVE-BUFFER] flush on error — events=\(count) isFirstChunk=\(sessionReplay.isFirstChunk)")
+        sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
+        sessionReplay.isFirstChunk = false
+    }
+
+    @objc(recordSessionReplayEvents:bufferForErrorMode:)
+    public func recordSessionReplayEvents(_ eventsJSON: String, bufferForErrorMode: Bool) -> Bool {
+        guard bufferForErrorMode else {
+            return uploadSessionReplayEvents(eventsJSON)
+        }
+        guard let jsonData = eventsJSON.data(using: .utf8),
+              let events = (try? JSONSerialization.jsonObject(with: jsonData)) as? [[String: Any]],
+              !events.isEmpty else {
+            return false
+        }
+        sessionReplayQueue.async { [self] in
+            // After an error the session records in full; upload directly (queued
+            // behind the flush on this serial queue, so order is kept).
+            if externalErrorTriggered {
+                _ = uploadSessionReplayEvents(eventsJSON)
+                return
+            }
+            externalBuffer.append(contentsOf: events)
+            pruneExternalBuffer(nowMs: Date().timeIntervalSince1970 * 1000)
+            persistExternalBuffer()
+        }
+        return true
+    }
+
+    private func uploadSessionReplayEvents(_ eventsJSON: String) -> Bool {
         // The enable/sampling gate lives in the caller
         // (NewRelicAgentInternal.recordSessionReplayEvents), which drops events
         // unless the config-resolved recording mode is not off. We deliberately

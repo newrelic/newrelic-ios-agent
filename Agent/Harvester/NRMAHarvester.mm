@@ -985,6 +985,10 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
         [[NewRelicAgentInternal sharedInstance] sessionReplayDisabled];
     }
 
+    // POC (2026-10-08, config push — not reviewed): tell external capture sources
+    // (e.g. the Flutter plugin) the SR config resolved, on both the saved-config
+    // and the network /connect paths. Observers read the getter for the details.
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"com.newrelic.sessionReplayConfigResolved" object:nil];
 }
 
 @end

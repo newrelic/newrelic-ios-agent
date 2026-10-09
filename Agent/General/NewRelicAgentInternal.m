@@ -794,7 +794,10 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         return false;
     }
     if(_sessionReplay != nil){
-        return [_sessionReplay recordSessionReplayEvents:eventsJSON];
+        // POC (2026-10-08, native error buffer — not reviewed): in error mode the
+        // agent holds the events in its own rolling buffer and uploads it on error.
+        return [_sessionReplay recordSessionReplayEvents:eventsJSON
+                                      bufferForErrorMode:(mode == SessionReplayRecordingModeError)];
     }
     NRLOG_AGENT_WARNING(@"Agent is not initialized");
     return false;
