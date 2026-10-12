@@ -183,6 +183,9 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
             eventJsonString = [[NSString alloc] initWithData:eventJsonData
                                                     encoding:NSUTF8StringEncoding];
 
+            // Clear under the same lock the events were read under -- clearing after
+            // releasing it would also wipe any event -addEvent: inserted in between,
+            // which was never serialized into eventJsonString above.
             if (clearEvents) {
                 // This batch has only been serialized into an outgoing payload,
                 // not delivered. Rotate it out of the live buffer (so new events
