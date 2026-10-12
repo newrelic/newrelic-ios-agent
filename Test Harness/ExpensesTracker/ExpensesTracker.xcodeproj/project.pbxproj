@@ -45,6 +45,7 @@
 		89C9EAA1E55B1B9B41C218A4 /* InstrumentedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5333ADF8765523F6684EE544 /* InstrumentedViewController.swift */; };
 		909BA5A31ECC512823D63BCE /* Scopes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F12BFF9A36E731166747CAA /* Scopes.swift */; };
 		919BDC28FF9499B1CD1F320F /* UIViewController+Toast.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB02706D3E2663FAFE037E83 /* UIViewController+Toast.swift */; };
+		A2AADA29E29CF80A3877A298 /* NRAPI-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 222152BD539B6EF26F06781B /* NRAPI-Info.plist */; };
 		A4FB7C266CCE3924E0E719A9 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5527B640C9A5BCF05F441168 /* SceneDelegate.swift */; };
 		ABAF5426F82A7E4759F74F50 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7657EF9EF87D274AB0A5A683 /* Assets.xcassets */; };
 		AC1FF7EB97459B3CF4373199 /* AddExpenseScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A59D6DD8AFF561BCFAAA34 /* AddExpenseScreen.swift */; };
@@ -152,6 +153,7 @@
 		1F12BFF9A36E731166747CAA /* Scopes.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Scopes.swift; sourceTree = "<group>"; };
 		1FE3D24A38AC6AC387C6BF71 /* ExpenseListScreen.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExpenseListScreen.swift; sourceTree = "<group>"; };
 		201C146390B81489E6738786 /* String+File.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "String+File.swift"; sourceTree = "<group>"; };
+		222152BD539B6EF26F06781B /* NRAPI-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "NRAPI-Info.plist"; sourceTree = "<group>"; };
 		245289840EFBBD5BA6BAC0B9 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		28725B387BEB20593CC8635D /* NRCollectorStub.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NRCollectorStub.swift; sourceTree = "<group>"; };
 		2A840ADF3660ED209BCBD403 /* ExpensesTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ExpensesTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -254,6 +256,7 @@
 				DF053B1167F58A0F000B8B66 /* Screens */,
 				ABE39E47E485893571B07FF4 /* Info.plist */,
 				7657EF9EF87D274AB0A5A683 /* Assets.xcassets */,
+				222152BD539B6EF26F06781B /* NRAPI-Info.plist */,
 			);
 			name = ExpensesTracker;
 			path = ExpensesTracker;
@@ -513,6 +516,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				ABAF5426F82A7E4759F74F50 /* Assets.xcassets in Resources */,
+				A2AADA29E29CF80A3877A298 /* NRAPI-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -666,13 +670,16 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
+				ET_BUNDLE_ID = com.newrelic.ExpensesTracker;
+				ET_PROVISIONING_PROFILE = "";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = ExpensesTracker/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.ExpensesTracker;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ET_BUNDLE_ID)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "$(ET_PROVISIONING_PROFILE)";
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -693,13 +700,16 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
+				ET_BUNDLE_ID = com.newrelic.ExpensesTracker;
+				ET_PROVISIONING_PROFILE = "";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = ExpensesTracker/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.ExpensesTracker;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ET_BUNDLE_ID)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "$(ET_PROVISIONING_PROFILE)";
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;

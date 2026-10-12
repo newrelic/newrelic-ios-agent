@@ -15,8 +15,10 @@
 //    live    — reports to the New Relic staging collector, matching the Android app's
 //              usingCollectorAddress("staging-mobile-collector.newrelic.com"). Data is queryable
 //              with NRQL. Set the token with NR_APP_TOKEN in the scheme (Product ▸ Scheme ▸ Edit
-//              Scheme ▸ Run ▸ Arguments ▸ Environment Variables), or edit
-//              `fallbackApplicationToken` below.
+//              Scheme ▸ Run ▸ Arguments ▸ Environment Variables), or fill in NRAPIKey in
+//              NRAPI-Info.plist. The plist is what CI writes: uploadApp-expensestracker.yml sets it
+//              from a repository secret before building the LambdaTest upload, since an app
+//              launched by LambdaTest has no scheme environment. Same file and keys as NRTestApp.
 //
 //    capture — reports to NRCollectorStub on localhost, which prints every MobileView, breadcrumb
 //              and interaction event from each harvest to the console. No account needed.
@@ -31,8 +33,30 @@ import NewRelic
 
 enum NewRelicConfig {
 
-    /// Used when NR_APP_TOKEN is not set. This is the same staging token the Android
-    /// ExpensesTracker ships with, so both apps report into the same place by default.
+    /// Used when NR_APP_TOKEN is not set. Empty in the committed plist — never commit a token —
+    /// which makes a fresh clone fall through to capture mode.
+    private static var fallbackApplicationToken: String {
+        apiInfo("NRAPIKey")
+    }
+
+    /// Collector overrides from NRAPI-Info.plist; empty means the staging collectors below.
+    private static var collectorAddress: String {
+        let fromPlist = apiInfo("collectorAddress")
+        return fromPlist.isEmpty ? "staging-mobile-collector.newrelic.com" : fromPlist
+    }
+
+    private static var crashCollectorAddress: String {
+        let fromPlist = apiInfo("crashCollectorAddress")
+        return fromPlist.isEmpty ? "staging-mobile-crash.newrelic.com" : fromPlist
+    }
+
+    private static func apiInfo(_ key: String) -> String {
+        guard let url = Bundle.main.url(forResource: "NRAPI-Info", withExtension: "plist"),
+              let values = NSDictionary(contentsOf: url) else {
+            return ""
+        }
+        return (values[key] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    }
 
     /// Mirrors the Android app's BuildConfig.TEST_USER_ID, which it fed to NewRelic.setUserId so
     /// sessions could be found by user in session replay.
@@ -89,10 +113,10 @@ enum NewRelicConfig {
 
         case .live:
             NewRelic.start(withApplicationToken: applicationToken,
-                           andCollectorAddress: "staging-mobile-collector.newrelic.com",
-                           andCrashCollectorAddress: "staging-mobile-crash.newrelic.com")
+                           andCollectorAddress: collectorAddress,
+                           andCrashCollectorAddress: crashCollectorAddress)
             appLog("""
-            [ExpensesTracker] Agent started in LIVE mode (staging collector).
+            [ExpensesTracker] Agent started in LIVE mode → \(collectorAddress)
                               Query with:  SELECT * FROM MobileView SINCE 30 MINUTES AGO
             """)
         }

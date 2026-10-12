@@ -43,7 +43,13 @@ target = project.new_target(:application, 'ExpensesTracker', :ios, DEPLOYMENT_TA
 # ── Build settings ────────────────────────────────────────────────────────────────────────────────
 target.build_configurations.each do |config|
   settings = config.build_settings
-  settings['PRODUCT_BUNDLE_IDENTIFIER']  = BUNDLE_ID
+  # Indirected through ET_* settings so the real-device archive (uploadApp-expensestracker-realdevice.yml) can
+  # retarget the app's bundle id and profile from the command line. Setting PRODUCT_BUNDLE_IDENTIFIER or
+  # PROVISIONING_PROFILE_SPECIFIER there directly would apply to Agent_iOS too, and fail the archive.
+  settings['ET_BUNDLE_ID']               = BUNDLE_ID
+  settings['ET_PROVISIONING_PROFILE']    = ''
+  settings['PRODUCT_BUNDLE_IDENTIFIER']  = '$(ET_BUNDLE_ID)'
+  settings['PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]'] = '$(ET_PROVISIONING_PROFILE)'
   settings['PRODUCT_NAME']               = '$(TARGET_NAME)'
   settings['INFOPLIST_FILE']             = 'ExpensesTracker/Info.plist'
   settings['GENERATE_INFOPLIST_FILE']    = 'NO'
@@ -92,6 +98,11 @@ app_group.new_file('Info.plist')
 # ── Resources ─────────────────────────────────────────────────────────────────────────────────────
 assets = app_group.new_file('Assets.xcassets')
 target.add_resources([assets])
+
+# Copied into the bundle so NewRelicConfig can read the token from it. CI fills the keys in with PlistBuddy
+# before building (uploadApp-expensestracker.yml); committed, they stay empty.
+api_info = app_group.new_file('NRAPI-Info.plist')
+target.add_resources([api_info])
 
 # ── Vendored Swifter, referenced in place rather than copied ───────────────────────────────────────
 # Both stub servers need an HTTP server. Swifter already lives in this repo for NRTestApp, and HomeSearch

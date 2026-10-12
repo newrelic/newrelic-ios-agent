@@ -38,14 +38,40 @@ complete inventory is `ViewName.allCases`, so NRQL expectations can be written o
 Set `NR_MODE` in the scheme's environment (Product ▸ Scheme ▸ Edit Scheme ▸ Run ▸ Arguments):
 
 - **`live`** (default when a token is available) — reports to the staging collector, matching the Android
-  app's `usingCollectorAddress("staging-mobile-collector.newrelic.com")`. Override the token with
-  `NR_APP_TOKEN`, the user id with `NR_USER_ID`.
+  app's `usingCollectorAddress("staging-mobile-collector.newrelic.com")`. Set the token with `NR_APP_TOKEN`
+  or `NRAPIKey` in `ExpensesTracker/NRAPI-Info.plist` (the environment wins), the user id with `NR_USER_ID`.
+  The plist's `collectorAddress` / `crashCollectorAddress` override the staging collectors when non-empty.
 - **`capture`** — reports to `NRCollectorStub` on `localhost:8080`, which prints every harvested event to the
   console. No account needed.
 
 Capture mode needs port 8080 exclusively (the agent only drops to plain HTTP for the literal string
 `localhost:8080`), so **only one** of ExpensesTracker, HomeSearch and NRTestApp can be in capture mode at a
 time.
+
+## LambdaTest
+
+`.github/workflows/uploadApp-expensestracker.yml` builds the app from `mobile-views-2` daily (and on manual
+dispatch) and uploads it to LambdaTest, as `uploadApp-mobile-views-2.yml` does for NRTestApp. It writes
+`NRAPIKey` into `NRAPI-Info.plist` from the `EXPENSESTRACKER_APP_TOKEN` repository secret before building;
+`EXPENSESTRACKER_MAIN_COLLECTOR_ADDRESS` and `EXPENSESTRACKER_CRASH_COLLECTOR_ADDRESS` are optional. The plist
+is committed empty — keep a local token out of commits.
+
+Once uploaded, the same workflow runs `LambdaTest/tests-expensestracker/` through `wdio-expensestracker.yml`. The suite
+walks every screen and every function: each auth validation message and success path, every tab and side-menu
+route, add/edit/delete with every editor validation, all thirteen test-menu options (the crashes and hangs each in
+a session of their own, followed by a relaunch so the crash report uploads), the Expense tab's reporter, and the
+whole SwiftUI section. Each spec ends by backgrounding the app so the agent harvests before the session closes.
+
+`uploadApp-expensestracker-realdevice.yml` (manual dispatch) archives a signed IPA and runs the same suite on a
+real LambdaTest device, where the crash specs also confirm from the device syslog that each crash report uploaded.
+Signing and the bundle-id fallback are described in `LambdaTest/REAL_DEVICE_TESTING.md`.
+
+To run it against a local simulator instead (see the header of `LambdaTest/wdio-config-expensestracker.js`):
+
+```sh
+npx appium &   # with the xcuitest driver installed
+ET_LOCAL_APP="/path/to/Release-iphonesimulator/ExpensesTracker.app" npm run test:wdio-expensestracker
+```
 
 ## No Firebase
 

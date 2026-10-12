@@ -25,17 +25,22 @@ dotenv.config();
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 const targetDir = path.resolve(__dirname, "../builds");
-const ipaPath = `${targetDir}/nrtestapp-ios.ipa`;
+
+// Defaults upload NRTestApp. Other test apps reuse this script by overriding all three, e.g.
+// uploadApp-expensestracker-realdevice.yml sets LT_APP_IPA=expensestracker-ios.ipa,
+// LT_APP_ID_PREFIX=com.newrelic.ExpensesTracker and LT_APP_ID_FILE=last-app-id-expensestracker-realdevice.
+const ipaPath = `${targetDir}/${process.env.LT_APP_IPA || "nrtestapp-ios.ipa"}`;
+const appIdPrefix = process.env.LT_APP_ID_PREFIX || "com.newrelic.NRApp.bitcode";
 // Holds the identifier the real-device suite should use as its `app` capability.
 // Prefers whatever LambdaTest returns for the upload (an `lt://APP...` URL) over
 // the custom_id we invented -- see the note on the write below.
-const appIdFile = path.join(__dirname, "last-app-id-realdevice");
+const appIdFile = path.join(__dirname, process.env.LT_APP_ID_FILE || "last-app-id-realdevice");
 
 // Timestamped so a fresh upload never resolves to a cached older build, and
 // namespaced with `realdevice` so it can never be confused with a virtual upload.
 function generateCustomId() {
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5);
-  return `com.newrelic.NRApp.bitcode.realdevice.${timestamp}`;
+  return `${appIdPrefix}.realdevice.${timestamp}`;
 }
 
 function uploadIpaToLambdaTest(filePath, customId) {
@@ -65,7 +70,7 @@ if (!fs.existsSync(ipaPath)) {
   console.error(`Error: no signed IPA at ${ipaPath}`);
   console.error(
     "Build one with .github/workflows/uploadApp-mobile-views-2-realdevice.yml, " +
-      "or export an archive locally and copy it to builds/nrtestapp-ios.ipa"
+      `or export an archive locally and copy it to ${path.relative(path.resolve(__dirname, ".."), ipaPath)}`
   );
   process.exit(1);
 }

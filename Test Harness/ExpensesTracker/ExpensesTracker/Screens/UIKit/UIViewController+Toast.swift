@@ -41,13 +41,19 @@ extension UIViewController {
             label.widthAnchor.constraint(lessThanOrEqualTo: view.widthAnchor, multiplier: 0.86)
         ])
 
-        UIView.animate(withDuration: 0.2) { label.alpha = 1 } completion: { _ in
-            UIView.animate(withDuration: 0.3, delay: duration, options: []) {
+        UIView.animate(withDuration: 0.2) { label.alpha = 1 }
+
+        // The fade-out is scheduled rather than given an animation `delay`: a delayed animation sets the
+        // model alpha to 0 immediately, which hides the toast from VoiceOver and UI tests while it is still
+        // on screen.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2 + duration) {
+            UIView.animate(withDuration: 0.3) {
                 label.alpha = 0
             } completion: { _ in
                 label.removeFromSuperview()
             }
         }
+        UIAccessibility.post(notification: .announcement, argument: message)
     }
 }
 

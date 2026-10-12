@@ -169,3 +169,48 @@ The 9 specs were written against a simulator. Real hardware differs in keyboard
 behaviour, animation timing, and scroll physics, so some may need waits or
 selectors adjusted. Nothing was pre-emptively changed — better to see which
 actually fail than to guess.
+
+## ExpensesTracker on real devices
+
+`Test Harness/ExpensesTracker` has the same pair of pipelines, built the same way:
+
+|                 | Virtual device                        | Real device                                             |
+| --------------- | ------------------------------------- | ------------------------------------------------------- |
+| Build workflow  | `uploadApp-expensestracker.yml` (daily) | `uploadApp-expensestracker-realdevice.yml` (dispatch) |
+| Test workflow   | `wdio-expensestracker.yml`            | `wdio-expensestracker-realdevice.yml`                   |
+| WDIO config     | `wdio-config-expensestracker.js`      | `wdio-config-expensestracker-realdevice.js`             |
+| npm script      | `test:wdio-expensestracker`           | `test:wdio-expensestracker-realdevice`                  |
+| App-id file     | `last-app-id` (shared upload script)  | `last-app-id-expensestracker-realdevice`                |
+| Results file    | `test-results.json`                   | `test-results-expensestracker-realdevice.json`          |
+| Specs           | `tests-expensestracker/*.test.js`     | the same 8, sequentially, plus crash-upload checks      |
+
+Both upload scripts are shared with NRTestApp; the ExpensesTracker workflows point them at their own files
+with `LT_APP_ZIP` / `LT_APP_IPA`, `LT_APP_ID_PREFIX` and `LT_APP_ID_FILE`. Unset, the scripts behave
+exactly as before.
+
+**Crash uploads.** On real devices (`ET_VERIFY_CRASH_UPLOAD=1`, set by the real-device config) the two crash
+specs check the device syslog the way `tests-realdevice/crash-reporting.test.js` does: agent console lines
+are visible before the crash, and after the relaunch the uploader logged an attempt and a 200 response
+(`tests-expensestracker/crash-upload.js`). ExpensesTracker meets the same two preconditions NRTestApp does —
+Debug log level, and no `AutoCollectLogs`. It enables `LogReporting`, which keeps the console target.
+
+**Signing.** ExpensesTracker's bundle id is `com.newrelic.ExpensesTracker`, which has no profile among the
+repo secrets. The workflow takes, in order:
+
+1. `EXPENSESTRACKER_PROVISION_PROFILE_BASE64`, if set — an App Store, ad hoc or enterprise profile for
+   `com.newrelic.ExpensesTracker` (or a wildcard ad hoc one). This is the clean option.
+2. Otherwise NRTestApp's `APP_STORE_PROVISION_PROFILE_BASE64`, archiving the app under
+   `com.newrelic.NRApp.bitcode`. It works with no Apple portal changes; the cost is that, on the device,
+   ExpensesTracker installs with NRTestApp's bundle id. Its data still reports under its own app token.
+
+The bundle id, team and export method (`app-store-connect`, `release-testing`, `enterprise`, or
+`debugging` for a development profile) are all read off whichever profile is used. Only the app target is
+retargeted: the project routes `PRODUCT_BUNDLE_IDENTIFIER` and `PROVISIONING_PROFILE_SPECIFIER` through
+`ET_BUNDLE_ID` / `ET_PROVISIONING_PROFILE`, because passing those two directly to `xcodebuild` would apply
+them to `Agent_iOS` as well and fail the archive. The bundle id actually used is passed on to the test
+workflow so the crash specs relaunch the right app; the specs prefer the id the live session reports, in
+case LambdaTest's resigning changes it again. The certificate is still `BUILD_CERTIFICATE_BASE64`.
+
+To re-run only the tests against an IPA already uploaded, dispatch **WDIO: automate ExpensesTracker iOS
+tests on real device (mobile-views-2)** with the `lt://APP...` URL from the upload run's summary, and the
+bundle id if it was the NRTestApp fallback.
