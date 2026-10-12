@@ -52,6 +52,14 @@
     return response;
 }
 
+- (NSDate *)recentFileModificationDate {
+    return [NSDate date];
+}
+
+- (NSDate *)staleFileModificationDate {
+    return [NSDate dateWithTimeIntervalSinceNow:-(8.0 * 24 * 60 * 60)];
+}
+
 - (void)testNotYetCapturedDoesNotSendAndDoesNotCrash {
     // Nothing captured yet (recovery read still in flight) -- must be a silent
     // no-op, not an attempt, so the next harvest retries.
@@ -65,7 +73,9 @@
     // Current behavior is fire-and-forget: the response from sendData: is
     // never inspected, so even a failed send latches _didUpload and is never
     // retried on a later harvest cycle.
-    [sut setLastSessionAttributeJSON:@"{\"foo\":\"bar\"}" eventJSON:@"[{\"eventType\":\"Custom\"}]"];
+    [sut setLastSessionAttributeJSON:@"{\"foo\":\"bar\"}"
+                            eventJSON:@"[{\"eventType\":\"Custom\"}]"
+                 fileModificationDate:[self recentFileModificationDate]];
 
     [[[mockConnection expect] andReturn:[self responseWithStatusCode:500]] sendData:[OCMArg any]];
     [sut uploadWithConnection:mockConnection dataToken:dataToken];
@@ -77,7 +87,9 @@
 }
 
 - (void)testSuccessfulSendLatchesAndDoesNotRetry {
-    [sut setLastSessionAttributeJSON:@"{\"foo\":\"bar\"}" eventJSON:@"[{\"eventType\":\"Custom\"}]"];
+    [sut setLastSessionAttributeJSON:@"{\"foo\":\"bar\"}"
+                            eventJSON:@"[{\"eventType\":\"Custom\"}]"
+                 fileModificationDate:[self recentFileModificationDate]];
 
     [[[mockConnection expect] andReturn:[self responseWithStatusCode:200]] sendData:[OCMArg any]];
     [sut uploadWithConnection:mockConnection dataToken:dataToken];
@@ -89,7 +101,7 @@
 }
 
 - (void)testNothingToSendLatchesWithoutCallingSendData {
-    [sut setLastSessionAttributeJSON:@"" eventJSON:@""];
+    [sut setLastSessionAttributeJSON:@"" eventJSON:@"" fileModificationDate:[self recentFileModificationDate]];
 
     // No stub configured for sendData: -- the strict mock raises if it's called.
     [sut uploadWithConnection:mockConnection dataToken:dataToken];
@@ -99,10 +111,44 @@
 - (void)testEventsAloneWithNoAttributesAreNotSent {
     // Current behavior treats either side being empty as "nothing to send" --
     // events alone, with no attributes, are skipped rather than sent.
-    [sut setLastSessionAttributeJSON:@"" eventJSON:@"[{\"eventType\":\"Custom\"}]"];
+    [sut setLastSessionAttributeJSON:@""
+                            eventJSON:@"[{\"eventType\":\"Custom\"}]"
+                 fileModificationDate:[self recentFileModificationDate]];
 
     // No stub configured for sendData: -- the strict mock raises if it's called.
     [sut uploadWithConnection:mockConnection dataToken:dataToken];
+}
+
+- (void)testStaleFileModificationDateSkipsUploadEntirely {
+    // The store file hasn't been touched in >7 days -- treat the whole batch
+    // as abandoned and skip without even parsing the JSON.
+    [sut setLastSessionAttributeJSON:@"{\"foo\":\"bar\"}"
+                            eventJSON:@"[{\"eventType\":\"Custom\"},{\"eventType\":\"Custom\"}]"
+                 fileModificationDate:[self staleFileModificationDate]];
+
+    // No stub configured for sendData: -- the strict mock raises if it's called.
+    [sut uploadWithConnection:mockConnection dataToken:dataToken];
+}
+
+- (void)testRecentFileModificationDateStillSends {
+    [sut setLastSessionAttributeJSON:@"{\"foo\":\"bar\"}"
+                            eventJSON:@"[{\"eventType\":\"Custom\"}]"
+                 fileModificationDate:[self recentFileModificationDate]];
+
+    [[[mockConnection expect] andReturn:[self responseWithStatusCode:200]] sendData:[OCMArg any]];
+    [sut uploadWithConnection:mockConnection dataToken:dataToken];
+    [mockConnection verify];
+}
+
+- (void)testNilFileModificationDateFailsOpenAndStillSends {
+    // Unknown mtime (e.g. the store file didn't exist) must not be treated as stale.
+    [sut setLastSessionAttributeJSON:@"{\"foo\":\"bar\"}"
+                            eventJSON:@"[{\"eventType\":\"Custom\"}]"
+                 fileModificationDate:nil];
+
+    [[[mockConnection expect] andReturn:[self responseWithStatusCode:200]] sendData:[OCMArg any]];
+    [sut uploadWithConnection:mockConnection dataToken:dataToken];
+    [mockConnection verify];
 }
 
 @end

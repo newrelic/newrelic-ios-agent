@@ -22,9 +22,15 @@
 + (instancetype) sharedInstance;
 
 // Captures the previous session's analytics JSON. Safe to call with nil/empty
-// strings (the upload becomes a no-op).
+// strings (the upload becomes a no-op). fileModificationDate is the on-disk
+// store's modification date at the time it was read (see
+// +[NRMAAnalytics getLastSessionEventsFileModificationDate]) -- if it's older
+// than the 7-day retention cap, the whole batch is treated as stale and the
+// upload is skipped, on the assumption that an abandoned batch is uniformly
+// old rather than a mix of ages.
 - (void) setLastSessionAttributeJSON:(NSString*)attributeJSON
-                           eventJSON:(NSString*)eventJSON;
+                           eventJSON:(NSString*)eventJSON
+                fileModificationDate:(NSDate*)fileModificationDate;
 
 // Sends the captured analytics as a dedicated harvest using the supplied,
 // already-connected connection and data token. Idempotent: only the first call

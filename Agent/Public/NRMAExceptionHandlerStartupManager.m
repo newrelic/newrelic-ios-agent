@@ -19,6 +19,11 @@
 - (void) fetchLastSessionsAnalytics{
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
         @synchronized (self) {
+            // Must be read before the two calls below -- on the legacy event
+            // system, -getLastSessionsEvents clears/rewrites the duplication
+            // store as a side effect, which would otherwise bump this to "now".
+            NSDate* eventsFileModificationDate = [NRMAAnalytics getLastSessionEventsFileModificationDate];
+
             self.attributeJson = [NRMAAnalytics getLastSessionsAttributes];
 
             self.eventJson = [NRMAAnalytics getLastSessionsEvents];
@@ -29,7 +34,8 @@
             // the data endpoint on launch without re-reading and double-consuming.
             if ([NRMAFlags shouldEnableSendLastSessionData]) {
                 [[NRMAPreviousSessionUploader sharedInstance] setLastSessionAttributeJSON:self.attributeJson
-                                                                               eventJSON:self.eventJson];
+                                                                               eventJSON:self.eventJson
+                                                                    fileModificationDate:eventsFileModificationDate];
             }
         }
     });

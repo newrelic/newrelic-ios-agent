@@ -12,9 +12,14 @@
 #import "NRMADeviceInformation.h"
 #import "NRLogger.h"
 
+// Hard cap: a previous-session batch whose store file hasn't been touched in
+// longer than this is never uploaded. Checked against the file's modification date.
+static const NSTimeInterval kNRMAPreviousSessionEventRetentionMs = 7.0 * 24 * 60 * 60 * 1000.0;
+
 @implementation NRMAPreviousSessionUploader {
     NSString* _attributeJSON;
     NSString* _eventJSON;
+    NSDate* _fileModificationDate;
     BOOL _captured;   // YES once the previous session's data has been read/handed to us.
     BOOL _didUpload;  // YES once we have made a definitive attempt (sent, or confirmed nothing to send).
 }
@@ -29,10 +34,12 @@
 }
 
 - (void) setLastSessionAttributeJSON:(NSString*)attributeJSON
-                           eventJSON:(NSString*)eventJSON {
+                           eventJSON:(NSString*)eventJSON
+                fileModificationDate:(NSDate*)fileModificationDate {
     @synchronized (self) {
         _attributeJSON = [attributeJSON copy];
         _eventJSON = [eventJSON copy];
+        _fileModificationDate = fileModificationDate;
         _captured = YES;
     }
 }
@@ -41,6 +48,7 @@
                     dataToken:(NRMADataToken*)dataToken {
     NSString* attributeJSON;
     NSString* eventJSON;
+    NSDate* fileModificationDate;
     @synchronized (self) {
         if (_didUpload) {
             return;
@@ -57,10 +65,16 @@
         _didUpload = YES;
         attributeJSON = _attributeJSON;
         eventJSON = _eventJSON;
+        fileModificationDate = _fileModificationDate;
     }
 
     if (connection == nil) {
         NRLOG_AGENT_VERBOSE(@"Skipping previous session upload: no connection.");
+        return;
+    }
+
+    if ([self isOlderThanRetentionWindow:fileModificationDate]) {
+        NRLOG_AGENT_VERBOSE(@"Previous session's persisted analytics are older than the 7-day retention window; skipping upload.");
         return;
     }
 
@@ -91,6 +105,14 @@
 }
 
 #pragma mark - Helpers
+
+// Nil (unknown mtime) fails open -- we don't skip data we can't confidently age.
+- (BOOL) isOlderThanRetentionWindow:(NSDate*)fileModificationDate {
+    if (fileModificationDate == nil) {
+        return NO;
+    }
+    return [[NSDate date] timeIntervalSinceDate:fileModificationDate] * 1000.0 > kNRMAPreviousSessionEventRetentionMs;
+}
 
 - (NSArray*) eventsFromJSON:(NSString*)eventJSON {
     if (eventJSON.length == 0) {
