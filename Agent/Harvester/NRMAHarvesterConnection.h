@@ -18,13 +18,16 @@
 #define kAPPLICATION_TOKEN_HEADER      @"X-App-License-Key"
 #define kCONNECT_TIME_HEADER           @"X-NewRelic-Connect-Time"
 
+@class NRMARetryingHTTPClient;
+
 @interface NRMAHarvesterConnection : NRMAConnection
 @property(strong) NSString*             collectorHost;
 @property(strong) NSString*             crossProcessID;
 @property(assign) long long             serverTimestamp;
 @property(strong) NSDictionary* requestHeadersMap;
 @property(strong) NRMAConnectInformation* connectionInformation;
-@property(strong) NSURLSession* harvestSession;
+// Retrying HTTP client used for all uploads. Exposed for test injection.
+@property(strong) NRMARetryingHTTPClient* httpClient;
 @property(strong) NRMAOfflineStorage* offlineStorage;
 
 - (id) init;
