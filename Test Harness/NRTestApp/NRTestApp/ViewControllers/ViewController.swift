@@ -300,6 +300,9 @@ class ViewController: UIViewController {
         // NR-566282 — exercises the Session Replay sign-out / rootViewController-swap crash repro.
         options.append(UtilOption(title: "Sign-Out Crash Repro", handler: { [self] in signOutCrashReproAction() }))
 
+        // Catalog of UIKit / Foundation / Obj-C crashes for validating crash reporting.
+        options.append(UtilOption(title: "Crash Test (UIKit)", handler: { [self] in crashTestUIKitAction() }))
+
         // PR #691 – On the new event system, recording one event with invalid attributes drops all events at harvest time.
         options.append(UtilOption(title: "Record an event with invalid attributes", handler: { [self] in recordEventBatchWithInvalidAttributes() }))
 
@@ -311,6 +314,10 @@ class ViewController: UIViewController {
 
     func signOutCrashReproAction() {
         coordinator?.showSignOutCrashReproViewController()
+    }
+
+    func crashTestUIKitAction() {
+        coordinator?.showCrashTestUIKitViewController()
     }
 
     func recordEventBatchWithInvalidAttributes() {

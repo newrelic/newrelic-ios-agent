@@ -84,6 +84,12 @@ enum ViewControllerProvider {
     }
 #endif
 
+#if os(iOS)
+    static var crashTestUIKitViewController: CrashTestUIKitViewController {
+        return CrashTestUIKitViewController()
+    }
+#endif
+
     static var mapViewController: MapViewController {
         let viewController = MapViewController()
         return viewController
