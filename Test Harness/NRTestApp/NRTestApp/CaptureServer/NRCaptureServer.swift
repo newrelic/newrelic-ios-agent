@@ -339,9 +339,25 @@ final class NRCaptureServer: ObservableObject {
         )
         captured.serverConnectResponse = serverResponse
 
+        if endpoint == "/mobile/blobs" {
+            writeBlobToDisk(decoded)
+        }
+
         DispatchQueue.main.async { [weak self] in
             self?.captures.insert(captured, at: 0)
         }
+    }
+}
+
+extension NRCaptureServer {
+    /// Keeps each decoded session replay upload in Documents/NRCapture/, so a chunk's rrweb events
+    /// can be inspected from the host (e.g. via `xcrun simctl get_app_container`).
+    fileprivate func writeBlobToDisk(_ data: Data) {
+        guard let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
+        let folder = documents.appendingPathComponent("NRCapture", isDirectory: true)
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let name = "blob_\(Int(Date().timeIntervalSince1970 * 1000)).json"
+        try? data.write(to: folder.appendingPathComponent(name))
     }
 }
 

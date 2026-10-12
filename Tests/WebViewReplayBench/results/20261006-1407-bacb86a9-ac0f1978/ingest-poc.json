@@ -1,0 +1,236 @@
+[
+  {
+    "branch" : "webview-msr-poc",
+    "docBridgeBytes" : 136845,
+    "docOutBytes" : 68122,
+    "ingestDoc" : {
+      "median" : 2.4877500000000001,
+      "n" : 299,
+      "p90" : 2.5740829999999999
+    },
+    "ingestMut1" : {
+      "median" : 0.51075000000000004,
+      "n" : 500,
+      "p90" : 0.51966699999999999
+    },
+    "ingestMut5" : {
+      "median" : 2.252208,
+      "n" : 332,
+      "p90" : 2.2987500000000001
+    },
+    "kind" : "ingest",
+    "mut5BridgeBytes" : 70305,
+    "mut5Events" : 70,
+    "mut5OutBytes" : 31782,
+    "nodes" : 400,
+    "parseDoc" : {
+      "median" : 0.50079200000000001,
+      "n" : 500,
+      "p90" : 0.50941599999999998
+    },
+    "parseMut5" : {
+      "median" : 0.40454200000000001,
+      "n" : 500,
+      "p90" : 0.419375
+    },
+    "rev" : "bacb86a9",
+    "shape" : "agent",
+    "size" : "small",
+    "variant" : "poc"
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "docBridgeBytes" : 1373121,
+    "docOutBytes" : 680748,
+    "ingestDoc" : {
+      "median" : 24.215,
+      "n" : 31,
+      "p90" : 24.428208000000001
+    },
+    "ingestMut1" : {
+      "median" : 0.56812499999999999,
+      "n" : 500,
+      "p90" : 0.57387500000000002
+    },
+    "ingestMut5" : {
+      "median" : 2.1533329999999999,
+      "n" : 347,
+      "p90" : 2.2151670000000001
+    },
+    "kind" : "ingest",
+    "mut5BridgeBytes" : 67807,
+    "mut5Events" : 70,
+    "mut5OutBytes" : 30189,
+    "nodes" : 4000,
+    "parseDoc" : {
+      "median" : 4.9612920000000003,
+      "n" : 151,
+      "p90" : 5.0194590000000003
+    },
+    "parseMut5" : {
+      "median" : 0.38837500000000003,
+      "n" : 500,
+      "p90" : 0.39600000000000002
+    },
+    "rev" : "bacb86a9",
+    "shape" : "agent",
+    "size" : "medium",
+    "variant" : "poc"
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "docBridgeBytes" : 5513353,
+    "docOutBytes" : 2724426,
+    "ingestDoc" : {
+      "median" : 96.355458999999996,
+      "n" : 15,
+      "p90" : 97.129416000000006
+    },
+    "ingestMut1" : {
+      "median" : 0.36445899999999998,
+      "n" : 500,
+      "p90" : 0.36762499999999998
+    },
+    "ingestMut5" : {
+      "median" : 2.4682499999999998,
+      "n" : 303,
+      "p90" : 2.4898750000000001
+    },
+    "kind" : "ingest",
+    "mut5BridgeBytes" : 79489,
+    "mut5Events" : 70,
+    "mut5OutBytes" : 35791,
+    "nodes" : 16000,
+    "parseDoc" : {
+      "median" : 19.746791000000002,
+      "n" : 38,
+      "p90" : 19.824541
+    },
+    "parseMut5" : {
+      "median" : 0.44329099999999999,
+      "n" : 500,
+      "p90" : 0.44700000000000001
+    },
+    "rev" : "bacb86a9",
+    "shape" : "agent",
+    "size" : "large",
+    "variant" : "poc"
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "docBridgeBytes" : 65468,
+    "docOutBytes" : 68122,
+    "ingestDoc" : {
+      "median" : 2.2836660000000002,
+      "n" : 328,
+      "p90" : 2.3021250000000002
+    },
+    "ingestMut1" : {
+      "median" : 0.47975000000000001,
+      "n" : 500,
+      "p90" : 0.48499999999999999
+    },
+    "ingestMut5" : {
+      "median" : 2.099958,
+      "n" : 357,
+      "p90" : 2.1140840000000001
+    },
+    "kind" : "ingest",
+    "mut5BridgeBytes" : 32047,
+    "mut5Events" : 70,
+    "mut5OutBytes" : 31782,
+    "nodes" : 400,
+    "parseDoc" : {
+      "median" : 0.32220799999999999,
+      "n" : 500,
+      "p90" : 0.32533299999999998
+    },
+    "parseMut5" : {
+      "median" : 0.28362500000000002,
+      "n" : 500,
+      "p90" : 0.28666700000000001
+    },
+    "rev" : "bacb86a9",
+    "shape" : "rrweb",
+    "size" : "small",
+    "variant" : "poc"
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "docBridgeBytes" : 657388,
+    "docOutBytes" : 680748,
+    "ingestDoc" : {
+      "median" : 22.243334000000001,
+      "n" : 34,
+      "p90" : 22.474499999999999
+    },
+    "ingestMut1" : {
+      "median" : 0.52858400000000005,
+      "n" : 500,
+      "p90" : 0.53333399999999997
+    },
+    "ingestMut5" : {
+      "median" : 1.9971669999999999,
+      "n" : 376,
+      "p90" : 2.0067080000000002
+    },
+    "kind" : "ingest",
+    "mut5BridgeBytes" : 30900,
+    "mut5Events" : 70,
+    "mut5OutBytes" : 30189,
+    "nodes" : 4000,
+    "parseDoc" : {
+      "median" : 3.1585000000000001,
+      "n" : 237,
+      "p90" : 3.2163750000000002
+    },
+    "parseMut5" : {
+      "median" : 0.26941700000000002,
+      "n" : 500,
+      "p90" : 0.27250000000000002
+    },
+    "rev" : "bacb86a9",
+    "shape" : "rrweb",
+    "size" : "medium",
+    "variant" : "poc"
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "docBridgeBytes" : 2639952,
+    "docOutBytes" : 2724426,
+    "ingestDoc" : {
+      "median" : 88.974874999999997,
+      "n" : 15,
+      "p90" : 89.155292000000003
+    },
+    "ingestMut1" : {
+      "median" : 0.33845799999999998,
+      "n" : 500,
+      "p90" : 0.34170899999999998
+    },
+    "ingestMut5" : {
+      "median" : 2.3163330000000002,
+      "n" : 323,
+      "p90" : 2.3628339999999999
+    },
+    "kind" : "ingest",
+    "mut5BridgeBytes" : 36424,
+    "mut5Events" : 70,
+    "mut5OutBytes" : 35791,
+    "nodes" : 16000,
+    "parseDoc" : {
+      "median" : 12.601834,
+      "n" : 60,
+      "p90" : 12.720917
+    },
+    "parseMut5" : {
+      "median" : 0.31016700000000003,
+      "n" : 500,
+      "p90" : 0.31345899999999999
+    },
+    "rev" : "bacb86a9",
+    "shape" : "rrweb",
+    "size" : "large",
+    "variant" : "poc"
+  }
+]

@@ -21,5 +21,8 @@ struct SessionReplayFrame {
     /// Increments by 1 for each pushed destination; 0 means the stack is at its root.
     /// A change in this value (push or pop) triggers an immediate full snapshot.
     let navigationStackDepth: Int
+    /// Channels of the WKWebViews whose mount point is in this frame. At harvest these decide which
+    /// WebViews get their document re-emitted into the chunk.
+    var webViewChannelIds: Set<Int> = []
 }
 #endif

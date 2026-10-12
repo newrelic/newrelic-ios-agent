@@ -1,0 +1,5 @@
+ProductName:		macOS
+ProductVersion:		26.6.1
+BuildVersion:		25G76
+Apple M3 Max
+swift-driver version: 1.168.6 Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)

@@ -9,12 +9,16 @@
 import Foundation
 import UIKit
 import SwiftUI
+#if os(iOS)
+import WebKit
+#endif
 
 @available(iOS 13.0, *)
 @objcMembers
 class SessionReplayCapture {
     private var layoutContainerViewCount: Int = 0
     private var navigationStackDepth: Int = 0
+    private var webViewChannelIds = Set<Int>()
     
     @MainActor
     public func recordFrom(rootView:UIView) -> SessionReplayFrame {
@@ -34,6 +38,7 @@ class SessionReplayCapture {
             // Reset counters for this frame capture
             layoutContainerViewCount = 0
             navigationStackDepth = 0
+            webViewChannelIds.removeAll()
 
             // Build tree using recursive approach to properly handle value semantics
             buildViewTree(for: rootView, into: &rootThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
@@ -41,7 +46,7 @@ class SessionReplayCapture {
             // Set nextId for all views after tree is built
             setNextIdRecursively(for: &rootThingy)
 
-            return SessionReplayFrame(date: Date(), views: rootThingy, rootViewControllerId: rootViewControllerID, rootSwiftUIViewId: rootSwiftUIViewID, size: rootView.frame.size, layoutContainerViewCount: layoutContainerViewCount, navigationStackDepth: navigationStackDepth)
+            return SessionReplayFrame(date: Date(), views: rootThingy, rootViewControllerId: rootViewControllerID, rootSwiftUIViewId: rootSwiftUIViewID, size: rootView.frame.size, layoutContainerViewCount: layoutContainerViewCount, navigationStackDepth: navigationStackDepth, webViewChannelIds: webViewChannelIds)
         }
     }
     
@@ -53,6 +58,11 @@ class SessionReplayCapture {
                 if shouldRecord(view: subview) {
                     var childThingy = findRecorderForView(view: subview)
                     if childThingy.viewDetails.isVisible {
+                        #if os(iOS)
+                        if let webViewThingy = childThingy as? WKWebViewThingy, !webViewThingy.isBlocked {
+                            webViewChannelIds.insert(webViewThingy.channelId)
+                        }
+                        #endif
                         buildViewTree(for: subview, into: &childThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
                         parentThingy.subviews.append(childThingy)
                     }
@@ -210,6 +220,9 @@ class SessionReplayCapture {
 
         case let switchControl as UISwitch:
             return UISwitchThingy(view: switchControl, viewDetails: ViewDetails(view: switchControl))
+
+        case let webView as WKWebView:
+            return WKWebViewThingy(view: webView, viewDetails: ViewDetails(view: webView))
         #endif
 
         default:

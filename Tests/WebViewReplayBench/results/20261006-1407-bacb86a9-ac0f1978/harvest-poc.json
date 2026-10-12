@@ -1,0 +1,3650 @@
+[
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.33570899999999998,
+      "n" : 500,
+      "p90" : 0.33900000000000002
+    },
+    "chunk" : 0,
+    "chunkGzBytes" : 163060,
+    "chunkRawBytes" : 556443,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 17.30875,
+      "n" : 18,
+      "p90" : 17.435625000000002
+    },
+    "gzipWebViewPart" : {
+      "median" : 6.6563749999999997,
+      "n" : 31,
+      "p90" : 6.9296660000000001
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 820,
+    "retainedBytes" : 317577,
+    "rev" : "bacb86a9",
+    "scenario" : "baseline",
+    "shed" : 0,
+    "size" : "small",
+    "variant" : "poc",
+    "webViewEvents" : 820,
+    "webViewRawBytes" : 453712
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.48254200000000003,
+      "n" : 500,
+      "p90" : 0.485875
+    },
+    "chunk" : 1,
+    "chunkGzBytes" : 211817,
+    "chunkRawBytes" : 823661,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 24.565583,
+      "n" : 13,
+      "p90" : 24.625209000000002
+    },
+    "gzipWebViewPart" : {
+      "median" : 10.239833000000001,
+      "n" : 20,
+      "p90" : 10.316750000000001
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 563114,
+    "rev" : "bacb86a9",
+    "scenario" : "baseline",
+    "shed" : 0,
+    "size" : "small",
+    "variant" : "poc",
+    "webViewEvents" : 1259,
+    "webViewRawBytes" : 720491
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.63416700000000004,
+      "n" : 471,
+      "p90" : 0.64870799999999995
+    },
+    "chunk" : 2,
+    "chunkGzBytes" : 259379,
+    "chunkRawBytes" : 1086617,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 30.558959000000002,
+      "n" : 10,
+      "p90" : 30.68375
+    },
+    "gzipWebViewPart" : {
+      "median" : 13.239750000000001,
+      "n" : 16,
+      "p90" : 13.373416000000001
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 810996,
+    "rev" : "bacb86a9",
+    "scenario" : "baseline",
+    "shed" : 0,
+    "size" : "small",
+    "variant" : "poc",
+    "webViewEvents" : 1688,
+    "webViewRawBytes" : 983018
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.78929199999999999,
+      "n" : 380,
+      "p90" : 0.79791699999999999
+    },
+    "chunk" : 3,
+    "chunkGzBytes" : 306658,
+    "chunkRawBytes" : 1345417,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 37.083874999999999,
+      "n" : 9,
+      "p90" : 37.166958000000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 16.316291,
+      "n" : 13,
+      "p90" : 16.692042000000001
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 1046884,
+    "rev" : "bacb86a9",
+    "scenario" : "baseline",
+    "shed" : 0,
+    "size" : "small",
+    "variant" : "poc",
+    "webViewEvents" : 2133,
+    "webViewRawBytes" : 1241373
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.951542,
+      "n" : 315,
+      "p90" : 0.95874999999999999
+    },
+    "chunk" : 4,
+    "chunkGzBytes" : 357822,
+    "chunkRawBytes" : 1621084,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 44.179082999999999,
+      "n" : 7,
+      "p90" : 44.497416000000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 20.47475,
+      "n" : 10,
+      "p90" : 21.077832999999998
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 1297657,
+    "rev" : "bacb86a9",
+    "scenario" : "baseline",
+    "shed" : 0,
+    "size" : "small",
+    "variant" : "poc",
+    "webViewEvents" : 2566,
+    "webViewRawBytes" : 1516607
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.114125,
+      "n" : 269,
+      "p90" : 1.132708
+    },
+    "chunk" : 5,
+    "chunkGzBytes" : 402566,
+    "chunkRawBytes" : 1866263,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 51.976374999999997,
+      "n" : 6,
+      "p90" : 52.2515
+    },
+    "gzipWebViewPart" : {
+      "median" : 23.418125,
+      "n" : 9,
+      "p90" : 23.620875000000002
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 1527121,
+    "rev" : "bacb86a9",
+    "scenario" : "baseline",
+    "shed" : 0,
+    "size" : "small",
+    "variant" : "poc",
+    "webViewEvents" : 2982,
+    "webViewRawBytes" : 1761370
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.33658300000000002,
+      "n" : 500,
+      "p90" : 0.33962500000000001
+    },
+    "chunk" : 0,
+    "chunkGzBytes" : 279584,
+    "chunkRawBytes" : 1146319,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 34.177208,
+      "n" : 9,
+      "p90" : 34.335124999999998
+    },
+    "gzipWebViewPart" : {
+      "median" : 14.785125000000001,
+      "n" : 14,
+      "p90" : 14.877375000000001
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 820,
+    "retainedBytes" : 911528,
+    "rev" : "bacb86a9",
+    "scenario" : "baseline",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 820,
+    "webViewRawBytes" : 1043588
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.49295800000000001,
+      "n" : 500,
+      "p90" : 0.50724999999999998
+    },
+    "chunk" : 1,
+    "chunkGzBytes" : 331325,
+    "chunkRawBytes" : 1430520,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 41.557042000000003,
+      "n" : 8,
+      "p90" : 41.738540999999998
+    },
+    "gzipWebViewPart" : {
+      "median" : 18.296624999999999,
+      "n" : 11,
+      "p90" : 18.807708000000002
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 1164815,
+    "rev" : "bacb86a9",
+    "scenario" : "baseline",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 1264,
+    "webViewRawBytes" : 1327345
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.64937500000000004,
+      "n" : 458,
+      "p90" : 0.67566700000000002
+    },
+    "chunk" : 2,
+    "chunkGzBytes" : 378005,
+    "chunkRawBytes" : 1683690,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 48.391666999999998,
+      "n" : 7,
+      "p90" : 48.557541999999998
+    },
+    "gzipWebViewPart" : {
+      "median" : 21.811624999999999,
+      "n" : 10,
+      "p90" : 21.946957999999999
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 1404766,
+    "rev" : "bacb86a9",
+    "scenario" : "baseline",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 1681,
+    "webViewRawBytes" : 1580098
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.79274999999999995,
+      "n" : 378,
+      "p90" : 0.79774999999999996
+    },
+    "chunk" : 3,
+    "chunkGzBytes" : 426086,
+    "chunkRawBytes" : 1943593,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 55.636792,
+      "n" : 6,
+      "p90" : 55.837000000000003
+    },
+    "gzipWebViewPart" : {
+      "median" : 25.143916000000001,
+      "n" : 8,
+      "p90" : 25.463125000000002
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 1646222,
+    "rev" : "bacb86a9",
+    "scenario" : "baseline",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 2108,
+    "webViewRawBytes" : 1839574
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.95183300000000004,
+      "n" : 314,
+      "p90" : 0.96399999999999997
+    },
+    "chunk" : 4,
+    "chunkGzBytes" : 473622,
+    "chunkRawBytes" : 2202240,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 62.251416999999996,
+      "n" : 5,
+      "p90" : 63.955500000000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 28.704999999999998,
+      "n" : 7,
+      "p90" : 28.936208000000001
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 1885213,
+    "rev" : "bacb86a9",
+    "scenario" : "baseline",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 2532,
+    "webViewRawBytes" : 2097797
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.121375,
+      "n" : 267,
+      "p90" : 1.1339170000000001
+    },
+    "chunk" : 5,
+    "chunkGzBytes" : 520875,
+    "chunkRawBytes" : 2462421,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 68.716542000000004,
+      "n" : 5,
+      "p90" : 69.035792000000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 32.074458999999997,
+      "n" : 7,
+      "p90" : 32.125082999999997
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 2125709,
+    "rev" : "bacb86a9",
+    "scenario" : "baseline",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 2950,
+    "webViewRawBytes" : 2357560
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.58875,
+      "n" : 500,
+      "p90" : 0.59416599999999997
+    },
+    "chunk" : 0,
+    "chunkGzBytes" : 840158,
+    "chunkRawBytes" : 3715947,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 106.464958,
+      "n" : 5,
+      "p90" : 106.75345900000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 47.707124999999998,
+      "n" : 5,
+      "p90" : 47.722667000000001
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 820,
+    "retainedBytes" : 911528,
+    "rev" : "bacb86a9",
+    "scenario" : "+3 native FS\/chunk",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 1460,
+    "webViewRawBytes" : 3492165
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.186167,
+      "n" : 253,
+      "p90" : 1.191416
+    },
+    "chunk" : 1,
+    "chunkGzBytes" : 824409,
+    "chunkRawBytes" : 3677178,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 120.248833,
+      "n" : 5,
+      "p90" : 120.668375
+    },
+    "gzipWebViewPart" : {
+      "median" : 60.824958000000002,
+      "n" : 5,
+      "p90" : 60.829583
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 1164815,
+    "rev" : "bacb86a9",
+    "scenario" : "+3 native FS\/chunk",
+    "shed" : 1,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 3155,
+    "webViewRawBytes" : 4514121
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.767833,
+      "n" : 170,
+      "p90" : 1.778583
+    },
+    "chunk" : 2,
+    "chunkGzBytes" : 970730,
+    "chunkRawBytes" : 4477255,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 144.602417,
+      "n" : 5,
+      "p90" : 145.30074999999999
+    },
+    "gzipWebViewPart" : {
+      "median" : 75.222832999999994,
+      "n" : 5,
+      "p90" : 75.330457999999993
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 1404766,
+    "rev" : "bacb86a9",
+    "scenario" : "+3 native FS\/chunk",
+    "shed" : 1,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 4849,
+    "webViewRawBytes" : 5584389
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 2.382917,
+      "n" : 126,
+      "p90" : 2.4101669999999999
+    },
+    "chunk" : 3,
+    "chunkGzBytes" : 822766,
+    "chunkRawBytes" : 3716127,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 146.73249999999999,
+      "n" : 5,
+      "p90" : 146.994167
+    },
+    "gzipWebViewPart" : {
+      "median" : 88.308417000000006,
+      "n" : 5,
+      "p90" : 88.322083000000006
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 1646222,
+    "rev" : "bacb86a9",
+    "scenario" : "+3 native FS\/chunk",
+    "shed" : 2,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 6544,
+    "webViewRawBytes" : 6596896
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 3.0535420000000002,
+      "n" : 98,
+      "p90" : 3.2075830000000001
+    },
+    "chunk" : 4,
+    "chunkGzBytes" : 919660,
+    "chunkRawBytes" : 4243331,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 166.954958,
+      "n" : 5,
+      "p90" : 167.64166700000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 101.59895899999999,
+      "n" : 5,
+      "p90" : 101.706292
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 1885213,
+    "rev" : "bacb86a9",
+    "scenario" : "+3 native FS\/chunk",
+    "shed" : 2,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 8256,
+    "webViewRawBytes" : 7660291
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 3.5590419999999998,
+      "n" : 85,
+      "p90" : 3.609375
+    },
+    "chunk" : 5,
+    "chunkGzBytes" : 642256,
+    "chunkRawBytes" : 2778080,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 162.18533300000001,
+      "n" : 5,
+      "p90" : 162.32833299999999
+    },
+    "gzipWebViewPart" : {
+      "median" : 115.391875,
+      "n" : 5,
+      "p90" : 115.949292
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 2125709,
+    "rev" : "bacb86a9",
+    "scenario" : "+3 native FS\/chunk",
+    "shed" : 3,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 9898,
+    "webViewRawBytes" : 8686207
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.1079589999999999,
+      "n" : 270,
+      "p90" : 1.1427080000000001
+    },
+    "chunk" : 0,
+    "chunkGzBytes" : 879869,
+    "chunkRawBytes" : 4216891,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 182.725042,
+      "n" : 5,
+      "p90" : 182.738167
+    },
+    "gzipWebViewPart" : {
+      "median" : 123.75825,
+      "n" : 5,
+      "p90" : 123.99933299999999
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 820,
+    "retainedBytes" : 911528,
+    "rev" : "bacb86a9",
+    "scenario" : "+10 iframe moves\/chunk",
+    "shed" : 6,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 2757,
+    "webViewRawBytes" : 9071297
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 2.7413750000000001,
+      "n" : 109,
+      "p90" : 2.7881670000000001
+    },
+    "chunk" : 1,
+    "chunkGzBytes" : 925084,
+    "chunkRawBytes" : 4516107,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 222.305916,
+      "n" : 5,
+      "p90" : 222.37662499999999
+    },
+    "gzipWebViewPart" : {
+      "median" : 156.521917,
+      "n" : 5,
+      "p90" : 157.06104199999999
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 1164815,
+    "rev" : "bacb86a9",
+    "scenario" : "+10 iframe moves\/chunk",
+    "shed" : 7,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 7405,
+    "webViewRawBytes" : 11833581
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 4.4130409999999998,
+      "n" : 68,
+      "p90" : 4.4676669999999996
+    },
+    "chunk" : 2,
+    "chunkGzBytes" : 881039,
+    "chunkRawBytes" : 4332498,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 259.99925000000002,
+      "n" : 5,
+      "p90" : 260.30141600000002
+    },
+    "gzipWebViewPart" : {
+      "median" : 197.395208,
+      "n" : 5,
+      "p90" : 197.540583
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 1404766,
+    "rev" : "bacb86a9",
+    "scenario" : "+10 iframe moves\/chunk",
+    "shed" : 8,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 12052,
+    "webViewRawBytes" : 14823617
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 6.2966249999999997,
+      "n" : 48,
+      "p90" : 6.5425000000000004
+    },
+    "chunk" : 3,
+    "chunkGzBytes" : 741477,
+    "chunkRawBytes" : 3617740,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 286.03554200000002,
+      "n" : 5,
+      "p90" : 286.24495899999999
+    },
+    "gzipWebViewPart" : {
+      "median" : 232.87420800000001,
+      "n" : 5,
+      "p90" : 232.91312500000001
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 1646222,
+    "rev" : "bacb86a9",
+    "scenario" : "+10 iframe moves\/chunk",
+    "shed" : 9,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 16706,
+    "webViewRawBytes" : 17572125
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 7.9323750000000004,
+      "n" : 38,
+      "p90" : 8.529458
+    },
+    "chunk" : 4,
+    "chunkGzBytes" : 838766,
+    "chunkRawBytes" : 4146878,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 332.71933300000001,
+      "n" : 5,
+      "p90" : 333.73570899999999
+    },
+    "gzipWebViewPart" : {
+      "median" : 270.09633400000001,
+      "n" : 5,
+      "p90" : 270.14233300000001
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 1885213,
+    "rev" : "bacb86a9",
+    "scenario" : "+10 iframe moves\/chunk",
+    "shed" : 9,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 21426,
+    "webViewRawBytes" : 20536346
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 9.6385419999999993,
+      "n" : 32,
+      "p90" : 9.6974999999999998
+    },
+    "chunk" : 5,
+    "chunkGzBytes" : 933208,
+    "chunkRawBytes" : 4662069,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 378.34649999999999,
+      "n" : 5,
+      "p90" : 378.82491599999997
+    },
+    "gzipWebViewPart" : {
+      "median" : 308.59266600000001,
+      "n" : 5,
+      "p90" : 308.87204200000002
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 2125709,
+    "rev" : "bacb86a9",
+    "scenario" : "+10 iframe moves\/chunk",
+    "shed" : 9,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 25941,
+    "webViewRawBytes" : 23353906
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.33683400000000002,
+      "n" : 500,
+      "p90" : 0.34004099999999998
+    },
+    "chunk" : 0,
+    "chunkGzBytes" : 279555,
+    "chunkRawBytes" : 1146319,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 34.053417000000003,
+      "n" : 9,
+      "p90" : 34.348875
+    },
+    "gzipWebViewPart" : {
+      "median" : 14.594125,
+      "n" : 14,
+      "p90" : 14.696042
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 820,
+    "retainedBytes" : 911528,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture (1s batches + fresh doc\/chunk)",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 820,
+    "webViewRawBytes" : 1043588
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.34012500000000001,
+      "n" : 500,
+      "p90" : 0.34262500000000001
+    },
+    "chunk" : 1,
+    "chunkGzBytes" : 278513,
+    "chunkRawBytes" : 1140062,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 33.621709000000003,
+      "n" : 9,
+      "p90" : 33.818334
+    },
+    "gzipWebViewPart" : {
+      "median" : 14.825917,
+      "n" : 14,
+      "p90" : 14.859833
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 900484,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture (1s batches + fresh doc\/chunk)",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 827,
+    "webViewRawBytes" : 1037324
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.34037499999999998,
+      "n" : 500,
+      "p90" : 0.34279100000000001
+    },
+    "chunk" : 2,
+    "chunkGzBytes" : 286747,
+    "chunkRawBytes" : 1173776,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 34.776291000000001,
+      "n" : 9,
+      "p90" : 34.992666999999997
+    },
+    "gzipWebViewPart" : {
+      "median" : 15.157209,
+      "n" : 14,
+      "p90" : 15.29425
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 932479,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture (1s batches + fresh doc\/chunk)",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 827,
+    "webViewRawBytes" : 1071038
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.33908300000000002,
+      "n" : 500,
+      "p90" : 0.35875000000000001
+    },
+    "chunk" : 3,
+    "chunkGzBytes" : 283054,
+    "chunkRawBytes" : 1160039,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 34.320332999999998,
+      "n" : 9,
+      "p90" : 34.395333999999998
+    },
+    "gzipWebViewPart" : {
+      "median" : 15.003458999999999,
+      "n" : 14,
+      "p90" : 15.127416999999999
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 918657,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture (1s batches + fresh doc\/chunk)",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 827,
+    "webViewRawBytes" : 1057301
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.34250000000000003,
+      "n" : 500,
+      "p90" : 0.357292
+    },
+    "chunk" : 4,
+    "chunkGzBytes" : 282538,
+    "chunkRawBytes" : 1156910,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 34.223959000000001,
+      "n" : 9,
+      "p90" : 34.358666999999997
+    },
+    "gzipWebViewPart" : {
+      "median" : 15.045208000000001,
+      "n" : 14,
+      "p90" : 15.156458000000001
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 910709,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture (1s batches + fresh doc\/chunk)",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 827,
+    "webViewRawBytes" : 1054172
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.34075,
+      "n" : 500,
+      "p90" : 0.34183400000000003
+    },
+    "chunk" : 5,
+    "chunkGzBytes" : 282920,
+    "chunkRawBytes" : 1155220,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 34.489874999999998,
+      "n" : 9,
+      "p90" : 34.722917000000002
+    },
+    "gzipWebViewPart" : {
+      "median" : 15.036790999999999,
+      "n" : 14,
+      "p90" : 15.269334000000001
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 912111,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture (1s batches + fresh doc\/chunk)",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 827,
+    "webViewRawBytes" : 1052482
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.59125000000000005,
+      "n" : 500,
+      "p90" : 0.61554200000000003
+    },
+    "chunk" : 0,
+    "chunkGzBytes" : 839657,
+    "chunkRawBytes" : 3715947,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 105.735208,
+      "n" : 5,
+      "p90" : 105.902458
+    },
+    "gzipWebViewPart" : {
+      "median" : 48.274749999999997,
+      "n" : 5,
+      "p90" : 48.688749999999999
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 820,
+    "retainedBytes" : 911528,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture +3 native FS\/chunk",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 1460,
+    "webViewRawBytes" : 3492165
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.58158299999999996,
+      "n" : 500,
+      "p90" : 0.58670900000000004
+    },
+    "chunk" : 1,
+    "chunkGzBytes" : 827356,
+    "chunkRawBytes" : 3651125,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 103.23141699999999,
+      "n" : 5,
+      "p90" : 103.497708
+    },
+    "gzipWebViewPart" : {
+      "median" : 46.590833000000003,
+      "n" : 5,
+      "p90" : 46.814584000000004
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 900484,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture +3 native FS\/chunk",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 1445,
+    "webViewRawBytes" : 3427358
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.59270800000000001,
+      "n" : 500,
+      "p90" : 0.61429199999999995
+    },
+    "chunk" : 2,
+    "chunkGzBytes" : 847815,
+    "chunkRawBytes" : 3736144,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 106.91541700000001,
+      "n" : 5,
+      "p90" : 106.988833
+    },
+    "gzipWebViewPart" : {
+      "median" : 48.324458,
+      "n" : 5,
+      "p90" : 48.451290999999998
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 932479,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture +3 native FS\/chunk",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 1468,
+    "webViewRawBytes" : 3512354
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.58633299999999999,
+      "n" : 500,
+      "p90" : 0.59245800000000004
+    },
+    "chunk" : 3,
+    "chunkGzBytes" : 842413,
+    "chunkRawBytes" : 3718703,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 105.39700000000001,
+      "n" : 5,
+      "p90" : 105.65204199999999
+    },
+    "gzipWebViewPart" : {
+      "median" : 47.452207999999999,
+      "n" : 5,
+      "p90" : 47.466749999999998
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 918657,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture +3 native FS\/chunk",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 1460,
+    "webViewRawBytes" : 3494921
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.56399999999999995,
+      "n" : 500,
+      "p90" : 0.56699999999999995
+    },
+    "chunk" : 4,
+    "chunkGzBytes" : 830494,
+    "chunkRawBytes" : 3653667,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 104.5605,
+      "n" : 5,
+      "p90" : 104.58045799999999
+    },
+    "gzipWebViewPart" : {
+      "median" : 49.651167000000001,
+      "n" : 5,
+      "p90" : 49.662374999999997
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 910709,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture +3 native FS\/chunk",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 1392,
+    "webViewRawBytes" : 3429953
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.57520800000000005,
+      "n" : 500,
+      "p90" : 0.57891700000000001
+    },
+    "chunk" : 5,
+    "chunkGzBytes" : 832460,
+    "chunkRawBytes" : 3664796,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 105.888541,
+      "n" : 5,
+      "p90" : 105.998375
+    },
+    "gzipWebViewPart" : {
+      "median" : 47.982041000000002,
+      "n" : 5,
+      "p90" : 48.050333000000002
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 912111,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture +3 native FS\/chunk",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 1431,
+    "webViewRawBytes" : 3441043
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.101667,
+      "n" : 271,
+      "p90" : 1.1258330000000001
+    },
+    "chunk" : 0,
+    "chunkGzBytes" : 880276,
+    "chunkRawBytes" : 4216891,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 183.925375,
+      "n" : 5,
+      "p90" : 184.01724999999999
+    },
+    "gzipWebViewPart" : {
+      "median" : 121.807542,
+      "n" : 5,
+      "p90" : 122.110834
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 820,
+    "retainedBytes" : 911528,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture +10 iframe moves\/chunk",
+    "shed" : 6,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 2757,
+    "webViewRawBytes" : 9071297
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.0816250000000001,
+      "n" : 277,
+      "p90" : 1.0896250000000001
+    },
+    "chunk" : 1,
+    "chunkGzBytes" : 869364,
+    "chunkRawBytes" : 4158352,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 179.06299999999999,
+      "n" : 5,
+      "p90" : 181.82791700000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 119.863084,
+      "n" : 5,
+      "p90" : 120.046083
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 900484,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture +10 iframe moves\/chunk",
+    "shed" : 6,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 2708,
+    "webViewRawBytes" : 8895546
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.1555839999999999,
+      "n" : 258,
+      "p90" : 1.203875
+    },
+    "chunk" : 2,
+    "chunkGzBytes" : 891741,
+    "chunkRawBytes" : 4252219,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 185.72054199999999,
+      "n" : 5,
+      "p90" : 186.46591699999999
+    },
+    "gzipWebViewPart" : {
+      "median" : 121.61820899999999,
+      "n" : 5,
+      "p90" : 122.00975
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 932479,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture +10 iframe moves\/chunk",
+    "shed" : 6,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 2773,
+    "webViewRawBytes" : 9105622
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.0985830000000001,
+      "n" : 273,
+      "p90" : 1.1088750000000001
+    },
+    "chunk" : 3,
+    "chunkGzBytes" : 880096,
+    "chunkRawBytes" : 4211705,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 183.08291600000001,
+      "n" : 5,
+      "p90" : 183.310959
+    },
+    "gzipWebViewPart" : {
+      "median" : 121.822208,
+      "n" : 5,
+      "p90" : 122.81274999999999
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 918657,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture +10 iframe moves\/chunk",
+    "shed" : 6,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 2746,
+    "webViewRawBytes" : 9055227
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.032292,
+      "n" : 291,
+      "p90" : 1.038708
+    },
+    "chunk" : 4,
+    "chunkGzBytes" : 875959,
+    "chunkRawBytes" : 4182577,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 179.21712500000001,
+      "n" : 5,
+      "p90" : 179.86654100000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 119.61150000000001,
+      "n" : 5,
+      "p90" : 121.731667
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 910709,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture +10 iframe moves\/chunk",
+    "shed" : 6,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 2538,
+    "webViewRawBytes" : 8868385
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.0701670000000001,
+      "n" : 281,
+      "p90" : 1.0780000000000001
+    },
+    "chunk" : 5,
+    "chunkGzBytes" : 875050,
+    "chunkRawBytes" : 4179520,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 178.652333,
+      "n" : 5,
+      "p90" : 178.79679100000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 119.155333,
+      "n" : 5,
+      "p90" : 119.743084
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 912111,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture +10 iframe moves\/chunk",
+    "shed" : 6,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 2668,
+    "webViewRawBytes" : 8918051
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.338084,
+      "n" : 500,
+      "p90" : 0.34120800000000001
+    },
+    "chunk" : 0,
+    "chunkGzBytes" : 279666,
+    "chunkRawBytes" : 1146319,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 33.895000000000003,
+      "n" : 9,
+      "p90" : 34.067374999999998
+    },
+    "gzipWebViewPart" : {
+      "median" : 14.547333999999999,
+      "n" : 14,
+      "p90" : 14.771209000000001
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 820,
+    "retainedBytes" : 911528,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture (5s batches + fresh doc\/chunk)",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 820,
+    "webViewRawBytes" : 1043588
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.34237499999999998,
+      "n" : 500,
+      "p90" : 0.34554099999999999
+    },
+    "chunk" : 1,
+    "chunkGzBytes" : 278425,
+    "chunkRawBytes" : 1140062,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 33.626458999999997,
+      "n" : 9,
+      "p90" : 33.803584000000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 14.556625,
+      "n" : 14,
+      "p90" : 14.686208000000001
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 900484,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture (5s batches + fresh doc\/chunk)",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 827,
+    "webViewRawBytes" : 1037324
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.33975,
+      "n" : 500,
+      "p90" : 0.34612500000000002
+    },
+    "chunk" : 2,
+    "chunkGzBytes" : 287234,
+    "chunkRawBytes" : 1173776,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 34.644624999999998,
+      "n" : 9,
+      "p90" : 34.771625
+    },
+    "gzipWebViewPart" : {
+      "median" : 15.136917,
+      "n" : 14,
+      "p90" : 15.294625
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 932479,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture (5s batches + fresh doc\/chunk)",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 827,
+    "webViewRawBytes" : 1071038
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.34295799999999999,
+      "n" : 500,
+      "p90" : 0.344333
+    },
+    "chunk" : 3,
+    "chunkGzBytes" : 283566,
+    "chunkRawBytes" : 1160039,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 34.460541999999997,
+      "n" : 9,
+      "p90" : 34.667208000000002
+    },
+    "gzipWebViewPart" : {
+      "median" : 14.98725,
+      "n" : 14,
+      "p90" : 15.081792
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 918657,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture (5s batches + fresh doc\/chunk)",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 827,
+    "webViewRawBytes" : 1057301
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.34004099999999998,
+      "n" : 500,
+      "p90" : 0.34266600000000003
+    },
+    "chunk" : 4,
+    "chunkGzBytes" : 283462,
+    "chunkRawBytes" : 1156910,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 34.741540999999998,
+      "n" : 9,
+      "p90" : 35.013792000000002
+    },
+    "gzipWebViewPart" : {
+      "median" : 15.23725,
+      "n" : 14,
+      "p90" : 15.423791
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 910709,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture (5s batches + fresh doc\/chunk)",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 827,
+    "webViewRawBytes" : 1054172
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.344084,
+      "n" : 500,
+      "p90" : 0.35575000000000001
+    },
+    "chunk" : 5,
+    "chunkGzBytes" : 283362,
+    "chunkRawBytes" : 1155220,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 34.705792000000002,
+      "n" : 9,
+      "p90" : 34.865541999999998
+    },
+    "gzipWebViewPart" : {
+      "median" : 15.01275,
+      "n" : 14,
+      "p90" : 15.179792000000001
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 912111,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture (5s batches + fresh doc\/chunk)",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 827,
+    "webViewRawBytes" : 1052482
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.59137499999999998,
+      "n" : 500,
+      "p90" : 0.59491700000000003
+    },
+    "chunk" : 0,
+    "chunkGzBytes" : 840213,
+    "chunkRawBytes" : 3715947,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 107.502084,
+      "n" : 5,
+      "p90" : 107.578666
+    },
+    "gzipWebViewPart" : {
+      "median" : 48.659792000000003,
+      "n" : 5,
+      "p90" : 48.703040999999999
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 820,
+    "retainedBytes" : 911528,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture +3 native FS\/chunk",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 1460,
+    "webViewRawBytes" : 3492165
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.582291,
+      "n" : 500,
+      "p90" : 0.58791700000000002
+    },
+    "chunk" : 1,
+    "chunkGzBytes" : 827052,
+    "chunkRawBytes" : 3651125,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 105.80125,
+      "n" : 5,
+      "p90" : 105.859459
+    },
+    "gzipWebViewPart" : {
+      "median" : 47.668709,
+      "n" : 5,
+      "p90" : 47.688082999999999
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 900484,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture +3 native FS\/chunk",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 1445,
+    "webViewRawBytes" : 3427358
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.59233400000000003,
+      "n" : 500,
+      "p90" : 0.59524999999999995
+    },
+    "chunk" : 2,
+    "chunkGzBytes" : 847957,
+    "chunkRawBytes" : 3736144,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 108.225083,
+      "n" : 5,
+      "p90" : 109.30458400000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 48.959541999999999,
+      "n" : 5,
+      "p90" : 49.136333
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 932479,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture +3 native FS\/chunk",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 1468,
+    "webViewRawBytes" : 3512354
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.59245800000000004,
+      "n" : 500,
+      "p90" : 0.595333
+    },
+    "chunk" : 3,
+    "chunkGzBytes" : 843385,
+    "chunkRawBytes" : 3718703,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 107.19470800000001,
+      "n" : 5,
+      "p90" : 107.221625
+    },
+    "gzipWebViewPart" : {
+      "median" : 48.270333000000001,
+      "n" : 5,
+      "p90" : 48.277166999999999
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 918657,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture +3 native FS\/chunk",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 1460,
+    "webViewRawBytes" : 3494921
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.56412499999999999,
+      "n" : 500,
+      "p90" : 0.56999999999999995
+    },
+    "chunk" : 4,
+    "chunkGzBytes" : 830713,
+    "chunkRawBytes" : 3653667,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 105.1045,
+      "n" : 5,
+      "p90" : 106.142208
+    },
+    "gzipWebViewPart" : {
+      "median" : 46.753500000000003,
+      "n" : 5,
+      "p90" : 46.844250000000002
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 910709,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture +3 native FS\/chunk",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 1392,
+    "webViewRawBytes" : 3429953
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.58079199999999997,
+      "n" : 500,
+      "p90" : 0.58550000000000002
+    },
+    "chunk" : 5,
+    "chunkGzBytes" : 832593,
+    "chunkRawBytes" : 3664796,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 106.229625,
+      "n" : 5,
+      "p90" : 106.31812499999999
+    },
+    "gzipWebViewPart" : {
+      "median" : 46.577834000000003,
+      "n" : 5,
+      "p90" : 47.327167000000003
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 912111,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture +3 native FS\/chunk",
+    "shed" : 0,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 1431,
+    "webViewRawBytes" : 3441043
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.109791,
+      "n" : 271,
+      "p90" : 1.1148750000000001
+    },
+    "chunk" : 0,
+    "chunkGzBytes" : 880595,
+    "chunkRawBytes" : 4216891,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 181.69566599999999,
+      "n" : 5,
+      "p90" : 183.30029200000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 121.74625,
+      "n" : 5,
+      "p90" : 122.36324999999999
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 820,
+    "retainedBytes" : 911528,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture +10 iframe moves\/chunk",
+    "shed" : 6,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 2757,
+    "webViewRawBytes" : 9071297
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.0788329999999999,
+      "n" : 278,
+      "p90" : 1.0882080000000001
+    },
+    "chunk" : 1,
+    "chunkGzBytes" : 870371,
+    "chunkRawBytes" : 4158352,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 180.03804099999999,
+      "n" : 5,
+      "p90" : 180.422166
+    },
+    "gzipWebViewPart" : {
+      "median" : 120.61225,
+      "n" : 5,
+      "p90" : 120.69
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 900484,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture +10 iframe moves\/chunk",
+    "shed" : 6,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 2708,
+    "webViewRawBytes" : 8895546
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.1094580000000001,
+      "n" : 271,
+      "p90" : 1.11575
+    },
+    "chunk" : 2,
+    "chunkGzBytes" : 891420,
+    "chunkRawBytes" : 4252219,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 185.01433299999999,
+      "n" : 5,
+      "p90" : 185.37504200000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 123.55225,
+      "n" : 5,
+      "p90" : 123.58725
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 932479,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture +10 iframe moves\/chunk",
+    "shed" : 6,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 2773,
+    "webViewRawBytes" : 9105622
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.10425,
+      "n" : 272,
+      "p90" : 1.1097919999999999
+    },
+    "chunk" : 3,
+    "chunkGzBytes" : 880188,
+    "chunkRawBytes" : 4211705,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 182.51875000000001,
+      "n" : 5,
+      "p90" : 182.99520799999999
+    },
+    "gzipWebViewPart" : {
+      "median" : 122.845709,
+      "n" : 5,
+      "p90" : 125.042208
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 918657,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture +10 iframe moves\/chunk",
+    "shed" : 6,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 2746,
+    "webViewRawBytes" : 9055227
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.060792,
+      "n" : 286,
+      "p90" : 1.083083
+    },
+    "chunk" : 4,
+    "chunkGzBytes" : 876354,
+    "chunkRawBytes" : 4182577,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 178.6925,
+      "n" : 5,
+      "p90" : 178.718625
+    },
+    "gzipWebViewPart" : {
+      "median" : 119.002166,
+      "n" : 5,
+      "p90" : 119.278583
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 910709,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture +10 iframe moves\/chunk",
+    "shed" : 6,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 2538,
+    "webViewRawBytes" : 8868385
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.0748329999999999,
+      "n" : 279,
+      "p90" : 1.081583
+    },
+    "chunk" : 5,
+    "chunkGzBytes" : 875912,
+    "chunkRawBytes" : 4179520,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 178.20708300000001,
+      "n" : 5,
+      "p90" : 178.28325000000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 120.331,
+      "n" : 5,
+      "p90" : 120.53004199999999
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 912111,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture +10 iframe moves\/chunk",
+    "shed" : 6,
+    "size" : "medium",
+    "variant" : "poc",
+    "webViewEvents" : 2668,
+    "webViewRawBytes" : 8918051
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.36354199999999998,
+      "n" : 500,
+      "p90" : 0.36725000000000002
+    },
+    "chunk" : 0,
+    "chunkGzBytes" : 682014,
+    "chunkRawBytes" : 3208395,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 89.497459000000006,
+      "n" : 5,
+      "p90" : 89.686875000000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 42.597665999999997,
+      "n" : 5,
+      "p90" : 42.657333999999999
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 820,
+    "retainedBytes" : 2970744,
+    "rev" : "bacb86a9",
+    "scenario" : "baseline",
+    "shed" : 0,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 820,
+    "webViewRawBytes" : 3105664
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.51654199999999995,
+      "n" : 500,
+      "p90" : 0.52137500000000003
+    },
+    "chunk" : 1,
+    "chunkGzBytes" : 728875,
+    "chunkRawBytes" : 3463275,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 96.717124999999996,
+      "n" : 5,
+      "p90" : 97.018749999999997
+    },
+    "gzipWebViewPart" : {
+      "median" : 46.245542,
+      "n" : 5,
+      "p90" : 46.347250000000003
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 3200570,
+    "rev" : "bacb86a9",
+    "scenario" : "baseline",
+    "shed" : 0,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 1266,
+    "webViewRawBytes" : 3360098
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.66845900000000003,
+      "n" : 448,
+      "p90" : 0.67558300000000004
+    },
+    "chunk" : 2,
+    "chunkGzBytes" : 779755,
+    "chunkRawBytes" : 3736509,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 103.9085,
+      "n" : 5,
+      "p90" : 104.57508300000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 49.955165999999998,
+      "n" : 5,
+      "p90" : 50.893082999999997
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 3456517,
+    "rev" : "bacb86a9",
+    "scenario" : "baseline",
+    "shed" : 0,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 1686,
+    "webViewRawBytes" : 3632912
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.83029200000000003,
+      "n" : 361,
+      "p90" : 0.83758299999999997
+    },
+    "chunk" : 3,
+    "chunkGzBytes" : 832918,
+    "chunkRawBytes" : 4019557,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 112.82062500000001,
+      "n" : 5,
+      "p90" : 112.93275
+    },
+    "gzipWebViewPart" : {
+      "median" : 53.918584000000003,
+      "n" : 5,
+      "p90" : 54.177957999999997
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 3720325,
+    "rev" : "bacb86a9",
+    "scenario" : "baseline",
+    "shed" : 0,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 2115,
+    "webViewRawBytes" : 3915531
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.98158400000000001,
+      "n" : 305,
+      "p90" : 0.99112500000000003
+    },
+    "chunk" : 4,
+    "chunkGzBytes" : 885306,
+    "chunkRawBytes" : 4301341,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 120.20950000000001,
+      "n" : 5,
+      "p90" : 120.218625
+    },
+    "gzipWebViewPart" : {
+      "median" : 57.871833000000002,
+      "n" : 5,
+      "p90" : 57.892417000000002
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 3979801,
+    "rev" : "bacb86a9",
+    "scenario" : "baseline",
+    "shed" : 0,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 2545,
+    "webViewRawBytes" : 4196885
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.1596249999999999,
+      "n" : 259,
+      "p90" : 1.1677500000000001
+    },
+    "chunk" : 5,
+    "chunkGzBytes" : 934458,
+    "chunkRawBytes" : 4568890,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 127.226834,
+      "n" : 5,
+      "p90" : 127.719084
+    },
+    "gzipWebViewPart" : {
+      "median" : 61.289459000000001,
+      "n" : 5,
+      "p90" : 61.359875000000002
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 4227722,
+    "rev" : "bacb86a9",
+    "scenario" : "baseline",
+    "shed" : 0,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 2953,
+    "webViewRawBytes" : 4464026
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.68891599999999997,
+      "n" : 434,
+      "p90" : 0.69479100000000005
+    },
+    "chunk" : 0,
+    "chunkGzBytes" : 803526,
+    "chunkRawBytes" : 3528524,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 215.86199999999999,
+      "n" : 5,
+      "p90" : 218.280666
+    },
+    "gzipWebViewPart" : {
+      "median" : 159.1165,
+      "n" : 5,
+      "p90" : 159.81995900000001
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 820,
+    "retainedBytes" : 2970744,
+    "rev" : "bacb86a9",
+    "scenario" : "+3 native FS\/chunk",
+    "shed" : 3,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 1454,
+    "webViewRawBytes" : 11698785
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.289625,
+      "n" : 233,
+      "p90" : 1.3004579999999999
+    },
+    "chunk" : 1,
+    "chunkGzBytes" : 848326,
+    "chunkRawBytes" : 3775542,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 234.20675,
+      "n" : 5,
+      "p90" : 234.388375
+    },
+    "gzipWebViewPart" : {
+      "median" : 174.20262500000001,
+      "n" : 5,
+      "p90" : 174.236625
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 3200570,
+    "rev" : "bacb86a9",
+    "scenario" : "+3 native FS\/chunk",
+    "shed" : 3,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 3180,
+    "webViewRawBytes" : 12710714
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.909,
+      "n" : 158,
+      "p90" : 1.9291670000000001
+    },
+    "chunk" : 2,
+    "chunkGzBytes" : 904135,
+    "chunkRawBytes" : 4068508,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 251.93870799999999,
+      "n" : 5,
+      "p90" : 252.52241699999999
+    },
+    "gzipWebViewPart" : {
+      "median" : 185.88387499999999,
+      "n" : 5,
+      "p90" : 189.75179199999999
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 3456517,
+    "rev" : "bacb86a9",
+    "scenario" : "+3 native FS\/chunk",
+    "shed" : 3,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 4853,
+    "webViewRawBytes" : 13787472
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 2.5087079999999999,
+      "n" : 120,
+      "p90" : 2.5501670000000001
+    },
+    "chunk" : 3,
+    "chunkGzBytes" : 955160,
+    "chunkRawBytes" : 4340565,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 266.46691700000002,
+      "n" : 5,
+      "p90" : 266.79300000000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 201.90004200000001,
+      "n" : 5,
+      "p90" : 202.14820900000001
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 3720325,
+    "rev" : "bacb86a9",
+    "scenario" : "+3 native FS\/chunk",
+    "shed" : 3,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 6560,
+    "webViewRawBytes" : 14860694
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 3.1097920000000001,
+      "n" : 97,
+      "p90" : 3.1360410000000001
+    },
+    "chunk" : 4,
+    "chunkGzBytes" : 1009157,
+    "chunkRawBytes" : 4629411,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 291.43658299999998,
+      "n" : 5,
+      "p90" : 291.47783399999997
+    },
+    "gzipWebViewPart" : {
+      "median" : 217.270667,
+      "n" : 5,
+      "p90" : 218.529708
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 3979801,
+    "rev" : "bacb86a9",
+    "scenario" : "+3 native FS\/chunk",
+    "shed" : 3,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 8288,
+    "webViewRawBytes" : 16018073
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 3.7531249999999998,
+      "n" : 80,
+      "p90" : 3.80125
+    },
+    "chunk" : 5,
+    "chunkGzBytes" : 238233,
+    "chunkRawBytes" : 614317,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 251.023291,
+      "n" : 5,
+      "p90" : 251.182084
+    },
+    "gzipWebViewPart" : {
+      "median" : 232.52366599999999,
+      "n" : 5,
+      "p90" : 232.60912500000001
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 4227722,
+    "rev" : "bacb86a9",
+    "scenario" : "+3 native FS\/chunk",
+    "shed" : 4,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 9936,
+    "webViewRawBytes" : 17101680
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.4020410000000001,
+      "n" : 211,
+      "p90" : 1.514875
+    },
+    "chunk" : 0,
+    "chunkGzBytes" : 723535,
+    "chunkRawBytes" : 3427947,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 481.06295899999998,
+      "n" : 5,
+      "p90" : 481.13175000000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 428.20416699999998,
+      "n" : 5,
+      "p90" : 428.35095799999999
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 820,
+    "retainedBytes" : 2970744,
+    "rev" : "bacb86a9",
+    "scenario" : "+10 iframe moves\/chunk",
+    "shed" : 10,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 2747,
+    "webViewRawBytes" : 31621304
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 3.0880839999999998,
+      "n" : 97,
+      "p90" : 3.1108750000000001
+    },
+    "chunk" : 1,
+    "chunkGzBytes" : 769437,
+    "chunkRawBytes" : 3678129,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 516.64220799999998,
+      "n" : 5,
+      "p90" : 518.94320900000002
+    },
+    "gzipWebViewPart" : {
+      "median" : 465.57637499999998,
+      "n" : 5,
+      "p90" : 465.83016700000002
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 3200570,
+    "rev" : "bacb86a9",
+    "scenario" : "+10 iframe moves\/chunk",
+    "shed" : 10,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 7452,
+    "webViewRawBytes" : 34404562
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 4.8312090000000003,
+      "n" : 62,
+      "p90" : 4.89975
+    },
+    "chunk" : 2,
+    "chunkGzBytes" : 824198,
+    "chunkRawBytes" : 3969463,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 566.02687500000002,
+      "n" : 5,
+      "p90" : 567.04254200000003
+    },
+    "gzipWebViewPart" : {
+      "median" : 500.33554099999998,
+      "n" : 5,
+      "p90" : 500.57629100000003
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 3456517,
+    "rev" : "bacb86a9",
+    "scenario" : "+10 iframe moves\/chunk",
+    "shed" : 10,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 12075,
+    "webViewRawBytes" : 37357096
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 6.6405839999999996,
+      "n" : 46,
+      "p90" : 6.74275
+    },
+    "chunk" : 3,
+    "chunkGzBytes" : 874271,
+    "chunkRawBytes" : 4238425,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 607.53708400000005,
+      "n" : 5,
+      "p90" : 612.45574999999997
+    },
+    "gzipWebViewPart" : {
+      "median" : 542.59550000000002,
+      "n" : 5,
+      "p90" : 542.98162500000001
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 3720325,
+    "rev" : "bacb86a9",
+    "scenario" : "+10 iframe moves\/chunk",
+    "shed" : 10,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 16762,
+    "webViewRawBytes" : 40282940
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 8.423959,
+      "n" : 36,
+      "p90" : 8.4808749999999993
+    },
+    "chunk" : 4,
+    "chunkGzBytes" : 930350,
+    "chunkRawBytes" : 4536684,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 651.64920900000004,
+      "n" : 5,
+      "p90" : 651.93074999999999
+    },
+    "gzipWebViewPart" : {
+      "median" : 581.36895900000002,
+      "n" : 5,
+      "p90" : 581.93533300000001
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 3979801,
+    "rev" : "bacb86a9",
+    "scenario" : "+10 iframe moves\/chunk",
+    "shed" : 10,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 21504,
+    "webViewRawBytes" : 43476723
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 10.385,
+      "n" : 29,
+      "p90" : 11.183541999999999
+    },
+    "chunk" : 5,
+    "chunkGzBytes" : 977993,
+    "chunkRawBytes" : 4795007,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 694.39866700000005,
+      "n" : 5,
+      "p90" : 696.04454099999998
+    },
+    "gzipWebViewPart" : {
+      "median" : 619.43733399999996,
+      "n" : 5,
+      "p90" : 623.88695900000005
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 840,
+    "retainedBytes" : 4227722,
+    "rev" : "bacb86a9",
+    "scenario" : "+10 iframe moves\/chunk",
+    "shed" : 10,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 26024,
+    "webViewRawBytes" : 46427389
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.36370799999999998,
+      "n" : 500,
+      "p90" : 0.36929200000000001
+    },
+    "chunk" : 0,
+    "chunkGzBytes" : 682058,
+    "chunkRawBytes" : 3208395,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 90.223667000000006,
+      "n" : 5,
+      "p90" : 90.694625000000002
+    },
+    "gzipWebViewPart" : {
+      "median" : 42.867916999999998,
+      "n" : 5,
+      "p90" : 42.893082999999997
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 820,
+    "retainedBytes" : 2970744,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture (1s batches + fresh doc\/chunk)",
+    "shed" : 0,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 820,
+    "webViewRawBytes" : 3105664
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.36716700000000002,
+      "n" : 500,
+      "p90" : 0.36870900000000001
+    },
+    "chunk" : 1,
+    "chunkGzBytes" : 681123,
+    "chunkRawBytes" : 3215552,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 89.450792000000007,
+      "n" : 5,
+      "p90" : 89.750292000000002
+    },
+    "gzipWebViewPart" : {
+      "median" : 42.184792000000002,
+      "n" : 5,
+      "p90" : 42.256957999999997
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2974190,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture (1s batches + fresh doc\/chunk)",
+    "shed" : 0,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 827,
+    "webViewRawBytes" : 3112814
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.36545800000000001,
+      "n" : 500,
+      "p90" : 0.36962499999999998
+    },
+    "chunk" : 2,
+    "chunkGzBytes" : 683975,
+    "chunkRawBytes" : 3225656,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 89.416083999999998,
+      "n" : 5,
+      "p90" : 89.566125
+    },
+    "gzipWebViewPart" : {
+      "median" : 42.698332999999998,
+      "n" : 5,
+      "p90" : 42.828958999999998
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2989297,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture (1s batches + fresh doc\/chunk)",
+    "shed" : 0,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 827,
+    "webViewRawBytes" : 3122918
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.36779099999999998,
+      "n" : 500,
+      "p90" : 0.392042
+    },
+    "chunk" : 3,
+    "chunkGzBytes" : 678347,
+    "chunkRawBytes" : 3198806,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 89.069874999999996,
+      "n" : 5,
+      "p90" : 89.153458000000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 42.444709000000003,
+      "n" : 5,
+      "p90" : 42.596541999999999
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2955652,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture (1s batches + fresh doc\/chunk)",
+    "shed" : 0,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 827,
+    "webViewRawBytes" : 3096068
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.36608299999999999,
+      "n" : 500,
+      "p90" : 0.36845899999999998
+    },
+    "chunk" : 4,
+    "chunkGzBytes" : 684620,
+    "chunkRawBytes" : 3226102,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 89.383416999999994,
+      "n" : 5,
+      "p90" : 89.764332999999993
+    },
+    "gzipWebViewPart" : {
+      "median" : 42.758707999999999,
+      "n" : 5,
+      "p90" : 43.175375000000003
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2988151,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture (1s batches + fresh doc\/chunk)",
+    "shed" : 0,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 827,
+    "webViewRawBytes" : 3123364
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.36512499999999998,
+      "n" : 500,
+      "p90" : 0.36716599999999999
+    },
+    "chunk" : 5,
+    "chunkGzBytes" : 679756,
+    "chunkRawBytes" : 3201815,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 89.698666000000003,
+      "n" : 5,
+      "p90" : 89.710458000000003
+    },
+    "gzipWebViewPart" : {
+      "median" : 42.373249999999999,
+      "n" : 5,
+      "p90" : 42.792583
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2960737,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture (1s batches + fresh doc\/chunk)",
+    "shed" : 0,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 827,
+    "webViewRawBytes" : 3099077
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.69120899999999996,
+      "n" : 434,
+      "p90" : 0.69595799999999997
+    },
+    "chunk" : 0,
+    "chunkGzBytes" : 803455,
+    "chunkRawBytes" : 3528524,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 213.388375,
+      "n" : 5,
+      "p90" : 213.707291
+    },
+    "gzipWebViewPart" : {
+      "median" : 158.16737499999999,
+      "n" : 5,
+      "p90" : 158.37383399999999
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 820,
+    "retainedBytes" : 2970744,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture +3 native FS\/chunk",
+    "shed" : 3,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 1454,
+    "webViewRawBytes" : 11698785
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.68104100000000001,
+      "n" : 440,
+      "p90" : 0.68516699999999997
+    },
+    "chunk" : 1,
+    "chunkGzBytes" : 803543,
+    "chunkRawBytes" : 3533242,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 217.30770899999999,
+      "n" : 5,
+      "p90" : 217.36987500000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 157.877375,
+      "n" : 5,
+      "p90" : 158.00283300000001
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2974190,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture +3 native FS\/chunk",
+    "shed" : 3,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 1423,
+    "webViewRawBytes" : 11695250
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.69287500000000002,
+      "n" : 429,
+      "p90" : 0.71695900000000001
+    },
+    "chunk" : 2,
+    "chunkGzBytes" : 809820,
+    "chunkRawBytes" : 3559228,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 218.13624999999999,
+      "n" : 5,
+      "p90" : 218.158334
+    },
+    "gzipWebViewPart" : {
+      "median" : 157.75258400000001,
+      "n" : 5,
+      "p90" : 157.76908299999999
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2989297,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture +3 native FS\/chunk",
+    "shed" : 3,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 1440,
+    "webViewRawBytes" : 11733197
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.67012499999999997,
+      "n" : 447,
+      "p90" : 0.674875
+    },
+    "chunk" : 3,
+    "chunkGzBytes" : 796487,
+    "chunkRawBytes" : 3499889,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 210.99504099999999,
+      "n" : 5,
+      "p90" : 211.026667
+    },
+    "gzipWebViewPart" : {
+      "median" : 155.841375,
+      "n" : 5,
+      "p90" : 160.08625000000001
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2955652,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture +3 native FS\/chunk",
+    "shed" : 3,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 1396,
+    "webViewRawBytes" : 11613820
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.70429200000000003,
+      "n" : 426,
+      "p90" : 0.71137499999999998
+    },
+    "chunk" : 4,
+    "chunkGzBytes" : 811351,
+    "chunkRawBytes" : 3563125,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 215.87787499999999,
+      "n" : 5,
+      "p90" : 217.22554099999999
+    },
+    "gzipWebViewPart" : {
+      "median" : 159.705625,
+      "n" : 5,
+      "p90" : 161.16354100000001
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2988151,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture +3 native FS\/chunk",
+    "shed" : 3,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 1483,
+    "webViewRawBytes" : 11734663
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.69141699999999995,
+      "n" : 431,
+      "p90" : 0.70341600000000004
+    },
+    "chunk" : 5,
+    "chunkGzBytes" : 797648,
+    "chunkRawBytes" : 3502398,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 215.57837499999999,
+      "n" : 5,
+      "p90" : 215.73858300000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 160.01433399999999,
+      "n" : 5,
+      "p90" : 160.024709
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2960737,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture +3 native FS\/chunk",
+    "shed" : 3,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 1469,
+    "webViewRawBytes" : 11642666
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.405292,
+      "n" : 214,
+      "p90" : 1.413667
+    },
+    "chunk" : 0,
+    "chunkGzBytes" : 723123,
+    "chunkRawBytes" : 3427947,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 477.49129199999999,
+      "n" : 5,
+      "p90" : 478.44212499999998
+    },
+    "gzipWebViewPart" : {
+      "median" : 424.90083299999998,
+      "n" : 5,
+      "p90" : 424.93829199999999
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 820,
+    "retainedBytes" : 2970744,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture +10 iframe moves\/chunk",
+    "shed" : 10,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 2747,
+    "webViewRawBytes" : 31621304
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.361917,
+      "n" : 220,
+      "p90" : 1.3736250000000001
+    },
+    "chunk" : 1,
+    "chunkGzBytes" : 723990,
+    "chunkRawBytes" : 3438506,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 474.20045800000003,
+      "n" : 5,
+      "p90" : 475.96979199999998
+    },
+    "gzipWebViewPart" : {
+      "median" : 422.779042,
+      "n" : 5,
+      "p90" : 425.419084
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2974190,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture +10 iframe moves\/chunk",
+    "shed" : 10,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 2644,
+    "webViewRawBytes" : 31612017
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.3805000000000001,
+      "n" : 217,
+      "p90" : 1.391667
+    },
+    "chunk" : 2,
+    "chunkGzBytes" : 728447,
+    "chunkRawBytes" : 3457434,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 461.61233399999998,
+      "n" : 5,
+      "p90" : 465.30516699999998
+    },
+    "gzipWebViewPart" : {
+      "median" : 427.22883300000001,
+      "n" : 5,
+      "p90" : 428.18741699999998
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2989297,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture +10 iframe moves\/chunk",
+    "shed" : 10,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 2703,
+    "webViewRawBytes" : 31694207
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.332959,
+      "n" : 225,
+      "p90" : 1.339458
+    },
+    "chunk" : 3,
+    "chunkGzBytes" : 716324,
+    "chunkRawBytes" : 3397794,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 470.53837499999997,
+      "n" : 5,
+      "p90" : 472.34841599999999
+    },
+    "gzipWebViewPart" : {
+      "median" : 419.22204199999999,
+      "n" : 5,
+      "p90" : 419.88012500000002
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2955652,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture +10 iframe moves\/chunk",
+    "shed" : 10,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 2561,
+    "webViewRawBytes" : 31410272
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.4299999999999999,
+      "n" : 209,
+      "p90" : 1.4535830000000001
+    },
+    "chunk" : 4,
+    "chunkGzBytes" : 728806,
+    "chunkRawBytes" : 3458749,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 484.92145900000003,
+      "n" : 5,
+      "p90" : 485.15445799999998
+    },
+    "gzipWebViewPart" : {
+      "median" : 433.41162500000002,
+      "n" : 5,
+      "p90" : 433.50975
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2988151,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture +10 iframe moves\/chunk",
+    "shed" : 10,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 2819,
+    "webViewRawBytes" : 31689629
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.399708,
+      "n" : 215,
+      "p90" : 1.4054169999999999
+    },
+    "chunk" : 5,
+    "chunkGzBytes" : 718267,
+    "chunkRawBytes" : 3405254,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 481.76433300000002,
+      "n" : 5,
+      "p90" : 482.60066699999999
+    },
+    "gzipWebViewPart" : {
+      "median" : 431.43658299999998,
+      "n" : 5,
+      "p90" : 433.34829200000001
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2960737,
+    "rev" : "bacb86a9",
+    "scenario" : "rrweb capture +10 iframe moves\/chunk",
+    "shed" : 10,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 2792,
+    "webViewRawBytes" : 31488173
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.36399999999999999,
+      "n" : 500,
+      "p90" : 0.36620799999999998
+    },
+    "chunk" : 0,
+    "chunkGzBytes" : 682023,
+    "chunkRawBytes" : 3208395,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 90.350583,
+      "n" : 5,
+      "p90" : 90.698499999999996
+    },
+    "gzipWebViewPart" : {
+      "median" : 43.166832999999997,
+      "n" : 5,
+      "p90" : 43.544666999999997
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 820,
+    "retainedBytes" : 2970744,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture (5s batches + fresh doc\/chunk)",
+    "shed" : 0,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 820,
+    "webViewRawBytes" : 3105664
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.38466600000000001,
+      "n" : 500,
+      "p90" : 0.40920800000000002
+    },
+    "chunk" : 1,
+    "chunkGzBytes" : 681854,
+    "chunkRawBytes" : 3215552,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 89.827124999999995,
+      "n" : 5,
+      "p90" : 89.941417000000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 42.524917000000002,
+      "n" : 5,
+      "p90" : 42.686584000000003
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2974190,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture (5s batches + fresh doc\/chunk)",
+    "shed" : 0,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 827,
+    "webViewRawBytes" : 3112814
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.36587500000000001,
+      "n" : 500,
+      "p90" : 0.36975000000000002
+    },
+    "chunk" : 2,
+    "chunkGzBytes" : 684191,
+    "chunkRawBytes" : 3225656,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 89.723500000000001,
+      "n" : 5,
+      "p90" : 89.786625000000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 42.600082999999998,
+      "n" : 5,
+      "p90" : 43.023833000000003
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2989297,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture (5s batches + fresh doc\/chunk)",
+    "shed" : 0,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 827,
+    "webViewRawBytes" : 3122918
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.36525000000000002,
+      "n" : 500,
+      "p90" : 0.37283300000000003
+    },
+    "chunk" : 3,
+    "chunkGzBytes" : 678349,
+    "chunkRawBytes" : 3198806,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 88.173374999999993,
+      "n" : 5,
+      "p90" : 88.540875
+    },
+    "gzipWebViewPart" : {
+      "median" : 42.966374999999999,
+      "n" : 5,
+      "p90" : 43.001916999999999
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2955652,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture (5s batches + fresh doc\/chunk)",
+    "shed" : 0,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 827,
+    "webViewRawBytes" : 3096068
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.37029200000000001,
+      "n" : 500,
+      "p90" : 0.37874999999999998
+    },
+    "chunk" : 4,
+    "chunkGzBytes" : 684772,
+    "chunkRawBytes" : 3226102,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 89.998790999999997,
+      "n" : 5,
+      "p90" : 90.202749999999995
+    },
+    "gzipWebViewPart" : {
+      "median" : 42.877625000000002,
+      "n" : 5,
+      "p90" : 42.886457999999998
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2988151,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture (5s batches + fresh doc\/chunk)",
+    "shed" : 0,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 827,
+    "webViewRawBytes" : 3123364
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.38204199999999999,
+      "n" : 500,
+      "p90" : 0.40670800000000001
+    },
+    "chunk" : 5,
+    "chunkGzBytes" : 679832,
+    "chunkRawBytes" : 3201815,
+    "documentCopies" : 1,
+    "encode" : {
+      "median" : 90.274041999999994,
+      "n" : 5,
+      "p90" : 91.360874999999993
+    },
+    "gzipWebViewPart" : {
+      "median" : 42.699792000000002,
+      "n" : 5,
+      "p90" : 43.076000000000001
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2960737,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture (5s batches + fresh doc\/chunk)",
+    "shed" : 0,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 827,
+    "webViewRawBytes" : 3099077
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.69625000000000004,
+      "n" : 430,
+      "p90" : 0.70179199999999997
+    },
+    "chunk" : 0,
+    "chunkGzBytes" : 803265,
+    "chunkRawBytes" : 3528524,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 214.08275,
+      "n" : 5,
+      "p90" : 214.621916
+    },
+    "gzipWebViewPart" : {
+      "median" : 158.59375,
+      "n" : 5,
+      "p90" : 158.90287499999999
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 820,
+    "retainedBytes" : 2970744,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture +3 native FS\/chunk",
+    "shed" : 3,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 1454,
+    "webViewRawBytes" : 11698785
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.68483400000000005,
+      "n" : 431,
+      "p90" : 0.73558299999999999
+    },
+    "chunk" : 1,
+    "chunkGzBytes" : 803685,
+    "chunkRawBytes" : 3533242,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 215.96795800000001,
+      "n" : 5,
+      "p90" : 215.97495900000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 162.85345799999999,
+      "n" : 5,
+      "p90" : 162.87337500000001
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2974190,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture +3 native FS\/chunk",
+    "shed" : 3,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 1423,
+    "webViewRawBytes" : 11695250
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.69183300000000003,
+      "n" : 434,
+      "p90" : 0.69779100000000005
+    },
+    "chunk" : 2,
+    "chunkGzBytes" : 810076,
+    "chunkRawBytes" : 3559228,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 214.37716699999999,
+      "n" : 5,
+      "p90" : 218.33337499999999
+    },
+    "gzipWebViewPart" : {
+      "median" : 156.08304100000001,
+      "n" : 5,
+      "p90" : 156.819084
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2989297,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture +3 native FS\/chunk",
+    "shed" : 3,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 1440,
+    "webViewRawBytes" : 11733197
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.66966700000000001,
+      "n" : 448,
+      "p90" : 0.674458
+    },
+    "chunk" : 3,
+    "chunkGzBytes" : 797661,
+    "chunkRawBytes" : 3499889,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 211.78420800000001,
+      "n" : 5,
+      "p90" : 212.00929199999999
+    },
+    "gzipWebViewPart" : {
+      "median" : 155.78833299999999,
+      "n" : 5,
+      "p90" : 155.80604099999999
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2955652,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture +3 native FS\/chunk",
+    "shed" : 3,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 1396,
+    "webViewRawBytes" : 11613820
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.701959,
+      "n" : 427,
+      "p90" : 0.70899999999999996
+    },
+    "chunk" : 4,
+    "chunkGzBytes" : 811242,
+    "chunkRawBytes" : 3563125,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 215.23616699999999,
+      "n" : 5,
+      "p90" : 215.97708299999999
+    },
+    "gzipWebViewPart" : {
+      "median" : 159.20387500000001,
+      "n" : 5,
+      "p90" : 159.463458
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2988151,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture +3 native FS\/chunk",
+    "shed" : 3,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 1483,
+    "webViewRawBytes" : 11734663
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 0.69654199999999999,
+      "n" : 431,
+      "p90" : 0.70191700000000001
+    },
+    "chunk" : 5,
+    "chunkGzBytes" : 798057,
+    "chunkRawBytes" : 3502398,
+    "documentCopies" : 4,
+    "encode" : {
+      "median" : 216.87195800000001,
+      "n" : 5,
+      "p90" : 216.89875000000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 157.333583,
+      "n" : 5,
+      "p90" : 157.455625
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2960737,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture +3 native FS\/chunk",
+    "shed" : 3,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 1469,
+    "webViewRawBytes" : 11642666
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.3860840000000001,
+      "n" : 216,
+      "p90" : 1.3979999999999999
+    },
+    "chunk" : 0,
+    "chunkGzBytes" : 723111,
+    "chunkRawBytes" : 3427947,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 477.27866699999998,
+      "n" : 5,
+      "p90" : 477.42583400000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 428.54154199999999,
+      "n" : 5,
+      "p90" : 428.54975000000002
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 820,
+    "retainedBytes" : 2970744,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture +10 iframe moves\/chunk",
+    "shed" : 10,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 2747,
+    "webViewRawBytes" : 31621304
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.3574170000000001,
+      "n" : 221,
+      "p90" : 1.366417
+    },
+    "chunk" : 1,
+    "chunkGzBytes" : 724270,
+    "chunkRawBytes" : 3438506,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 473.42266699999999,
+      "n" : 5,
+      "p90" : 474.443375
+    },
+    "gzipWebViewPart" : {
+      "median" : 427.49570899999998,
+      "n" : 5,
+      "p90" : 428.41820899999999
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2974190,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture +10 iframe moves\/chunk",
+    "shed" : 10,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 2644,
+    "webViewRawBytes" : 31612017
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.3746670000000001,
+      "n" : 214,
+      "p90" : 1.4804999999999999
+    },
+    "chunk" : 2,
+    "chunkGzBytes" : 728758,
+    "chunkRawBytes" : 3457434,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 486.85762499999998,
+      "n" : 5,
+      "p90" : 487.77941600000003
+    },
+    "gzipWebViewPart" : {
+      "median" : 429.52404200000001,
+      "n" : 5,
+      "p90" : 434.31604099999998
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2989297,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture +10 iframe moves\/chunk",
+    "shed" : 10,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 2703,
+    "webViewRawBytes" : 31694207
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.320708,
+      "n" : 227,
+      "p90" : 1.337
+    },
+    "chunk" : 3,
+    "chunkGzBytes" : 716448,
+    "chunkRawBytes" : 3397794,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 468.513125,
+      "n" : 5,
+      "p90" : 469.37533400000001
+    },
+    "gzipWebViewPart" : {
+      "median" : 417.76400000000001,
+      "n" : 5,
+      "p90" : 419.00037500000002
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2955652,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture +10 iframe moves\/chunk",
+    "shed" : 10,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 2561,
+    "webViewRawBytes" : 31410272
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.4233750000000001,
+      "n" : 210,
+      "p90" : 1.444709
+    },
+    "chunk" : 4,
+    "chunkGzBytes" : 729273,
+    "chunkRawBytes" : 3458749,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 490.35083300000002,
+      "n" : 5,
+      "p90" : 490.69799999999998
+    },
+    "gzipWebViewPart" : {
+      "median" : 422.284291,
+      "n" : 5,
+      "p90" : 427.39545900000002
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2988151,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture +10 iframe moves\/chunk",
+    "shed" : 10,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 2819,
+    "webViewRawBytes" : 31689629
+  },
+  {
+    "branch" : "webview-msr-poc",
+    "build" : {
+      "median" : 1.420625,
+      "n" : 210,
+      "p90" : 1.486
+    },
+    "chunk" : 5,
+    "chunkGzBytes" : 718650,
+    "chunkRawBytes" : 3405254,
+    "documentCopies" : 11,
+    "encode" : {
+      "median" : 469.266458,
+      "n" : 5,
+      "p90" : 470.90579100000002
+    },
+    "gzipWebViewPart" : {
+      "median" : 423.537958,
+      "n" : 5,
+      "p90" : 425.25270799999998
+    },
+    "kind" : "harvest",
+    "pendingEvents" : 827,
+    "retainedBytes" : 2960737,
+    "rev" : "bacb86a9",
+    "scenario" : "agent+snapshot capture +10 iframe moves\/chunk",
+    "shed" : 10,
+    "size" : "large",
+    "variant" : "poc",
+    "webViewEvents" : 2792,
+    "webViewRawBytes" : 31488173
+  }
+]

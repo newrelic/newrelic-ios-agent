@@ -6,6 +6,8 @@
 #import "NRMAWKWebViewInstrumentation.h"
 #import "NRMAWKWebViewNavigationDelegate.h"
 #import <UIKit/UIKit.h>
+#import <WebKit/WebKit.h>
+#import <NewRelic/NewRelic-Swift.h>
 
 //NOTE: this files has ARC disabled.
 
@@ -156,9 +158,24 @@ static void setNavigationDelegate(id self, SEL _cmd, id delegate) {
 }
 
 #if !TARGET_OS_TV
+// Installs the session replay bridge before the first navigation: a user script added once a page has
+// loaded is invisible to that page. Never lets a failure escape the WKWebView initializer.
+static void NRMAInstallWebViewReplayBridge(id webView) {
+    if (webView == nil) {
+        return;
+    }
+    @try {
+        [NRMAWebViewReplayBridge installOnWebView:webView];
+    } @catch (NSException *exception) {
+    }
+}
+#endif
+
+#if !TARGET_OS_TV
 id initWithCoder(id self, SEL _cmd, id coder) {
      id result = NRMA__WKWebView_initWithCoder(self, _cmd, coder);
     NRMA__WKWebView_setNavigationDelegate(result, _cmd, [[NRMAWKWebViewNavigationDelegate alloc] initWithOriginalDelegate:nil]);
+    NRMAInstallWebViewReplayBridge(result);
     return result;
 }
 #endif
@@ -167,6 +184,7 @@ id initWithCoder(id self, SEL _cmd, id coder) {
 id initWithFrame_configuration(id self, SEL _cmd, CGRect frame, id configuration) {
     id result = NRMA__WKWebView_initWithFrame_configuration(self, _cmd, frame, configuration);
     NRMA__WKWebView_setNavigationDelegate(result, _cmd,  [[NRMAWKWebViewNavigationDelegate alloc] initWithOriginalDelegate:nil]);
+    NRMAInstallWebViewReplayBridge(result);
 
     return result;
 }

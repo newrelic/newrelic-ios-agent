@@ -130,31 +130,29 @@ func generateDiff(old:[any SessionReplayViewThingy], new:[any SessionReplayViewT
     var changes = [Operation]()
     
     // Removals
-    var deleteOffsets = Array(repeating: 0, count: oldArrayEntries.count)
-    var runningOffset = 0
     for(index, entry) in oldArrayEntries.enumerated() {
-        deleteOffsets[index] = runningOffset
         if case .symbol = entry {
             changes.append(.Remove(Operation.RemoveChange(parentId: old[index].viewDetails.parentId ?? 0, id: old[index].viewDetails.viewId)))
-            runningOffset += 1
         }
     }
     
-    runningOffset = 0
+    let matches: [Int?] = newArrayEntries.map {
+        if case .index(let indexInOld) = $0 { return indexInOld }
+        return nil
+    }
+    let moved = movedElements(old: old.map(DiffNode.init), new: new.map(DiffNode.init), matches: matches)
     
     // Additions and Alterations
     for(index, entry) in newArrayEntries.enumerated() {
         switch entry {
         case .symbol:
             changes.append(.Add(Operation.AddChange(parentId: new[index].viewDetails.parentId ?? 0, id: new[index].viewDetails.viewId, node: new[index])))
-            runningOffset += 1
             
         case .index(let indexInOld):
-            let deleteOffset = deleteOffsets[indexInOld]
             let newElement = new[index]
             let oldElement = old[indexInOld]
             
-            if (indexInOld - deleteOffset + runningOffset) != index {
+            if moved.contains(index) {
                 changes.append(.Remove(Operation.RemoveChange(parentId: oldElement.viewDetails.parentId ?? 0, id: newElement.viewDetails.viewId)))
                 changes.append(.Add(Operation.AddChange(parentId: newElement.viewDetails.parentId ?? 0, id: newElement.viewDetails.viewId, node: newElement)))
             } else if type(of: newElement) == type(of: oldElement) {
@@ -166,6 +164,144 @@ func generateDiff(old:[any SessionReplayViewThingy], new:[any SessionReplayViewT
     }
     
     return changes
+}
+
+/// What moving an element costs on top of re-adding it: re-adding a WebView's `<iframe>` throws away
+/// the page document attached to it in the replay, which then has to be attached again.
+let webViewMoveCost = 10_000
+
+/// What the move rule needs to know about one element of a flattened tree.
+struct DiffNode {
+    let id: Int
+    let parentId: Int
+    let isWebView: Bool
+}
+
+extension DiffNode {
+    init(_ element: any SessionReplayViewThingy) {
+        #if os(iOS)
+        let isWebView = element is WKWebViewThingy
+        #else
+        let isWebView = false
+        #endif
+        self.init(id: element.viewDetails.viewId, parentId: element.viewDetails.parentId ?? 0, isWebView: isWebView)
+    }
+}
+
+/// Indices into `new` of the matched elements that have to be removed and re-added.
+///
+/// An element has moved if its parent changed, or if its order among the siblings it kept changed.
+/// Comparing positions in the flattened tree instead marks every element between a moved one's old
+/// and new position as moved too -- and each of those is re-added with its whole subtree, including
+/// any WebView, whose replayed page then has to be attached again.
+///
+/// Among siblings that kept their parent, the ones that stay put are the heaviest run still in their
+/// old order, weighted by what moving each would cost (its subtree, plus `webViewMoveCost` for each
+/// WebView in it). So when a WebView and a sibling trade places, the sibling is the one that moves.
+///
+/// A re-added element comes back without its children (adds carry no child nodes), so everything under
+/// a moved element is re-added with it.
+///
+/// - Parameters:
+///   - old, new: the flattened trees, in pre-order (a parent before everything under it)
+///   - matches: for each element of `new`, the index of the same element in `old`, or nil if it is new
+func movedElements(old: [DiffNode], new: [DiffNode], matches: [Int?]) -> Set<Int> {
+    var newIndexById = [Int: Int](minimumCapacity: new.count)
+    for (index, element) in new.enumerated() where newIndexById[element.id] == nil {
+        newIndexById[element.id] = index
+    }
+    func parentIndex(of index: Int) -> Int? {
+        guard let parent = newIndexById[new[index].parentId], parent < index else {
+            return nil
+        }
+        return parent
+    }
+
+    var cost = Array(repeating: 1, count: new.count)
+    for index in new.indices.reversed() {
+        if new[index].isWebView {
+            cost[index] += webViewMoveCost
+        }
+        if let parent = parentIndex(of: index) {
+            cost[parent] += cost[index]
+        }
+    }
+
+    var moved = Set<Int>()
+    var keptSiblings = [Int: [(newIndex: Int, oldIndex: Int)]]()
+    for (index, match) in matches.enumerated() {
+        guard let indexInOld = match else { continue }
+        if new[index].parentId != old[indexInOld].parentId {
+            moved.insert(index)
+        } else {
+            keptSiblings[new[index].parentId, default: []].append((index, indexInOld))
+        }
+    }
+    for siblings in keptSiblings.values where siblings.count > 1 {
+        let staying = heaviestIncreasingSubsequence(siblings.map { $0.oldIndex }, weights: siblings.map { cost[$0.newIndex] })
+        for (position, sibling) in siblings.enumerated() where !staying.contains(position) {
+            moved.insert(sibling.newIndex)
+        }
+    }
+
+    for index in new.indices where matches[index] != nil && !moved.contains(index) {
+        if let parent = parentIndex(of: index), moved.contains(parent) {
+            moved.insert(index)
+        }
+    }
+    return moved
+}
+
+/// Positions of the heaviest strictly increasing subsequence of `values`. Exact for typical sibling
+/// counts; past `exactLimit` it falls back to the longest one, ignoring weights, to stay O(n log n).
+func heaviestIncreasingSubsequence(_ values: [Int], weights: [Int], exactLimit: Int = 256) -> Set<Int> {
+    let count = values.count
+    guard count > 1 else { return Set(0..<count) }
+    guard count <= exactLimit else { return longestIncreasingSubsequence(values) }
+    
+    var best = weights
+    var previous = Array(repeating: -1, count: count)
+    for i in 1..<count {
+        for j in 0..<i where values[j] < values[i] && best[j] + weights[i] > best[i] {
+            best[i] = best[j] + weights[i]
+            previous[i] = j
+        }
+    }
+    var index = 0
+    for i in 1..<count where best[i] > best[index] {
+        index = i
+    }
+    var staying = Set<Int>()
+    while index >= 0 {
+        staying.insert(index)
+        index = previous[index]
+    }
+    return staying
+}
+
+/// Positions of a longest strictly increasing subsequence of `values` (patience sorting).
+func longestIncreasingSubsequence(_ values: [Int]) -> Set<Int> {
+    var tails = [Int]()
+    var previous = Array(repeating: -1, count: values.count)
+    for i in values.indices {
+        var low = 0
+        var high = tails.count
+        while low < high {
+            let mid = (low + high) / 2
+            if values[tails[mid]] < values[i] { low = mid + 1 } else { high = mid }
+        }
+        if low > 0 {
+            previous[i] = tails[low - 1]
+        }
+        if low == tails.count { tails.append(i) } else { tails[low] = i }
+    }
+    var staying = Set<Int>()
+    var index = tails.last ?? -1
+    while index >= 0 {
+        staying.insert(index)
+        index = previous[index]
+    }
+    return staying
 }
     
 //         For nodes that have not been added/removed, we should get the difference they've got as a dictionary (that can be turned into JSON

@@ -1,0 +1,236 @@
+[
+  {
+    "branch" : "two-streams-webview-msr",
+    "docBridgeBytes" : 136845,
+    "docOutBytes" : 65342,
+    "ingestDoc" : {
+      "median" : 1.0006250000000001,
+      "n" : 500,
+      "p90" : 1.028875
+    },
+    "ingestMut1" : {
+      "median" : 0.216084,
+      "n" : 500,
+      "p90" : 0.22508300000000001
+    },
+    "ingestMut5" : {
+      "median" : 0.95154099999999997,
+      "n" : 500,
+      "p90" : 0.96220799999999995
+    },
+    "kind" : "ingest",
+    "mut5BridgeBytes" : 70305,
+    "mut5Events" : 70,
+    "mut5OutBytes" : 31892,
+    "nodes" : 400,
+    "parseDoc" : {
+      "median" : 0.50275000000000003,
+      "n" : 500,
+      "p90" : 0.51083299999999998
+    },
+    "parseMut5" : {
+      "median" : 0.409167,
+      "n" : 500,
+      "p90" : 0.41949999999999998
+    },
+    "rev" : "ac0f1978",
+    "shape" : "agent",
+    "size" : "small",
+    "variant" : "twostreams"
+  },
+  {
+    "branch" : "two-streams-webview-msr",
+    "docBridgeBytes" : 1373121,
+    "docOutBytes" : 655778,
+    "ingestDoc" : {
+      "median" : 9.6983750000000004,
+      "n" : 78,
+      "p90" : 9.7207500000000007
+    },
+    "ingestMut1" : {
+      "median" : 0.22983400000000001,
+      "n" : 500,
+      "p90" : 0.23474999999999999
+    },
+    "ingestMut5" : {
+      "median" : 0.90504099999999998,
+      "n" : 500,
+      "p90" : 0.91704200000000002
+    },
+    "kind" : "ingest",
+    "mut5BridgeBytes" : 67807,
+    "mut5Events" : 70,
+    "mut5OutBytes" : 30737,
+    "nodes" : 4000,
+    "parseDoc" : {
+      "median" : 4.9384170000000003,
+      "n" : 152,
+      "p90" : 4.9790409999999996
+    },
+    "parseMut5" : {
+      "median" : 0.38795800000000003,
+      "n" : 500,
+      "p90" : 0.39116600000000001
+    },
+    "rev" : "ac0f1978",
+    "shape" : "agent",
+    "size" : "medium",
+    "variant" : "twostreams"
+  },
+  {
+    "branch" : "two-streams-webview-msr",
+    "docBridgeBytes" : 5513353,
+    "docOutBytes" : 2633466,
+    "ingestDoc" : {
+      "median" : 38.959625000000003,
+      "n" : 20,
+      "p90" : 39.039791999999998
+    },
+    "ingestMut1" : {
+      "median" : 0.16429199999999999,
+      "n" : 500,
+      "p90" : 0.167292
+    },
+    "ingestMut5" : {
+      "median" : 1.0365,
+      "n" : 500,
+      "p90" : 1.0885419999999999
+    },
+    "kind" : "ingest",
+    "mut5BridgeBytes" : 79489,
+    "mut5Events" : 70,
+    "mut5OutBytes" : 36277,
+    "nodes" : 16000,
+    "parseDoc" : {
+      "median" : 20.119624999999999,
+      "n" : 37,
+      "p90" : 21.823416999999999
+    },
+    "parseMut5" : {
+      "median" : 0.44637500000000002,
+      "n" : 500,
+      "p90" : 0.449708
+    },
+    "rev" : "ac0f1978",
+    "shape" : "agent",
+    "size" : "large",
+    "variant" : "twostreams"
+  },
+  {
+    "branch" : "two-streams-webview-msr",
+    "docBridgeBytes" : 65468,
+    "docOutBytes" : 65342,
+    "ingestDoc" : {
+      "median" : 0.82450000000000001,
+      "n" : 500,
+      "p90" : 0.84008300000000002
+    },
+    "ingestMut1" : {
+      "median" : 0.17874999999999999,
+      "n" : 500,
+      "p90" : 0.18141699999999999
+    },
+    "ingestMut5" : {
+      "median" : 0.80929200000000001,
+      "n" : 500,
+      "p90" : 0.81499999999999995
+    },
+    "kind" : "ingest",
+    "mut5BridgeBytes" : 32047,
+    "mut5Events" : 70,
+    "mut5OutBytes" : 31892,
+    "nodes" : 400,
+    "parseDoc" : {
+      "median" : 0.323542,
+      "n" : 500,
+      "p90" : 0.32700000000000001
+    },
+    "parseMut5" : {
+      "median" : 0.28349999999999997,
+      "n" : 500,
+      "p90" : 0.28658299999999998
+    },
+    "rev" : "ac0f1978",
+    "shape" : "rrweb",
+    "size" : "small",
+    "variant" : "twostreams"
+  },
+  {
+    "branch" : "two-streams-webview-msr",
+    "docBridgeBytes" : 657388,
+    "docOutBytes" : 655778,
+    "ingestDoc" : {
+      "median" : 7.9592090000000004,
+      "n" : 95,
+      "p90" : 7.9955420000000004
+    },
+    "ingestMut1" : {
+      "median" : 0.19933400000000001,
+      "n" : 500,
+      "p90" : 0.202625
+    },
+    "ingestMut5" : {
+      "median" : 0.77633399999999997,
+      "n" : 500,
+      "p90" : 0.81287500000000001
+    },
+    "kind" : "ingest",
+    "mut5BridgeBytes" : 30900,
+    "mut5Events" : 70,
+    "mut5OutBytes" : 30737,
+    "nodes" : 4000,
+    "parseDoc" : {
+      "median" : 3.1715420000000001,
+      "n" : 236,
+      "p90" : 3.1923750000000002
+    },
+    "parseMut5" : {
+      "median" : 0.27625,
+      "n" : 500,
+      "p90" : 0.30379200000000001
+    },
+    "rev" : "ac0f1978",
+    "shape" : "rrweb",
+    "size" : "medium",
+    "variant" : "twostreams"
+  },
+  {
+    "branch" : "two-streams-webview-msr",
+    "docBridgeBytes" : 2639952,
+    "docOutBytes" : 2633466,
+    "ingestDoc" : {
+      "median" : 32.594499999999996,
+      "n" : 23,
+      "p90" : 34.037500000000001
+    },
+    "ingestMut1" : {
+      "median" : 0.13875000000000001,
+      "n" : 500,
+      "p90" : 0.13933400000000001
+    },
+    "ingestMut5" : {
+      "median" : 0.88054200000000005,
+      "n" : 500,
+      "p90" : 0.90829099999999996
+    },
+    "kind" : "ingest",
+    "mut5BridgeBytes" : 36424,
+    "mut5Events" : 70,
+    "mut5OutBytes" : 36277,
+    "nodes" : 16000,
+    "parseDoc" : {
+      "median" : 12.903375,
+      "n" : 58,
+      "p90" : 13.491625000000001
+    },
+    "parseMut5" : {
+      "median" : 0.31212499999999999,
+      "n" : 500,
+      "p90" : 0.32716699999999999
+    },
+    "rev" : "ac0f1978",
+    "shape" : "rrweb",
+    "size" : "large",
+    "variant" : "twostreams"
+  }
+]
