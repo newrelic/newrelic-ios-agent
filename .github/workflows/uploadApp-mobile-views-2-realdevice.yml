@@ -1,0 +1,319 @@
+# Builds a SIGNED NRTestApp IPA from the `mobile-views-2` branch, uploads it to
+# LambdaTest's real-device app store, and runs the iOS suite on real hardware.
+#
+# Why this exists alongside uploadApp-mobile-views-2.yml: that workflow builds an
+# UNSIGNED simulator .app and uploads it to the virtualDevice endpoint. Real
+# hardware needs a signed .ipa, which means a full archive + export cycle. The
+# archive/export/signing steps here are lifted from archive-nrtestapp.yml (the
+# pre-release App Store sanity check), minus its TestFlight upload -- we only
+# want the .ipa.
+#
+# Signing note: this exports with method `app-store-connect` using the existing
+# APP_STORE_PROVISION_PROFILE_BASE64 secret, and relies on LambdaTest resigning
+# the IPA with their own profile (their default for real-device uploads). No new
+# Apple portal work or secrets are needed. If LambdaTest ever rejects the App
+# Store entitlements, the fallback is an ad-hoc (`release-testing`) profile added
+# as a new secret -- see LambdaTest/REAL_DEVICE_TESTING.md.
+#
+# Manual dispatch only. A signed archive takes ~20 minutes and real-device
+# minutes are limited, so this is deliberately opt-in rather than scheduled.
+
+name: Upload iOS NRTestApp IPA (mobile-views-2) to LambdaTest real devices
+
+permissions:
+  contents: read
+  actions: read
+
+on:
+  # enables option for workflow to be manually executed in Github UI
+  workflow_dispatch:
+
+jobs:
+
+  build-ipa:
+    name: Archive + export signed IPA
+    runs-on: macos-15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # pin@v4
+        with:
+          ref: mobile-views-2
+          submodules: true
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "26.2"
+
+      - name: Install Apple distribution certificate and provisioning profile
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          APP_STORE_PROVISION_PROFILE_BASE64: ${{ secrets.APP_STORE_PROVISION_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          PP_PATH=$RUNNER_TEMP/NRTestApp_AppStore.mobileprovision
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+          echo -n "$APP_STORE_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
+          PROFILE_PLIST=$(security cms -D -i $PP_PATH)
+          PROFILE_NAME=$(/usr/libexec/PlistBuddy -c "Print :Name" /dev/stdin <<< "$PROFILE_PLIST")
+          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin <<< "$PROFILE_PLIST")
+          # PlistBuddy exits 0 even when the key is missing, so check explicitly --
+          # otherwise an undecodable profile installs as a dotfile and the archive
+          # fails much later with an unrelated-looking signing error.
+          if [ -z "$PROFILE_NAME" ] || [ -z "$PROFILE_UUID" ]; then
+            echo "::error::Could not read Name/UUID from the provisioning profile; check APP_STORE_PROVISION_PROFILE_BASE64."
+            exit 1
+          fi
+          echo "PROFILE_NAME=$PROFILE_NAME" >> $GITHUB_ENV
+          echo "PROFILE_UUID=$PROFILE_UUID" >> $GITHUB_ENV
+
+          # Install under the UUID filename (what Xcode itself does) into BOTH search
+          # paths: Xcode 16+ reads UserData/Provisioning Profiles, older Xcode reads the
+          # legacy MobileDevice path.
+          for PROFILE_DIR in \
+            "$HOME/Library/MobileDevice/Provisioning Profiles" \
+            "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"; do
+            mkdir -p "$PROFILE_DIR"
+            cp "$PP_PATH" "$PROFILE_DIR/$PROFILE_UUID.mobileprovision"
+          done
+
+          # Confirm signing material actually landed, so a failure later is legible.
+          echo "Installed profile: $PROFILE_NAME ($PROFILE_UUID)"
+          security find-identity -v -p codesigning $KEYCHAIN_PATH
+
+      # The collector addresses and app token are what make the run report into
+      # the same account the virtual run uses.
+      - name: Set NRTestApp plist secrets
+        env:
+          NRTESTAPP_CRASH_COLLECTOR_ADDRESS: ${{ secrets.NRTESTAPP_CRASH_COLLECTOR_ADDRESS }}
+          NRTESTAPP_MAIN_COLLECTOR_ADDRESS: ${{ secrets.NRTESTAPP_MAIN_COLLECTOR_ADDRESS }}
+          NRTESTAPP_APP_TOKEN: ${{ secrets.NRTESTAPP_APP_TOKEN }}
+        run: |
+          PLIST_PATH="./Test Harness/NRTestApp/NRAPI-Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :crashCollectorAddress ${NRTESTAPP_CRASH_COLLECTOR_ADDRESS}" "$PLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Set :collectorAddress ${NRTESTAPP_MAIN_COLLECTOR_ADDRESS}" "$PLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Set :NRAPIKey ${NRTESTAPP_APP_TOKEN}" "$PLIST_PATH"
+
+      - name: Write ExportOptions.plist
+        run: |
+          cat > $RUNNER_TEMP/ExportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>teamID</key><string>SU7SUNGZJP</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>signingCertificate</key><string>Apple Distribution</string>
+            <key>stripSwiftSymbols</key><true/>
+            <key>uploadSymbols</key><true/>
+            <key>destination</key><string>export</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.newrelic.NRApp.bitcode</key>
+              <string>${PROFILE_NAME}</string>
+            </dict>
+          </dict>
+          </plist>
+          EOF
+          cat $RUNNER_TEMP/ExportOptions.plist
+
+      - name: Archive NRTestApp
+        run: |
+          # Do NOT pass PROVISIONING_PROFILE_SPECIFIER here. Command-line build settings
+          # apply to EVERY target in the build graph, and this archive pulls in JSON, Hex,
+          # Utilities, Connectivity, Analytics, and Agent_iOS -- each of which fails with
+          # "<target> does not support provisioning profiles". The NRTestApp target already
+          # sets PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*] = NRTestApp-AppStore.
+          set +e   # so a non-zero pipeline doesn't abort before PIPESTATUS is read
+          xcodebuild archive \
+            -workspace Agent.xcworkspace \
+            -scheme NRTestApp \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath $RUNNER_TEMP/NRTestApp.xcarchive \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM=SU7SUNGZJP \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            2>&1 | tee $RUNNER_TEMP/archive.log | xcpretty
+          # Judge the build by xcodebuild's own status (PIPESTATUS[0]), never xcpretty's --
+          # a broken/missing formatter must not decide whether the archive passed.
+          STATUS=${PIPESTATUS[0]}
+          set -e
+          if [ "$STATUS" -ne 0 ]; then
+            # xcpretty swallows code-signing errors, leaving only a bare
+            # "Archiving workspace Agent with scheme NRTestApp (1 failure)" footer,
+            # so always surface the raw log on failure.
+            echo "::error::Archive failed (xcodebuild exit $STATUS) -- raw output below."
+            echo "::group::error lines"
+            grep -E "error:" $RUNNER_TEMP/archive.log || echo "(no 'error:' lines in log)"
+            echo "::endgroup::"
+            echo "::group::full xcodebuild output"
+            cat $RUNNER_TEMP/archive.log
+            echo "::endgroup::"
+            exit "$STATUS"
+          fi
+
+      - name: Export IPA
+        run: |
+          set +e   # so a non-zero pipeline doesn't abort before PIPESTATUS is read
+          xcodebuild -exportArchive \
+            -archivePath $RUNNER_TEMP/NRTestApp.xcarchive \
+            -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist \
+            -exportPath $RUNNER_TEMP/export \
+            -allowProvisioningUpdates \
+            2>&1 | tee $RUNNER_TEMP/export.log | xcpretty
+          STATUS=${PIPESTATUS[0]}
+          set -e
+          if [ "$STATUS" -ne 0 ]; then
+            echo "::error::Export failed (xcodebuild exit $STATUS) -- raw output below."
+            echo "::group::error lines"
+            grep -E "error:" $RUNNER_TEMP/export.log || echo "(no 'error:' lines in log)"
+            echo "::endgroup::"
+            echo "::group::full xcodebuild output"
+            cat $RUNNER_TEMP/export.log
+            echo "::endgroup::"
+            exit "$STATUS"
+          fi
+          ls -la $RUNNER_TEMP/export/
+
+      # Normalize the name so the upload script has a fixed path to read, the same
+      # way the virtual pipeline standardizes on builds/nrtestapp-ios.zip.
+      - name: Stage IPA for upload
+        run: |
+          IPA_PATH="$(ls $RUNNER_TEMP/export/*.ipa | head -1)"
+          if [ -z "$IPA_PATH" ]; then
+            echo "::error::export produced no .ipa"
+            exit 1
+          fi
+          mkdir -p "$GITHUB_WORKSPACE/builds"
+          cp "$IPA_PATH" "$GITHUB_WORKSPACE/builds/nrtestapp-ios.ipa"
+          ls -la "$GITHUB_WORKSPACE/builds/nrtestapp-ios.ipa"
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nrtestapp-ios-ipa
+          path: builds/nrtestapp-ios.ipa
+          compression-level: 0
+          retention-days: 1
+
+      - name: Cleanup keychain
+        if: always()
+        run: security delete-keychain $RUNNER_TEMP/app-signing.keychain-db || true
+
+  upload-ipa:
+    name: Upload signed IPA to LT real devices
+    needs: [build-ipa]
+    runs-on: ubuntu-latest
+    outputs:
+      # Handed to the test workflow as a workflow_call input. Passing it in-run
+      # like this avoids having the downstream workflow download an artifact from
+      # this run, which is the "artifact poisoning" pattern security scanners flag.
+      app_id: ${{ steps.app-id.outputs.app_id }}
+    env:
+      LT_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
+      LT_ACCESSKEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # pin@v4
+        with:
+          ref: mobile-views-2
+
+      - name: Setup environment
+        uses: ./.github/actions/env-setup
+
+      - name: Download IPA artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: nrtestapp-ios-ipa
+          path: ${{ github.workspace }}/builds
+
+      - name: Run upload script
+        run: node LambdaTest/uploadAppToLambdaTest-realDevice.mjs
+
+      # Read back the custom_id this run just wrote. Validated before it leaves
+      # the job so a malformed value can't reach the downstream workflow.
+      - name: Capture uploaded app ID
+        id: app-id
+        run: |
+          APP_ID_FILE="LambdaTest/last-app-id-realdevice"
+          if [ ! -f "$APP_ID_FILE" ]; then
+            echo "::error::upload script did not write $APP_ID_FILE"
+            exit 1
+          fi
+          APP_ID="$(tr -d '\n' < "$APP_ID_FILE")"
+          if ! printf '%s' "$APP_ID" | grep -Eq '^[A-Za-z0-9._:-]{1,200}$'; then
+            echo "::error::uploaded app ID is not in the expected format"
+            exit 1
+          fi
+          echo "app_id=$APP_ID" >> "$GITHUB_OUTPUT"
+          echo "Captured app ID: $APP_ID"
+
+      # Informational only - for humans debugging a run. Nothing consumes this;
+      # the test workflow gets the ID via the job output above. Do not wire a
+      # downstream workflow to download it (artifact poisoning).
+      - name: Upload custom_id artifact
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambdatest-app-id-realdevice
+          path: LambdaTest/last-app-id-realdevice
+          retention-days: 1
+
+      - name: Log success
+        if: ${{ success() }}
+        run: echo "[ RUNNER ] - successfully uploaded mobile-views-2 NRTestApp IPA to LambdaTest real devices"
+
+      - name: Log failure
+        if: ${{ failure() || cancelled() }}
+        run: echo "[ RUNNER ] - failed to upload mobile-views-2 NRTestApp IPA to LambdaTest real devices"
+
+      - name: Notify failure
+        if: ${{ failure() || cancelled() }}
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # pin@v2
+        with:
+          webhook-type: incoming-webhook
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            blocks:
+              - type: "header"
+                text:
+                  type: "plain_text"
+                  text: ":crying-sunglasses-cowboy: LambdaTest Real Device Upload Failed (mobile-views-2)"
+              - type: "divider"
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "Something went wrong while uploading the signed mobile-views-2 NRTestApp IPA to LambdaTest. If the error mentions resigning, see LambdaTest/REAL_DEVICE_TESTING.md."
+                accessory:
+                  type: "button"
+                  text:
+                    type: "plain_text"
+                    text: "View logs"
+                    emoji: true
+                  value: "view_logs"
+                  url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  action_id: "button-action"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  run-tests:
+    name: Run LambdaTest iOS suite on real device
+    needs: [upload-ipa]
+    uses: ./.github/workflows/wdio-mobile-views-2-realdevice.yml
+    secrets: inherit
+    with:
+      app_id: ${{ needs.upload-ipa.outputs.app_id }}

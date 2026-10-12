@@ -5,8 +5,10 @@
 #include <Utilities/libLogger.hpp>
 #include <Utilities/WorkQueue.hpp>
 #include <Analytics/AnalyticEvent.hpp>
+#include <atomic>
 #include <chrono>
 #include <sstream>
+#include <thread>
 
 
 #ifndef LIBMOBILEAGENT_FILEBACKEDSTORE_HPP
@@ -26,8 +28,11 @@ private:
     bool (* _validator)(K const& k,
                         std::shared_ptr<T> t);
 
-    std::chrono::time_point<std::chrono::system_clock> lastWriteTime;
-    bool dirtyFlag = false;
+    std::chrono::steady_clock::time_point lastWriteTime;
+    std::atomic<bool> dirtyFlag{false};
+    // Set while a write is queued but hasn't snapshotted the cache yet; anything
+    // stored or removed in the meantime rides along on that write.
+    std::atomic<bool> writeScheduled{false};
     WorkQueue workQueue;
 
 public:
@@ -84,7 +89,7 @@ public:
 
         std::lock_guard<std::mutex> lk(_fileMutex);
         if (dirtyFlag) {
-            flush();
+            writeToFile();
         }
         if (_fO.is_open())
             _fO.close();
@@ -92,56 +97,18 @@ public:
 
     virtual void clear() {
         CacheBackedStore<K, T>::clear();
-        workQueue.enqueue([this] {
-            try {
-                std::lock_guard<std::mutex> lk(_fileMutex);
-                _fO.close();
-                _fO.open(_fullPath, std::ios::trunc);
-                _fO.rdbuf()->pubsetbuf(0, 0);
-            } catch (std::exception& e) {
-                LLOG_VERBOSE("failed to clear file: %s\nreason: %s", _fullPath.c_str(), e.what());
-            } catch (...) {
-                LLOG_VERBOSE("Failed to clear file: %s", _fullPath.c_str());
-            }
-        });
+        scheduleWrite();
     }
 
     virtual void store(K key,
                        std::shared_ptr<T> obj) {
         CacheBackedStore<K, T>::store(key, obj);
-        dirtyFlag = true;
-        workQueue.enqueue([this] {
-            try {
-                std::lock_guard<std::mutex> lk(_fileMutex);
-                // Check throttle, but don't block the worker thread with sleep
-                // This allows synchronize() and terminate() to complete faster
-                auto now = std::chrono::system_clock::now();
-                if (now - lastWriteTime >= writeThrottle()) {
-                    flush();
-                }
-                // If throttled, the dirty flag remains set and will be flushed
-                // on next store() call or in destructor
-            } catch (std::exception& e) {
-                LLOG_VERBOSE("Failed to store item: %s", e.what());
-            } catch (...) {
-                LLOG_VERBOSE("Failed to store item.");
-            }
-        });
+        scheduleWrite();
     }
 
     virtual void remove(K key) {
         CacheBackedStore<K, T>::remove(key);
-        dirtyFlag = true;
-        workQueue.enqueue([this] {
-            try {
-                std::lock_guard<std::mutex> lk(_fileMutex);
-                flush();
-            } catch (std::exception& e) {
-                LLOG_VERBOSE("Failed to remove item: %s", e.what());
-            } catch (...) {
-                LLOG_VERBOSE("Failed to remove item.");
-            }
-        });
+        scheduleWrite();
     }
 
     virtual std::map<K, std::shared_ptr<T>> load() {
@@ -152,6 +119,7 @@ public:
     }
 
     virtual void flush() {
+        std::lock_guard<std::mutex> lk(_fileMutex);
         writeToFile();
     }
 
@@ -229,33 +197,89 @@ protected:
         dirtyFlag = false;
     }
 
+    // Marks the cache dirty and makes sure a write is queued. The write snapshots the
+    // cache when it runs, so one queued write covers every change made before it
+    // starts instead of queueing a full rewrite per call.
+    void scheduleWrite() {
+        dirtyFlag = true;
+        if (writeScheduled.exchange(true)) {
+            return;
+        }
+        workQueue.enqueue([this] {
+            try {
+                std::unique_lock<std::mutex> lk(_fileMutex);
+                auto sinceLastWrite = std::chrono::steady_clock::now() - lastWriteTime;
+                if (sinceLastWrite < writeThrottle()) {
+                    lk.unlock();
+                    std::this_thread::sleep_for(writeThrottle() - sinceLastWrite);
+                    lk.lock();
+                }
+                // Cleared before the snapshot: a change that still sees it set is in the
+                // snapshot, and a change that sees it cleared queues the next write.
+                writeScheduled = false;
+                writeToFile();
+            } catch (std::exception& e) {
+                writeScheduled = false;
+                LLOG_VERBOSE("Failed to write store: %s", e.what());
+            } catch (...) {
+                writeScheduled = false;
+                LLOG_VERBOSE("Failed to write store.");
+            }
+        });
+    }
+
+    // Caller must hold _fileMutex.
     void writeToFile() {
-        std::lock_guard<std::mutex> lk(CacheBackedStore<K, T>::m);
-        auto map = CacheBackedStore<K, T>::map;
-
-        if (dirtyFlag) {
-            if (!_fO.is_open()) {
-                _fO.open(_fullPath);
-                _fO.rdbuf()->pubsetbuf(0, 0);
+        std::map<K, std::shared_ptr<T>> snapshot;
+        {
+            // Only hold the cache lock long enough to copy the cache. store() and remove()
+            // are called with EventManager's events lock held, and the main thread waits on
+            // that lock, so file I/O must never happen under it.
+            std::lock_guard<std::mutex> lk(CacheBackedStore<K, T>::m);
+            if (!dirtyFlag) {
+                return;
             }
-
-            _fO.seekp(0);
-            for (auto it = map.cbegin(); it != map.cend(); it++) {
-                _fO << it->first << std::endl << std::flush;
-                _fO << *(it->second) << std::endl << std::flush;
-            }
-            _fO.flush();
-
-            // Update the file meta with real size, to exclude lingering data
-            auto rc = truncate(getFullStorePath(), _fO.tellp());
-            if (-1 == rc) {
-                LLOG_VERBOSE("File truncation failed on \"%s\". Errno: %d", getFullStorePath(), errno);
-            }
-
+            snapshot = CacheBackedStore<K, T>::map;
             dirtyFlag = false;
-            lastWriteTime = std::chrono::system_clock::now();
         }
 
+        // Reopen a stream an earlier write left failed (e.g. disk full), otherwise every
+        // later write would silently do nothing.
+        if (!_fO.is_open() || !_fO.good()) {
+            _fO.close();
+            _fO.clear();
+            _fO.open(_fullPath);
+            _fO.rdbuf()->pubsetbuf(0, 0);
+        }
+
+        _fO.seekp(0);
+        // _fO is unbuffered, so serialize into memory and hand it large chunks rather
+        // than paying a write(2) per token.
+        const std::streamoff chunkSize = 64 * 1024;
+        std::ostringstream chunk;
+        for (auto it = snapshot.cbegin(); it != snapshot.cend(); it++) {
+            chunk << it->first << '\n';
+            chunk << *(it->second) << '\n';
+            if (chunk.tellp() >= chunkSize) {
+                writeChunk(chunk);
+            }
+        }
+        writeChunk(chunk);
+        _fO.flush();
+
+        // Update the file meta with real size, to exclude lingering data
+        auto rc = truncate(getFullStorePath(), _fO.tellp());
+        if (-1 == rc) {
+            LLOG_VERBOSE("File truncation failed on \"%s\". Errno: %d", getFullStorePath(), errno);
+        }
+
+        lastWriteTime = std::chrono::steady_clock::now();
+    }
+
+    void writeChunk(std::ostringstream& chunk) {
+        const std::string bytes = chunk.str();
+        _fO.write(bytes.data(), bytes.size());
+        chunk.str("");
     }
 
 protected:
