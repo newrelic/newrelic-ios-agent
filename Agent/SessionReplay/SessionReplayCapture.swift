@@ -55,12 +55,23 @@ class SessionReplayCapture {
         // Process UIKit subviews only if current view should record subviews
         if parentThingy.shouldRecordSubviewsComputed {
             for subview in currentView.subviews {
+                #if os(iOS)
+                // Inside a Flutter view, only PlatformView containers are real content;
+                // Flutter's own subviews are internals.
+                if parentThingy is EmbeddedRendererThingy, !EmbeddedRendererThingy.isHostedNativeView(subview) {
+                    continue
+                }
+                #endif
                 if shouldRecord(view: subview) {
                     var childThingy = findRecorderForView(view: subview)
                     if childThingy.viewDetails.isVisible {
                         #if os(iOS)
                         if let webViewThingy = childThingy as? WKWebViewThingy, !webViewThingy.isBlocked {
                             webViewChannelIds.insert(webViewThingy.channelId)
+                        }
+                        // A Flutter view is grafted like a WebView.
+                        if let rendererThingy = childThingy as? EmbeddedRendererThingy, !rendererThingy.isBlocked {
+                            webViewChannelIds.insert(rendererThingy.channelId)
                         }
                         #endif
                         buildViewTree(for: subview, into: &childThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
@@ -226,6 +237,12 @@ class SessionReplayCapture {
         #endif
 
         default:
+            #if os(iOS)
+            // Flutter renders outside UIKit; its content is grafted in.
+            if EmbeddedRendererThingy.isEmbeddedRenderer(originalView) {
+                return EmbeddedRendererThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
+            }
+            #endif
             if let rctParagraphClass = NSClassFromString(RCTParagraphComponentView),
                originalView.isKind(of: rctParagraphClass) {
                 return UILabelThingy(view: originalView, viewDetails: ViewDetails(view: originalView))

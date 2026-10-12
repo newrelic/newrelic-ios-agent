@@ -36,7 +36,11 @@ class SessionReplayFrameProcessor {
         // or the NavigationStack depth changed.
         if takeFullSnapshotNext || frame.size != lastFullFrame.size ||
             (frame.layoutContainerViewCount > 1 && frame.layoutContainerViewCount > lastFullFrame.layoutContainerViewCount) ||
-            frame.navigationStackDepth != lastFullFrame.navigationStackDepth {
+            frame.navigationStackDepth != lastFullFrame.navigationStackDepth ||
+            // A grafted view (Flutter / WebView) came into the tree. The player
+            // doesn't fill an <iframe> that a mutation adds in the same moment the document is
+            // grafted, but it does fill one built by a full snapshot.
+            !frame.webViewChannelIds.subtracting(lastFullFrame.webViewChannelIds).isEmpty {
             rrwebCommon = processFullSnapshot(frame)
             takeFullSnapshotNext = false
         } else {

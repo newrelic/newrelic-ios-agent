@@ -111,4 +111,109 @@ extension WKWebViewThingy: Hashable {
         hasher.combine(url)
     }
 }
+
+// MARK: - Flutter views grafted like WebViews
+
+/// Maps a view that renders its own content outside UIKit -- today a `FlutterView` -- to a `<div>`
+/// holding an empty `<iframe>`. The renderer's content arrives separately as rrweb (the Flutter
+/// plugin, through `NRMAWebViewReplayBridge.recordEmbeddedEvents`) and is grafted under the
+/// iframe by `WebViewReplayChunkBuilder`, exactly like WebView content.
+///
+/// Native views the renderer hosts (Flutter PlatformViews, which on iOS are real UIKit subviews of
+/// the FlutterView) are recorded natively as later children of the `<div>`, so they draw above the
+/// grafted content. Flutter's own internal subviews are skipped.
+///
+/// Recognized by class name: the agent does not link Flutter.
+class EmbeddedRendererThingy: SessionReplayViewThingy {
+    static let rendererClassNames: Set<String> = ["FlutterView"]
+    /// Containers Flutter wraps each PlatformView in. Only these subviews are recorded.
+    static let hostedNativeViewClassNames: Set<String> = ["FlutterTouchInterceptingView", "ChildClippingView", "FlutterClippingMaskView"]
+    /// The iframe needs a node ID of its own, distinct from the container's (the view's) ID.
+    static let iframeIdOffset = 500_000_000
+
+    static func isEmbeddedRenderer(_ view: UIView) -> Bool {
+        return rendererClassNames.contains(NSStringFromClass(type(of: view)))
+    }
+
+    static func isHostedNativeView(_ view: UIView) -> Bool {
+        return hostedNativeViewClassNames.contains(NSStringFromClass(type(of: view)))
+    }
+
+    static func channelId(forViewId viewId: Int) -> Int {
+        return viewId + iframeIdOffset
+    }
+
+    var isMasked: Bool
+    var isBlocked: Bool
+    var subviews = [any SessionReplayViewThingy]()
+
+    /// Hosted native views are recorded; `SessionReplayCapture` filters out the rest.
+    var shouldRecordSubviews: Bool {
+        true
+    }
+
+    var viewDetails: ViewDetails
+
+    init(view: UIView, viewDetails: ViewDetails) {
+        self.viewDetails = viewDetails
+        self.isMasked = viewDetails.isMasked ?? false
+        self.isBlocked = viewDetails.blockView ?? false
+    }
+
+    /// The `<iframe>` node the renderer's document is grafted under.
+    var channelId: Int {
+        Self.channelId(forViewId: viewDetails.viewId)
+    }
+
+    private static let iframeStyle = "position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; border: 0;"
+
+    func cssDescription() -> String {
+        return "#\(viewDetails.cssSelector) {\(generateBaseCSSStyle())} "
+    }
+
+    private func iframeNode() -> ElementNodeData {
+        return ElementNodeData(id: channelId,
+                               tagName: .iframe,
+                               attributes: ["style": Self.iframeStyle],
+                               childNodes: [])
+    }
+
+    func generateRRWebNode() -> ElementNodeData {
+        return ElementNodeData(id: viewDetails.viewId,
+                               tagName: .div,
+                               attributes: ["id": viewDetails.cssSelector],
+                               childNodes: [.element(iframeNode())])
+    }
+
+    func generateRRWebAdditionNode(parentNodeId: Int) -> [RRWebMutationData.AddRecord] {
+        let container = ElementNodeData(id: viewDetails.viewId,
+                                        tagName: .div,
+                                        attributes: ["id": viewDetails.cssSelector,
+                                                     "style": generateBaseCSSStyle()],
+                                        childNodes: [])
+        return [.init(parentId: parentNodeId, nextId: viewDetails.nextId, node: .element(container)),
+                .init(parentId: viewDetails.viewId, nextId: nil, node: .element(iframeNode()))]
+    }
+
+    func generateDifference<T: SessionReplayViewThingy>(from other: T) -> [MutationRecord] {
+        guard let typedOther = other as? EmbeddedRendererThingy else {
+            return []
+        }
+        return [RRWebMutationData.AttributeRecord(id: viewDetails.viewId,
+                                                  attributes: ["id": typedOther.viewDetails.cssSelector,
+                                                               "style": typedOther.generateBaseCSSStyle()])]
+    }
+}
+
+extension EmbeddedRendererThingy: Equatable {
+    static func == (lhs: EmbeddedRendererThingy, rhs: EmbeddedRendererThingy) -> Bool {
+        return lhs.viewDetails == rhs.viewDetails
+    }
+}
+
+extension EmbeddedRendererThingy: Hashable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(viewDetails)
+    }
+}
 #endif

@@ -89,6 +89,10 @@ static NRMAURLTransformer* urlTransformer;
 
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     SessionReplayManager* _sessionReplay;
+    // Set before _sessionReplay exists (e.g. by the Flutter plugin right after
+    // startup); applied to the manager on creation so native capture is
+    // suppressed race-free with the async /connect that starts it.
+    BOOL _sessionReplayExternalCaptureSource;
 #endif
 }
 
@@ -401,6 +405,7 @@ static NewRelicAgentInternal* _sharedInstance;
     if (@available(iOS 13.0, *)) {
         SessionReplayReporter *reporter = [[SessionReplayReporter alloc] initWithApplicationToken:_agentConfiguration.applicationToken.value url: [self->_agentConfiguration sessionReplayURL]];
         _sessionReplay = [[SessionReplayManager alloc] initWithReporter:reporter url: [self->_agentConfiguration sessionReplayURL]];
+        _sessionReplay.externalCaptureSource = _sessionReplayExternalCaptureSource;
 
         if ([self isSessionReplayEnabled]) {
             [_sessionReplay checkForPreviousSessionFiles];
@@ -770,6 +775,85 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     return false;
 }
 
+- (BOOL) recordSessionReplayEvents:(NSString *)eventsJSON {
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+    // Gate on the config-resolved recording mode (enabled + sampled), matching
+    // -sessionReplayConfiguration. This is independent of whether the native
+    // capture loop is running, so externally-produced (e.g. Flutter) frames
+    // upload whenever the remote config says to record.
+    //
+    // Accept both FULL and ERROR. In error mode the external source (the Flutter
+    // agent) buffers a rolling window on its side and forwards it — as a normal
+    // immediate upload — only when an error occurs, so by the time events reach
+    // here they should be uploaded regardless of full/error. Only OFF is dropped.
+    SessionReplayRecordingMode mode = [self isSessionReplayEnabled]
+        ? [self determineRecordingMode]
+        : SessionReplayRecordingModeOff;
+    if(mode == SessionReplayRecordingModeOff){
+        NRLOG_AGENT_WARNING(@"Session replay recording mode is off (disabled or not sampled); dropping externally-produced events.");
+        return false;
+    }
+    if(_sessionReplay != nil){
+        return [_sessionReplay recordSessionReplayEvents:eventsJSON];
+    }
+    NRLOG_AGENT_WARNING(@"Agent is not initialized");
+    return false;
+#endif
+    return false;
+}
+
+// When true, an external source (e.g. the Flutter agent) supplies session
+// replay frames, so the native capture loop is suppressed (ingest-only). Stored
+// even before _sessionReplay exists, then applied on creation, to avoid racing
+// the async /connect that starts native capture.
+- (void) setSessionReplayExternalCaptureSource:(BOOL)external {
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+    _sessionReplayExternalCaptureSource = external;
+    if (_sessionReplay != nil) {
+        _sessionReplay.externalCaptureSource = external;
+    }
+#endif
+}
+
+// Resolved session replay configuration (remote config + effective recording
+// mode), for consumers that produce their own frames (e.g. the Flutter agent).
+- (NSDictionary *) sessionReplayConfiguration {
+    NRMAHarvesterConfiguration *config = [NRMAHarvestController configuration];
+    if (config == nil) {
+        // Pre-/connect: fail-closed so callers don't record before the remote
+        // config resolves.
+        return @{ @"enabled": @(NO), @"recordingMode": @"off" };
+    }
+
+    // determineRecordingMode only reflects sampling; gate on enabled so a
+    // disabled remote config always reports "off" regardless of sample rate.
+    SessionReplayRecordingMode mode = config.session_replay_enabled
+        ? [self determineRecordingMode]
+        : SessionReplayRecordingModeOff;
+    NSString *recordingMode;
+    switch (mode) {
+        case SessionReplayRecordingModeFull:  recordingMode = @"full";  break;
+        case SessionReplayRecordingModeError: recordingMode = @"error"; break;
+        default:                              recordingMode = @"off";   break;
+    }
+
+    return @{
+        @"enabled":            @(config.session_replay_enabled),
+        @"mode":               config.session_replay_mode ?: @"",
+        @"recordingMode":      recordingMode,
+        @"samplingRate":       @(config.session_replay_sampling_rate),
+        @"errorSamplingRate":  @(config.session_replay_error_sampling_rate),
+        @"maskApplicationText":@(config.session_replay_maskApplicationText),
+        @"maskUserInputText":  @(config.session_replay_maskUserInputText),
+        @"maskAllImages":      @(config.session_replay_maskAllImages),
+        @"maskAllUserTouches": @(config.session_replay_maskAllUserTouches),
+        @"maskedClasses":      config.session_replay_maskedClassNames ?: @[],
+        @"unmaskedClasses":    config.session_replay_unmaskedClassNames ?: @[],
+        @"maskedKeys":         config.session_replay_maskedAccessibilityIdentifiers ?: @[],
+        @"unmaskedKeys":       config.session_replay_unmaskedAccessibilityIdentifiers ?: @[],
+    };
+}
+
 - (BOOL) pauseReplay {
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     if(![self isSessionReplayEnabled]){
@@ -916,6 +1000,12 @@ static const NSString *kNRMA_APPLICATION_WILL_TERMINATE =
     // Update session duration manager with new session start time for 4-hour session timeout
     [[NRMASessionDurationManager shared] updateSessionStartTime:self.appSessionStartDate];
     [self onSessionStart];
+
+    // Notify external session-replay sources (e.g. the New Relic Flutter agent) that
+    // a new session started, so they can re-emit a fresh FullSnapshot. Fires on
+    // session restarts (background timeout / 4-hour / setUserId) and the initial
+    // start; consumers not yet recording ignore the initial one.
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"com.newrelic.sessionStart" object:nil];
 }
 
 - (void) startNewSessionForUserId:(NSString* _Nullable)userId {
