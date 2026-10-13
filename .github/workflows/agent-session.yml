@@ -1,11 +1,17 @@
 name: AgentSession
 
-# Starts a new Copilot coding agent session (shows up in the repo's Agents tab)
-# via `gh agent-task create`.
+# Starts a new Copilot cloud agent session (shows up in the repo's Agents tab)
+# via the agent tasks REST API, which, unlike `gh agent-task create`, lets us
+# pick the model.
 #
-# Requires the COPILOT_AGENT_OAUTH_TOKEN secret: an OAuth token (gho_...) from a
-# user with a Copilot seat, e.g. the output of `gh auth token` after `gh auth login`.
-# `gh agent-task` rejects PATs and the workflow GITHUB_TOKEN.
+# Review mode (pr_number set): the agent starts from the PR's head branch,
+# writes its review to REVIEW.md on its own branch instead of opening a PR,
+# and this workflow posts that file as a comment on the PR. The agent's GitHub
+# tools are read-only, so it can't post the comment itself.
+#
+# Requires the COPILOT_AGENT_OAUTH_TOKEN secret: a user token (OAuth gho_... or
+# PAT) from a user with a Copilot seat. The workflow GITHUB_TOKEN can't start
+# agent tasks; it's only used here to read REVIEW.md, comment, and clean up.
 on:
   workflow_dispatch:
     inputs:
@@ -13,44 +19,138 @@ on:
         description: "Task description for the agent"
         required: true
         type: string
-      base:
-        description: "Base branch for the agent's PR (blank = default branch)"
+      pr_number:
+        description: "PR to review and comment on (optional; enables review mode)"
         required: false
         type: string
-      custom_agent:
-        description: "Custom agent name from .github/agents/<name>.md (optional)"
+      model:
+        description: "Model for the agent"
+        required: false
+        type: string
+        default: "claude-opus-5.5"
+      base:
+        description: "Base branch for the agent (blank = PR head in review mode, else default branch)"
         required: false
         type: string
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
 
 jobs:
   create-session:
     name: Create agent session
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
-      - name: Create agent task
+      - name: Start agent task
+        id: start
         env:
-          COPILOT_AGENT_OAUTH_TOKEN: ${{ secrets.COPILOT_AGENT_OAUTH_TOKEN }}
+          GH_TOKEN: ${{ secrets.COPILOT_AGENT_OAUTH_TOKEN }}
           TASK: ${{ inputs.task }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+          MODEL: ${{ inputs.model }}
           BASE: ${{ inputs.base }}
-          CUSTOM_AGENT: ${{ inputs.custom_agent }}
         run: |
-          set -o pipefail
-          gh --version
-          # agent-task only accepts a gho_ token read from gh's own config/keyring,
-          # not from GH_TOKEN, so log in with it instead of exporting it.
-          printf '%s' "$COPILOT_AGENT_OAUTH_TOKEN" | gh auth login --hostname github.com --with-token --insecure-storage
+          set -euo pipefail
+          base="$BASE"
+          prompt="$TASK"
+          create_pr=true
 
-          args=(--repo "$GITHUB_REPOSITORY")
-          if [ -n "$BASE" ]; then args+=(--base "$BASE"); fi
-          if [ -n "$CUSTOM_AGENT" ]; then args+=(--custom-agent "$CUSTOM_AGENT"); fi
+          if [ -n "$PR_NUMBER" ]; then
+            if [ -z "$base" ]; then
+              base=$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json headRefName --jq .headRefName)
+            fi
+            prompt+=$'\n\n'"When you are done, write your complete review as GitHub-flavored Markdown to a file named REVIEW.md at the repository root and commit it. Do not modify any other files. The contents of REVIEW.md will be posted verbatim as a comment on pull request #${PR_NUMBER}, so write it as that comment."
+            create_pr=false
+          fi
 
-          printf '%s' "$TASK" | gh agent-task create -F - "${args[@]}" | tee out.txt
+          jq -n --arg prompt "$prompt" --arg model "$MODEL" --arg base "$base" --argjson create_pr "$create_pr" \
+            '{prompt: $prompt, model: $model, create_pull_request: $create_pr} + (if $base == "" then {} else {base_ref: $base} end)' \
+            | gh api -X POST "/agents/repos/$GITHUB_REPOSITORY/tasks" --input - > task.json
+
+          id=$(jq -r '.id // empty' task.json)
+          if [ -z "$id" ]; then
+            echo "::error::Unexpected response creating agent task"
+            cat task.json
+            exit 1
+          fi
+          url=$(jq -r '.html_url // empty' task.json)
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
 
           {
             echo "### Agent session created"
             echo
-            cat out.txt
+            echo "- Session: $url"
+            echo "- Requested model: \`$MODEL\`"
+            echo "- Base: \`${base:-default branch}\`"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Wait for agent
+        id: wait
+        if: inputs.pr_number != ''
+        env:
+          GH_TOKEN: ${{ secrets.COPILOT_AGENT_OAUTH_TOKEN }}
+          TASK_ID: ${{ steps.start.outputs.id }}
+        run: |
+          set -euo pipefail
+          deadline=$((SECONDS + 50 * 60))
+          while :; do
+            gh api "/agents/repos/$GITHUB_REPOSITORY/tasks/$TASK_ID" > task.json
+            state=$(jq -r .state task.json)
+            echo "state: $state"
+            case "$state" in
+              completed) break ;;
+              failed|timed_out|cancelled|waiting_for_user)
+                echo "::error::Agent task ended in state '$state'"
+                exit 1 ;;
+            esac
+            if [ "$SECONDS" -ge "$deadline" ]; then
+              echo "::error::Gave up waiting for agent task (last state '$state')"
+              exit 1
+            fi
+            sleep 30
+          done
+
+          branch=$(jq -r '[.artifacts[]? | select(.type == "branch") | .data.head_ref][0] // empty' task.json)
+          branch="${branch#refs/heads/}"
+          if [ -z "$branch" ]; then
+            echo "::error::Agent task has no branch artifact; can't find REVIEW.md"
+            exit 1
+          fi
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
+      - name: Post review comment
+        if: inputs.pr_number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+          MODEL: ${{ inputs.model }}
+          BRANCH: ${{ steps.wait.outputs.branch }}
+          TASK_URL: ${{ steps.start.outputs.url }}
+        run: |
+          set -euo pipefail
+          if ! gh api "repos/$GITHUB_REPOSITORY/contents/REVIEW.md?ref=$BRANCH" --jq .content > review.b64; then
+            echo "::error::REVIEW.md not found on agent branch '$BRANCH'"
+            exit 1
+          fi
+          base64 -d review.b64 > review.md
+
+          {
+            echo "## Copilot agent review"
+            echo
+            echo "<sub>Requested model \`$MODEL\` · [Agents tab session]($TASK_URL)</sub>"
+            echo
+            cat review.md
+          } > comment.md
+          gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file comment.md | tee -a "$GITHUB_STEP_SUMMARY"
+
+      # Only ever delete the agent's own copilot/* branch, never the PR head.
+      # Skipped on failure so REVIEW.md stays recoverable.
+      - name: Delete agent branch
+        if: startsWith(steps.wait.outputs.branch, 'copilot/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ steps.wait.outputs.branch }}
+        run: gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$BRANCH"
