@@ -1591,6 +1591,9 @@
 		CD11FE0002000000000000A2 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */; };
 		CD11FE0003000000000000A3 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */; };
 		CD11FE0004000000000000A4 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */; };
+		CD11FE0006000000000000B2 /* NRMASessionReplayCustomMaskingRulesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0005000000000000B1 /* NRMASessionReplayCustomMaskingRulesTests.m */; };
+		CD11FE0007000000000000B3 /* NRMASessionReplayCustomMaskingRulesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0005000000000000B1 /* NRMASessionReplayCustomMaskingRulesTests.m */; };
+		CD11FE0008000000000000B4 /* NRMASessionReplayCustomMaskingRulesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0005000000000000B1 /* NRMASessionReplayCustomMaskingRulesTests.m */; };
 		D4580CA72F563363003BAD8C /* JSErrorControllerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4580CA52F563363003BAD8C /* JSErrorControllerTests.m */; };
 		D46F91C02F69CD5600FD2EBE /* UISwitchThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91BF2F69CD5600FD2EBE /* UISwitchThingy.swift */; };
 		D46F91C12F69CD5600FD2EBE /* UISwitchThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91BF2F69CD5600FD2EBE /* UISwitchThingy.swift */; };
@@ -2717,6 +2720,7 @@
 		C94F51A02857832B00E81E01 /* NRMAActivityNameGeneratorTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAActivityNameGeneratorTest.m; sourceTree = "<group>"; };
 		C9C28B9E284A6AF70097B433 /* NRMAKeyAttributesTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAKeyAttributesTest.m; sourceTree = "<group>"; };
 		CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAHarvesterConfigurationLifetimeTests.m; sourceTree = "<group>"; };
+		CD11FE0005000000000000B1 /* NRMASessionReplayCustomMaskingRulesTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMASessionReplayCustomMaskingRulesTests.m; sourceTree = "<group>"; };
 		D4580CA52F563363003BAD8C /* JSErrorControllerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JSErrorControllerTests.m; sourceTree = "<group>"; };
 		D46F91BF2F69CD5600FD2EBE /* UISwitchThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UISwitchThingy.swift; sourceTree = "<group>"; };
 		D48D55172F4E46B2003BE3AB /* JSErrorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSErrorController.swift; sourceTree = "<group>"; };
@@ -3022,6 +3026,7 @@
 				0209AC3724E7075100E45C90 /* NRHarvesterTest.m */,
 				0209AC3324E7074100E45C90 /* NRMAConnectionTest.m */,
 				CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */,
+				CD11FE0005000000000000B1 /* NRMASessionReplayCustomMaskingRulesTests.m */,
 				0209AC2A24E7072700E45C90 /* Harvestable-Data-Tests */,
 				F8D23CF92F840F92000FFD31 /* Agent-watchos-Tests-Bridging-Header.h */,
 			);
@@ -5654,6 +5659,7 @@
 				0209ABDC24E706AE00E45C90 /* TestContextAdapter.mm in Sources */,
 				0209AC3424E7074100E45C90 /* NRMAConnectionTest.m in Sources */,
 				CD11FE0002000000000000A2 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */,
+				CD11FE0006000000000000B2 /* NRMASessionReplayCustomMaskingRulesTests.m in Sources */,
 				F85ABB632F155B4B0098A2CF /* RRWebEvent.swift in Sources */,
 				0209ABF124E706FA00E45C90 /* NRMALastActivityTraceControllerTest.m in Sources */,
 				0209AC0E24E7071500E45C90 /* APINetworkNoticeTest.m in Sources */,
@@ -6073,6 +6079,7 @@
 				F8FBFA5A2A77FA3000CDC8C5 /* TestRequestEvents.m in Sources */,
 				0256581024EB19BF00FE3125 /* NRMAConnectionTest.m in Sources */,
 				CD11FE0003000000000000A3 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */,
+				CD11FE0007000000000000B3 /* NRMASessionReplayCustomMaskingRulesTests.m in Sources */,
 				0256581124EB19BF00FE3125 /* NRMALastActivityTraceControllerTest.m in Sources */,
 				0256581224EB19BF00FE3125 /* APINetworkNoticeTest.m in Sources */,
 				0256581324EB19BF00FE3125 /* NRMADeviceInformationTests.m in Sources */,
@@ -6493,6 +6500,7 @@
 				3431DD7F2BED4A5200FF145F /* NRHarvesterTest.m in Sources */,
 				3431DD802BED4A5200FF145F /* NRMAConnectionTest.m in Sources */,
 				CD11FE0004000000000000A4 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */,
+				CD11FE0008000000000000B4 /* NRMASessionReplayCustomMaskingRulesTests.m in Sources */,
 				3431DD812BED4A5200FF145F /* NRHarvestableVitalsTest.m in Sources */,
 				3431DD822BED4A5200FF145F /* NRHarvesterStateTest.m in Sources */,
 				3431DD562BED38F400FF145F /* NRMAHTTPUtilitiesTests.m in Sources */,
