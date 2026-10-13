@@ -16,6 +16,12 @@
 #import "NRMAHarvesterConfiguration.h"
 #import "NRMAAgentConfiguration.h"
 #import "NRAgentTestBase.h"
+#import "NRMASupportMetricHelper.h"
+#import "NRMATaskQueue.h"
+
+@interface NRMATaskQueue (tests)
++ (void) clear;
+@end
 
 @interface NRMASessionReplayCustomMaskingRulesTests : NRMAAgentTestBase
 @end
@@ -37,6 +43,13 @@ static NSArray<NSString *> *testRuleNames(void)
         [[NRMAAgentConfiguration local_session_replay_maskedClassNames] removeObject:name];
         [[NRMAAgentConfiguration local_session_replay_unmaskedClassNames] removeObject:name];
     }
+
+    // Parsing a session_replay config enqueues SessionReplay/Config supportability metrics.
+    // Left queued, they are what the next test reading "the next recorded metric" gets
+    // (NRMAStartTimerTests, NRMASupportMetricHelperTests).
+    [NRMASupportMetricHelper processDeferredMetrics];
+    [NRMATaskQueue clear];
+
     [super tearDown];
 }
 
