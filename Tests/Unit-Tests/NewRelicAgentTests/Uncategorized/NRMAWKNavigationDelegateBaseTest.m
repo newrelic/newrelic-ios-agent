@@ -22,6 +22,7 @@
 
 @interface NRMATaskQueue (tests)
 + (void) clear;
++ (dispatch_queue_t) dispatchQueue;
 @end
 
 @interface NRMAWKNavigationDelegateWithDelegateFunctions : NSObject <WKNavigationDelegate>
@@ -101,6 +102,14 @@
     [NRMAMeasurements removeMeasurementConsumer:self.helper];
     self.helper = nil;
     [NRMAMeasurements shutdown];
+    
+    // Each WKWebView launches its own WebContent process, and XCTest keeps this test case
+    // instance (and so these properties) alive after the test ends. Release them here, or
+    // this class leaves ~40 web content processes running, enough to slow WebKit and the
+    // agent's background queues to a crawl on a CI runner.
+    self.webView = nil;
+    self.webViewWithDelegateFunction = nil;
+    self.webViewWithOldDelegateFunction = nil;
     
     [super tearDown];
 }
@@ -263,18 +272,10 @@
     [self startWebKitLoad];
     
     [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction didFinishNavigation:self.navigationItem];
-    sleep(1);
     
     NSString* fullMetricName = self.url.absoluteString;
     
-    NRMAHTTPTransactionMeasurement* foundMeasurement;
-    
-    for (id measurement in self.helper.consumedMeasurements) {
-        if([((NRMAHTTPTransactionMeasurement*)measurement).url isEqualToString:fullMetricName]) {
-            foundMeasurement = measurement;
-            break;
-        }
-    }
+    NRMAHTTPTransactionMeasurement* foundMeasurement = [self waitForMeasurementWithURL:fullMetricName statusCode:200 errorCode:0];
     
     XCTAssertEqualObjects(foundMeasurement.url, fullMetricName, @"Metric is not generated properly.");
 }
@@ -282,19 +283,12 @@
 - (void)testWebViewLoadFailedProvisionalNavigationMetric {
     [self startWebKitLoad];
     
-    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webView didFailProvisionalNavigation:self.navigationItem withError:[self createNSError]];
-    sleep(1);
+    NSError* error = [self createNSError];
+    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webView didFailProvisionalNavigation:self.navigationItem withError:error];
     
     NSString* fullMetricName = self.url.absoluteString;
     
-    NRMAHTTPTransactionMeasurement* foundMeasurement;
-    
-    for (id measurement in self.helper.consumedMeasurements) {
-        if([((NRMAHTTPTransactionMeasurement*)measurement).url isEqualToString:fullMetricName]) {
-            foundMeasurement = measurement;
-            break;
-        }
-    }
+    NRMAHTTPTransactionMeasurement* foundMeasurement = [self waitForMeasurementWithURL:fullMetricName statusCode:0 errorCode:(int)error.code];
     
     XCTAssertEqualObjects(foundMeasurement.url, fullMetricName, @"Metric is not generated properly.");
     
@@ -303,19 +297,12 @@
 - (void)testWebViewLoadDidFailNavigationMetric {
     [self startWebKitLoad];
     
-    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webView didFailNavigation:self.navigationItem withError:[self createNSError]];
-    sleep(1);
+    NSError* error = [self createNSError];
+    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webView didFailNavigation:self.navigationItem withError:error];
     
     NSString* fullMetricName = self.url.absoluteString;
     
-    NRMAHTTPTransactionMeasurement* foundMeasurement;
-    
-    for (id measurement in self.helper.consumedMeasurements) {
-        if([((NRMAHTTPTransactionMeasurement*)measurement).url isEqualToString:fullMetricName]) {
-            foundMeasurement = measurement;
-            break;
-        }
-    }
+    NRMAHTTPTransactionMeasurement* foundMeasurement = [self waitForMeasurementWithURL:fullMetricName statusCode:0 errorCode:(int)error.code];
     
     XCTAssertEqualObjects(foundMeasurement.url, fullMetricName, @"Metric is not generated properly.");
     
@@ -335,6 +322,33 @@
     }
 
     [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction didStartProvisionalNavigation:self.navigationItem];
+}
+
+// The agent records the measurement asynchronously (a global-queue hop, then the
+// NRMATaskQueue), which can take well over a second on a loaded CI runner, so poll for it
+// rather than sleeping a fixed interval. Match the codes as well as the URL: the web view's
+// real load of self.url is recorded too, and a previous test's measurement can arrive late,
+// and neither may stand in for the one this test drove by hand.
+- (NRMAHTTPTransactionMeasurement*) waitForMeasurementWithURL:(NSString*)url
+                                                   statusCode:(int)statusCode
+                                                    errorCode:(int)errorCode {
+    NSDate* deadline = [NSDate dateWithTimeIntervalSinceNow:15.0];
+    while ([NSDate.date compare:deadline] == NSOrderedAscending) {
+        // The helper appends to consumedMeasurements on the NRMATaskQueue dispatch queue.
+        __block NSArray* measurements;
+        dispatch_sync([NRMATaskQueue dispatchQueue], ^{
+            measurements = [self.helper.consumedMeasurements copy];
+        });
+        for (NRMAHTTPTransactionMeasurement* measurement in measurements) {
+            if ([measurement.url isEqualToString:url] &&
+                measurement.statusCode == statusCode &&
+                measurement.errorCode == errorCode) {
+                return measurement;
+            }
+        }
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+    }
+    return nil;
 }
 
 - (NSError*) createNSError {
@@ -422,9 +436,10 @@
     [webView loadHTMLString:@"<html><body><script>window.newrelic = {}</script></body></html>" baseURL:nil];
 
     // CI runners (e.g. GitHub Actions macOS) can be slow to spin up WebKit's WebContent
-    // process on a cold start, so give the initial load a generous timeout rather than
-    // the ~5s that's plenty locally but flakes under CI load.
-    NSDate *loadDeadline = [NSDate dateWithTimeIntervalSinceNow:20.0];
+    // process on a cold start (launches of over 20s have been seen there), so give the
+    // initial load a generous timeout rather than the ~5s that's plenty locally but
+    // flakes under CI load.
+    NSDate *loadDeadline = [NSDate dateWithTimeIntervalSinceNow:60.0];
     while (webView.isLoading && [NSDate.date compare:loadDeadline] == NSOrderedAscending) {
         [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
     }
