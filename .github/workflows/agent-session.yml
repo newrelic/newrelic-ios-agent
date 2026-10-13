@@ -4,14 +4,20 @@ name: AgentSession
 # via the agent tasks REST API, which, unlike `gh agent-task create`, lets us
 # pick the model.
 #
-# Review mode (pr_number set): the agent starts from the PR's head branch,
-# writes its review to REVIEW.md on its own branch instead of opening a PR,
-# and this workflow posts that file as a comment on the PR. The agent's GitHub
-# tools are read-only, so it can't post the comment itself.
+# Modes:
+#   report (default)  The agent writes its answer to AGENT_OUTPUT.md on its own
+#                     branch instead of opening a PR. This workflow waits for it,
+#                     publishes the file to the job summary and as an artifact,
+#                     posts it as a comment on pr_number if set, then deletes the
+#                     agent's branch. Use for reviews, summaries, release notes.
+#   pull_request      The agent opens a PR with its changes; the workflow only
+#                     starts the session.
+#
+# The agent's GitHub tools are read-only, so it can't post comments itself.
 #
 # Requires the COPILOT_AGENT_OAUTH_TOKEN secret: a user token (OAuth gho_... or
 # PAT) from a user with a Copilot seat. The workflow GITHUB_TOKEN can't start
-# agent tasks; it's only used here to read REVIEW.md, comment, and clean up.
+# agent tasks; it's only used here to read AGENT_OUTPUT.md, comment, and clean up.
 on:
   workflow_dispatch:
     inputs:
@@ -19,8 +25,14 @@ on:
         description: "Task description for the agent"
         required: true
         type: string
+      mode:
+        description: "report = return AGENT_OUTPUT.md, pull_request = agent opens a PR"
+        required: false
+        type: choice
+        options: [report, pull_request]
+        default: report
       pr_number:
-        description: "PR to review and comment on (optional; enables review mode)"
+        description: "PR to work against; in report mode the output is posted as a comment on it"
         required: false
         type: string
       model:
@@ -29,7 +41,7 @@ on:
         type: string
         default: "claude-opus-5.5"
       base:
-        description: "Base branch for the agent (blank = PR head in review mode, else default branch)"
+        description: "Base branch for the agent (blank = PR head if pr_number, else default branch)"
         required: false
         type: string
 
@@ -42,12 +54,15 @@ jobs:
     name: Create agent session
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    env:
+      OUTPUT_FILE: AGENT_OUTPUT.md
     steps:
       - name: Start agent task
         id: start
         env:
           GH_TOKEN: ${{ secrets.COPILOT_AGENT_OAUTH_TOKEN }}
           TASK: ${{ inputs.task }}
+          MODE: ${{ inputs.mode }}
           PR_NUMBER: ${{ inputs.pr_number }}
           MODEL: ${{ inputs.model }}
           BASE: ${{ inputs.base }}
@@ -57,11 +72,15 @@ jobs:
           prompt="$TASK"
           create_pr=true
 
-          if [ -n "$PR_NUMBER" ]; then
-            if [ -z "$base" ]; then
-              base=$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json headRefName --jq .headRefName)
+          if [ -n "$PR_NUMBER" ] && [ -z "$base" ]; then
+            base=$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json headRefName --jq .headRefName)
+          fi
+
+          if [ "$MODE" = "report" ]; then
+            prompt+=$'\n\n'"When you are done, write your complete final answer as GitHub-flavored Markdown to a file named ${OUTPUT_FILE} at the repository root and commit it. Do not modify any other files."
+            if [ -n "$PR_NUMBER" ]; then
+              prompt+=" The contents of ${OUTPUT_FILE} will be posted verbatim as a comment on pull request #${PR_NUMBER}, so write it as that comment."
             fi
-            prompt+=$'\n\n'"When you are done, write your complete review as GitHub-flavored Markdown to a file named REVIEW.md at the repository root and commit it. Do not modify any other files. The contents of REVIEW.md will be posted verbatim as a comment on pull request #${PR_NUMBER}, so write it as that comment."
             create_pr=false
           fi
 
@@ -83,13 +102,14 @@ jobs:
             echo "### Agent session created"
             echo
             echo "- Session: $url"
+            echo "- Mode: \`$MODE\`"
             echo "- Requested model: \`$MODEL\`"
             echo "- Base: \`${base:-default branch}\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Wait for agent
         id: wait
-        if: inputs.pr_number != ''
+        if: inputs.mode == 'report'
         env:
           GH_TOKEN: ${{ secrets.COPILOT_AGENT_OAUTH_TOKEN }}
           TASK_ID: ${{ steps.start.outputs.id }}
@@ -116,38 +136,59 @@ jobs:
           branch=$(jq -r '[.artifacts[]? | select(.type == "branch") | .data.head_ref][0] // empty' task.json)
           branch="${branch#refs/heads/}"
           if [ -z "$branch" ]; then
-            echo "::error::Agent task has no branch artifact; can't find REVIEW.md"
+            echo "::error::Agent task has no branch artifact; can't find $OUTPUT_FILE"
             exit 1
           fi
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
 
-      - name: Post review comment
-        if: inputs.pr_number != ''
+      - name: Fetch agent output
+        if: inputs.mode == 'report'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ steps.wait.outputs.branch }}
+        run: |
+          set -euo pipefail
+          if ! gh api "repos/$GITHUB_REPOSITORY/contents/$OUTPUT_FILE?ref=$BRANCH" --jq .content > output.b64; then
+            echo "::error::$OUTPUT_FILE not found on agent branch '$BRANCH'"
+            exit 1
+          fi
+          base64 -d output.b64 > "$OUTPUT_FILE"
+          cat "$OUTPUT_FILE"
+
+          {
+            echo
+            echo "### Agent output"
+            echo
+            cat "$OUTPUT_FILE"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload agent output
+        if: inputs.mode == 'report'
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-output
+          path: ${{ env.OUTPUT_FILE }}
+
+      - name: Post PR comment
+        if: inputs.mode == 'report' && inputs.pr_number != ''
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ inputs.pr_number }}
           MODEL: ${{ inputs.model }}
-          BRANCH: ${{ steps.wait.outputs.branch }}
           TASK_URL: ${{ steps.start.outputs.url }}
         run: |
           set -euo pipefail
-          if ! gh api "repos/$GITHUB_REPOSITORY/contents/REVIEW.md?ref=$BRANCH" --jq .content > review.b64; then
-            echo "::error::REVIEW.md not found on agent branch '$BRANCH'"
-            exit 1
-          fi
-          base64 -d review.b64 > review.md
-
           {
             echo "## Copilot agent review"
             echo
             echo "<sub>Requested model \`$MODEL\` · [Agents tab session]($TASK_URL)</sub>"
             echo
-            cat review.md
+            cat "$OUTPUT_FILE"
           } > comment.md
           gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file comment.md | tee -a "$GITHUB_STEP_SUMMARY"
 
       # Only ever delete the agent's own copilot/* branch, never the PR head.
-      # Skipped on failure so REVIEW.md stays recoverable.
+      # Skipped on failure so AGENT_OUTPUT.md stays recoverable.
       - name: Delete agent branch
         if: startsWith(steps.wait.outputs.branch, 'copilot/')
         env:
