@@ -1,0 +1,189 @@
+# uuid BDBB53DF45803BB69123234B492D9F65
+# architecture arm64
+# vmaddr 0x0000000000000000
+# vmaddr 0x0000000100000000
+# vmaddr 0x0000000100004000
+# vmaddr 0x0000000100008000
+# vmaddr 0x000000010000C000
+# vmaddr 0x000000010000D000
+0x0000000100000a90 main (app.swift:0)
+0x0000000100000aa0 main (app.swift:5)
+0x0000000100000ac0 main (app.swift:5)
+0x0000000100000ae0 main (app.swift:5)
+0x0000000100000afc main (app.swift:6)
+0x0000000100000b30 main (app.swift:6)
+0x0000000100000b40 main (app.swift:6)
+0x0000000100000b44 main (app.swift:6)
+0x0000000100000b50 main (app.swift:6)
+0x0000000100000b64 main (app.swift:6)
+0x0000000100000bac main (app.swift:0)
+0x0000000100000bd4 main (app.swift:6)
+0x0000000100000bf4 main (/<compiler-generated>:0)
+0x0000000100000c04 Greeter.init(name:) (app.swift:0)
+0x0000000100000c08 type metadata accessor for Counter (/<compiler-generated>:0)
+0x0000000100000c10 type metadata accessor for Counter (/<compiler-generated>:0)
+0x0000000100000c2c Counter.__allocating_init() (app.swift:3)
+0x0000000100000c3c Counter.__allocating_init() (app.swift:3)
+0x0000000100000c4c Counter.__allocating_init() (app.swift:0)
+0x0000000100000c64 Counter.bump(by:) (app.swift:3)
+0x0000000100000c80 Counter.bump(by:) (app.swift:0)
+0x0000000100000ca8 Counter.bump(by:) (app.swift:3)
+0x0000000100000cc0 Counter.bump(by:) (app.swift:0)
+0x0000000100000cc8 Counter.bump(by:) (app.swift:3)
+0x0000000100000cd0 Counter.bump(by:) (app.swift:0)
+0x0000000100000cd8 Counter.bump(by:) (app.swift:3)
+0x0000000100000d04 Counter.bump(by:) (app.swift:0)
+0x0000000100000d0c Counter.bump(by:) (app.swift:3)
+0x0000000100000d18 Counter.bump(by:) (/<compiler-generated>:0)
+0x0000000100000d1c Greeter.greet(times:) (app.swift:2)
+0x0000000100000d74 Greeter.greet(times:) (app.swift:0)
+0x0000000100000d80 Greeter.greet(times:) (app.swift:2)
+0x0000000100000d88 Greeter.greet(times:) (app.swift:0)
+0x0000000100000d94 Greeter.greet(times:) (app.swift:2)
+0x0000000100000dd0 Greeter.greet(times:) (/<compiler-generated>:0)
+0x0000000100000de4 Greeter.greet(times:) (app.swift:2)
+0x0000000100000dec Greeter.greet(times:) (app.swift:0)
+0x0000000100000e00 Greeter.greet(times:) (app.swift:2)
+0x0000000100000e08 Greeter.greet(times:) (app.swift:2)
+0x0000000100000e64 Greeter.greet(times:) (app.swift:0)
+0x0000000100000e70 Greeter.greet(times:) (app.swift:2)
+0x0000000100000e78 Greeter.greet(times:) (app.swift:2)
+0x0000000100000e8c Greeter.greet(times:) (app.swift:0)
+0x0000000100000e90 Greeter.greet(times:) (app.swift:2)
+0x0000000100000e98 helper<A>(_:) (app.swift:4)
+0x0000000100000ec8 helper<A>(_:) (app.swift:0)
+0x0000000100000ed4 helper<A>(_:) (app.swift:4)
+0x0000000100000edc helper<A>(_:) (app.swift:4)
+0x0000000100000ef4 helper<A>(_:) (app.swift:0)
+0x0000000100000f14 helper<A>(_:) (app.swift:4)
+0x0000000100000f74 helper<A>(_:) (app.swift:0)
+0x0000000100000f80 helper<A>(_:) (app.swift:4)
+0x0000000100000f9c helper<A>(_:) (app.swift:4)
+0x0000000100000fc0 helper<A>(_:) (app.swift:4)
+0x0000000100001000 helper<A>(_:) (app.swift:4)
+0x0000000100001014 helper<A>(_:) (app.swift:4)
+0x0000000100001028 helper<A>(_:) (app.swift:0)
+0x000000010000102c helper<A>(_:) (app.swift:4)
+0x0000000100001034 _finalizeUninitializedArray<A>(_:) (/<compiler-generated>:0)
+0x0000000100001048 _finalizeUninitializedArray<A>(_:) (/<compiler-generated>:0)
+0x0000000100001074 default argument 1 of print(_:separator:terminator:) (/<compiler-generated>:0)
+0x000000010000107c default argument 1 of print(_:separator:terminator:) (/<compiler-generated>:0)
+0x00000001000010a0 default argument 2 of print(_:separator:terminator:) (/<compiler-generated>:0)
+0x00000001000010a8 default argument 2 of print(_:separator:terminator:) (/<compiler-generated>:0)
+0x00000001000010cc Greeter.name.getter (/<compiler-generated>:0)
+0x00000001000010d8 Greeter.name.getter (/<compiler-generated>:0)
+0x00000001000010fc closure #1 in Greeter.greet(times:) (app.swift:2)
+0x0000000100001128 closure #1 in Greeter.greet(times:) (<stdin>:0)
+0x000000010000113c closure #1 in Greeter.greet(times:) (app.swift:2)
+0x0000000100001184 closure #1 in Greeter.greet(times:) (app.swift:0)
+0x0000000100001198 closure #1 in Greeter.greet(times:) (app.swift:2)
+0x00000001000011b4 closure #1 in Greeter.greet(times:) (app.swift:2)
+0x00000001000011d8 closure #1 in Greeter.greet(times:) (app.swift:0)
+0x00000001000011e0 closure #1 in Greeter.greet(times:) (app.swift:2)
+0x00000001000011fc closure #1 in Greeter.greet(times:) (app.swift:0)
+0x0000000100001214 closure #1 in Greeter.greet(times:) (app.swift:2)
+0x0000000100001218 closure #1 in Greeter.greet(times:) (app.swift:2)
+0x0000000100001234 closure #1 in Greeter.greet(times:) (app.swift:2)
+0x000000010000124c closure #1 in Greeter.greet(times:) (app.swift:0)
+0x000000010000127c closure #1 in Greeter.greet(times:) (app.swift:2)
+0x0000000100001290 closure #1 in Greeter.greet(times:) (app.swift:2)
+0x00000001000012a0 Collection.map<A, B>(_:) (/<compiler-generated>:0)
+0x00000001000012b0 Collection.map<A, B>(_:) (/<compiler-generated>:0)
+0x0000000100001908 variable initialization expression of Counter.value (/<compiler-generated>:0)
+0x0000000100001910 Counter.value.getter (/<compiler-generated>:0)
+0x0000000100001958 Counter.value.setter (/<compiler-generated>:0)
+0x0000000100001964 Counter.value.setter (/<compiler-generated>:0)
+0x00000001000019a0 Counter.value.modify (/<compiler-generated>:0)
+0x00000001000019e0 Counter.value.modify (/<compiler-generated>:0)
+0x00000001000019f4 default argument 0 of Counter.bump(by:) (app.swift:0)
+0x0000000100001a00 Counter.deinit (app.swift:3)
+0x0000000100001a0c Counter.deinit (app.swift:3)
+0x0000000100001a10 Counter.deinit (app.swift:0)
+0x0000000100001a24 Counter.__deallocating_deinit (app.swift:3)
+0x0000000100001a30 Counter.__deallocating_deinit (app.swift:3)
+0x0000000100001a34 Counter.__deallocating_deinit (app.swift:0)
+0x0000000100001a60 Counter.init() (app.swift:3)
+0x0000000100001a70 Counter.init() (app.swift:0)
+0x0000000100001a78 Counter.init() (app.swift:3)
+0x0000000100001a7c Counter.init() (app.swift:0)
+0x0000000100001a88 partial apply for closure #1 in Greeter.greet(times:) (/<compiler-generated>:0)
+0x0000000100001ab4 __swift_instantiateConcreteTypeFromMangledNameV2 (/<compiler-generated>:0)
+0x0000000100001ac0 __swift_instantiateConcreteTypeFromMangledNameV2 (/<compiler-generated>:0)
+0x0000000100001b34 lazy protocol witness table accessor for type Range<Int> and conformance <> Range<A> (/<compiler-generated>:0)
+0x0000000100001b40 lazy protocol witness table accessor for type Range<Int> and conformance <> Range<A> (/<compiler-generated>:0)
+0x0000000100001bc0 __swift_instantiateConcreteTypeFromMangledNameAbstractV2 (/<compiler-generated>:0)
+0x0000000100001bcc __swift_instantiateConcreteTypeFromMangledNameAbstractV2 (/<compiler-generated>:0)
+0x0000000100001c38 lazy protocol witness table accessor for type Int and conformance Int (/<compiler-generated>:0)
+0x0000000100001c44 lazy protocol witness table accessor for type Int and conformance Int (/<compiler-generated>:0)
+0x0000000100001c9c key path getter for CustomStringConvertible.description : <A>A (/<compiler-generated>:0)
+0x0000000100001cac key path getter for CustomStringConvertible.description : <A>A (/<compiler-generated>:0)
+0x0000000100001d28 implicit closure #1 in helper<A>(_:) (/<compiler-generated>:0)
+0x0000000100001d34 implicit closure #1 in helper<A>(_:) (/<compiler-generated>:0)
+0x0000000100001d74 partial apply for implicit closure #1 in helper<A>(_:) (/<compiler-generated>:0)
+0x0000000100001da0 lazy protocol witness table accessor for type (/<compiler-generated>:0)
+0x0000000100001dac lazy protocol witness table accessor for type (/<compiler-generated>:0)
+0x0000000100001e14 outlined destroy of (/<compiler-generated>:0)
+0x0000000100001e20 outlined destroy of (/<compiler-generated>:0)
+0x0000000100001e3c initializeBufferWithCopyOfBuffer for Greeter (/<compiler-generated>:0)
+0x0000000100001e48 initializeBufferWithCopyOfBuffer for Greeter (/<compiler-generated>:0)
+0x0000000100001e78 destroy for Greeter (/<compiler-generated>:0)
+0x0000000100001e90 initializeWithCopy for Greeter (/<compiler-generated>:0)
+0x0000000100001e9c initializeWithCopy for Greeter (/<compiler-generated>:0)
+0x0000000100001ecc assignWithCopy for Greeter (/<compiler-generated>:0)
+0x0000000100001ed8 assignWithCopy for Greeter (/<compiler-generated>:0)
+0x0000000100001f14 __swift_memcpy16_8 (/<compiler-generated>:0)
+0x0000000100001f20 assignWithTake for Greeter (/<compiler-generated>:0)
+0x0000000100001f30 assignWithTake for Greeter (/<compiler-generated>:0)
+0x0000000100001f5c getEnumTagSinglePayload for Greeter (/<compiler-generated>:0)
+0x0000000100001f60 getEnumTagSinglePayload for Greeter (/<compiler-generated>:0)
+0x00000001000020a0 storeEnumTagSinglePayload for Greeter (/<compiler-generated>:0)
+0x00000001000020a4 storeEnumTagSinglePayload for Greeter (/<compiler-generated>:0)
+0x0000000100002270 type metadata accessor for Greeter (/<compiler-generated>:0)
+0x0000000100002284 outlined destroy of String (/<compiler-generated>:0)
+0x0000000100002290 outlined destroy of String (/<compiler-generated>:0)
+0x00000001000022ac outlined destroy of DefaultStringInterpolation (/<compiler-generated>:0)
+0x00000001000022b8 outlined destroy of DefaultStringInterpolation (/<compiler-generated>:0)
+0x00000001000022d4 Array._endMutation() (/<compiler-generated>:0)
+0x0000000100002560  symbolic SnySiG 
+0x0000000100002568  symbolic x 
+0x0000000100002570  generic environment s23CustomStringConvertibleRzl 
+0x0000000100002584  symbolic SS 
+0x0000000100002588  symbolic SaySSG 
+0x0000000100002590  symbolic _____ 4main7GreeterV 
+0x0000000100002596  symbolic _____ 4main7CounterC 
+0x000000010000259c  symbolic Si 
+0x00000001000025a0  mangled name ref for type metadata for Range<Int> 
+0x00000001000025d8  mangled name ref for type metadata for 
+0x00000001000025f0  direct field offset for Counter.value 
+0x0000000100002600  __swift_reflection_version 
+0x000000010000260c  module descriptor  
+0x0000000100002618  nominal type descriptor for Greeter 
+0x0000000100002634  nominal type descriptor for Counter 
+0x0000000100002668  method descriptor for Counter.__allocating_init() 
+0x000000010000267c  reflection metadata field descriptor Greeter 
+0x0000000100002698  reflection metadata field descriptor Counter 
+0x0000000100004000  value witness table for Greeter 
+0x0000000100004058  full type metadata for Greeter 
+0x0000000100004068  type metadata for Greeter 
+0x0000000100008000  _METACLASS_DATA__TtC4main7Counter 
+0x0000000100008048  _IVARS__TtC4main7Counter 
+0x0000000100008070  _DATA__TtC4main7Counter 
+0x00000001000080b8  demangling cache variable for type metadata for Range<Int> 
+0x00000001000080c0  lazy protocol witness table cache variable for type Range<Int> and conformance <> Range<A> 
+0x00000001000080c8  lazy protocol witness table cache variable for type Int and conformance Int 
+0x00000001000080d0  demangling cache variable for type metadata for 
+0x00000001000080d8  lazy protocol witness table cache variable for type 
+0x00000001000080e0  metaclass for Counter 
+0x0000000100008108  full type metadata for Counter 
+0x0000000100008120  type metadata for Counter 
+0x0000000100008180  g 
+0x0000000100008190  c 
+0x000000010000d000 __debug_line
+0x000000010000d2f2 __debug_info
+0x000000010000db13 __debug_aranges
+0x000000010000db53 __debug_abbrev
+0x000000010000de7c __debug_str
+0x000000010000ed60 __apple_namespac
+0x000000010000ed84 __apple_names
+0x000000010000f3ec __apple_types
+0x000000010000f694 __apple_objc

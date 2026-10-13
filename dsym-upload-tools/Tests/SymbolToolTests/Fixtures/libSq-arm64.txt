@@ -1,0 +1,39 @@
+dsyms/libSq.dylib.dSYM/Contents/Resources/DWARF/libSq.dylib [arm64, 0.000473 seconds]:
+    73B56914-2754-3C53-BC29-00057DA9F2C1 /private/tmp/symtool/dsyms/libSq.dylib.dSYM/Contents/Resources/DWARF/libSq.dylib [dSYM_v3, FaultedFromDisk, Found-dSYM]  
+        0x0000000000000000 (  0x4000) __TEXT SEGMENT
+            0x0000000000000000 (   0x2d0) MACH_HEADER
+            0x00000000000002d0 (    0x84) __TEXT __text
+                0x00000000000002d0 (    0x68) sum_squares [FUNC, EXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x00000000000002d0 (    0x10) lib.c:3
+                    0x00000000000002e0 (     0x4) lib.c:3
+                    0x00000000000002e4 (     0x4) lib.c:3
+                    0x00000000000002e8 (     0x4) lib.c:3
+                    0x00000000000002ec (     0x4) lib.c:3
+                    0x00000000000002f0 (     0x4) lib.c:3
+                    0x00000000000002f4 (     0xc) lib.c:3
+                    0x0000000000000300 (     0x4) lib.c:3
+                    0x0000000000000304 (     0x4) lib.c:3
+                    0x0000000000000308 (     0xc) lib.c:3
+                    0x0000000000000314 (     0x4) lib.c:3
+                    0x0000000000000318 (     0xc) lib.c:3
+                    0x0000000000000324 (     0x4) lib.c:3
+                    0x0000000000000328 (     0x4) lib.c:3
+                    0x000000000000032c (     0xc) lib.c:3
+                0x0000000000000338 (    0x1c) square [FUNC, OMIT-FP, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000000000338 (     0x8) lib.c:2
+                    0x0000000000000340 (     0x4) lib.c:2
+                    0x0000000000000344 (     0x4) lib.c:2
+                    0x0000000000000348 (     0x4) lib.c:2
+                    0x000000000000034c (     0x8) lib.c:2
+            0x0000000000000354 (    0x60) __TEXT __unwind_info
+        0x0000000000004000 (  0x1000) __LINKEDIT SEGMENT
+        0x0000000000005000 (  0x1000) __DWARF SEGMENT
+            0x0000000000005000 (    0x96) __DWARF __debug_line
+            0x0000000000005096 (    0x30) __DWARF __debug_aranges
+            0x00000000000050c6 (    0x20) __DWARF __debug_addr
+            0x00000000000050e6 (    0x7d) __DWARF __debug_info
+            0x0000000000005163 (    0x7f) __DWARF __debug_abbrev
+            0x00000000000051e2 (    0xcc) __DWARF __debug_str
+            0x00000000000052ae (    0x38) __DWARF __debug_str_offs
+            0x00000000000052e6 (    0x13) __DWARF __debug_line_str
+            0x00000000000052fc (    0x84) __DWARF __debug_names

@@ -89,7 +89,7 @@ With the 7.4.6 release the dsym-upload-tools are no longer included inside the X
 The run-symbol-tool Run script must be added to your app's Xcode project build phases.
 
 - `dsym-upload-tools/run-symbol-tool`: Shell script which is used to bootstrap Swift script.
-- `dsym-upload-tools/run-symbol-tool.swift`: Swift script which converts dSYMs to map files and uploads to New Relic.
+- `dsym-upload-tools/Sources/SymbolTool/`: Swift sources, compiled by `run-symbol-tool` at build time, which convert dSYMs to map files and upload them to New Relic. Copy the whole `dsym-upload-tools` folder, including `Sources/`.
 
 ## Building
 - To check out the code, run the following git command. Note the recursive submodule addition to make sure we get the repo's git submodules.

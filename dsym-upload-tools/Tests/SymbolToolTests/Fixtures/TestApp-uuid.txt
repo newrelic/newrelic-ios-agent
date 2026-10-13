@@ -1,0 +1,2 @@
+    A6A08248-13A1-3BCE-AED8-0B6F92DFAB3B x86_64   /private/tmp/symtool/dsyms/TestApp.app.dSYM/Contents/Resources/DWARF/TestApp [dSYM_v3, Empty] 
+    BDBB53DF-4580-3BB6-9123-234B492D9F65 arm64    /private/tmp/symtool/dsyms/TestApp.app.dSYM/Contents/Resources/DWARF/TestApp [dSYM_v3, Empty] 

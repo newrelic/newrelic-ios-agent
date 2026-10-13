@@ -263,6 +263,14 @@ Run Tests for iOS/tvOS and Build NewRelic.XCFramework for all platforms
 
 Build NewRelic.XCFramework for iOS Only
 
+### ios uploadNRTestApp
+
+```sh
+[bundle exec] fastlane ios uploadNRTestApp
+```
+
+Upload a prebuilt NRTestApp IPA to App Store Connect (TestFlight) using an ASC API key
+
 ----
 
 This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.

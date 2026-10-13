@@ -18,4 +18,5 @@ xcodebuild -create-xcframework \
 	-output build/NewRelic.xcframework
 
 
-cp -r dsym-upload-tools/ build/NewRelic.xcframework/Resources/
+# Copy the tools without their development-only files (listed in scripts/dsym-upload-tools-release.exclude).
+rsync -a --exclude-from scripts/dsym-upload-tools-release.exclude dsym-upload-tools/ build/NewRelic.xcframework/Resources/
