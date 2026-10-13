@@ -313,7 +313,6 @@ static long long _accountId;
                         continue;
                     }
                     SessionReplayCustomMaskingRule *rule = [[SessionReplayCustomMaskingRule alloc] initWithDictionary:ruleObject];
-                    [self.session_replay_customRules addObject:rule];
 
                     if (![rule.name isKindOfClass:[NSArray class]]) {
                         NRLOG_AGENT_WARNING(@"Ignoring session replay custom masking rule whose name is not an array: %@", ruleObject);
@@ -324,6 +323,10 @@ static long long _accountId;
                         if ([name isKindOfClass:[NSString class]]) {
                             [names addObject:name];
                         }
+                    }
+                    if (names.count != rule.name.count) {
+                        NRLOG_AGENT_WARNING(@"Ignoring %lu non-string name(s) in session replay custom masking rule (%lu name(s) left): %@",
+                                            (unsigned long)(rule.name.count - names.count), (unsigned long)names.count, ruleObject);
                     }
 
                     // iOS apps are sent "accessibilityIdentifier"; "tag" (what Android apps get) is accepted too.
@@ -345,7 +348,16 @@ static long long _accountId;
 
                     } else {
                         NRLOG_AGENT_WARNING(@"Ignoring session replay custom masking rule with unrecognized identifier or type: %@", ruleObject);
+                        continue;
                     }
+
+                    // Only keep the sanitized rule: the configuration is persisted to NSUserDefaults,
+                    // which aborts on non-property-list values such as NSNull.
+                    rule.name = names;
+                    if (![rule.operatorName isKindOfClass:[NSString class]]) {
+                        rule.operatorName = nil;
+                    }
+                    [self.session_replay_customRules addObject:rule];
                 }
             }
 
@@ -558,10 +570,12 @@ static long long _accountId;
 
 - (void)addMaskedClassNames:(NSArray *)array {
     if (array.count > 0) {
-        for (id item in array) {
-            if (![_session_replay_maskedClassNames containsObject:item]) {
-                [_session_replay_maskedClassNames addObject:item];
-                NRLOG_AGENT_VERBOSE(@"Added masked class name: %@", item);
+        @synchronized(_session_replay_maskedClassNames) {
+            for (id item in array) {
+                if (![_session_replay_maskedClassNames containsObject:item]) {
+                    [_session_replay_maskedClassNames addObject:item];
+                    NRLOG_AGENT_VERBOSE(@"Added masked class name: %@", item);
+                }
             }
         }
     }
@@ -578,10 +592,12 @@ static long long _accountId;
 
 - (void)addUnmaskedAccessibilityIdentifiers:(NSArray *)array {
     if (array.count > 0) {
-        for (id item in array) {
-            if (![_session_replay_unmaskedAccessibilityIdentifiers containsObject:item]) {
-                [_session_replay_unmaskedAccessibilityIdentifiers addObject:item];
-                NRLOG_AGENT_VERBOSE(@"Added unmasked accessibility identifier: %@", item);
+        @synchronized(_session_replay_unmaskedAccessibilityIdentifiers) {
+            for (id item in array) {
+                if (![_session_replay_unmaskedAccessibilityIdentifiers containsObject:item]) {
+                    [_session_replay_unmaskedAccessibilityIdentifiers addObject:item];
+                    NRLOG_AGENT_VERBOSE(@"Added unmasked accessibility identifier: %@", item);
+                }
             }
         }
     }
@@ -597,10 +613,12 @@ static long long _accountId;
 }
 
 - (void)addUnmaskedClassNames:(NSArray *)array {
-    for (id item in array) {
-        if (![_session_replay_unmaskedClassNames containsObject:item]) {
-            [_session_replay_unmaskedClassNames addObject:item];
-            NRLOG_AGENT_VERBOSE(@"Added unmasked class name: %@", item);
+    @synchronized(_session_replay_unmaskedClassNames) {
+        for (id item in array) {
+            if (![_session_replay_unmaskedClassNames containsObject:item]) {
+                [_session_replay_unmaskedClassNames addObject:item];
+                NRLOG_AGENT_VERBOSE(@"Added unmasked class name: %@", item);
+            }
         }
     }
 }

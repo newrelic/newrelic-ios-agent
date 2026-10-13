@@ -9,7 +9,7 @@
 //  The connect endpoint sends accessibility identifier rules to iOS apps with
 //  "identifier": "accessibilityIdentifier" (Android apps get "tag"). The agent only
 //  recognized "tag", so every accessibility identifier rule set in Application Settings
-//  was silently dropped on iOS (NR-633404).
+//  was silently dropped on iOS.
 //
 
 #import <XCTest/XCTest.h>
@@ -110,6 +110,18 @@ static NSArray<NSString *> *testRuleNames(void)
     XCTAssertTrue([configuration.session_replay_unmaskedClassNames containsObject:@"PublicLabel"]);
 }
 
+// Masking wins over unmasking when a view matches both, but that is decided at capture time
+// (ViewDetails), so the parser has to keep the identifier in both lists.
+- (void) testIdentifierInBothMaskAndUnmaskRulesIsKeptInBothLists
+{
+    NRMAHarvesterConfiguration *configuration = [self configurationWithRulesJSON:
+        @"[{\"type\":\"unmask\",\"operator\":\"equals\",\"name\":[\"private\"],\"identifier\":\"accessibilityIdentifier\"},"
+         "{\"type\":\"mask\",\"operator\":\"equals\",\"name\":[\"private\"],\"identifier\":\"accessibilityIdentifier\"}]"];
+
+    XCTAssertTrue([configuration.session_replay_maskedAccessibilityIdentifiers containsObject:@"private"]);
+    XCTAssertTrue([configuration.session_replay_unmaskedAccessibilityIdentifiers containsObject:@"private"]);
+}
+
 // The stored configuration is re-parsed through -initWithDictionary: on the next launch,
 // so the rule has to survive the asDictionary round trip with its original identifier.
 - (void) testAccessibilityIdentifierRuleSurvivesStoredConfigurationRoundTrip
@@ -164,6 +176,36 @@ static NSArray<NSString *> *testRuleNames(void)
 
     XCTAssertTrue([configuration.session_replay_maskedAccessibilityIdentifiers containsObject:@"private"]);
     XCTAssertEqual(configuration.session_replay_customRules.count, 1u);
+}
+
+// -[NRMAHarvester configureFromCollector:] writes -asDictionary to NSUserDefaults, which aborts
+// on non-property-list values. Malformed values from the connect response must not reach it.
+- (void) testMalformedRulesDoNotBreakConfigurationPersistence
+{
+    NRMAHarvesterConfiguration *configuration = [self configurationWithRulesJSON:
+        @"[{\"type\":\"mask\",\"operator\":null,\"name\":[42,\"private\",null],\"identifier\":\"accessibilityIdentifier\"},"
+         "{\"type\":\"mask\",\"operator\":\"equals\",\"name\":[\"public\"],\"identifier\":null},"
+         "{\"type\":null,\"operator\":\"equals\",\"name\":[\"public\"],\"identifier\":\"class\"},"
+         "{\"type\":\"mask\",\"operator\":\"equals\",\"name\":\"public\",\"identifier\":\"accessibilityIdentifier\"}]"];
+
+    XCTAssertEqual(configuration.session_replay_customRules.count, 1u, @"only the applied rule is kept");
+    SessionReplayCustomMaskingRule *rule = configuration.session_replay_customRules.firstObject;
+    XCTAssertEqualObjects(rule.name, (@[@"private"]));
+    XCTAssertNil(rule.operatorName);
+
+    NSDictionary *stored = [configuration asDictionary];
+    XCTAssertTrue([NSPropertyListSerialization propertyList:stored isValidForFormat:NSPropertyListBinaryFormat_v1_0],
+                  @"the persisted configuration must be a valid property list");
+
+    NSString *key = @"com.newrelic.tests.sessionReplayCustomMaskingRules";
+    [[NSUserDefaults standardUserDefaults] setObject:stored forKey:key];
+    id restoredDictionary = [[NSUserDefaults standardUserDefaults] objectForKey:key];
+    [[NSUserDefaults standardUserDefaults] removeObjectForKey:key];
+    XCTAssertTrue([restoredDictionary isKindOfClass:[NSDictionary class]]);
+
+    [[NRMAAgentConfiguration local_session_replay_maskedAccessibilityIdentifiers] removeObject:@"private"];
+    NRMAHarvesterConfiguration *restored = [[NRMAHarvesterConfiguration alloc] initWithDictionary:restoredDictionary];
+    XCTAssertTrue([restored.session_replay_maskedAccessibilityIdentifiers containsObject:@"private"]);
 }
 
 @end
