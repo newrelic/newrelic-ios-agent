@@ -29,7 +29,7 @@ platform :ios do
       workspace: "Agent.xcworkspace",
       code_coverage: true,
       scheme: "Agent-iOS",
-      device: "iPhone 8",
+      device: "iPhone 17",
       disable_xcpretty: true
     )
   end
@@ -81,7 +81,7 @@ platform :ios do
       workspace: "Agent.xcworkspace",
       code_coverage: true,
       scheme: "Agent-tvOS",
-      device: "Apple TV",
+      device: "Apple TV 4K (3rd generation)",
       disable_xcpretty: true
 
     )
@@ -126,7 +126,7 @@ platform :ios do
       workspace: "Agent.xcworkspace",
       code_coverage: true,
       scheme: "Agent-watchOS",
-      device: "Apple Watch SE (40mm) (2nd generation)",
+      device: "Apple Watch SE 3 (40mm)",
       xcargs: "-testPlan Agent-watchOS"
     )
   end
@@ -140,7 +140,7 @@ platform :ios do
       workspace: "Agent.xcworkspace",
       code_coverage: false,
       scheme: "Agent-watchOS",
-      device: "Apple Watch SE (40mm) (2nd generation) (#{options[:os_version]})",
+      device: "Apple Watch SE 3 (40mm) (#{options[:os_version]})",
       xcargs: "-testPlan Agent-watchOS",
       output_style: 'raw'
     )
@@ -155,7 +155,7 @@ platform :ios do
       workspace: "Agent.xcworkspace",
       code_coverage: false,
       scheme: "NRTestApp (watchOS) Watch App",
-      device: "Apple Watch SE (40mm) (2nd generation) (#{options[:os_version]})",
+      device: "Apple Watch SE 3 (40mm) (#{options[:os_version]})",
       xcargs: "-testPlan Agent-watchOS",
       output_style: 'raw'
     )
