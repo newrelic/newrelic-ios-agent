@@ -32,12 +32,17 @@ jobs:
     steps:
       - name: Create agent task
         env:
-          GH_TOKEN: ${{ secrets.COPILOT_AGENT_OAUTH_TOKEN }}
+          COPILOT_AGENT_OAUTH_TOKEN: ${{ secrets.COPILOT_AGENT_OAUTH_TOKEN }}
           TASK: ${{ inputs.task }}
           BASE: ${{ inputs.base }}
           CUSTOM_AGENT: ${{ inputs.custom_agent }}
         run: |
+          set -o pipefail
           gh --version
+          # agent-task only accepts a gho_ token read from gh's own config/keyring,
+          # not from GH_TOKEN, so log in with it instead of exporting it.
+          printf '%s' "$COPILOT_AGENT_OAUTH_TOKEN" | gh auth login --hostname github.com --with-token --insecure-storage
+
           args=(--repo "$GITHUB_REPOSITORY")
           if [ -n "$BASE" ]; then args+=(--base "$BASE"); fi
           if [ -n "$CUSTOM_AGENT" ]; then args+=(--custom-agent "$CUSTOM_AGENT"); fi
