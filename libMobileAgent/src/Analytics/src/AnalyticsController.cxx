@@ -949,6 +949,11 @@ namespace NewRelic {
         auto json = _eventManager.toJSON();
 
         if (clearEvents) {
+            // Mark pending BEFORE clearing -- _events is what's about to be
+            // wiped by empty(), and these are exactly the events this harvest
+            // attempt is carrying. Their persisted copies must survive until
+            // a later confirmation that this attempt actually succeeded.
+            EventManager::markEventsPendingConfirmationIfBridged(_eventManager._events);
             _eventManager.empty();
             _eventsDuplicationStore.clear();
         }

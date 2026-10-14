@@ -24,6 +24,7 @@
 #import "NRMAMeasurements.h"
 #import "NRMATaskQueue.h"
 #import "NRMANamedValueMeasurement.h"
+#import <NewRelic/NewRelic-Swift.h>
 
 @interface NRMAAnalyticsTest : XCTestCase
 {
@@ -1861,6 +1862,113 @@
 
    XCTAssertTrue([analytics addSessionEvent], @"failed to successfully add session event");
 
+}
+
+// MARK: - EventPersistence wiring, legacy (C++) path (NR-631296)
+
+// Waits for `eventType` to show up in a recovery payload, polling the real
+// NREventPersistenceController.shared store -- the legacy path's bridge call
+// lands asynchronously (on NREventPersistenceController's own queue)
+// relative to -addCustomEvent:.
+- (void)waitForRecoveredLegacyEventType:(NSString *)eventType {
+    NSPredicate *predicate = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
+        for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{}]) {
+            if ([candidate[@"eventType"] isEqualToString:eventType]) {
+                return YES;
+            }
+        }
+        return NO;
+    }];
+    [self waitForExpectations:@[[[XCTNSPredicateExpectation alloc] initWithPredicate:predicate object:nil]] timeout:5];
+}
+
+- (void)testLegacyAddCustomEventIsRecoverableWithSessionAttributes {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    [analytics setSessionAttribute:@"userId" value:@"legacy-test-user"];
+
+    XCTAssertTrue([analytics addCustomEvent:@"LegacyPersistenceWiringSentinel" withAttributes:@{}]);
+
+    [self waitForRecoveredLegacyEventType:@"LegacyPersistenceWiringSentinel"];
+
+    NSDictionary *found = nil;
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{}]) {
+        if ([candidate[@"eventType"] isEqualToString:@"LegacyPersistenceWiringSentinel"]) {
+            found = candidate;
+            break;
+        }
+    }
+    XCTAssertNotNil(found, @"a custom event added through the legacy C++ path must be recoverable through the controller");
+    XCTAssertEqualObjects(found[@"userId"], @"legacy-test-user",
+                          @"the legacy session's attribute snapshot at write time must ride along with the recovered event");
+
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [NRMAAnalytics clearDuplicationStores];
+}
+
+- (void)testLegacyAddCustomEventDoesNotPersistWhenFlagDisabled {
+    [NRMAFlags disableFeatures:NRFeatureFlag_EventPersistence];
+
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    XCTAssertTrue([analytics addCustomEvent:@"LegacyFlagOffSentinel" withAttributes:@{}]);
+
+    // Re-enable and add a positive control: once *it* shows up in a recovery
+    // payload, the write pipeline has definitely had enough time to flush, so
+    // LegacyFlagOffSentinel's continued absence is meaningful.
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+    XCTAssertTrue([analytics addCustomEvent:@"LegacyFlushSentinel" withAttributes:@{}]);
+    [self waitForRecoveredLegacyEventType:@"LegacyFlushSentinel"];
+
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{}]) {
+        XCTAssertNotEqualObjects(candidate[@"eventType"], @"LegacyFlagOffSentinel",
+                                 @"an event added through the legacy path while the flag was disabled must never be persisted");
+    }
+
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [NRMAAnalytics clearDuplicationStores];
+}
+
+- (void)testOnHarvestSuccessConfirmsRecoveredEvents {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    XCTAssertTrue([analytics addCustomEvent:@"OnHarvestSuccessSentinel" withAttributes:@{}]);
+    [self waitForRecoveredLegacyEventType:@"OnHarvestSuccessSentinel"];
+
+    [analytics onHarvestSuccess];
+
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{}]) {
+        XCTAssertNotEqualObjects(candidate[@"eventType"], @"OnHarvestSuccessSentinel",
+                                 @"-onHarvestSuccess must confirm (and thus delete) the events it just staged for recovery");
+    }
+
+    [NRMAAnalytics clearDuplicationStores];
+}
+
+// Regression guard for a real bug found via manual testing: a freshly-recorded
+// legacy-path event's persisted copy was never deleted after it was
+// successfully included in an ordinary (non-recovery) harvest, so it would be
+// wrongly recovered and re-sent as a duplicate on every subsequent relaunch.
+- (void)testFreshlyHarvestedLegacyEventIsNotRecoverableAfterConfirmedHarvestSuccess {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    XCTAssertTrue([analytics addCustomEvent:@"FreshLegacyHarvestConfirmSentinel" withAttributes:@{}]);
+    [self waitForRecoveredLegacyEventType:@"FreshLegacyHarvestConfirmSentinel"];
+
+    // Simulate the normal (non-recovery) harvest path: pull events out for
+    // sending (marks them pending, per the fix), then confirm success.
+    NSString *json = [analytics analyticsJSONString];
+    XCTAssertTrue([json containsString:@"FreshLegacyHarvestConfirmSentinel"]);
+    [analytics onHarvestSuccess];
+
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{}]) {
+        XCTAssertNotEqualObjects(candidate[@"eventType"], @"FreshLegacyHarvestConfirmSentinel",
+                                 @"a legacy-path event already confirmed delivered via a normal harvest must never be recovered again");
+    }
+
+    [NRMAAnalytics clearDuplicationStores];
 }
 
 @end

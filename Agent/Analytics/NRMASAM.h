@@ -29,6 +29,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSString*) sessionAttributeJSONString;
 - (BOOL) setLastInteraction:(NSString*)name;
+
+// Public (customer-set) attributes only -- excludes the private "NR"
+// attributes, which represent session-stable data (os/device/app version,
+// etc.) rather than user-set state. Used as the "mutableAttributesSnapshot"
+// captured for event persistence at write time.
+- (NSDictionary*) currentPublicAttributes;
+
+// Private "NR" attributes only (os/device/app version, carrier, etc.) --
+// used as the "stableAttributes" captured in a session's persisted manifest.
+- (NSDictionary*) currentPrivateAttributes;
 @end
 
 NS_ASSUME_NONNULL_END

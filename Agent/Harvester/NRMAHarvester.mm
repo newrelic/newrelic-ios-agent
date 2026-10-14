@@ -451,6 +451,7 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
         [self.harvestData clear];
         // If there was a successful harvest upload send the persisted offline payloads.
         [connection sendOfflineStorage];
+        [self fireOnHarvestSuccess];
     }
     //Supportability/MobileAgent/Collector/Harvest
 
@@ -844,6 +845,31 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
                 [NRMAExceptionHandler logException:excep
                                              class:NSStringFromClass([hao class])
                                           selector:@"onHarvestComplete"];
+            }
+#endif
+        }
+    }
+}
+
+- (void) fireOnHarvestSuccess
+{
+    // See -fireOnHarvestBefore: iterate a snapshot to stay safe against reentrant
+    // listener mutation and to avoid calling out while holding the lock.
+    NSArray* harvestAwareObjectsSnapshot;
+    @synchronized(self.harvestAwareObjects) {
+        harvestAwareObjectsSnapshot = [self.harvestAwareObjects copy];
+    }
+    for (id<NRMAHarvestAware> hao in harvestAwareObjectsSnapshot) {
+        if ([hao respondsToSelector:@selector(onHarvestSuccess)]) {
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+            @try {
+#endif
+                [hao onHarvestSuccess];
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+            } @catch (NSException* excep) {
+                [NRMAExceptionHandler logException:excep
+                                             class:NSStringFromClass([hao class])
+                                          selector:@"onHarvestSuccess"];
             }
 #endif
         }

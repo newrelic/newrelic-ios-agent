@@ -14,6 +14,10 @@
 #import "NRMANetworkErrorEvent.h"
 #import "NRMAAgentConfiguration.h"
 #import "NRMASupportMetricHelper.h"
+#import "NRMAFlags.h"
+#import "NewRelicAgentInternal.h"
+#import "NRMAExceptionMetaDataStore.h"
+#import <NewRelic/NewRelic-Swift.h>
 
 static const NSUInteger kDefaultBufferSize = 1000;
 static const NSUInteger kDefaultBufferTimeSeconds = 60; // 60 seconds
@@ -130,6 +134,22 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
         if (added) {
             [NRMASupportMetricHelper enqueueEventAddedMetric];
             eventsRecorded++;
+
+            // Persist freshly-recorded events for crash/force-quit recovery.
+            // Recovered events (replayed from a previous session) are never
+            // re-persisted here -- they're already on disk under their
+            // original UUID.
+            if ([NRMAFlags shouldEnableEventPersistence] && !event.isRecoveredEvent) {
+                NSString *sessionId = [[NewRelicAgentInternal sharedInstance] currentSessionId] ?: @"";
+                NSDictionary *mutableSnapshot = [self.sessionAttributeManager currentPublicAttributes] ?: @{};
+                [[NREventPersistenceController shared] recordEventWithEventUUID:event.eventUUID
+                                                                        eventType:event.eventType
+                                                                      timestampMs:(int64_t)event.timestamp
+                                                                       attributes:(NSDictionary *)[event JSONObject]
+                                                                        sessionId:sessionId
+                                                                      realAgentId:NRMA_getAgentId()
+                                                        mutableAttributesSnapshot:mutableSnapshot];
+            }
         }
     }
     return added;
@@ -179,6 +199,20 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
         // Clear under the same lock the events were read under. Clearing after releasing it
         // also wiped any event -addEvent: inserted in between, which was never serialized.
         if (clearEvents) {
+            // This batch is about to be handed to a harvest attempt whose outcome
+            // isn't known yet -- mark pending (not delete) so the persisted copies
+            // survive until a later confirmed success. Otherwise a successfully
+            // harvested event's on-disk copy would linger forever and get wrongly
+            // recovered/re-sent as a duplicate on a future relaunch.
+            if ([NRMAFlags shouldEnableEventPersistence]) {
+                NSMutableArray<NSString *> *eventUUIDs = [NSMutableArray arrayWithCapacity:events.count];
+                for (id<NRMAAnalyticEventProtocol> event in events) {
+                    if (event.eventUUID) {
+                        [eventUUIDs addObject:event.eventUUID];
+                    }
+                }
+                [[NREventPersistenceController shared] markEventsPendingConfirmationWithEventUUIDs:eventUUIDs];
+            }
             [self empty];
         }
     }

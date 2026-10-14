@@ -12,6 +12,7 @@
 #include <Analytics/UserActionEvent.hpp>
 #include <Analytics/CustomEvent.hpp>
 #include <Analytics/PersistentStore.hpp>
+#include <Analytics/EventPersistenceBridge.hpp>
 
 #ifndef __EventManager_H_
 #define __EventManager_H_
@@ -115,6 +116,21 @@ namespace NewRelic {
         bool didExceedMaxQueueTime(unsigned long long currentTimestamp_ms); //strict check (no leeway) used for supportability metrics
         void empty(); //removes all events in _events;
         void resetTimestamp(); //resets _oldest_event_timestamp_ms to 0 (for session clear)
+
+        // Hands freshly-recorded events to the platform's event persistence
+        // layer, for crash/force-quit recovery. Mirrors LibLogger::setLogger --
+        // one process-wide bridge, set once at agent init. Null (never set, or
+        // explicitly cleared) means persistence is simply skipped.
+        static void setPersistenceBridge(std::shared_ptr<EventPersistenceBridge> bridge);
+
+        // Called by AnalyticsController::getEventsJSON(true) just before it
+        // clears _events, so the persisted copies of this batch aren't deleted
+        // until the harvest carrying them is confirmed to have succeeded.
+        static void markEventsPendingConfirmationIfBridged(const std::vector<std::shared_ptr<AnalyticEvent>>& events);
+
+    private:
+        static std::shared_ptr<EventPersistenceBridge> _persistenceBridge;
+        void persistIfBridged(std::shared_ptr<AnalyticEvent> event) const;
     };
 }
 #endif

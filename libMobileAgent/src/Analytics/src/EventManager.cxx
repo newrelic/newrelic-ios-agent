@@ -3,6 +3,7 @@
 #include <sstream>
 #include <array>
 #include <iostream>
+#include <iomanip>
 #include "Analytics/EventManager.hpp"
 #include <algorithm>
 #include "NetworkErrorEvent.hpp"
@@ -14,6 +15,35 @@
 static const int kBufferTimeSecondsLeeway = 60; // 60 seconds
 
 namespace NewRelic {
+
+std::shared_ptr<EventPersistenceBridge> EventManager::_persistenceBridge = nullptr;
+
+void EventManager::setPersistenceBridge(std::shared_ptr<EventPersistenceBridge> bridge) {
+    _persistenceBridge = bridge;
+}
+
+void EventManager::persistIfBridged(std::shared_ptr<AnalyticEvent> event) const {
+    if (!_persistenceBridge || !event) {
+        return;
+    }
+    std::stringstream ss;
+    ss << std::setprecision(15) << *(event->generateJSONObject());
+    _persistenceBridge->persistEvent(event->getEventUUID(), event->getEventType(), ss.str());
+}
+
+void EventManager::markEventsPendingConfirmationIfBridged(const std::vector<std::shared_ptr<AnalyticEvent>>& events) {
+    if (!_persistenceBridge || events.empty()) {
+        return;
+    }
+    std::vector<std::string> uuids;
+    uuids.reserve(events.size());
+    for (const auto& event : events) {
+        if (event) {
+            uuids.push_back(event->getEventUUID());
+        }
+    }
+    _persistenceBridge->markEventsPendingConfirmation(uuids);
+}
 
 EventManager::EventManager(PersistentStore<std::string, AnalyticEvent>& store) :
         _eventDuplicationStore(store) {
@@ -90,6 +120,7 @@ EventAddResult EventManager::addEvent(std::shared_ptr<AnalyticEvent> event) {
             _eventDuplicationStore.store(EventManager::createKey(event), event);
             result.added = true;
             _events_recorded++;
+            persistIfBridged(event);
         }
         // else: the random removal index landed outside the queue's current bounds --
         // drop the incoming event instead of silently losing it (matches the Android
@@ -108,6 +139,7 @@ EventAddResult EventManager::addEvent(std::shared_ptr<AnalyticEvent> event) {
         }
         result.added = true;
         _events_recorded++;
+        persistIfBridged(event);
     }
     //increment the total attempted inserts.
     _total_attempted_inserts++;

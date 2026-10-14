@@ -63,6 +63,7 @@
 		34BF4EFC2910977100E4D170 /* JSON.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34BF4EFB2910977100E4D170 /* JSON.framework */; };
 		34BF4F002910984C00E4D170 /* Connectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34BF4EFF2910984C00E4D170 /* Connectivity.framework */; };
 		34BF4F032910985F00E4D170 /* Utilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34BF4F022910985F00E4D170 /* Utilities.framework */; };
+		5B31084E40B8DA4BA98AB6B4 /* EventPersistenceBridge.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 4E15FED5733C1C3702AF3296 /* EventPersistenceBridge.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -123,6 +124,7 @@
 		34BF4EFB2910977100E4D170 /* JSON.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = JSON.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		34BF4EFF2910984C00E4D170 /* Connectivity.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Connectivity.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		34BF4F022910985F00E4D170 /* Utilities.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Utilities.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		4E15FED5733C1C3702AF3296 /* EventPersistenceBridge.hpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.h; path = EventPersistenceBridge.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -183,6 +185,7 @@
 				34BF4E9B291095E400E4D170 /* NetworkRequestData.hpp */,
 				34BF4E9C291095E400E4D170 /* Events */,
 				34BF4EA9291095E400E4D170 /* AttributeDeserializer.hpp */,
+				4E15FED5733C1C3702AF3296 /* EventPersistenceBridge.hpp */,
 			);
 			path = Analytics;
 			sourceTree = "<group>";
@@ -301,6 +304,7 @@
 				34BF4ED5291095E500E4D170 /* UserActionEvent.hpp in Headers */,
 				34BF4EE0291095E500E4D170 /* AttributeDeserializer.hpp in Headers */,
 				34BF4EC6291095E500E4D170 /* EventBufferConfig.hpp in Headers */,
+				5B31084E40B8DA4BA98AB6B4 /* EventPersistenceBridge.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

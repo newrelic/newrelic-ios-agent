@@ -223,6 +223,8 @@ typedef NSString NRMetricUnit;
 #define kNRMAEventRecordedMetric            @"Supportability/Events/Recorded"
 #define kNRMAEventQueueSizeExceededMetric   @"Supportability/Events/Queue/Size/Exceeded"
 #define kNRMAEventQueueTimeExceededMetric   @"Supportability/Events/Queue/Time/Exceeded"
+#define kNRMAEventPersistenceReattributedMetric   @"Supportability/Events/Persistence/Reattributed"
+#define kNRMAEventPersistenceManifestMissingMetric @"Supportability/Events/Persistence/ManifestMissing"
 #define kNRMAEventSizeUncompressedMetric    @"Supportability/Events/Size/Uncompressed"
 
 #define NRMAHandledRequestKey @"NRMAHandledRequest"

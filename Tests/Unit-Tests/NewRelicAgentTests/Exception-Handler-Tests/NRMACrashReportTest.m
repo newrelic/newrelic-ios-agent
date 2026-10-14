@@ -23,6 +23,11 @@
 
  #import "NRMACrashReportFileManager.h"
  #import "NRMAFakeDataHelper.h"
+ #import "NRMAFlags.h"
+ #import "NRMAExceptionMetaDataStore.h"
+ #import "NRMAExceptionhandlerConstants.h"
+ #import "NRMAJSON.h"
+ #import <NewRelic/NewRelic-Swift.h>
 
  #if __has_include(<CrashReporter/CrashReporter.h>)
  #import <CrashReporter/CrashReporter.h>
@@ -170,6 +175,85 @@
      XCTAssertNoThrow([NRMACrashDataWriter writeCrashReport:report withMetaData:Nil sessionAttributes:Nil analyticsEvents:Nil], @"should not throw exception even with missing data.");
 
  }
+
+// Writes the crash report via NRMACrashDataWriter and returns the JSON of
+// whichever report file is newest in the crash report directory afterward.
+- (NSDictionary *)writeCrashReportAndReadBackJSONWithMetaData:(NSDictionary *)metaDictionary
+                                              sessionAttributes:(NSDictionary *)sessionAttributes
+                                                analyticsEvents:(NSArray *)events {
+    NSError *error;
+    PLCrashReporter *reporter = [[PLCrashReporter alloc] initWithConfiguration:[PLCrashReporterConfig defaultConfiguration]];
+    NSData *reportData = [reporter generateLiveReportAndReturnError:&error];
+    PLCrashReport *report = [[PLCrashReport alloc] initWithData:reportData error:&error];
+
+    NSString *reportDirectory = [NSString stringWithFormat:@"%@/%@", NSTemporaryDirectory(), kNRMA_CR_ReportPath];
+    NSSet *filesBefore = [NSSet setWithArray:[[NSFileManager defaultManager] contentsOfDirectoryAtPath:reportDirectory error:nil] ?: @[]];
+
+    BOOL success = [NRMACrashDataWriter writeCrashReport:report
+                                             withMetaData:metaDictionary
+                                        sessionAttributes:sessionAttributes
+                                          analyticsEvents:events];
+    XCTAssertTrue(success);
+
+    NSArray *filesAfter = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:reportDirectory error:nil];
+    NSString *newFile = nil;
+    for (NSString *fileName in filesAfter) {
+        if (![filesBefore containsObject:fileName]) {
+            newFile = fileName;
+            break;
+        }
+    }
+    XCTAssertNotNil(newFile, @"writeCrashReport: did not produce a new report file");
+
+    NSString *fullPath = [reportDirectory stringByAppendingPathComponent:newFile];
+    NSData *jsonData = [NSData dataWithContentsOfFile:fullPath];
+    NSDictionary *json = [NRMAJSON JSONObjectWithData:jsonData options:0 error:nil];
+    [[NSFileManager defaultManager] removeItemAtPath:fullPath error:nil];
+    return json;
+}
+
+- (void)testCrashDataWriterReattributesAttributesOnSessionMismatchWhenManifestFound {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+
+    NSString *crashSessionId = @"crash-true-session-reattribution-test";
+    [[NREventPersistenceController shared] writeSessionManifestWithSessionId:crashSessionId
+                                                                   realAgentId:7
+                                                                sessionStartMs:0
+                                                              stableAttributes:@{@"appVersion": @"2.0"}];
+
+    NSDictionary *metaDictionary = @{@kNRMAMetaKey_Session: crashSessionId};
+    // Attributes read at next launch belong to the WRONG (mismatched) session.
+    NSDictionary *mismatchedAttributes = @{@"sessionId": @"some-other-session", @"stale": @"shouldNotAppear"};
+
+    NSDictionary *json = [self writeCrashReportAndReadBackJSONWithMetaData:metaDictionary
+                                                           sessionAttributes:mismatchedAttributes
+                                                             analyticsEvents:@[@{@"eventType": @"testEvent"}]];
+
+    NSDictionary *writtenAttributes = json[kNRMA_CR_sessionAttributes];
+    XCTAssertEqualObjects(writtenAttributes[@"appVersion"], @"2.0",
+                          @"a session mismatch with a manifest available must substitute the TRUE session's attributes");
+    XCTAssertNil(writtenAttributes[@"stale"], @"the wrong session's stale attributes must not survive reattribution");
+    XCTAssertNotEqual(json[kNRMA_CR_analyticsEvents], [NSNull null],
+                      @"events carry no per-event session identity in this format, so they must not be dropped");
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_EventPersistence];
+}
+
+- (void)testCrashDataWriterStillDropsOnSessionMismatchWhenNoManifestFound {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+
+    NSDictionary *metaDictionary = @{@kNRMAMetaKey_Session: @"crash-session-with-no-manifest"};
+    NSDictionary *mismatchedAttributes = @{@"sessionId": @"some-other-session", @"stale": @"shouldNotAppear"};
+
+    NSDictionary *json = [self writeCrashReportAndReadBackJSONWithMetaData:metaDictionary
+                                                           sessionAttributes:mismatchedAttributes
+                                                             analyticsEvents:@[@{@"eventType": @"testEvent"}]];
+
+    XCTAssertEqualObjects(json[kNRMA_CR_sessionAttributes], [NSNull null],
+                          @"with no manifest to recover from, a session mismatch must still drop attributes exactly as before this feature existed");
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_EventPersistence];
+}
 
  -(void) testExceptionHandlerManager {
      NRMAExceptionHandlerStartupManager* exceptionHandlerStartupManager = [[NRMAExceptionHandlerStartupManager alloc] init];

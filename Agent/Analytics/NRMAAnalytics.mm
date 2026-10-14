@@ -3,6 +3,8 @@
 #import "NRMAAnalytics.h"
 #import "NRMAAnalytics+cppInterface.h"
 #import "NRMALoggerBridge.hpp"
+#import "NRMAEventPersistenceBridge.hpp"
+#import <NewRelic/NewRelic-Swift.h>
 
 #import "NRLogger.h"
 #import "NRMAJSON.h"
@@ -143,6 +145,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             _eventManager = [[NRMAEventManager alloc] initWithPersistentStore:[eventStore autorelease]];
             _attributeValidator = [[NRMAAttributeValidator alloc] init];
             _sessionAttributeManager = [[NRMASAM alloc] initWithAttributeValidator:_attributeValidator];
+            _eventManager.sessionAttributeManager = _sessionAttributeManager;
 
             NSString* attributes = [self sessionAttributeJSONString];
             if (attributes != nil && [attributes length] > 0) {
@@ -182,6 +185,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
             NSString* documentDirURL = [NewRelicInternalUtils getStorePath];
             _analyticsController = std::make_shared<NewRelic::AnalyticsController>(sessionStartTime,documentDirURL.UTF8String, [NRMAAnalytics eventDupStore], [NRMAAnalytics attributeDupStore]);
+            NewRelic::EventManager::setPersistenceBridge(std::make_shared<NewRelic::NRMAEventPersistenceBridge>(NewRelic::NRMAEventPersistenceBridge()));
             //__kNRMA_RA_upgradeFrom and __kNRMA_RA_install are only valid for one session
             //and will be set shortly after the initialization of NRMAAnalytics.
             //They can be removed now and it shouldn't interfere with the generation
@@ -1089,6 +1093,28 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         return nil;
     }
 }
+
+- (NSDictionary*) currentSessionStableAttributesForPersistence {
+    if ([NRMAFlags shouldEnableNewEventSystem]) {
+        return [_sessionAttributeManager currentPrivateAttributes] ?: @{};
+    }
+    try {
+        auto attributes = _analyticsController->getSessionAttributeJSON();
+        std::stringstream stream;
+        stream << std::setprecision(13) << *attributes;
+        NSString *jsonString = [NSString stringWithUTF8String:stream.str().c_str()];
+        NSDictionary *parsed = [NRMAJSON JSONObjectWithData:[jsonString dataUsingEncoding:NSUTF8StringEncoding]
+                                                      options:0
+                                                        error:nil];
+        return [parsed isKindOfClass:[NSDictionary class]] ? parsed : @{};
+    } catch (std::exception& e) {
+        NRLOG_AGENT_VERBOSE(@"Failed to generate stable attributes for persistence: %s", e.what());
+    } catch (...) {
+        NRLOG_AGENT_VERBOSE(@"Failed to generate stable attributes for persistence.");
+    }
+    return @{};
+}
+
 + (NSString*) getLastSessionsAttributes {
     if([NRMAFlags shouldEnableNewEventSystem]){
         return [NRMASAM getLastSessionsAttributes];
@@ -1231,6 +1257,20 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if (_sessionWillEnd || _newSession || queueTimeExceeded) {
         _newSession = NO;
         [self handleHarvest];
+    }
+
+    if ([NRMAFlags shouldEnableEventPersistence]) {
+        [[NREventPersistenceController shared] performRetentionSweepWithNowMs:(int64_t)currentTimeMs];
+        NSString *sessionId = [[NewRelicAgentInternal sharedInstance] currentSessionId];
+        if (sessionId.length > 0) {
+            [[NREventPersistenceController shared] refreshSessionManifestWithSessionId:sessionId nowMs:(int64_t)currentTimeMs];
+        }
+    }
+}
+
+- (void) onHarvestSuccess {
+    if ([NRMAFlags shouldEnableEventPersistence]) {
+        [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
     }
 }
 

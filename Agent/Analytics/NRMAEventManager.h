@@ -13,10 +13,17 @@
 #import "NRMANetworkRequestData.h"
 #import "NRMAPayload.h"
 #import "PersistentEventStore.h"
+#import "NRMASAM.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface NRMAEventManager : NSObject
+
+// Source of the "mutableAttributesSnapshot" captured for event persistence at
+// write time. Weak + settable (not a constructor param) so existing callers
+// (including tests) that construct an NRMAEventManager without one keep
+// working -- persistence of the snapshot is simply skipped (empty) until set.
+@property (nonatomic, weak, nullable) NRMASAM *sessionAttributeManager;
 
 - (instancetype)initWithPersistentStore:(PersistentEventStore *)store;
 - (void)setMaxEventBufferSize:(NSUInteger)size;

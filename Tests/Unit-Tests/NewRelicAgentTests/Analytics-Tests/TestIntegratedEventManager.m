@@ -13,6 +13,8 @@
 #import "NRMACustomEvent.h"
 #import "BlockAttributeValidator.h"
 #import "NRMAFlags.h"
+#import "NRMASAM.h"
+#import <NewRelic/NewRelic-Swift.h>
 
 @interface TestIntegratedEventManager : XCTestCase {
     NRMAEventManager *sut;
@@ -404,6 +406,124 @@
                                                              error:nil];
     XCTAssertEqual(secondDrain.count, 1, @"the event added mid-drain was cleared without being serialized");
     XCTAssertEqualObjects(secondDrain.firstObject[@"eventType"], @"Custom Event 2");
+}
+
+// MARK: - EventPersistence wiring (NR-631296)
+
+// Waits for `eventType` to show up in a recovery payload, polling the real
+// NREventPersistenceController.shared store -- the write lands on that
+// controller's own internal queue, asynchronously relative to -addEvent:.
+- (void)waitForRecoveredEventType:(NSString *)eventType {
+    NSPredicate *predicate = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
+        for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{}]) {
+            if ([candidate[@"eventType"] isEqualToString:eventType]) {
+                return YES;
+            }
+        }
+        return NO;
+    }];
+    [self waitForExpectations:@[[[XCTNSPredicateExpectation alloc] initWithPredicate:predicate object:nil]] timeout:5];
+}
+
+- (void)testAddEventWithPersistenceEnabledIsRecoverableWithItsAttributeSnapshot {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+
+    NSString *filename = @"fbstest_eventpersistence_wiring";
+    [[NSFileManager defaultManager] removeItemAtPath:filename error:nil];
+    NRMAEventManager *manager = [[NRMAEventManager alloc] initWithPersistentStore:[[PersistentEventStore alloc] initWithFilename:filename andMinimumDelay:.025]];
+
+    NRMASAM *sam = [[NRMASAM alloc] initWithAttributeValidator:agreeableAttributeValidator];
+    [sam setSessionAttribute:@"userId" value:@"test-user-123"];
+    manager.sessionAttributeManager = sam;
+
+    NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:@"PersistenceWiringSentinel"
+                                                                timestamp:12345
+                                              sessionElapsedTimeInSeconds:1
+                                                   withAttributeValidator:agreeableAttributeValidator];
+    XCTAssertTrue([manager addEvent:event]);
+
+    [self waitForRecoveredEventType:@"PersistenceWiringSentinel"];
+
+    NSDictionary *found = nil;
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{}]) {
+        if ([candidate[@"eventType"] isEqualToString:@"PersistenceWiringSentinel"]) {
+            found = candidate;
+            break;
+        }
+    }
+    XCTAssertNotNil(found, @"the event persisted by addEvent: must be recoverable through the controller");
+    XCTAssertEqualObjects(found[@"userId"], @"test-user-123",
+                          @"the public attribute snapshot captured at write time must ride along with the recovered event");
+
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [[NSFileManager defaultManager] removeItemAtPath:filename error:nil];
+}
+
+- (void)testAddEventDoesNotPersistWhenFlagDisabled {
+    [NRMAFlags disableFeatures:NRFeatureFlag_EventPersistence];
+
+    NSString *filename = @"fbstest_eventpersistence_flagoff";
+    [[NSFileManager defaultManager] removeItemAtPath:filename error:nil];
+    NRMAEventManager *manager = [[NRMAEventManager alloc] initWithPersistentStore:[[PersistentEventStore alloc] initWithFilename:filename andMinimumDelay:.025]];
+
+    NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:@"FlagOffSentinel"
+                                                                timestamp:1
+                                              sessionElapsedTimeInSeconds:1
+                                                   withAttributeValidator:agreeableAttributeValidator];
+    XCTAssertTrue([manager addEvent:event]);
+
+    // Re-enable and add a second event as a positive control: once *it*
+    // shows up in a recovery payload, the write pipeline has definitely had
+    // enough time to flush, so FlagOffSentinel's continued absence is
+    // meaningful rather than just "not written yet".
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+    NRMACustomEvent *sentinel = [[NRMACustomEvent alloc] initWithEventType:@"FlushSentinel"
+                                                                   timestamp:2
+                                                 sessionElapsedTimeInSeconds:1
+                                                      withAttributeValidator:agreeableAttributeValidator];
+    XCTAssertTrue([manager addEvent:sentinel]);
+    [self waitForRecoveredEventType:@"FlushSentinel"];
+
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{}]) {
+        XCTAssertNotEqualObjects(candidate[@"eventType"], @"FlagOffSentinel",
+                                 @"an event added while the flag was disabled must never be persisted");
+    }
+
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [[NSFileManager defaultManager] removeItemAtPath:filename error:nil];
+}
+
+// Regression guard for a real bug found via manual testing: a freshly-recorded
+// event's persisted copy was never deleted after it was successfully included
+// in an ordinary (non-recovery) harvest, so it would be wrongly recovered and
+// re-sent as a duplicate on every subsequent relaunch.
+- (void)testFreshlyHarvestedEventIsNotRecoverableAfterConfirmedHarvestSuccess {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+
+    NSString *filename = @"fbstest_eventpersistence_freshharvestconfirm";
+    [[NSFileManager defaultManager] removeItemAtPath:filename error:nil];
+    NRMAEventManager *manager = [[NRMAEventManager alloc] initWithPersistentStore:[[PersistentEventStore alloc] initWithFilename:filename andMinimumDelay:.025]];
+
+    NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:@"FreshHarvestConfirmSentinel"
+                                                                timestamp:1
+                                              sessionElapsedTimeInSeconds:1
+                                                   withAttributeValidator:agreeableAttributeValidator];
+    XCTAssertTrue([manager addEvent:event]);
+    [self waitForRecoveredEventType:@"FreshHarvestConfirmSentinel"];
+
+    // Simulate the normal (non-recovery) harvest path: pull the event out for
+    // sending (marks it pending, per the fix), then confirm the harvest succeeded.
+    NSError *error = nil;
+    NSString *json = [manager getEventJSONStringWithError:&error clearEvents:YES];
+    XCTAssertTrue([json containsString:@"FreshHarvestConfirmSentinel"]);
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{}]) {
+        XCTAssertNotEqualObjects(candidate[@"eventType"], @"FreshHarvestConfirmSentinel",
+                                 @"an event already confirmed delivered via a normal harvest must never be recovered again");
+    }
+
+    [[NSFileManager defaultManager] removeItemAtPath:filename error:nil];
 }
 
 @end

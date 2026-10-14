@@ -302,6 +302,8 @@ static NewRelicAgentInternal* _sharedInstance;
             }
             [self initialize];
             [self onSessionStart];
+            // After -onSessionStart, not before -- see its recovery comment.
+            [self startHarvestControllerIfNotBackground];
 
             if ([NRMAFlags shouldEnableCrashReporting]) {
                 NRMACrashReporterRecorder* crashReportRecorder = [[NRMACrashReporterRecorder alloc] init];
@@ -343,7 +345,6 @@ static NewRelicAgentInternal* _sharedInstance;
 
     // Last session's analytics must be fetched (asynchronously) before instrumentation
     [exceptionHandlerStartupManager fetchLastSessionsAnalytics];
-    
 
     [self initializeInstrumentation];
 
@@ -359,6 +360,7 @@ static NewRelicAgentInternal* _sharedInstance;
     }
 
     [NRMAHarvestController initialize:self->_agentConfiguration];
+
     /*
      * NRMAMeasurements must be started before the
      * harvest controller Or else there is a chance the
@@ -387,15 +389,8 @@ static NewRelicAgentInternal* _sharedInstance;
      * initialization.
      */
     [NRMAMeasurements initializeMeasurements];
-#if TARGET_OS_WATCH
-    if([WKExtension sharedExtension].applicationState != WKApplicationStateBackground) {
-        [NRMAHarvestController start];
-    }
-#else
-    if ([UIApplication sharedApplication].applicationState != UIApplicationStateBackground) {
-        [NRMAHarvestController start];
-    }
-#endif
+    // +[NRMAHarvestController start] is called after -onSessionStart instead
+    // (see its recovery comment) -- not here.
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     // SESSION REPLAY INITIALIZATION
     if (@available(iOS 13.0, *)) {
@@ -409,6 +404,21 @@ static NewRelicAgentInternal* _sharedInstance;
     
     // END SESSION REPLAY INITIALIZATION
 
+#endif
+}
+
+// Starts the harvest timer/first execute cycle, unless the app is currently
+// backgrounded. Split out of -initialize so it can be called after
+// -onSessionStart's recovered-event staging -- see that method's comment.
+- (void) startHarvestControllerIfNotBackground {
+#if TARGET_OS_WATCH
+    if ([WKExtension sharedExtension].applicationState != WKApplicationStateBackground) {
+        [NRMAHarvestController start];
+    }
+#else
+    if ([UIApplication sharedApplication].applicationState != UIApplicationStateBackground) {
+        [NRMAHarvestController start];
+    }
 #endif
 }
 
@@ -650,6 +660,49 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
     [self.analyticsController setNRSessionAttribute:@"sessionId"
                                               value:self->_agentConfiguration.sessionIdentifier];
+
+    // Write this session's persisted manifest (stable attributes snapshot)
+    // now that both the sessionId and the stable attributes above are set,
+    // so a recovered event from this session can later be correctly
+    // reattributed if the app force-quits before harvesting it.
+    if ([NRMAFlags shouldEnableEventPersistence] && self->_agentConfiguration.sessionIdentifier.length > 0) {
+        int64_t sessionStartMs = (int64_t)([self.appSessionStartDate timeIntervalSince1970] * 1000.0);
+        NSDictionary *stableAttributes = [self.analyticsController currentSessionStableAttributesForPersistence] ?: @{};
+        [[NREventPersistenceController shared] writeSessionManifestWithSessionId:self->_agentConfiguration.sessionIdentifier
+                                                                       realAgentId:NRMA_getAgentId()
+                                                                    sessionStartMs:sessionStartMs
+                                                                  stableAttributes:stableAttributes];
+    }
+
+    // Recover any events persisted (but never harvested) by a previous
+    // session that force-quit/crashed, and stage them for the next harvest.
+    // Runs here, synchronously, rather than from -initialize, for two
+    // reasons: -sessionStartInitialization can recreate the harvester (and
+    // harvestData) after -initialize returns, so -initialize's harvestData
+    // isn't always this session's final one; and every caller of this
+    // method starts the harvester (+[NRMAHarvestController start]) only
+    // *after* calling it, so staging here is guaranteed to land before the
+    // harvester's first async execute can clear what was just staged.
+    if ([NRMAFlags shouldEnableEventPersistence]) {
+        int64_t nowMs = (int64_t)([[NSDate date] timeIntervalSince1970] * 1000.0);
+        [[NREventPersistenceController shared] performRetentionSweepWithNowMs:nowMs];
+
+        NSDictionary *currentAttributes = @{};
+        NSString *currentAttributesJSON = [self.analyticsController sessionAttributeJSONString];
+        if (currentAttributesJSON.length > 0) {
+            NSDictionary *parsed = [NRMAJSON JSONObjectWithData:[currentAttributesJSON dataUsingEncoding:NSUTF8StringEncoding]
+                                                          options:0
+                                                            error:nil];
+            if ([parsed isKindOfClass:[NSDictionary class]]) {
+                currentAttributes = parsed;
+            }
+        }
+
+        NSArray *recoveredEvents = [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:currentAttributes];
+        if (recoveredEvents.count > 0) {
+            [NRMAHarvestController addRecoveredAnalyticsEvents:recoveredEvents];
+        }
+    }
 
     // Attempt to upload crash report files (if any exist)
     if ([NRMAFlags shouldEnableCrashReporting]) {
@@ -911,11 +964,14 @@ static const NSString *kNRMA_APPLICATION_WILL_TERMINATE =
     [NRMAHarvestController initialize:self->_agentConfiguration];
 
     [NRMAMeasurements initializeMeasurements];
-    [NRMAHarvestController start];
 
     // Update session duration manager with new session start time for 4-hour session timeout
     [[NRMASessionDurationManager shared] updateSessionStartTime:self.appSessionStartDate];
     [self onSessionStart];
+    // After -onSessionStart, not before -- see its recovery comment.
+    // (Unconditional here, same as before this reordering -- unlike
+    // -initialize's call, this one was never background-gated.)
+    [NRMAHarvestController start];
 }
 
 - (void) startNewSessionForUserId:(NSString* _Nullable)userId {

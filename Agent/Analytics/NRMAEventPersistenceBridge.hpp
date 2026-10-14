@@ -1,0 +1,27 @@
+//
+//  NRMAEventPersistenceBridge.hpp
+//  NewRelicAgent
+//
+//  Copyright © 2026 New Relic. All rights reserved.
+//
+
+#ifndef NRMAEventPersistenceBridge_hpp
+#define NRMAEventPersistenceBridge_hpp
+
+#include <Analytics/EventPersistenceBridge.hpp>
+
+namespace NewRelic {
+    // Legacy (C++) event-system implementation of EventPersistenceBridge --
+    // forwards into NREventPersistenceController, gathering the session/agent
+    // context (sessionId, realAgentId, the public attribute snapshot) itself
+    // since the Analytics library has no notion of either.
+    class NRMAEventPersistenceBridge : public EventPersistenceBridge {
+        virtual void persistEvent(const std::string& eventUUID,
+                                   const std::string& eventType,
+                                   const std::string& jsonAttributes) override;
+
+        virtual void markEventsPendingConfirmation(const std::vector<std::string>& eventUUIDs) override;
+    };
+}
+
+#endif /* NRMAEventPersistenceBridge_hpp */
