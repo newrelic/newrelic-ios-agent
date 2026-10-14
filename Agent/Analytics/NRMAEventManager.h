@@ -32,6 +32,13 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)resetTimestamp;
 - (nullable NSString *)getEventJSONStringWithError:(NSError *__autoreleasing *)error clearEvents:(BOOL)clearEvents;
 
+// Removes the events most recently pulled out by -getEventJSONStringWithError:clearEvents:
+// from the persistent store. Call this only once that batch is confirmed sent
+// (or durably offline-persisted) -- not merely attempted -- so a force-quit
+// before that confirmation leaves the on-disk backup intact for recovery on
+// the next launch.
+- (void)confirmEventsSent;
+
 + (nullable NSString *)getLastSessionEventsFromFilename:(NSString *)filename;
 @end
 
