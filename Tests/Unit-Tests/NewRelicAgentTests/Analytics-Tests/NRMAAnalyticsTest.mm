@@ -304,12 +304,25 @@
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     __block volatile BOOL writersDone = NO;
 
-    dispatch_group_t group = dispatch_group_create();
-    dispatch_group_async(group, dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+    // Read on a dedicated thread at the writers' QoS, not a utility global queue. GCD won't
+    // start a utility worker while about one thread per core is busy at that QoS or above,
+    // so on a 3-core CI runner the reader could go unscheduled past the wait below; and even
+    // when it did run, it started only once the higher-QoS writers had finished, so nothing
+    // raced. Wait for the reader to start so the writes overlap the reads.
+    dispatch_semaphore_t readerStarted = dispatch_semaphore_create(0);
+    dispatch_semaphore_t readerFinished = dispatch_semaphore_create(0);
+    NSThread* reader = [[NSThread alloc] initWithBlock:^{
+        dispatch_semaphore_signal(readerStarted);
         while (!writersDone) {
-            XCTAssertNotNil([analytics sessionAttributeJSONString]);
+            @autoreleasepool {
+                XCTAssertNotNil([analytics sessionAttributeJSONString]);
+            }
         }
-    });
+        dispatch_semaphore_signal(readerFinished);
+    }];
+    reader.qualityOfService = NSQualityOfServiceUserInitiated;
+    [reader start];
+    XCTAssertEqual(dispatch_semaphore_wait(readerStarted, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC)), 0);
 
     dispatch_apply(2000, dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^(size_t i) {
         [analytics setNRSessionAttribute:@"memUsageMb" value:@(i)];
@@ -318,7 +331,7 @@
     });
     writersDone = YES;
 
-    XCTAssertEqual(dispatch_group_wait(group, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC)), 0);
+    XCTAssertEqual(dispatch_semaphore_wait(readerFinished, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC)), 0);
 
     NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:[[analytics sessionAttributeJSONString] dataUsingEncoding:NSUTF8StringEncoding]
                                                            options:0

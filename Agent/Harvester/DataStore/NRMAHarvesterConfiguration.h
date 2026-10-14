@@ -44,6 +44,8 @@
 #define kNRMA_SESSION_REPLAY_CONFIG_MASK_KEY @"mask"
 #define kNRMA_SESSION_REPLAY_CONFIG_UNMASK_KEY @"unmask"
 #define kNRMA_SESSION_REPLAY_CONFIG_TAG_KEY @"tag"
+// The connect endpoint sends this for iOS apps; "tag" is what Android apps receive.
+#define kNRMA_SESSION_REPLAY_CONFIG_ACCESSIBILITY_IDENTIFIER_KEY @"accessibilityIdentifier"
 #define kNRMA_SESSION_REPLAY_CONFIG_CLASS_KEY @"class"
 
 #define kNRMA_SESSION_REPLAY_CONFIG_ENABLED_KEY @"enabled"
