@@ -31,6 +31,7 @@
     "ajv": "^8.18.0",
     "serialize-javascript": "^7.0.3",
     "axios": "^1.13.5",
-    "@puppeteer/browsers": "3.0.2"
+    "@puppeteer/browsers": "3.0.2",
+    "shell-quote": "^1.11.0"
   }
 }
