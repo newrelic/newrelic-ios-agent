@@ -307,23 +307,57 @@ static long long _accountId;
             // Handle the custom rule options.
             NSArray *customRulesArray = innerDict[kNRMA_SESSION_REPLAY_CONFIG_customMaskingRules_KEY];
             if (customRulesArray && [customRulesArray isKindOfClass:[NSArray class]]) {
-                for (NSDictionary *ruleDict in customRulesArray) {
-                    SessionReplayCustomMaskingRule *rule = [[SessionReplayCustomMaskingRule alloc] initWithDictionary:ruleDict];
-                    [self.session_replay_customRules addObject:rule];
-                    
-                    if ([rule.identifier isEqual: kNRMA_SESSION_REPLAY_CONFIG_TAG_KEY] && [rule.type isEqual: kNRMA_SESSION_REPLAY_CONFIG_MASK_KEY]) {
-                        [self addMaskedAccessibilityIdentifiers: rule.name];
-                        
-                    } else if ([rule.identifier isEqual: kNRMA_SESSION_REPLAY_CONFIG_CLASS_KEY] && [rule.type isEqual: kNRMA_SESSION_REPLAY_CONFIG_MASK_KEY]) {
-                        [self addMaskedClassNames: rule.name];
-                        
-                    } else if ([rule.identifier isEqual: kNRMA_SESSION_REPLAY_CONFIG_TAG_KEY] && [rule.type isEqual: kNRMA_SESSION_REPLAY_CONFIG_UNMASK_KEY]) {
-                        [self addUnmaskedAccessibilityIdentifiers: rule.name];
-                        
-                    } else if ([rule.identifier isEqual: kNRMA_SESSION_REPLAY_CONFIG_CLASS_KEY] && [rule.type isEqual: kNRMA_SESSION_REPLAY_CONFIG_UNMASK_KEY]) {
-                        [self addUnmaskedClassNames: rule.name];
-                        
+                for (id ruleObject in customRulesArray) {
+                    if (![ruleObject isKindOfClass:[NSDictionary class]]) {
+                        NRLOG_AGENT_WARNING(@"Ignoring session replay custom masking rule that is not a dictionary: %@", ruleObject);
+                        continue;
                     }
+                    SessionReplayCustomMaskingRule *rule = [[SessionReplayCustomMaskingRule alloc] initWithDictionary:ruleObject];
+
+                    if (![rule.name isKindOfClass:[NSArray class]]) {
+                        NRLOG_AGENT_WARNING(@"Ignoring session replay custom masking rule whose name is not an array: %@", ruleObject);
+                        continue;
+                    }
+                    NSMutableArray<NSString *> *names = [NSMutableArray array];
+                    for (id name in rule.name) {
+                        if ([name isKindOfClass:[NSString class]]) {
+                            [names addObject:name];
+                        }
+                    }
+                    if (names.count != rule.name.count) {
+                        NRLOG_AGENT_WARNING(@"Ignoring %lu non-string name(s) in session replay custom masking rule (%lu name(s) left): %@",
+                                            (unsigned long)(rule.name.count - names.count), (unsigned long)names.count, ruleObject);
+                    }
+
+                    // iOS apps are sent "accessibilityIdentifier"; "tag" (what Android apps get) is accepted too.
+                    BOOL isAccessibilityIdentifierRule = [rule.identifier isEqual: kNRMA_SESSION_REPLAY_CONFIG_ACCESSIBILITY_IDENTIFIER_KEY] ||
+                                                         [rule.identifier isEqual: kNRMA_SESSION_REPLAY_CONFIG_TAG_KEY];
+                    BOOL isClassRule = [rule.identifier isEqual: kNRMA_SESSION_REPLAY_CONFIG_CLASS_KEY];
+
+                    if (isAccessibilityIdentifierRule && [rule.type isEqual: kNRMA_SESSION_REPLAY_CONFIG_MASK_KEY]) {
+                        [self addMaskedAccessibilityIdentifiers: names];
+
+                    } else if (isClassRule && [rule.type isEqual: kNRMA_SESSION_REPLAY_CONFIG_MASK_KEY]) {
+                        [self addMaskedClassNames: names];
+
+                    } else if (isAccessibilityIdentifierRule && [rule.type isEqual: kNRMA_SESSION_REPLAY_CONFIG_UNMASK_KEY]) {
+                        [self addUnmaskedAccessibilityIdentifiers: names];
+
+                    } else if (isClassRule && [rule.type isEqual: kNRMA_SESSION_REPLAY_CONFIG_UNMASK_KEY]) {
+                        [self addUnmaskedClassNames: names];
+
+                    } else {
+                        NRLOG_AGENT_WARNING(@"Ignoring session replay custom masking rule with unrecognized identifier or type: %@", ruleObject);
+                        continue;
+                    }
+
+                    // Only keep the sanitized rule: the configuration is persisted to NSUserDefaults,
+                    // which aborts on non-property-list values such as NSNull.
+                    rule.name = names;
+                    if (![rule.operatorName isKindOfClass:[NSString class]]) {
+                        rule.operatorName = nil;
+                    }
+                    [self.session_replay_customRules addObject:rule];
                 }
             }
 
@@ -536,10 +570,12 @@ static long long _accountId;
 
 - (void)addMaskedClassNames:(NSArray *)array {
     if (array.count > 0) {
-        for (id item in array) {
-            if (![_session_replay_maskedClassNames containsObject:item]) {
-                [_session_replay_maskedClassNames addObject:item];
-                NRLOG_AGENT_VERBOSE(@"Added masked class name: %@", array);
+        @synchronized(_session_replay_maskedClassNames) {
+            for (id item in array) {
+                if (![_session_replay_maskedClassNames containsObject:item]) {
+                    [_session_replay_maskedClassNames addObject:item];
+                    NRLOG_AGENT_VERBOSE(@"Added masked class name: %@", item);
+                }
             }
         }
     }
@@ -556,10 +592,12 @@ static long long _accountId;
 
 - (void)addUnmaskedAccessibilityIdentifiers:(NSArray *)array {
     if (array.count > 0) {
-        for (id item in array) {
-            if (![_session_replay_unmaskedAccessibilityIdentifiers containsObject:item]) {
-                [_session_replay_unmaskedAccessibilityIdentifiers addObject:item];
-                NRLOG_AGENT_VERBOSE(@"Added unmasked accessibility identifier: %@", array);
+        @synchronized(_session_replay_unmaskedAccessibilityIdentifiers) {
+            for (id item in array) {
+                if (![_session_replay_unmaskedAccessibilityIdentifiers containsObject:item]) {
+                    [_session_replay_unmaskedAccessibilityIdentifiers addObject:item];
+                    NRLOG_AGENT_VERBOSE(@"Added unmasked accessibility identifier: %@", item);
+                }
             }
         }
     }
@@ -575,10 +613,12 @@ static long long _accountId;
 }
 
 - (void)addUnmaskedClassNames:(NSArray *)array {
-    for (id item in array) {
-        if (![_session_replay_unmaskedClassNames containsObject:item]) {
-            [_session_replay_unmaskedClassNames addObject:item];
-            NRLOG_AGENT_VERBOSE(@"Added unmasked class name: %@", array);
+    @synchronized(_session_replay_unmaskedClassNames) {
+        for (id item in array) {
+            if (![_session_replay_unmaskedClassNames containsObject:item]) {
+                [_session_replay_unmaskedClassNames addObject:item];
+                NRLOG_AGENT_VERBOSE(@"Added unmasked class name: %@", item);
+            }
         }
     }
 }
