@@ -1,24 +1,31 @@
 #!/usr/bin/env bash
 #
-# Make sure xcodebuild can see the watchOS simulator the Agent-watchOS tests run on.
+# Wait until xcodebuild can use the watchOS simulator the Agent-watchOS tests run on.
 #
-# Why: some xcode-27-arm64 GitHub runners come up with the watchOS simulator runtime
-# visible to `simctl` but not to xcodebuild: its watch devices log
-# "SimDevice native architecture is nil ... runtime={ ...watchOS-27-0: (null) }" and
-# -showdestinations lists only the "Any watchOS Simulator Device" placeholder. Checking
-# with simctl is not enough, so this asks xcodebuild directly and, while the simulator
-# is missing, tries progressively heavier repairs: restart CoreSimulatorService, rescan
-# the runtime disk images, then download the watchOS platform for the selected Xcode.
+# Why: xcode-27-arm64 GitHub runners can start a job while the watchOS simulator runtime
+# is still being re-registered: `simctl runtime list` shows several copies of the same
+# runtime image in "Deleting", "Copying" and "Ready" states. Until that settles, xcodebuild
+# sees the watch devices with `runtime: (null)` and lists no watchOS destination, and
+# fastlane falls back to an iPhone. Restarting CoreSimulatorService, rescanning the runtime
+# disk images and re-running `xcodebuild -downloadPlatform watchOS` don't help; waiting does.
 #
 # Usage (from the repo root):
-#   scripts/ensure_watchos_simulator.sh
+#   scripts/ensure_watchos_simulator.sh [timeout_seconds]   # default 900
 #
 set -u
 
-# Keep in sync with the runWatchOSTests destination in fastlane/TestFastfile.
+# Keep in sync with the runWatchOSTests device in fastlane/TestFastfile.
 SIM_NAME="Apple Watch SE 3 (40mm)"
 WORKSPACE="Agent.xcworkspace"
 SCHEME="Agent-watchOS"
+TIMEOUT="${1:-900}"
+
+# Prints "<build> <state>" for every watchOS runtime image that isn't Ready yet.
+unsettled_watch_runtimes() {
+  xcrun simctl runtime list -j | jq -r '
+    [.[] | select(.platformIdentifier == "com.apple.platform.watchsimulator" and .state != "Ready")
+         | "\(.build) \(.state)"] | join(", ")'
+}
 
 sim_visible() {
   local destinations
@@ -27,45 +34,39 @@ sim_visible() {
   grep -F "name:$SIM_NAME }" <<<"$destinations" | grep -q "platform:watchOS Simulator, arch:"
 }
 
-restart_simulator_service() {
-  xcrun simctl shutdown all >/dev/null 2>&1
-  killall -9 com.apple.CoreSimulator.CoreSimulatorService >/dev/null 2>&1
-  # Any simctl call relaunches the service, which rediscovers the installed runtimes.
-  xcrun simctl list runtimes >/dev/null 2>&1
-}
-
 print_diagnostics() {
   echo "::group::Simulator state"
   xcodebuild -version
   xcrun simctl runtime list -v
   xcrun simctl runtime match list
-  xcrun simctl list runtimes
   xcrun simctl list devices watchOS
   echo "::endgroup::"
 }
 
-if sim_visible; then
-  echo "xcodebuild can see the $SIM_NAME simulator."
+start=$SECONDS
+while true; do
+  unsettled="$(unsettled_watch_runtimes)"
+  visible=false
+  sim_visible && visible=true
+
+  if [ -z "$unsettled" ] && $visible; then
+    echo "watchOS simulator runtime is ready after $((SECONDS - start))s."
+    exit 0
+  fi
+
+  if (( SECONDS - start >= TIMEOUT )); then
+    break
+  fi
+
+  echo "Waiting for the watchOS simulator runtime ($((SECONDS - start))s): images not ready: ${unsettled:-none}; xcodebuild sees $SIM_NAME: $visible"
+  sleep 15
+done
+
+if $visible; then
+  echo "::warning::watchOS runtime images still not settled after ${TIMEOUT}s (${unsettled}), but xcodebuild can see $SIM_NAME; continuing."
   exit 0
 fi
 
-echo "::warning::xcodebuild can't see the $SIM_NAME simulator; repairing the runner's simulator setup."
-print_diagnostics
-
-echo "Restarting CoreSimulatorService"
-restart_simulator_service
-sim_visible && { echo "Fixed by restarting CoreSimulatorService."; exit 0; }
-
-echo "Rescanning simulator runtime disk images"
-xcrun simctl runtime scan-and-mount
-restart_simulator_service
-sim_visible && { echo "Fixed by rescanning runtime disk images."; exit 0; }
-
-echo "Downloading the watchOS platform"
-xcodebuild -downloadPlatform watchOS
-restart_simulator_service
-sim_visible && { echo "Fixed by downloading the watchOS platform."; exit 0; }
-
-echo "::error::xcodebuild still can't see the $SIM_NAME simulator after all repairs."
+echo "::error::xcodebuild still can't see the $SIM_NAME simulator after ${TIMEOUT}s."
 print_diagnostics
 exit 1

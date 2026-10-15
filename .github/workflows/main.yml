@@ -110,10 +110,10 @@ jobs:
       - name: Install gems
         run: bundle install
 
-      # Some xcode-27-arm64 runners come up with the watchOS simulator runtime unusable by
-      # xcodebuild (simctl still lists the devices). Repair it before the tests run.
-      - name: Ensure watchOS simulator is available
-        timeout-minutes: 30
+      # xcode-27-arm64 runners can start while the watchOS simulator runtime is still being
+      # re-registered, and xcodebuild can't use it until that finishes. Wait for it.
+      - name: Wait for watchOS simulator
+        timeout-minutes: 20
         run: scripts/ensure_watchos_simulator.sh
 
       - name: Run tests on watchOS (using fastlane)

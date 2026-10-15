@@ -126,9 +126,8 @@ platform :ios do
       workspace: "Agent.xcworkspace",
       code_coverage: true,
       scheme: "Agent-watchOS",
-      # Let xcodebuild resolve the simulator. With `device:`, scan matches it against simctl's
-      # list and silently falls back to an iPhone when the watch simulator is missing there.
-      destination: "platform=watchOS Simulator,name=Apple Watch SE 3 (40mm),OS=latest",
+      device: "Apple Watch SE 3 (40mm)",
+      ensure_devices_found: true,
       xcargs: "-testPlan Agent-watchOS"
     )
   end
