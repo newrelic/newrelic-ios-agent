@@ -48,7 +48,12 @@ static NSString* __deviceIdentifierReplacement = NULL;
                               NRFeatureFlag_RequestErrorEvents |
                               NRFeatureFlag_DistributedTracing |
                               NRFeatureFlag_AppStartMetrics |
-                              NRFeatureFlag_JSErrorEvents;
+                              NRFeatureFlag_JSErrorEvents |
+                              NRFeatureFlag_AutomaticMobileViews|
+                              NRFeatureFlag_AutomaticSwiftUIViews;
+                              // NRFeatureFlag_AutomaticMobileViews and NRFeatureFlag_ManualMobileViews
+                              // are disabled by default; opt in via enableFeatures:.
+
                   });
     return __flags;
 }
@@ -186,6 +191,21 @@ static NSString* __deviceIdentifierReplacement = NULL;
     return ([NRMAFlags featureFlags] & NRFeatureFlag_AutoCollectLogs) != 0;
 }
 
++ (BOOL) shouldEnableAutomaticMobileViews {
+    return ([NRMAFlags featureFlags] & NRFeatureFlag_AutomaticMobileViews) != 0;
+}
+
++ (BOOL) shouldEnableManualMobileViews {
+    return ([NRMAFlags featureFlags] & NRFeatureFlag_ManualMobileViews) != 0;
+}
+
++ (BOOL) shouldEnableAutomaticSwiftUIViews {
+    // Gated on AutomaticMobileViews as well: this flag adds a SwiftUI producer to automatic view
+    // collection, so it cannot be meaningfully on while automatic collection is off.
+    return ([NRMAFlags featureFlags] & NRFeatureFlag_AutomaticSwiftUIViews) != 0
+        && [NRMAFlags shouldEnableAutomaticMobileViews];
+}
+
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags {
     NSMutableArray *retArray = [NSMutableArray array];
     if ((flags & NRFeatureFlag_InteractionTracing) == NRFeatureFlag_InteractionTracing) {
@@ -251,7 +271,16 @@ static NSString* __deviceIdentifierReplacement = NULL;
     if ((flags & NRFeatureFlag_AutoCollectLogs) == NRFeatureFlag_AutoCollectLogs) {
         [retArray addObject:@"AutoCollectLogs"];
     }
-    
+    if ((flags & NRFeatureFlag_AutomaticMobileViews) == NRFeatureFlag_AutomaticMobileViews) {
+        [retArray addObject:@"AutomaticViews"];
+    }
+    if ((flags & NRFeatureFlag_ManualMobileViews) == NRFeatureFlag_ManualMobileViews) {
+        [retArray addObject:@"ManualViews"];
+    }
+    if ((flags & NRFeatureFlag_AutomaticSwiftUIViews) == NRFeatureFlag_AutomaticSwiftUIViews) {
+        [retArray addObject:@"AutomaticSwiftUIViews"];
+    }
+
     return retArray;
 }
 

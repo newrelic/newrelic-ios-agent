@@ -105,6 +105,7 @@ struct FormView: View {
                 NewRelic.recordBreadcrumb("FormView appeared")
             }
         }
+
     }
 
     private func submitForm() {

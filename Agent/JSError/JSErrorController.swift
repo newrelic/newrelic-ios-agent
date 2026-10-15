@@ -156,7 +156,7 @@ public class JSErrorController: NSObject {
         if let sessionAttributesJSON = analyticsController.sessionAttributeJSONString(),
            !sessionAttributesJSON.isEmpty,
            let sessionData = sessionAttributesJSON.data(using: .utf8),
-           let sessionAttributes = try? JSONSerialization.jsonObject(with: sessionData) as? [String: Any] {
+           let sessionAttributes = try? NRMAJSON.jsonObject(with: sessionData) as? [String: Any] {
             for (key, value) in sessionAttributes {
                 allAttributes[key] = value
             }
