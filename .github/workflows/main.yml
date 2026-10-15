@@ -110,6 +110,17 @@ jobs:
       - name: Install gems
         run: bundle install
 
+      # Some xcode-27-arm64 runners come up without the watchOS simulator runtime loaded,
+      # leaving every watch simulator unavailable. Download the runtime when that happens.
+      - name: Ensure watchOS simulator is available
+        run: |
+          if ! xcrun simctl list devices available | grep -q "Apple Watch SE 3 (40mm)"; then
+            echo "Apple Watch SE 3 (40mm) simulator is unavailable. Installed runtimes:"
+            xcrun simctl runtime list
+            xcodebuild -downloadPlatform watchOS
+          fi
+          xcrun simctl list devices watchOS
+
       - name: Run tests on watchOS (using fastlane)
         run: bundle exec fastlane runWatchOSTests
 
