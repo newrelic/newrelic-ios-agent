@@ -535,6 +535,10 @@ SessionAttributeManager::SessionAttributeManager(PersistentStore<std::string,Bas
         std::map<std::string, std::shared_ptr<AttributeBase>> tempMap = std::map<std::string, std::shared_ptr<AttributeBase>>(
                 _sessionAttributes);
 
+        // _privateSessionAttributes is written by addNRAttribute under _privateAttributesLock only
+        // (memUsageMb, lastInteraction, session start attributes, etc.), so it must be held here too.
+        // Without it the harvest thread can copy a map node / shared_ptr mid-mutation and crash.
+        std::lock_guard<std::mutex> privateAttributeLock(_privateAttributesLock);
         tempMap.insert(_privateSessionAttributes.cbegin(), _privateSessionAttributes.cend());
 
         return tempMap;

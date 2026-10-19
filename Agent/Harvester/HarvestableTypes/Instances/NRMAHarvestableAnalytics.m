@@ -6,6 +6,7 @@
 #import "NRMAHarvestableAnalytics.h"
 
 #import "NRLogger.h"
+#import "NRMAJSON.h"
 
 @implementation NRMAHarvestableAnalytics
 - (id) initWithAttributeJSON:(NSString*)attributeJSON EventJSON:(NSString*)eventJSON {
@@ -16,9 +17,9 @@
         NSData* attributeJSONData = [attributeJSON dataUsingEncoding:NSUTF8StringEncoding];
 
         if (attributeJSONData.length > 0) {
-            self.sessionAttributes = [NSJSONSerialization JSONObjectWithData:attributeJSONData
-                                                                     options:0
-                                                                       error:&error];
+            self.sessionAttributes = [NRMAJSON JSONObjectWithData:attributeJSONData
+                                                            options:0
+                                                              error:&error];
         } 
 
         if(error != nil) {
@@ -28,9 +29,9 @@
 
         NSData* eventJSONData = [eventJSON dataUsingEncoding:NSUTF8StringEncoding];
         if (eventJSONData.length > 0) {
-            self.events = [NSJSONSerialization JSONObjectWithData:eventJSONData
-                                                      options:0
-                                                        error:&error];
+            self.events = [NRMAJSON JSONObjectWithData:eventJSONData
+                                                 options:0
+                                                   error:&error];
         }
 
         if  (error != nil) {
