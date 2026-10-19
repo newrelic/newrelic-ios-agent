@@ -11,6 +11,9 @@
 #import "NRMAConnectInformation.h"
 #import "NRMADeviceInformation.h"
 #import "NRLogger.h"
+#import "NRMAFlags.h"
+#import "NRMAOfflineStorage.h"
+#import "NRMAJSON.h"
 
 // Hard cap: a previous-session batch whose store file hasn't been touched in
 // longer than this is never uploaded. Checked against the file's modification date.
@@ -98,13 +101,38 @@ static const NSTimeInterval kNRMAPreviousSessionEventRetentionMs = 7.0 * 24 * 60
                         (unsigned long)events.count, (unsigned long)attributes.count);
 
     @try {
-        [connection sendData:harvestable];
+        NRMAHarvestResponse* response = [connection sendData:harvestable];
+        if (response.isError) {
+            [self checkOfflineAndPersist:response harvestable:harvestable connection:connection];
+        }
     } @catch (NSException* exception) {
         NRLOG_AGENT_ERROR(@"Failed to send previous session analytics: %@", exception.reason);
     }
 }
 
 #pragma mark - Helpers
+
+// Mirrors NRMAHarvester's -checkOfflineAndPersist: -- on a retryable network
+// error, hand the payload to the connection's offline store (the same "data"
+// endpoint regular harvests use) so it rejoins the normal offline-replay cycle
+// on the next successful harvest instead of being lost.
+- (void) checkOfflineAndPersist:(NRMAHarvestResponse*)response
+                     harvestable:(NRMAPreviousSessionHarvestable*)harvestable
+                      connection:(NRMAHarvesterConnection*)connection {
+    if (![NRMAFlags shouldEnableOfflineStorage]) {
+        return;
+    }
+    if (![NRMAOfflineStorage checkErrorToPersist:response.error]) {
+        return;
+    }
+    NSError* error = nil;
+    NSData* jsonData = [NRMAJSON dataWithJSONABLEObject:harvestable options:0 error:&error];
+    if (error) {
+        NRLOG_AGENT_ERROR(@"Failed to generate JSON for previous session analytics offline storage");
+        return;
+    }
+    [connection.offlineStorage persistDataToDisk:jsonData];
+}
 
 // Nil (unknown mtime) fails open -- we don't skip data we can't confidently age.
 - (BOOL) isOlderThanRetentionWindow:(NSDate*)fileModificationDate {
