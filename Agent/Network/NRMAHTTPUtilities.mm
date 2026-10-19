@@ -48,8 +48,9 @@ NSString* currentParentId = @"";
                                            _operationType,
                                            _operationId];
                   });
-
-    return _trackedHeaderFields;
+    @synchronized (self) {
+        return [_trackedHeaderFields copy];
+    }
 }
 
 + (NSMutableURLRequest*) addCrossProcessIdentifier:(NSURLRequest*)request {
