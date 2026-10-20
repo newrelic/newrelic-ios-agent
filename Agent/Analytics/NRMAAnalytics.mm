@@ -1113,6 +1113,17 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     }
 }
 
++ (NSDate*) getLastSessionEventsFileModificationDate {
+    NSString *filename;
+    if ([NRMAFlags shouldEnableNewEventSystem]) {
+        filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:kNRMA_EventStoreFilename];
+    } else {
+        filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:[NSString stringWithUTF8String:AnalyticsController::getEventDupStoreName()]];
+    }
+    NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:filename error:nil];
+    return fileAttributes[NSFileModificationDate];
+}
+
 + (NSString*) getLastSessionsEvents{
     if([NRMAFlags shouldEnableNewEventSystem]) {
         NSString *filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:kNRMA_EventStoreFilename];
@@ -1169,6 +1180,12 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         } catch (...) {
             NRLOG_AGENT_VERBOSE(@"Failed to clear last sessions' analytcs.");
         }
+    }
+}
+
+- (void) confirmLastHarvestEventsSent {
+    if ([NRMAFlags shouldEnableNewEventSystem]) {
+        [_eventManager confirmEventsSent];
     }
 }
 

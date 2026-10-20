@@ -27,6 +27,7 @@
 #import "NRMAMetric.h"
 #import "NRMACrashReporterRecorder.h"
 #import "Constants.h"
+#import "NRMAPreviousSessionUploader.h"
 
 @interface NRMAExceptionHandlerManager  ()
 #if !TARGET_OS_WATCH
@@ -121,6 +122,11 @@ static const NSString* NRMAManagerAccessorLock = @"managerLock";
 
             [_reportManager processReportsWithSessionAttributes:modifiedAttributes
                                                 analyticsEvents:events];
+
+            // The crash report now carries this session's events/attributes to
+            // the collector -- don't also send them via the previous session
+            // uploader's dedicated harvest.
+            [[NRMAPreviousSessionUploader sharedInstance] cancelUploadClaimedByCrashReport];
 
             NRMAReachability* r = [NewRelicInternalUtils reachability];
             @synchronized(r) {

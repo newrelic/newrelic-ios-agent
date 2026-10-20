@@ -60,7 +60,21 @@
 + (void) clearDuplicationStores;
 + (NSString*) getLastSessionsAttributes;
 + (NSString*) getLastSessionsEvents;
+
+// Modification date of whichever on-disk store currently backs the previous
+// session's events (New Event System's eventsStore.txt, or the legacy
+// duplication store), without reading/parsing its contents. Must be read
+// before -getLastSessionsEvents, which can clear/rewrite that store as a
+// side effect on the legacy path.
++ (NSDate*) getLastSessionEventsFileModificationDate;
 - (void) clearLastSessionsAnalytics;
+
+// Confirms the most recent -analyticsJSONString batch was actually delivered
+// (sent successfully, or durably persisted for offline retry) so the
+// persistent event store can safely drop it. Must NOT be called for a plain,
+// non-persisted failure -- that batch needs to survive a possible force-quit
+// so it can still be recovered and resent on the next launch.
+- (void) confirmLastHarvestEventsSent;
 
 - (BOOL) checkOfflineStatus;
 - (BOOL) checkBackgroundStatus;
