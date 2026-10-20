@@ -25,6 +25,7 @@ static const NSTimeInterval kNRMAPreviousSessionEventRetentionMs = 7.0 * 24 * 60
     NSDate* _fileModificationDate;
     BOOL _captured;   // YES once the previous session's data has been read/handed to us.
     BOOL _didUpload;  // YES once we have made a definitive attempt (sent, or confirmed nothing to send).
+    BOOL _claimedByCrashReport;  // YES if the crash reporter already embedded this session's data in its own upload.
 }
 
 + (instancetype) sharedInstance {
@@ -47,6 +48,12 @@ static const NSTimeInterval kNRMAPreviousSessionEventRetentionMs = 7.0 * 24 * 60
     }
 }
 
+- (void) cancelUploadClaimedByCrashReport {
+    @synchronized (self) {
+        _claimedByCrashReport = YES;
+    }
+}
+
 - (void) uploadWithConnection:(NRMAHarvesterConnection*)connection
                     dataToken:(NRMADataToken*)dataToken {
     NSString* attributeJSON;
@@ -66,6 +73,10 @@ static const NSTimeInterval kNRMAPreviousSessionEventRetentionMs = 7.0 * 24 * 60
         }
         // We have the data (possibly empty). This is our one definitive attempt.
         _didUpload = YES;
+        if (_claimedByCrashReport) {
+            NRLOG_AGENT_VERBOSE(@"Previous session analytics already embedded in a crash report upload; skipping duplicate send.");
+            return;
+        }
         attributeJSON = _attributeJSON;
         eventJSON = _eventJSON;
         fileModificationDate = _fileModificationDate;

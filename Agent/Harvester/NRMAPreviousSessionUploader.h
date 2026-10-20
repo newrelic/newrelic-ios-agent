@@ -35,7 +35,19 @@
 // Sends the captured analytics as a dedicated harvest using the supplied,
 // already-connected connection and data token. Idempotent: only the first call
 // per launch performs work.
+//
+// If the send fails with a retryable network error and
+// +[NRMAFlags shouldEnableOfflineStorage] is enabled, the payload is handed to
+// connection.offlineStorage (the same "data"-endpoint store regular harvests
+// use) so it rejoins the normal offline-replay cycle on the next successful
+// harvest instead of being lost.
 - (void) uploadWithConnection:(NRMAHarvesterConnection*)connection
                     dataToken:(NRMADataToken*)dataToken;
+
+// Called when the crash reporter determines that the previous session ended
+// in a crash and has embedded that session's events/attributes in its own
+// crash report upload. Marks the upload as claimed so -uploadWithConnection:
+// becomes a no-op for this session's data, avoiding a duplicate send.
+- (void) cancelUploadClaimedByCrashReport;
 
 @end
