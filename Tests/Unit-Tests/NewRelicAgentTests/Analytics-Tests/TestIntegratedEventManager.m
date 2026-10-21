@@ -28,6 +28,34 @@
 }
 @end
 
+// Adds `lateEvent` from another thread the first time the buffer is cleared, as a network
+// request finishing mid-harvest would. Any later clear first waits for that insert to land, so a
+// drain that clears again after releasing the events lock deterministically wipes it.
+@interface ConcurrentInsertEventManager : NRMAEventManager
+@property (nonatomic, strong) id<NRMAAnalyticEventProtocol> lateEvent;
+- (BOOL)waitForLateEvent;
+@end
+@implementation ConcurrentInsertEventManager {
+    dispatch_group_t _lateInsert;
+}
+- (void)empty {
+    if (self.lateEvent) {
+        id<NRMAAnalyticEventProtocol> event = self.lateEvent;
+        self.lateEvent = nil;
+        _lateInsert = dispatch_group_create();
+        dispatch_group_async(_lateInsert, dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+            [self addEvent:event];
+        });
+    } else if (_lateInsert) {
+        [self waitForLateEvent];
+    }
+    [super empty];
+}
+- (BOOL)waitForLateEvent {
+    return dispatch_group_wait(_lateInsert, dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC)) == 0;
+}
+@end
+
 @implementation TestIntegratedEventManager
 
     static NSString *testFilename = @"fbstest_tempStore";
@@ -347,6 +375,35 @@
 
     XCTAssertEqual([dropSut getEventsRecordedCount], 1);
     XCTAssertEqual([dropSut getEventsEvictedCount], 1);
+}
+
+// An event added while the buffer is being drained was not in the JSON just produced, so it must
+// still be there for the next drain rather than cleared along with the events that were.
+- (void)testEventAddedDuringDrainSurvivesForTheNextDrain {
+    ConcurrentInsertEventManager *drainSut = [[ConcurrentInsertEventManager alloc] initWithPersistentStore:[[PersistentEventStore alloc] initWithFilename:@"fbstest_concurrentinsert"
+                                                                                                                                       andMinimumDelay:1]];
+    [drainSut addEvent:[[NRMACustomEvent alloc] initWithEventType:@"Custom Event 1"
+                                                        timestamp:3
+                                      sessionElapsedTimeInSeconds:20
+                                           withAttributeValidator:agreeableAttributeValidator]];
+    drainSut.lateEvent = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 2"
+                                                          timestamp:5
+                                        sessionElapsedTimeInSeconds:15
+                                             withAttributeValidator:agreeableAttributeValidator];
+
+    NSError *error = nil;
+    NSArray *firstDrain = [NSJSONSerialization JSONObjectWithData:[[drainSut getEventJSONStringWithError:&error clearEvents:YES] dataUsingEncoding:NSUTF8StringEncoding]
+                                                          options:0
+                                                            error:nil];
+    XCTAssertEqual(firstDrain.count, 1);
+    XCTAssertEqualObjects(firstDrain.firstObject[@"eventType"], @"Custom Event 1");
+    XCTAssertTrue([drainSut waitForLateEvent], @"the concurrent insert never completed");
+
+    NSArray *secondDrain = [NSJSONSerialization JSONObjectWithData:[[drainSut getEventJSONStringWithError:&error clearEvents:YES] dataUsingEncoding:NSUTF8StringEncoding]
+                                                           options:0
+                                                             error:nil];
+    XCTAssertEqual(secondDrain.count, 1, @"the event added mid-drain was cleared without being serialized");
+    XCTAssertEqualObjects(secondDrain.firstObject[@"eventType"], @"Custom Event 2");
 }
 
 @end
