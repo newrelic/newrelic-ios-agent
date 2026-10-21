@@ -7,12 +7,13 @@
 //
 //  What it does, and why each piece is here:
 //
-//    * Reports the screen with `NewRelic.setCurrentView(_:attributes:)` on appear, using a `ViewName`
-//      case. Automatic view tracking is also on, so the agent independently emits events named after
-//      the view controller *class* — that is intentional, not an oversight. This app is a validation
-//      vehicle: having both means a MobileView query shows the automatic name and the deliberate one
-//      side by side, and the manual API gets exercised on every screen rather than on one. The
-//      readable names in `ViewName` are the ones NRQL expectations should be written against.
+//    * Reports the screen with `NewRelic.setCurrentView(_:viewClass:uiFramework:attributes:)` on
+//      appear, using a `ViewName` case. Automatic view tracking is also on, so the agent
+//      independently emits events named after the view controller *class* — that is intentional,
+//      not an oversight. This app is a validation vehicle: having both means a MobileView query
+//      shows the automatic name and the deliberate one side by side, and the manual API gets
+//      exercised on every screen rather than on one. The readable names in `ViewName` are the ones
+//      NRQL expectations should be written against.
 //
 //    * Logs the lifecycle. The Android app peppered onCreate/onResume/onPause/onDestroy with
 //      NewRelic.logInfo and logDebug calls; doing it once here covers every screen instead of the
@@ -87,7 +88,12 @@ class InstrumentedViewController: UIViewController {
     /// Reports this screen as the current view. Called from `viewDidAppear` unless
     /// `reportsViewOnAppear` is false, in which case the screen's owner calls it.
     func reportView() {
-        NewRelic.setCurrentView(viewName.rawValue, attributes: viewAttributes)
+        // The same fully-qualified class the automatic event for this controller carries, so the
+        // two can be matched up.
+        NewRelic.setCurrentView(viewName.rawValue,
+                                viewClass: String(reflecting: Swift.type(of: self)),
+                                uiFramework: "Manual",
+                                attributes: viewAttributes)
     }
 
     // MARK: - Rotation

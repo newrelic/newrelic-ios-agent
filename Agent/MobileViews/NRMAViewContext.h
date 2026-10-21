@@ -21,24 +21,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/// Longest construction-to-appear interval still treated as a measurement rather than an artifact.
-///
-/// A load start is only trustworthy when the runtime built the screen *because* it was about to show
-/// it. Every producer has a case where that is false -- SwiftUI builds every tab's content struct up
-/// front to resolve tab items, UIKit loads a view whose `view` property was touched early, and a
-/// manual `beginViewLoad` may never be followed by a `setCurrentView:`. All three then report the
-/// interval since app launch as a screen load.
-///
-/// Above this, `loadTime` and the `timeToInitialDisplay` baseline are both withheld and the view's
-/// event carries `loadTimeUnavailable` instead, so the omission is diagnosable in NRDB rather than
-/// looking like the attribute was never implemented.
-///
-/// Chosen to separate "slow screen" from "constructed long before shown": a genuinely slow
-/// synchronous load is at most a few seconds, while eager construction is tens of seconds or more.
-/// Deliberately not tight -- a tight ceiling silently truncates the right tail of the baseline,
-/// which is exactly the population worth looking at.
-FOUNDATION_EXPORT const double kNRMAMaxPlausibleLoadMs;
-
 @class NRMAViewTimingSnapshot;
 
 /// Why an automatically tracked view went away. See -viewDidDisappearNamed:instanceId:departure:.
@@ -98,8 +80,9 @@ typedef NS_ENUM(NSInteger, NRMAViewDeparture) {
 /// enclosing it, and the subtraction changes sign depending on the screen.
 ///
 /// Pass nil when the producer cannot vouch for a construction start -- nothing was built (a
-/// re-appearance, a tab selection), the agent started mid-construction, or the interval exceeded
-/// `kNRMAMaxPlausibleLoadMs`. Then no baseline row is emitted and marks fall back to `appearTime` --
+/// re-appearance, a tab selection), or the agent started mid-construction. A start more than
+/// `kNRMAViewTimingMaxMilliseconds` before `appearTime` is treated as nil. Then no baseline row is
+/// emitted and marks fall back to `appearTime` --
 /// which also means such a view has no baseline for a mark to be wrongly subtracted from. Whether a
 /// given visit had a construction start is recoverable from its `MobileView` event, which carries
 /// `loadTime` exactly when one was vouched for.
@@ -145,7 +128,7 @@ typedef NS_ENUM(NSInteger, NRMAViewDeparture) {
                    instanceId:(NSString *)instanceId
                     departure:(NRMAViewDeparture)departure;
 
-#pragma mark - Manual producer (+[NewRelic setCurrentView:attributes:])
+#pragma mark - Manual producer (+[NewRelic setCurrentView:viewClass:uiFramework:attributes:])
 
 /// Records that construction of the *next* manually-set view starts now, giving manual views the
 /// construction-start origin the automatic producers get from `viewDidLoad` / modifier init.
@@ -156,17 +139,24 @@ typedef NS_ENUM(NSInteger, NRMAViewDeparture) {
 /// every percentile and indistinguishable from an instant load -- the baseline is simply absent for
 /// manual views unless the customer marks the start with this method.
 ///
-/// Consumed by the next `setCurrentManualView:attributes:`, and only if that call arrives within
-/// `kNRMAMaxPlausibleLoadMs`; a begin with no matching set goes stale rather than attaching itself
-/// to whatever screen appears next. Calling it again before a set replaces the pending start.
+/// Consumed by the next `setCurrentManualView:viewClass:uiFramework:attributes:`, and vouched for
+/// only if that set arrives within `kNRMAViewTimingMaxMilliseconds`. Calling it again before a set
+/// replaces the pending start.
 - (void)beginManualViewLoad;
 
 /// Sets the current view by name (browser route-change / SPA model). If a manual view is already
 /// current, its MobileView event is emitted now -- that visit has just ended, so its `timeVisible`
-/// is finally knowable. `name` then becomes current and emits nothing yet; `attributes` are held
-/// and ride on its event when the *next* setCurrentView: (or a background flush) closes it out.
-/// Auto-tracked views that happen to be current are left for their own viewDidDisappear to close.
-- (void)setCurrentManualView:(NSString *)name attributes:(nullable NSDictionary<NSString *, id> *)attributes;
+/// is finally knowable. `name` then becomes current and emits nothing yet; `viewClass`,
+/// `uiFramework` and `attributes` are held and ride on its event when the *next* setCurrentView:
+/// (or a background flush, or an automatic screen appearing) closes it out. Auto-tracked views that
+/// happen to be current are left for their own viewDidDisappear to close.
+///
+/// A nil or empty `viewClass` reports `name` as the class. A nil or empty `uiFramework` reports
+/// "Manual". Either way the event is gated by the manual flag, whatever framework it declares.
+- (void)setCurrentManualView:(NSString *)name
+                   viewClass:(nullable NSString *)viewClass
+                 uiFramework:(nullable NSString *)uiFramework
+                  attributes:(nullable NSDictionary<NSString *, id> *)attributes;
 
 /// If the current view was set manually, emits its MobileView event (with timeVisible) and clears
 /// it. Called on app background so the last manual view produces an event at all -- it is otherwise

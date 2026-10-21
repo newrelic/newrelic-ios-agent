@@ -114,7 +114,10 @@ class ViewsAndInteractionsViewController: UIViewController {
     }
 
     @objc private func setCurrentViewTapped() {
-        NewRelic.setCurrentView("Checkout", attributes: ["source": "views-and-interactions-demo"])
+        NewRelic.setCurrentView("Checkout",
+                                viewClass: "Checkout",
+                                uiFramework: "Manual",
+                                attributes: ["source": "views-and-interactions-demo"])
         append("setCurrentView(\"Checkout\") — MobileView event carries the running interactionId")
     }
 

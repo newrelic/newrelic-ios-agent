@@ -50,7 +50,10 @@ struct ManualViewsDemoView: View {
                 Text("Navigate (React Native-style)").font(.headline)
                 ForEach(screens, id: \.self) { name in
                     Button {
-                        NewRelic.setCurrentView(name, attributes: ["source": "manual-demo"])
+                        NewRelic.setCurrentView(name,
+                                                viewClass: name,
+                                                uiFramework: "ReactNative",
+                                                attributes: ["source": "manual-demo"])
                         previousView = currentView
                         currentView = name
                         append("setCurrentView(\"\(name)\")")

@@ -14,34 +14,33 @@ import Foundation
 ///
 /// These used to live as `static NSString * const` blocks duplicated across
 /// NRMAViewContext.m, NRMAViewTiming.m and NRMAMobileViewTracker.m, with the SwiftUI
-/// producers using bare literals instead. Three copies plus literals is why the schema
-/// drifted: `navigationKind` reached only the tab sites, and `agentName` only some of
-/// them.
+/// producers using bare literals instead.
 internal enum NRViewAttribute {
     static let viewClass              = "viewClass"
     static let viewName               = "viewName"
     static let viewInstanceId         = "viewInstanceId"
     static let previousView           = "previousView"
     static let previousViewInstanceId = "previousViewInstanceId"
-    static let uiFramework             = "uiFramework"
+    static let uiFramework            = "uiFramework"
     static let loadTime               = "loadTime"
     static let loadTimeUnavailable    = "loadTimeUnavailable"
     static let timeVisible            = "timeVisible"
-    static let navigationKind         = "navigationKind"
     static let timingName             = "timingName"
     static let timingValue            = "timingValue"
-    static let agentName               = "agentName"
-}
 
-/// Verbatim from the three producers this file replaced, which each hardcoded @"iOS".
-///
-/// +[NewRelicInternalUtils osName] would be the more correct source -- it reports tvOS and watchOS
-/// accurately -- but switching to it would change this value on those platforms, which is a wire
-/// change rather than a refactor. Left as-is deliberately.
-private let kNRViewAgentName = "iOS"
+    /// The MobileView schema (IDD §5.3). Customer-supplied attributes can never set these, whether
+    /// or not a given event writes the key itself.
+    static let reservedForMobileView: Set<String> = [
+        viewClass, viewName, viewInstanceId, previousView, previousViewInstanceId,
+        uiFramework, loadTime, loadTimeUnavailable, timeVisible,
+    ]
+}
 
 /// The UI toolkit that observed the view. Absent when a producer genuinely does not know,
 /// which is why the record holds this as an optional rather than defaulting it.
+///
+/// Also what picks the gating flag, so a manual view stays `.manual` whatever toolkit its
+/// caller declared -- that declaration is `MobileViewRecord.declaredFramework`.
 internal enum NRViewFramework: String {
     case uiKit   = "UIKit"
     case swiftUI = "SwiftUI"
@@ -58,10 +57,10 @@ internal enum NRViewLoadOutcome {
     case unavailable(Reason)
 
     internal enum Reason: String {
-        /// The view was built long before it was shown (an eagerly-constructed tab or
-        /// container child), so the interval is an artifact rather than a slow screen.
-        case constructedBeforeAppear
-        /// No construction start was observed at all.
+        /// setCurrentView without beginLoad
+        case noLoadStartDeclared
+        /// No construction start was observed for this visit, or it was more than
+        /// kNRMAViewTimingMaxMilliseconds before the view appeared.
         case noConstructionObserved
         /// SwiftUI preserved this view's identity, so nothing was rebuilt and there is
         /// nothing to time.
@@ -98,19 +97,24 @@ internal struct MobileViewRecord {
     var viewClass: String?
     var instanceId: String
     var framework: NRViewFramework?
+    /// The toolkit a manual view's caller passed to setCurrentView: ("ReactNative", "Flutter",
+    /// ...), written as `uiFramework` in place of "Manual". Ignored unless `framework` is
+    /// `.manual`.
+    var declaredFramework: String?
     var referrer: NRViewReferrer = .none
     /// Measured at appear time and carried until the visit ends. `nil` omits both loadTime
     /// and loadTimeUnavailable.
     var load: NRViewLoadOutcome?
     /// Milliseconds the view was on screen.
     var timeVisibleMs: Double?
-    var navigationKind: String?
     var custom: [String: Any]?
 
-    /// Reserved keys always win over customer-supplied ones, so the schema is stable no
-    /// matter what an app returns from `nrMobileViewAttributes`.
+    /// Reserved keys are dropped from customer-supplied attributes, so the schema is stable no
+    /// matter what an app returns from `nrMobileViewAttributes` or passes to setCurrentView:.
     internal func attributes() -> [String: Any] {
-        var attrs: [String: Any] = custom ?? [:]
+        var attrs: [String: Any] = (custom ?? [:]).filter {
+            !NRViewAttribute.reservedForMobileView.contains($0.key)
+        }
 
         switch referrer {
         case .none:
@@ -137,10 +141,11 @@ internal struct MobileViewRecord {
         // producer that genuinely does not know which toolkit it saw cannot be mistaken for
         // one that reported an empty string.
         if let framework = framework {
-            attrs[NRViewAttribute.uiFramework] = framework.rawValue
-        }
-        if let navigationKind = navigationKind, !navigationKind.isEmpty {
-            attrs[NRViewAttribute.navigationKind] = navigationKind
+            if framework == .manual, let declared = declaredFramework, !declared.isEmpty {
+                attrs[NRViewAttribute.uiFramework] = declared
+            } else {
+                attrs[NRViewAttribute.uiFramework] = framework.rawValue
+            }
         }
 
         // loadTime and loadTimeUnavailable are mutually exclusive by construction. loadTime
@@ -150,8 +155,13 @@ internal struct MobileViewRecord {
         switch load {
         case .none:
             break
-        case .some(.measured(let ms)):
+        case .some(.measured(let ms)) where ms <= kNRMAViewTimingMaxMilliseconds:
             attrs[NRViewAttribute.loadTime] = NSNumber(value: ms)
+        case .some(.measured):
+            // The construction start was not vouched for (NRMAViewContext), so this visit has no
+            // baseline timing; loadTime must not report the interval the baseline refused.
+            attrs[NRViewAttribute.loadTimeUnavailable] =
+                NRViewLoadOutcome.Reason.noConstructionObserved.rawValue
         case .some(.unavailable(let reason)):
             attrs[NRViewAttribute.loadTimeUnavailable] = reason.rawValue
         }
@@ -188,7 +198,6 @@ internal struct ViewTimingRecord {
         var attrs: [String: Any] = [
             NRViewAttribute.timingName:  timingName,
             NRViewAttribute.timingValue: NSNumber(value: timingValueMs),
-            NRViewAttribute.agentName:   kNRViewAgentName,
         ]
         // Only keys with values are set; an absent view must read as absent, not as an
         // empty string.
@@ -257,15 +266,18 @@ public class NRMAMobileViewFields: NSObject {
     public var viewClass: String?
     public var instanceId: String = ""
     /// "UIKit", "SwiftUI" or "Manual". Anything else (including nil or empty) omits
-    /// `uiFramework`.
+    /// `uiFramework` -- unless `manual` is set, when it is written verbatim and nil or empty
+    /// writes "Manual".
     public var uiFramework: String?
+    /// Set by the manual setCurrentView: producer. The event is gated by the manual flag and
+    /// `uiFramework` is whatever its caller declared, not a toolkit the agent observed.
+    public var manual: Bool = false
     /// Milliseconds. Setting this writes `loadTime`; it wins over `loadTimeUnavailable`.
     public var loadTimeMs: NSNumber?
-    /// One of "constructedBeforeAppear", "noConstructionObserved", "notRebuilt".
+    /// One of "noLoadStartDeclared", "noConstructionObserved", "notRebuilt".
     public var loadTimeUnavailable: String?
     /// Milliseconds. Setting this writes `timeVisible`.
     public var timeVisibleMs: NSNumber?
-    public var navigationKind: String?
     /// Merge `previousView` / `previousViewInstanceId` out of the shared view context.
     /// Ignored when `previousView` is set explicitly.
     public var useContextReferrer: Bool = false
@@ -301,11 +313,11 @@ public class NRMAMobileViewFields: NSObject {
             viewName: viewName,
             viewClass: viewClass,
             instanceId: instanceId,
-            framework: uiFramework.flatMap { NRViewFramework(rawValue: $0) },
+            framework: manual ? .manual : uiFramework.flatMap { NRViewFramework(rawValue: $0) },
+            declaredFramework: manual ? uiFramework : nil,
             referrer: referrer,
             load: load,
             timeVisibleMs: timeVisibleMs?.doubleValue,
-            navigationKind: navigationKind,
             custom: custom)
     }
 }

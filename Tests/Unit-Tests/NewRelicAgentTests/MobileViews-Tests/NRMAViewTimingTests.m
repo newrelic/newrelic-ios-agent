@@ -15,10 +15,33 @@
 //
 
 #import <XCTest/XCTest.h>
+#import <objc/runtime.h>
 #import "NRMAViewTiming.h"
 #import "NRMAFlags.h"
 #import "NRMAViewContext.h"
 #import "NewRelic.h"
+
+#pragma mark - Fake clock
+
+// Stands in for +[NRMAViewContext monotonicNow] so a test can let time pass without sleeping.
+static CFAbsoluteTime sFakeNow;
+static IMP sRealMonotonicNow;
+
+static void NRMAUseFakeClock(CFAbsoluteTime start) {
+    sFakeNow = start;
+    if (sRealMonotonicNow) { return; }
+    Method method = class_getClassMethod([NRMAViewContext class], @selector(monotonicNow));
+    sRealMonotonicNow = method_setImplementation(method, imp_implementationWithBlock(^CFAbsoluteTime(id _self) {
+        return sFakeNow;
+    }));
+}
+
+static void NRMARestoreClock(void) {
+    if (!sRealMonotonicNow) { return; }
+    Method method = class_getClassMethod([NRMAViewContext class], @selector(monotonicNow));
+    method_setImplementation(method, sRealMonotonicNow);
+    sRealMonotonicNow = NULL;
+}
 
 @interface NRMAViewTimingTests : XCTestCase
 @end
@@ -35,6 +58,7 @@
 }
 
 - (void)tearDown {
+    NRMARestoreClock();
     // Both MobileViews flags are opt-in; restore the default so we don't leak flag state.
     [NewRelic disableFeatures:NRFeatureFlag_AutomaticMobileViews];
     [NewRelic disableFeatures:NRFeatureFlag_ManualMobileViews];
@@ -94,7 +118,6 @@
                           @"viewInstanceId is what joins MobileViewTiming back to its MobileView visit");
     XCTAssertEqualObjects(attrs[@"previousView"], @"SearchResults",
                           @"previousView makes timings queryable by route, not only by destination");
-    XCTAssertEqualObjects(attrs[@"agentName"], @"iOS");
 }
 
 // A caller-supplied duration with no view current still lands; it is simply unattributed.
@@ -269,6 +292,73 @@
                     @"a customer exhausting the cap must not suppress the agent's own baseline row");
 }
 
+#pragma mark - Unattributed cap
+
+- (void)fillCapForSnapshot:(NRMAViewTimingSnapshot *)snapshot {
+    for (NSUInteger i = 0; i < kNRMAViewTimingMaxPerViewInstance; i++) {
+        [_timing attributesForTimingNamed:[NSString stringWithFormat:@"mark%lu", (unsigned long)i]
+                            milliseconds:100
+                                snapshot:snapshot
+                              agentOwned:NO];
+    }
+}
+
+- (void)testUnattributedCapReopensOnSessionStart {
+    NRMAViewTimingSnapshot *snapshot = [self snapshotWithoutView];
+    [self fillCapForSnapshot:snapshot];
+    XCTAssertNil([_timing attributesForTimingNamed:@"timeToFirstByte"
+                                     milliseconds:214
+                                         snapshot:snapshot
+                                       agentOwned:NO],
+                 @"precondition: the unattributed bucket is full");
+
+    [_timing resetUnattributedCapForNewSession];
+
+    XCTAssertNotNil([_timing attributesForTimingNamed:@"timeToFirstByte"
+                                        milliseconds:214
+                                            snapshot:snapshot
+                                          agentOwned:NO],
+                    @"each session starts with an empty unattributed bucket");
+}
+
+- (void)testUnattributedCapStaysFullForTheRestOfTheSession {
+    NRMAUseFakeClock(1000);
+    NRMAViewTimingSnapshot *snapshot = [self snapshotWithoutView];
+    [self fillCapForSnapshot:snapshot];
+
+    sFakeNow += 60 * 60;   // an hour later, same session
+
+    XCTAssertNil([_timing attributesForTimingNamed:@"timeToFirstByte"
+                                     milliseconds:214
+                                         snapshot:snapshot
+                                       agentOwned:NO],
+                 @"only a session start reopens the unattributed bucket");
+}
+
+- (void)testUnattributedCapStaysFullAsViewBucketsAreEvicted {
+    NRMAViewTimingSnapshot *unattributed = [self snapshotWithoutView];
+    [self fillCapForSnapshot:unattributed];
+
+    // Enough view instances to push every older bucket out of cap bookkeeping.
+    for (NSUInteger i = 0; i < 100; i++) {
+        NRMAViewTimingSnapshot *visit =
+            [[NRMAViewTimingSnapshot alloc] initWithViewName:@"Feed"
+                                             viewInstanceId:[NSString stringWithFormat:@"VISIT-%lu", (unsigned long)i]
+                                               previousView:nil
+                                                 appearTime:[NRMAViewContext monotonicNow]
+                                              loadStartTime:0
+                                               hasLoadStart:NO
+                                             hasCurrentView:YES];
+        [_timing attributesForTimingNamed:@"timeToFullDisplay" milliseconds:100 snapshot:visit agentOwned:NO];
+    }
+
+    XCTAssertNil([_timing attributesForTimingNamed:@"timeToFirstByte"
+                                     milliseconds:214
+                                         snapshot:unattributed
+                                       agentOwned:NO],
+                 @"only a session start reopens the unattributed bucket");
+}
+
 #pragma mark - Public API gating
 
 // markViewTiming measures from the current view's appear time; with no view there is no zero point.
@@ -279,7 +369,7 @@
 // context directly rather than +[NewRelic setCurrentView:] keeps the test independent of whether an
 // agent is running.
 - (void)testMarkWithNoCurrentViewIsRejected {
-    [[NRMAViewContext sharedInstance] setCurrentManualView:@"TransientView" attributes:nil];
+    [[NRMAViewContext sharedInstance] setCurrentManualView:@"TransientView" viewClass:nil uiFramework:nil attributes:nil];
     [[NRMAViewContext sharedInstance] flushCurrentManualViewOnBackground];
 
     XCTAssertFalse([_timing markTimingNamed:@"timeToFullDisplay"],
@@ -365,6 +455,34 @@
                    @"no vouched start means no baseline row and appear-anchored marks");
 }
 
+// A controller whose view was loaded long before it appeared -- a preloaded tab -- would otherwise
+// report the whole gap: a baseline above the timing ceiling, which is rejected, and marks that all
+// exceed it too. Past the ceiling the start is not vouched for, so marks fall back to appear.
+- (void)testConstructionStartMoreThanTenMinutesBeforeAppearIsNotVouchedFor {
+    NRMAViewContext *context = [[NRMAViewContext alloc] init];
+
+    [context transitionToView:@"ProductDetail"
+                  instanceId:@"ID-1"
+                  appearTime:1000.0
+               loadStartTime:@(399.999)
+                    platform:@"UIKit"];
+
+    XCTAssertFalse([context snapshotForTiming].hasLoadStart);
+}
+
+// Same boundary as every timing: 600000 ms is accepted, so a baseline at the limit still lands.
+- (void)testConstructionStartExactlyTenMinutesBeforeAppearIsVouchedFor {
+    NRMAViewContext *context = [[NRMAViewContext alloc] init];
+
+    [context transitionToView:@"ProductDetail"
+                  instanceId:@"ID-1"
+                  appearTime:1000.0
+               loadStartTime:@(400.0)
+                    platform:@"UIKit"];
+
+    XCTAssertTrue([context snapshotForTiming].hasLoadStart);
+}
+
 // The leak this guards against would be silent and wrong in the worst way: marks on a screen with no
 // construction start would be measured from whenever the *previous* screen started building.
 - (void)testTransitionWithNoVouchedStartDoesNotInheritThePreviousViewsStart {
@@ -392,7 +510,7 @@
     [NewRelic enableFeatures:NRFeatureFlag_ManualMobileViews];
     NRMAViewContext *context = [[NRMAViewContext alloc] init];
 
-    [context setCurrentManualView:@"Checkout" attributes:nil];
+    [context setCurrentManualView:@"Checkout" viewClass:nil uiFramework:nil attributes:nil];
 
     XCTAssertFalse([context snapshotForTiming].hasLoadStart,
                    @"setCurrentView: is called once the screen is already up, so load start and "
@@ -405,7 +523,7 @@
 
     [context beginManualViewLoad];
     [NSThread sleepForTimeInterval:0.050];
-    [context setCurrentManualView:@"Checkout" attributes:nil];
+    [context setCurrentManualView:@"Checkout" viewClass:nil uiFramework:nil attributes:nil];
 
     NRMAViewTimingSnapshot *snapshot = [context snapshotForTiming];
     XCTAssertTrue(snapshot.hasLoadStart, @"beginViewLoad is how a manual view earns a baseline");
@@ -414,13 +532,41 @@
                          40.0, @"the baseline must span the declared load, not be a zero placeholder");
 }
 
+- (void)testBeginViewLoadIsConsumedAfterAMultiSecondLoad {
+    [NewRelic enableFeatures:NRFeatureFlag_ManualMobileViews];
+    NRMAViewContext *context = [[NRMAViewContext alloc] init];
+    NRMAUseFakeClock(1000);
+
+    [context beginManualViewLoad];
+    sFakeNow += 6.0;   // a six-second load
+    [context setCurrentManualView:@"Checkout" viewClass:nil uiFramework:nil attributes:nil];
+
+    NRMAViewTimingSnapshot *snapshot = [context snapshotForTiming];
+    XCTAssertTrue(snapshot.hasLoadStart, @"the next setCurrentView: consumes the declared start");
+    XCTAssertEqualWithAccuracy([NRMAViewContext millisecondsBetween:snapshot.loadStartTime
+                                                               and:snapshot.appearTime],
+                               6000.0, 1.0);
+}
+
+- (void)testBeginViewLoadMoreThanTenMinutesBeforeTheSetIsNotVouchedFor {
+    [NewRelic enableFeatures:NRFeatureFlag_ManualMobileViews];
+    NRMAViewContext *context = [[NRMAViewContext alloc] init];
+    NRMAUseFakeClock(1000);
+
+    [context beginManualViewLoad];
+    sFakeNow += 600.001;
+    [context setCurrentManualView:@"Checkout" viewClass:nil uiFramework:nil attributes:nil];
+
+    XCTAssertFalse([context snapshotForTiming].hasLoadStart);
+}
+
 - (void)testBeginViewLoadIsIgnoredWhenManualViewsAreDisabled {
     [NewRelic disableFeatures:NRFeatureFlag_ManualMobileViews];
     NRMAViewContext *context = [[NRMAViewContext alloc] init];
 
     [context beginManualViewLoad];
     [NewRelic enableFeatures:NRFeatureFlag_ManualMobileViews];
-    [context setCurrentManualView:@"Checkout" attributes:nil];
+    [context setCurrentManualView:@"Checkout" viewClass:nil uiFramework:nil attributes:nil];
 
     XCTAssertFalse([context snapshotForTiming].hasLoadStart,
                    @"a start recorded while the feature was off must not be consumed later");

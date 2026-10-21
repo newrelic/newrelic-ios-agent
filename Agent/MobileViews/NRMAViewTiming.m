@@ -22,23 +22,19 @@ const double     kNRMAViewTimingMaxMilliseconds    = 10 * 60 * 1000;   // 10 min
 // This event's attribute names live in MobileViewEmitter.swift, which owns the MobileViewTiming
 // schema. This file owns admission policy: what is allowed to be recorded, and how often.
 
-// Cap bucket for timings recorded with no view current. A view instance's bucket is naturally
-// bounded — the view goes away — but this one is not, so it is rate limited by window instead of
-// capped for the process lifetime. Without the window, sixteen unattributed timings early in a
-// launch would silence the path for good.
+// Cap bucket for timings recorded with no view current. A view instance's bucket stops mattering
+// when the view goes away; this one never does, so -resetUnattributedCapForNewSession empties it at
+// each session start. Nothing else does: it is exempt from eviction below.
 static NSString * const kNRUnattributedBucket   = @"__nrma_unattributed__";
 
-static const CFTimeInterval kNRUnattributedWindowSeconds = 60.0;
-
-// Upper bound on tracked buckets. Every visited view instance would otherwise be remembered for the
-// life of the process. Oldest-inserted buckets are evicted first: they belong to views the user has
-// long since left, so re-admitting them to the cap costs nothing real.
+// Upper bound on tracked view-instance buckets. Every visited view instance would otherwise be
+// remembered for the life of the process. Oldest-inserted buckets are evicted first: they belong to
+// views the user has long since left, so re-admitting them to the cap costs nothing real.
 static const NSUInteger kNRMaxTrackedBuckets = 64;
 
-/// Mutable count for one bucket, plus when its window opened (used only by the unattributed bucket).
+/// Mutable count for one bucket.
 @interface NRMAViewTimingBucket : NSObject
 @property (nonatomic) NSUInteger count;
-@property (nonatomic) CFAbsoluteTime windowStart;
 @end
 
 @implementation NRMAViewTimingBucket
@@ -155,9 +151,9 @@ static const NSUInteger kNRMaxTrackedBuckets = 64;
     if (!snapshot.hasCurrentView || snapshot.viewName.length == 0) { return; }
 
     // No vouched construction start means there is nothing to time: the screen resurfaced without
-    // being rebuilt, the agent started mid-construction, the interval was an eager-construction
-    // artifact, or this is a manual view whose customer never called beginViewLoad. A placeholder
-    // here would be a real value in every percentile, so the row is simply absent.
+    // being rebuilt, the agent started mid-construction, or this is a manual view whose customer
+    // never called beginViewLoad. A placeholder here would be a real value in every percentile, so
+    // the row is simply absent.
     if (!snapshot.hasLoadStart) { return; }
 
     double milliseconds = [NRMAViewContext millisecondsBetween:snapshot.loadStartTime
@@ -167,6 +163,14 @@ static const NSUInteger kNRMaxTrackedBuckets = 64;
              milliseconds:milliseconds
                  snapshot:snapshot
                agentOwned:YES];
+}
+
+#pragma mark - Session lifecycle
+
+- (void)resetUnattributedCapForNewSession {
+    os_unfair_lock_lock(&_lock);
+    [_buckets removeObjectForKey:kNRUnattributedBucket];
+    os_unfair_lock_unlock(&_lock);
 }
 
 #pragma mark - Emission
@@ -256,7 +260,6 @@ static const NSUInteger kNRMaxTrackedBuckets = 64;
 - (BOOL)admitTimingForSnapshot:(NRMAViewTimingSnapshot *)snapshot {
     BOOL isUnattributed = (snapshot.viewInstanceId.length == 0);
     NSString *key = isUnattributed ? kNRUnattributedBucket : snapshot.viewInstanceId;
-    CFAbsoluteTime now = [NRMAViewContext monotonicNow];
 
     BOOL admitted = NO;
     BOOL shouldWarn = NO;
@@ -265,20 +268,18 @@ static const NSUInteger kNRMaxTrackedBuckets = 64;
     NRMAViewTimingBucket *bucket = _buckets[key];
     if (bucket == nil) {
         bucket = [[NRMAViewTimingBucket alloc] init];
-        bucket.windowStart = now;
         _buckets[key] = bucket;
-        [_bucketOrder addObject:key];
 
-        // Evict oldest-inserted buckets so a long session cannot accumulate one per visited view.
-        while (_bucketOrder.count > kNRMaxTrackedBuckets) {
-            NSString *oldest = _bucketOrder.firstObject;
-            [_bucketOrder removeObjectAtIndex:0];
-            [_buckets removeObjectForKey:oldest];
+        if (!isUnattributed) {
+            [_bucketOrder addObject:key];
+
+            // Evict oldest-inserted buckets so a long session cannot accumulate one per visited view.
+            while (_bucketOrder.count > kNRMaxTrackedBuckets) {
+                NSString *oldest = _bucketOrder.firstObject;
+                [_bucketOrder removeObjectAtIndex:0];
+                [_buckets removeObjectForKey:oldest];
+            }
         }
-    } else if (isUnattributed && (now - bucket.windowStart) > kNRUnattributedWindowSeconds) {
-        // Rate limit rather than a lifetime cap: see kNRUnattributedBucket.
-        bucket.count = 0;
-        bucket.windowStart = now;
     }
 
     if (bucket.count < kNRMAViewTimingMaxPerViewInstance) {

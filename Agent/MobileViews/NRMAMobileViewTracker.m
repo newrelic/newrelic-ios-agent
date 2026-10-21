@@ -38,8 +38,7 @@ static const char kNRSwiftUIScreenKey;
 // Attribute names, the event type, and the loadTime-vs-loadTimeUnavailable rule all live in
 // MobileViewEmitter.swift now. This file reports facts; it does not build events.
 
-// The reason string handed to the recorder when a construction interval cannot be trusted.
-static NSString * const kNRLoadUnavailableConstructedBeforeAppear = @"constructedBeforeAppear";
+// The reason string handed to the recorder when no construction start was observed.
 static NSString * const kNRLoadUnavailableNoConstructionObserved  = @"noConstructionObserved";
 
 // Swift mangling marker — any class name starting with _Tt is mangled
@@ -318,7 +317,7 @@ NS_INLINE NSString *NRMA_ViewNameForController(UIViewController *vc) {
 
 /**
  * Returns custom attributes from the optional nrMobileViewAttributes hook, or nil.
- * Attributes are merged into emitted MobileView events; reserved keys win.
+ * Attributes are merged into emitted MobileView events; reserved keys are dropped.
  */
 NS_INLINE NSDictionary<NSString *, id> * _Nullable NRMA_AttributesForController(UIViewController *vc) {
     SEL sel = @selector(nrMobileViewAttributes);
@@ -426,20 +425,11 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
     // Absent on every appearance after the first: viewDidLoad fires once per load, and
     // viewDidDisappear clears this key. A screen the user returns to was not rebuilt, so it has
     // nothing to time.
+    //
+    // viewDidLoad → viewDidAppear is the construction-to-visible boundary. A controller whose `view`
+    // was touched early -- a preloaded tab, an eagerly-built container child -- reports everything
+    // since that load, up to kNRMAViewTimingMaxMilliseconds. Past that the start is not vouched for.
     NSNumber *loadTimestamp = objc_getAssociatedObject(self, &kNRLoadTimestampKey);
-
-    // viewDidLoad → viewDidAppear is an exact construction-to-visible boundary, but only when the
-    // view was loaded *because* it was about to be shown. A controller whose `view` was touched
-    // early -- a preloaded tab, an eagerly-built container child -- loaded minutes before it
-    // appeared, and the interval is an artifact of that, not a slow screen. Above the shared
-    // ceiling the agent declines to vouch for it: no loadTime, no baseline row, and marks fall
-    // back to the appear time. The absent loadTime is what tells a consumer that happened.
-    double loadTimeMs      = 0.0;
-    BOOL loadIsMeasurable  = NO;
-    if (loadTimestamp) {
-        loadTimeMs = [NRMAViewContext millisecondsBetween:loadTimestamp.doubleValue and:appearTime];
-        loadIsMeasurable = (loadTimeMs <= kNRMAMaxPlausibleLoadMs);
-    }
 
     // Make this view current in the shared context so it becomes the referrer for the next view
     // and for breadcrumbs recorded while it is visible.
@@ -451,7 +441,7 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
     [[NRMAViewContext sharedInstance] transitionToView:viewName
                                             instanceId:uuid
                                             appearTime:appearTime
-                                         loadStartTime:(loadIsMeasurable ? loadTimestamp : nil)
+                                         loadStartTime:loadTimestamp
                                               platform:platform];
 
     // No event is emitted here. One MobileView event is recorded per visit, at
@@ -509,17 +499,6 @@ static void NRMA_CloseVisit(UIViewController *vc, NRMASwiftUIScreen *swiftUIScre
 
     double timeVisibleMs = [NRMAViewContext millisecondsBetween:appearTimestamp.doubleValue and:disappearTime];
 
-    // loadTime is reported only when there is a trustworthy construction start. This used to fall
-    // through to 0.0, which put a real zero into every percentile over loadTime for exactly the
-    // appearances that had nothing to measure -- every screen the user returned to, since
-    // viewDidLoad fires once per load.
-    double loadTimeMs     = 0.0;
-    BOOL loadIsMeasurable = NO;
-    if (loadTimestamp) {
-        loadTimeMs = [NRMAViewContext millisecondsBetween:loadTimestamp.doubleValue and:appearTimestamp.doubleValue];
-        loadIsMeasurable = (loadTimeMs <= kNRMAMaxPlausibleLoadMs);
-    }
-
     // viewClass: fully-qualified demangled name, e.g. "MyApp.ProductDetailViewController"
     NSString *viewClass = swiftUIScreen ? swiftUIScreen.viewClass : NRMA_DemangledName([vc class], YES);
 
@@ -536,10 +515,9 @@ static void NRMA_CloseVisit(UIViewController *vc, NRMASwiftUIScreen *swiftUIScre
     fields.previousView           = referrer[@"previousView"];
     fields.previousViewInstanceId = referrer[@"previousViewInstanceId"];
 
-    if (loadIsMeasurable) {
-        fields.loadTimeMs = @(loadTimeMs);
-    } else if (loadTimestamp) {
-        fields.loadTimeUnavailable = kNRLoadUnavailableConstructedBeforeAppear;
+    if (loadTimestamp) {
+        fields.loadTimeMs = @([NRMAViewContext millisecondsBetween:loadTimestamp.doubleValue
+                                                              and:appearTimestamp.doubleValue]);
     } else {
         fields.loadTimeUnavailable = kNRLoadUnavailableNoConstructionObserved;
     }

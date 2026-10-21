@@ -800,8 +800,10 @@
                                                                       withAttributes:breadcrumbAttributes];
 }
 
-+ (void) setCurrentView:(NSString* __nonnull)name
-             attributes:(NSDictionary* __nullable)attributes
++ (void) setCurrentView:(NSString* _Nonnull)name
+              viewClass:(NSString* _Nonnull)viewClass
+            uiFramework:(NSString* _Nonnull)uiFramework
+             attributes:(NSDictionary* _Nullable)attributes
 {
     // If Agent is shutdown we shouldn't respond.
     if([NewRelicAgentInternal sharedInstance].isShutdown) {
@@ -820,7 +822,10 @@
 
     // SPA / route-change model: close out the previous manual view (emitting its timeVisible),
     // make `name` current, and emit its appearance stamped with the prior view as referrer.
-    [[NRMAViewContext sharedInstance] setCurrentManualView:name attributes:attributes];
+    [[NRMAViewContext sharedInstance] setCurrentManualView:name
+                                                 viewClass:viewClass
+                                               uiFramework:uiFramework
+                                                attributes:attributes];
 }
 
 + (void) beginViewLoad

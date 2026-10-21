@@ -81,6 +81,34 @@ final class MobileViewEmitterTests: XCTestCase {
         XCTAssertNil(record.attributes()["uiFramework"])
     }
 
+    // A manual view is labelled with the framework its caller passed to setCurrentView:, so a React
+    // Native screen facets as ReactNative rather than as a generic manual view.
+    func testAManualRecordWritesTheFrameworkItsCallerDeclared() {
+        var record = visitRecord()
+        record.framework = .manual
+        record.declaredFramework = "ReactNative"
+
+        XCTAssertEqual(record.attributes()["uiFramework"] as? String, "ReactNative")
+    }
+
+    func testAManualRecordThatDeclaresNoFrameworkWritesManual() {
+        for declared in [nil, ""] as [String?] {
+            var record = visitRecord()
+            record.framework = .manual
+            record.declaredFramework = declared
+
+            XCTAssertEqual(record.attributes()["uiFramework"] as? String, "Manual")
+        }
+    }
+
+    // Only the manual producer takes a framework from its caller; an automatic one reports what it observed.
+    func testADeclaredFrameworkIsIgnoredOnAnAutomaticRecord() {
+        var record = visitRecord()
+        record.declaredFramework = "ReactNative"
+
+        XCTAssertEqual(record.attributes()["uiFramework"] as? String, "SwiftUI")
+    }
+
     // MARK: - The loadTime rule
 
     func testMeasuredLoadWritesLoadTimeAndNotTheReason() {
@@ -99,6 +127,22 @@ final class MobileViewEmitterTests: XCTestCase {
                      "loadTime is omitted rather than zeroed, so it cannot drag percentiles to 0")
     }
 
+    // Above the timing ceiling the producer's construction start is not vouched for, so no baseline
+    // timing is emitted either. loadTime must not claim what the baseline refused.
+    func testMeasuredLoadAboveTenMinutesIsReportedAsNoConstructionObserved() {
+        let attrs = visitRecord(load: .measured(600_001)).attributes()
+
+        XCTAssertNil(attrs["loadTime"])
+        XCTAssertEqual(attrs["loadTimeUnavailable"] as? String, "noConstructionObserved")
+    }
+
+    func testMeasuredLoadOfExactlyTenMinutesIsWritten() {
+        let attrs = visitRecord(load: .measured(600_000)).attributes()
+
+        XCTAssertEqual(attrs["loadTime"] as? NSNumber, NSNumber(value: 600_000))
+        XCTAssertNil(attrs["loadTimeUnavailable"])
+    }
+
     func testNoLoadOutcomeOmitsBothKeys() {
         let attrs = visitRecord(load: nil).attributes()
 
@@ -108,7 +152,7 @@ final class MobileViewEmitterTests: XCTestCase {
 
     func testEveryUnavailableReasonKeepsItsWireString() {
         // These strings are already in customers' NRQL, so they are part of the contract.
-        XCTAssertEqual(NRViewLoadOutcome.Reason.constructedBeforeAppear.rawValue, "constructedBeforeAppear")
+        XCTAssertEqual(NRViewLoadOutcome.Reason.noLoadStartDeclared.rawValue, "noLoadStartDeclared")
         XCTAssertEqual(NRViewLoadOutcome.Reason.noConstructionObserved.rawValue, "noConstructionObserved")
         XCTAssertEqual(NRViewLoadOutcome.Reason.notRebuilt.rawValue, "notRebuilt")
     }
@@ -151,14 +195,10 @@ final class MobileViewEmitterTests: XCTestCase {
         XCTAssertNil(attrs["churn"])
     }
 
-    // MARK: - Optional facts
+    // MARK: - Retired attributes
 
-    func testNavigationKindIsWrittenOnlyWhenPresent() {
-        var record = visitRecord()
-        XCTAssertNil(record.attributes()["navigationKind"])
-
-        record.navigationKind = "tab"
-        XCTAssertEqual(record.attributes()["navigationKind"] as? String, "tab")
+    func testNoRecordWritesNavigationKind() {
+        XCTAssertNil(visitRecord().attributes()["navigationKind"])
     }
 
     // MARK: - Referrer
@@ -215,6 +255,25 @@ final class MobileViewEmitterTests: XCTestCase {
         XCTAssertEqual(attrs["loadTime"] as? NSNumber, NSNumber(value: 10))
     }
 
+    // A reserved key this event leaves unset stays unset: a manual view has no loadTime of its own,
+    // and a customer-supplied one must not stand in for it.
+    func testCustomerAttributesCannotSupplyAReservedKeyTheEventLeavesUnset() {
+        let reservedButUnset = ["viewClass", "uiFramework", "loadTime", "loadTimeUnavailable",
+                                "timeVisible", "previousView", "previousViewInstanceId"]
+        var hostile: [String: Any] = ["tier": "gold"]
+        for key in reservedButUnset { hostile[key] = "spoofed" }
+        let record = MobileViewRecord(viewName: "CheckoutView",
+                                      instanceId: "instance-1",
+                                      custom: hostile)
+
+        let attrs = record.attributes()
+
+        for key in reservedButUnset {
+            XCTAssertNil(attrs[key], "\(key) is reserved")
+        }
+        XCTAssertEqual(attrs["tier"] as? String, "gold")
+    }
+
     // MARK: - Gate
 
     func testAutomaticProducersAreGatedByTheAutomaticFlag() {
@@ -266,13 +325,15 @@ final class MobileViewEmitterTests: XCTestCase {
         XCTAssertEqual(attrs["viewName"] as? String, "CheckoutView")
         XCTAssertEqual(attrs["viewInstanceId"] as? String, "instance-1")
         XCTAssertEqual(attrs["previousView"] as? String, "CartView")
-        XCTAssertEqual(attrs["agentName"] as? String, "iOS")
     }
 
-    // MobileView dropped agentName at 6 of its 8 sites before this change; MobileViewTiming had a
-    // single site that kept it. The asymmetry is preserved deliberately -- see the report.
-    func testMobileViewRecordDoesNotCarryAgentName() {
+    func testNeitherRecordCarriesAgentName() {
         XCTAssertNil(visitRecord().attributes()["agentName"])
+        XCTAssertNil(ViewTimingRecord(timingName: "custom",
+                                      timingValueMs: 1,
+                                      viewName: "CheckoutView",
+                                      viewInstanceId: "instance-1",
+                                      previousView: nil).attributes()["agentName"])
     }
 
     // An absent view must read as absent, not as an empty string.
@@ -320,6 +381,40 @@ final class MobileViewEmitterTests: XCTestCase {
 
         XCTAssertNil(fields.record(),
                      "a view with no name must not produce an event")
+    }
+
+    // The manual producer passes on whatever framework its caller declared.
+    func testObjCFacadeWritesAManualViewsFrameworkVerbatim() {
+        let fields = NRMAMobileViewFields()
+        fields.viewName = "CartScreen"
+        fields.manual = true
+        fields.uiFramework = "ReactNative"
+
+        XCTAssertEqual(fields.record()?.attributes()["uiFramework"] as? String, "ReactNative")
+    }
+
+    func testObjCFacadeWritesManualForAManualViewThatDeclaresNoFramework() {
+        let fields = NRMAMobileViewFields()
+        fields.viewName = "CartScreen"
+        fields.manual = true
+
+        XCTAssertEqual(fields.record()?.attributes()["uiFramework"] as? String, "Manual")
+    }
+
+    // The flag gates the producer, not the label: a manual view that declares UIKit must still be
+    // dropped while only automatic tracking is on.
+    func testObjCFacadeGatesAManualViewByTheManualFlagWhateverItDeclares() {
+        let fields = NRMAMobileViewFields()
+        fields.viewName = "CartScreen"
+        fields.manual = true
+        fields.uiFramework = "UIKit"
+        let framework = fields.record()?.framework
+
+        NewRelic.enableFeatures(NRMAFeatureFlags.NRFeatureFlag_AutomaticMobileViews)
+        XCTAssertFalse(NRMobileViewEmitter.isEnabled(for: framework))
+
+        NewRelic.enableFeatures(NRMAFeatureFlags.NRFeatureFlag_ManualMobileViews)
+        XCTAssertTrue(NRMobileViewEmitter.isEnabled(for: framework))
     }
 
     // An unrecognized platform string omits uiFramework rather than writing it through.

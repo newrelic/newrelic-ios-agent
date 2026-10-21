@@ -745,12 +745,20 @@ extern "C" {
  * Requires NRFeatureFlag_ManualViews to be enabled. Independent of NRFeatureFlag_AutomaticViews.
  *
  * @param name The display name of the view (screen). Must be a non-empty string.
+ * @param viewClass The type backing the view (e.g. the React Native component's name), reported as
+ *        the MobileView event's viewClass. An empty string reports `name` instead.
+ * @param uiFramework The UI framework the view is built with, reported as the MobileView event's
+ *        uiFramework: "ReactNative", "Flutter", "Capacitor", "Cordova", "MAUI", or "Manual" for a
+ *        native screen. An empty string reports "Manual". The event is gated by
+ *        NRFeatureFlag_ManualViews whatever framework it names.
  * @param attributes Optional custom attributes merged into this view's MobileView event -- which is
  *        recorded when the view is closed out, so they are held until then. Reserved keys
- *        (viewClass, viewName, viewInstanceId, previousView, timeVisible, uiFramework, agentName) are
- *        not overridden.
+ *        (viewClass, viewName, viewInstanceId, previousView, previousViewInstanceId, uiFramework,
+ *        loadTime, loadTimeUnavailable, timeVisible) are dropped.
  */
 + (void) setCurrentView:(NSString* _Nonnull)name
+              viewClass:(NSString* _Nonnull)viewClass
+            uiFramework:(NSString* _Nonnull)uiFramework
              attributes:(NSDictionary* _Nullable)attributes;
 
 /*!
@@ -762,7 +770,10 @@ extern "C" {
  *
  *     [NewRelic beginViewLoad];                        // user tapped through to the screen
  *     ... build it, fetch it ...
- *     [NewRelic setCurrentView:@"ProductDetail" attributes:nil];   // it is now on screen
+ *     [NewRelic setCurrentView:@"ProductDetail"                    // it is now on screen
+ *                    viewClass:@"ProductDetail"
+ *                  uiFramework:@"Manual"
+ *                   attributes:nil];
  *
  * Optional, and only useful for manual views. The agent cannot observe a manual view's lifecycle:
  * setCurrentView: is called when the screen is already showing, so without this the load start and
@@ -775,8 +786,9 @@ extern "C" {
  * interval the screen looked finished but was not. Without it, marks measure from the setCurrentView:
  * instant instead, and the view has no baseline to compare them against.
  *
- * A begin with no matching setCurrentView: goes stale rather than attaching to whatever screen is
- * set much later. Calling it twice before a setCurrentView: keeps only the later start.
+ * The next setCurrentView: consumes the start. If that call comes more than 10 minutes later, the
+ * start is ignored, as if this method had not been called. Calling this twice before a
+ * setCurrentView: keeps only the later start.
  *
  * Requires NRFeatureFlag_ManualViews to be enabled.
  */

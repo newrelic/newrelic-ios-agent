@@ -27,12 +27,12 @@ static NSString * const kNRAttr_currentViewId  = @"currentViewInstanceId";
 // discarded first; they are the least likely to be what the user is looking at.
 static const NSUInteger kNRMAMaxVisibleViews = 32;
 
-// See the header for why this exists and why it is not tight. 5s keeps genuinely slow synchronous
-// loads in the baseline while still rejecting the eager-construction artifact, which is tens of
-// seconds or more because it dates from app launch.
-const double kNRMAMaxPlausibleLoadMs = 5000.0;
-
-static NSString * const kNRUIPlatformManual    = @"Manual";
+// A construction start further back than the longest accepted timing is not vouched for. The view was
+// built long before it was shown -- a preloaded tab -- so its baseline would be rejected and so would
+// every mark measured from that start. Unvouched, marks measure from appear instead.
+static BOOL NRMA_IsVouchedLoadStart(CFAbsoluteTime loadStart, CFAbsoluteTime appear) {
+    return [NRMAViewContext millisecondsBetween:loadStart and:appear] <= kNRMAViewTimingMaxMilliseconds;
+}
 
 /// One view believed to be on screen. Held oldest-first, so the last element is the topmost.
 @interface NRMAVisibleView : NSObject
@@ -67,16 +67,19 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     BOOL _currentViewHasLoadStart;
 
     // Pending construction start declared by -beginManualViewLoad, consumed by the next
-    // -setCurrentManualView:attributes:.
+    // -setCurrentManualView:viewClass:uiFramework:attributes:.
     CFAbsoluteTime _pendingManualLoadStart;
     BOOL _hasPendingManualLoadStart;
 
     NSString *_previousViewName;
     NSString *_previousViewInstanceId;
 
-    // Attributes the customer passed to -setCurrentManualView:attributes: for the *current* manual
-    // view. Held here because they belong on that view's MobileView event, and that event is not
-    // emitted until the view is closed out -- by the next setCurrentView: or by a background flush.
+    // What the customer passed to -setCurrentManualView:viewClass:uiFramework:attributes: for the
+    // *current* manual view. Held here because they belong on that view's MobileView event, and that
+    // event is not emitted until the view is closed out -- by the next setCurrentView: or by a
+    // background flush. Nil while an automatic view is current; its producer reports its own.
+    NSString *_currentViewClass;
+    NSString *_currentUIFramework;
     NSDictionary<NSString *, id> *_currentViewCustomAttributes;
 
     // Views the automatic producers have reported as appeared and not yet as disappeared, oldest
@@ -156,6 +159,8 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     CFAbsoluteTime manualAppear   = _currentViewAppearTime;
     NSString *manualReferrer      = closesManualView ? _previousViewName : nil;
     NSString *manualReferrerId    = closesManualView ? _previousViewInstanceId : nil;
+    NSString *manualViewClass     = closesManualView ? _currentViewClass : nil;
+    NSString *manualUIFramework   = closesManualView ? _currentUIFramework : nil;
     NSDictionary *manualCustom    = closesManualView ? _currentViewCustomAttributes : nil;
 
     // A view replacing itself (a new instance of the same screen, as SwiftUI produces on a tab
@@ -170,12 +175,15 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     _currentViewAppearTime  = appearTime;
     // Assigned unconditionally: a transition with no vouched load start must *clear* any start left
     // by the previous view, or marks on this screen would silently measure from the previous one.
-    _currentViewLoadStartTime = loadStartTime ? loadStartTime.doubleValue : 0;
-    _currentViewHasLoadStart  = (loadStartTime != nil);
+    BOOL vouched = loadStartTime && NRMA_IsVouchedLoadStart(loadStartTime.doubleValue, appearTime);
+    _currentViewLoadStartTime = vouched ? loadStartTime.doubleValue : 0;
+    _currentViewHasLoadStart  = vouched;
     _currentViewSource      = NRMAViewSourceAutomatic;
     _transitionGeneration++;
-    // Automatic producers carry their own custom attributes; anything left here belongs to a manual
-    // view that is no longer current and must not leak onto this one's event.
+    // Automatic producers carry their own class, framework and custom attributes; anything left here
+    // belongs to a manual view that is no longer current and must not leak onto this one's event.
+    _currentViewClass            = nil;
+    _currentUIFramework          = nil;
     _currentViewCustomAttributes = nil;
     [self pushVisibleViewLocked:name instanceId:instanceId appearTime:appearTime platform:platform];
     os_unfair_lock_unlock(&_lock);
@@ -183,6 +191,8 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
 
     if (closesManualView) {
         [self recordMobileView:manualName
+                     viewClass:manualViewClass
+                   uiFramework:manualUIFramework
                     instanceId:manualInstanceId
                   previousView:manualReferrer
         previousViewInstanceId:manualReferrerId
@@ -331,7 +341,10 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     os_unfair_lock_unlock(&_lock);
 }
 
-- (void)setCurrentManualView:(NSString *)name attributes:(NSDictionary<NSString *, id> *)attributes {
+- (void)setCurrentManualView:(NSString *)name
+                   viewClass:(nullable NSString *)viewClass
+                 uiFramework:(nullable NSString *)uiFramework
+                  attributes:(nullable NSDictionary<NSString *, id> *)attributes {
     if (name.length == 0) { return; }
     CFAbsoluteTime now = [NRMAViewContext monotonicNow];
     NSString *newInstanceId = [[NSUUID UUID] UUIDString];
@@ -344,7 +357,10 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     BOOL outgoingWasManual   = (_currentViewSource == NRMAViewSourceManual);
     NSString *beforeOutgoing = _previousViewName;      // referrer of the outgoing view
     NSString *beforeOutgoingId = _previousViewInstanceId;
-    // The outgoing view's own attributes, which ride on the event emitted for it below.
+    // The outgoing view's own class, framework and attributes, which ride on the event emitted for
+    // it below.
+    NSString *outgoingClass      = _currentViewClass;
+    NSString *outgoingFramework  = _currentUIFramework;
     NSDictionary *outgoingCustom = _currentViewCustomAttributes;
 
     _previousViewName       = _currentViewName;
@@ -352,16 +368,15 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     _currentViewName        = [name copy];
     _currentViewInstanceId  = newInstanceId;
     _currentViewAppearTime  = now;
-    // Kept until this view is closed out; that is the event they belong on.
+    // Kept until this view is closed out; that is the event they belong on. A view with no class of
+    // its own is identified by its name.
+    _currentViewClass            = viewClass.length > 0 ? [viewClass copy] : [name copy];
+    _currentUIFramework          = [uiFramework copy];
     _currentViewCustomAttributes = [attributes copy];
 
-    // Consume any pending -beginManualViewLoad, but only if it is still plausibly about *this*
-    // screen. A begin with no matching set would otherwise attach itself to whatever the customer
-    // shows next, however much later that is.
-    BOOL pendingIsFresh = (_hasPendingManualLoadStart &&
-                           [NRMAViewContext millisecondsBetween:_pendingManualLoadStart and:now] <= kNRMAMaxPlausibleLoadMs);
-    _currentViewLoadStartTime  = pendingIsFresh ? _pendingManualLoadStart : 0;
-    _currentViewHasLoadStart   = pendingIsFresh;
+    BOOL vouched = _hasPendingManualLoadStart && NRMA_IsVouchedLoadStart(_pendingManualLoadStart, now);
+    _currentViewLoadStartTime  = vouched ? _pendingManualLoadStart : 0;
+    _currentViewHasLoadStart   = vouched;
     _pendingManualLoadStart    = 0;
     _hasPendingManualLoadStart = NO;
 
@@ -378,6 +393,8 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     if (outgoingName.length > 0 && outgoingWasManual) {
         double timeVisibleMs = [NRMAViewContext millisecondsBetween:outgoingAppear and:now];
         [self recordMobileView:outgoingName
+                     viewClass:outgoingClass
+                   uiFramework:outgoingFramework
                     instanceId:outgoingId
                   previousView:beforeOutgoing
         previousViewInstanceId:beforeOutgoingId
@@ -401,6 +418,8 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     CFAbsoluteTime appear = _currentViewAppearTime;
     NSString *previous    = _previousViewName;
     NSString *previousId  = _previousViewInstanceId;
+    NSString *viewClass   = _currentViewClass;
+    NSString *uiFramework = _currentUIFramework;
     NSDictionary *custom  = _currentViewCustomAttributes;
 
     // Current view is done; it becomes the previous view.
@@ -411,12 +430,16 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     _currentViewLoadStartTime = 0;
     _currentViewHasLoadStart  = NO;
     _currentViewSource      = NRMAViewSourceNone;
+    _currentViewClass            = nil;
+    _currentUIFramework          = nil;
     _currentViewCustomAttributes = nil;
     os_unfair_lock_unlock(&_lock);
     [self persistCurrentReferrerState];
 
     double timeVisibleMs = [NRMAViewContext millisecondsBetween:appear and:now];
     [self recordMobileView:name
+                 viewClass:viewClass
+               uiFramework:uiFramework
                 instanceId:instanceId
               previousView:previous
     previousViewInstanceId:previousId
@@ -424,9 +447,11 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
                customAttrs:custom];
 }
 
-// Reports the MobileView for one completed manual visit. The recorder keeps reserved keys winning
-// over caller-supplied custom attributes, so the event schema stays stable.
+// Reports the MobileView for one completed manual visit. The recorder drops reserved keys from
+// caller-supplied custom attributes, so the event schema stays stable.
 - (void)recordMobileView:(NSString *)name
+               viewClass:(nullable NSString *)viewClass
+             uiFramework:(nullable NSString *)uiFramework
               instanceId:(NSString *)instanceId
             previousView:(nullable NSString *)previousView
   previousViewInstanceId:(nullable NSString *)previousViewInstanceId
@@ -434,9 +459,11 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
              customAttrs:(nullable NSDictionary<NSString *, id> *)customAttrs {
     NRMAMobileViewFields *fields = [NRMAMobileViewFields new];
     fields.viewName      = name;
-    fields.viewClass     = name;   // manual views have no class; name is the identity
+    fields.viewClass     = viewClass;
     fields.instanceId    = instanceId ?: @"";
-    fields.uiFramework      = kNRUIPlatformManual;
+    // Written as declared, but gated by the manual flag rather than by whatever toolkit it names.
+    fields.manual        = YES;
+    fields.uiFramework   = uiFramework;
     fields.timeVisibleMs = timeVisibleMs;
     fields.custom        = customAttrs;
     // The manual producer tracks its own navigation, so it names the referrer directly -- and it is

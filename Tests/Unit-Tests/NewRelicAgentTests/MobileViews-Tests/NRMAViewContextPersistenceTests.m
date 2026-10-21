@@ -80,7 +80,7 @@
 }
 
 - (void)testManualViewTransitionIsAlsoPersisted {
-    [_context setCurrentManualView:@"Cart" attributes:nil];
+    [_context setCurrentManualView:@"Cart" viewClass:nil uiFramework:nil attributes:nil];
 
     NSDictionary<NSString *, NSString *> *persisted = [NRMAViewContext persistedReferrerAttributes];
 

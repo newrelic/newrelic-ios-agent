@@ -64,8 +64,8 @@ FOUNDATION_EXPORT const double kNRMAViewTimingMaxMilliseconds;
 /// and the only origin timeToInitialDisplay can be measured from. Meaningless unless hasLoadStart.
 @property (nonatomic, readonly) CFAbsoluteTime loadStartTime;
 
-/// NO when the producer could not vouch for a construction start — nothing was built, the agent
-/// started mid-construction, or the interval exceeded kNRMAMaxPlausibleLoadMs.
+/// NO when the producer could not vouch for a construction start — nothing was built, or the agent
+/// started mid-construction.
 @property (nonatomic, readonly) BOOL hasLoadStart;
 
 /// NO when no view is current, in which case appearTime is meaningless.
@@ -125,6 +125,12 @@ FOUNDATION_EXPORT const double kNRMAViewTimingMaxMilliseconds;
 /// does not have to repeat that test. Exempt from the reserved-name check and from the customer cap:
 /// the baseline must never be the row that gets dropped.
 - (void)recordInitialDisplayForCurrentView;
+
+#pragma mark - Session lifecycle
+
+/// Empties the cap bucket shared by timings recorded with no view current. Called at session start,
+/// the only point that bucket reopens.
+- (void)resetUnattributedCapForNewSession;
 
 #pragma mark - Decision layer
 

@@ -53,7 +53,8 @@ public extension SwiftUI.View {
 ///
 /// MobileView collection is opt-in via `NRFeatureFlag_AutomaticMobileViews`. The UIKit producer is
 /// gated at swizzle-install time (see `-[NewRelicAgentInternal initialize]`) and the manual
-/// `setCurrentView:` producer is gated at its API boundary (see `+[NewRelic setCurrentView:attributes:]`).
+/// `setCurrentView:` producer is gated at its API boundary (see
+/// `+[NewRelic setCurrentView:viewClass:uiFramework:attributes:]`).
 /// The SwiftUI modifiers below are compiled into the host app's view tree, so they must consult the
 /// flag at emit time — otherwise merely attaching `.NRMobileView(...)` would send data even with the
 /// feature disabled, which is the bug this gate closes. Keeping the decision here means the flag is a
@@ -129,9 +130,9 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
     //
     // The approximation breaks for any view SwiftUI *constructs* long before it *shows*. TabView is
     // the clearest case: it builds every tab's content struct up front to resolve the tab items, so a
-    // tab the user selects five minutes later would report a five-minute load. Container views that
-    // build their children eagerly behave the same way. kNRMAMaxPlausibleLoadMs is what rejects
-    // those, and `hasAppearedBefore` is what rejects the other direction (below).
+    // tab the user selects five minutes later reports a five-minute load. Container views that
+    // build their children eagerly behave the same way. `hasAppearedBefore` (below) keeps a view
+    // SwiftUI preserved from reporting a load at all.
     private let modifierCreatedAt = NRMAViewContext.monotonicNow()
 
     func body(content: Content) -> some View {
@@ -208,9 +209,7 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
         // `hasAppearedBefore` lives in @State, so it is `true` here precisely when SwiftUI
         // preserved this view's identity — which means the view was *not* rebuilt and has no
         // construction to time. (Had it been rebuilt, @State would have reset and this would
-        // read `false`.) That check replaces an earlier "measure from the last time it was
-        // hidden" fallback, which reported the interval the user spent on some *other*
-        // screen as this screen's load time whenever they came back within the ceiling.
+        // read `false`.)
         var loadStart: NSNumber?
         var unavailableReason: String?
         var loadTimeMs: Double = 0
@@ -218,13 +217,8 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
         if hasAppearedBefore {
             unavailableReason = "notRebuilt"
         } else {
-            let measured = NRMAViewContext.millisecondsBetween(modifierCreatedAt, and: now)
-            if measured <= kNRMAMaxPlausibleLoadMs {
-                loadStart  = NSNumber(value: modifierCreatedAt)
-                loadTimeMs = measured
-            } else {
-                unavailableReason = "constructedBeforeAppear"
-            }
+            loadStart  = NSNumber(value: modifierCreatedAt)
+            loadTimeMs = NRMAViewContext.millisecondsBetween(modifierCreatedAt, and: now)
         }
         let loadIsMeasurable = (loadStart != nil)
 
@@ -438,8 +432,9 @@ private struct NRMobileViewBackgroundBridge: SwiftUI.ViewModifier {
 ///     inside `body`, where that type is SwiftUI's modifier chain -- to the screen its hosting
 ///     controller holds, the name automatic SwiftUI collection would give it.
 ///   - attributes: Optional custom attributes merged into the MobileView event emitted
-///     for this view. Reserved keys (viewClass, viewName, viewInstanceId, loadTime,
-///     timeVisible, uiFramework, previousView) are not overridden.
+///     for this view. Reserved keys (viewClass, viewName, viewInstanceId, previousView,
+///     previousViewInstanceId, uiFramework, loadTime, loadTimeUnavailable, timeVisible) are
+///     dropped.
 ///
 /// To not track a screen, do not attach this modifier to it. There is no `ignored` parameter: an
 /// attached modifier that reports nothing looks exactly like an absent one in the data, so it was a

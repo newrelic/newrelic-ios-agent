@@ -29,6 +29,7 @@
 #import "NRMAMethodProfiler.h"
 #import "NRMAMobileViewTracker.h"
 #import "NRMAViewContext.h"
+#import "NRMAViewTiming.h"
 #import "NRMACPUVitals.h"
 #import "NRMAExceptionHandlerManager.h"
 #import "NRMAExceptionMetaDataStore.h"
@@ -597,6 +598,8 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
     NRMA_setSessionStartTime([NSString stringWithFormat:@"%lld",
                               (long long)NRMAMillisecondTimestamp()].UTF8String);
+
+    [[NRMAViewTiming sharedInstance] resetUnattributedCapForNewSession];
 
     NSString* backupStorePath = [NSString stringWithFormat:@"%@",[NewRelicInternalUtils getStorePath]];
     NSError* error = nil;

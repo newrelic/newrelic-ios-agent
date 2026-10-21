@@ -38,6 +38,8 @@
 // capture what it reports rather than it going to an analytics controller that tests do not have.
 @interface NRMAViewContext (RecordingHook)
 - (void)recordMobileView:(NSString *)name
+               viewClass:(nullable NSString *)viewClass
+             uiFramework:(nullable NSString *)uiFramework
               instanceId:(NSString *)instanceId
             previousView:(nullable NSString *)previousView
   previousViewInstanceId:(nullable NSString *)previousViewInstanceId
@@ -51,6 +53,8 @@
 
 @implementation NRMARecordingViewContext
 - (void)recordMobileView:(NSString *)name
+               viewClass:(NSString *)viewClass
+             uiFramework:(NSString *)uiFramework
               instanceId:(NSString *)instanceId
             previousView:(NSString *)previousView
   previousViewInstanceId:(NSString *)previousViewInstanceId
@@ -58,6 +62,8 @@
              customAttrs:(NSDictionary<NSString *, id> *)customAttrs {
     if (!self.recorded) { self.recorded = [NSMutableArray array]; }
     [self.recorded addObject:@{ @"viewName": name ?: @"",
+                                @"viewClass": viewClass ?: @"",
+                                @"uiFramework": uiFramework ?: @"",
                                 @"viewInstanceId": instanceId ?: @"",
                                 @"previousView": previousView ?: @"" }];
 }
@@ -234,7 +240,7 @@
     NRMARecordingViewContext *context = [[NRMARecordingViewContext alloc] init];
     [context transitionToView:@"Dashboard" instanceId:@"ID-DASH"
                    appearTime:[NRMAViewContext monotonicNow] platform:@"UIKit"];
-    [context setCurrentManualView:@"Side Menu" attributes:nil];
+    [context setCurrentManualView:@"Side Menu" viewClass:nil uiFramework:nil attributes:nil];
     NSString *manualId = [context referrerAttributes][@"currentViewInstanceId"];
 
     [context transitionToView:@"Income" instanceId:@"ID-INCOME"
@@ -252,7 +258,7 @@
 // Once closed out by the automatic screen, the manual visit is over: nothing reports it again.
 - (void)testManualViewClosedByAnAutomaticScreenIsNotReportedTwice {
     NRMARecordingViewContext *context = [[NRMARecordingViewContext alloc] init];
-    [context setCurrentManualView:@"Checkout" attributes:nil];
+    [context setCurrentManualView:@"Checkout" viewClass:nil uiFramework:nil attributes:nil];
     [context transitionToView:@"Home" instanceId:@"ID-HOME"
                    appearTime:[NRMAViewContext monotonicNow] platform:@"UIKit"];
     [context transitionToView:@"Detail" instanceId:@"ID-DETAIL"
@@ -269,6 +275,57 @@
     [context transitionToView:@"B" instanceId:@"ID-B" appearTime:[NRMAViewContext monotonicNow] platform:@"UIKit"];
 
     XCTAssertEqual(context.recorded.count, 0u);
+}
+
+#pragma mark - A manual view reports the class and framework it was set with
+
+// The event for a manual view is emitted by whatever ends its visit, after the next screen is
+// already current. It must still describe the manual view, not the screen that replaced it.
+- (void)testManualViewReplacedByAnAutomaticScreenReportsItsOwnClassAndFramework {
+    NRMARecordingViewContext *context = [[NRMARecordingViewContext alloc] init];
+    [context setCurrentManualView:@"Cart" viewClass:@"CartScreen" uiFramework:@"ReactNative" attributes:nil];
+
+    [context transitionToView:@"Income" instanceId:@"ID-INCOME"
+                   appearTime:[NRMAViewContext monotonicNow] platform:@"UIKit"];
+
+    XCTAssertEqual(context.recorded.count, 1u);
+    XCTAssertEqualObjects(context.recorded.firstObject[@"viewClass"], @"CartScreen");
+    XCTAssertEqualObjects(context.recorded.firstObject[@"uiFramework"], @"ReactNative");
+}
+
+- (void)testManualViewReplacedByAnotherReportsItsOwnClassAndFramework {
+    NRMARecordingViewContext *context = [[NRMARecordingViewContext alloc] init];
+    [context setCurrentManualView:@"Cart" viewClass:@"CartScreen" uiFramework:@"ReactNative" attributes:nil];
+
+    [context setCurrentManualView:@"Checkout" viewClass:@"CheckoutScreen" uiFramework:@"Flutter" attributes:nil];
+
+    XCTAssertEqual(context.recorded.count, 1u);
+    XCTAssertEqualObjects(context.recorded.firstObject[@"viewName"], @"Cart");
+    XCTAssertEqualObjects(context.recorded.firstObject[@"viewClass"], @"CartScreen");
+    XCTAssertEqualObjects(context.recorded.firstObject[@"uiFramework"], @"ReactNative");
+}
+
+- (void)testBackgroundFlushReportsTheManualViewsClassAndFramework {
+    NRMARecordingViewContext *context = [[NRMARecordingViewContext alloc] init];
+    [context setCurrentManualView:@"Cart" viewClass:@"CartScreen" uiFramework:@"ReactNative" attributes:nil];
+
+    [context flushCurrentManualViewOnBackground];
+
+    XCTAssertEqual(context.recorded.count, 1u);
+    XCTAssertEqualObjects(context.recorded.firstObject[@"viewClass"], @"CartScreen");
+    XCTAssertEqualObjects(context.recorded.firstObject[@"uiFramework"], @"ReactNative");
+}
+
+// A manual view with no class of its own is identified by its name. No framework is passed on as
+// none; the emitter reports that as "Manual".
+- (void)testManualViewWithNoClassReportsItsName {
+    NRMARecordingViewContext *context = [[NRMARecordingViewContext alloc] init];
+    [context setCurrentManualView:@"Cart" viewClass:@"" uiFramework:nil attributes:nil];
+
+    [context flushCurrentManualViewOnBackground];
+
+    XCTAssertEqualObjects(context.recorded.firstObject[@"viewClass"], @"Cart");
+    XCTAssertEqualObjects(context.recorded.firstObject[@"uiFramework"], @"");
 }
 
 #pragma mark - A view replacing itself keeps its referrer

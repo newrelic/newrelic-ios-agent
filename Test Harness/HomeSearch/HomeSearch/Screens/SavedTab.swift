@@ -109,11 +109,14 @@ struct SavedTab: View {
     /// The manual view declaration. Attributes ride along on the MobileView event so the mode is
     /// queryable without having to parse it back out of the view name.
     private func declareCurrentView() {
-        NewRelic.setCurrentView(mode.viewName, attributes: [
-            "savedMode": mode.rawValue,
-            "savedCount": savedHomes.savedIDs.count,
-            "recentlyViewedCount": savedHomes.recentlyViewedIDs.count,
-            "resultCount": listings.count
-        ])
+        NewRelic.setCurrentView(mode.viewName,
+                                viewClass: String(describing: Self.self),
+                                uiFramework: "Manual",
+                                attributes: [
+                                    "savedMode": mode.rawValue,
+                                    "savedCount": savedHomes.savedIDs.count,
+                                    "recentlyViewedCount": savedHomes.recentlyViewedIDs.count,
+                                    "resultCount": listings.count
+                                ])
     }
 }

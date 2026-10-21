@@ -49,8 +49,8 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * Optionally implement nrMobileViewAttributes to attach extra attributes to every
  * MobileView event emitted for the view. Reserved keys (viewClass, viewName,
- * viewInstanceId, loadTime, timeVisible, previousView, uiFramework)
- * cannot be overridden.
+ * viewInstanceId, previousView, previousViewInstanceId, uiFramework, loadTime,
+ * loadTimeUnavailable, timeVisible) are dropped.
  *
  * Objective-C:
  *   - (nullable NSDictionary<NSString *, id> *)nrMobileViewAttributes {
