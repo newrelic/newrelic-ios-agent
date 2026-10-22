@@ -175,6 +175,14 @@ Copy dsym-upload-tools to xcframework
 
 Codesign xcframework
 
+### ios checkBinaryPaths
+
+```sh
+[bundle exec] fastlane ios checkBinaryPaths
+```
+
+Fail if any NewRelic.xcframework binary embeds an absolute build-machine path
+
 ### ios internalOutputXCFrameworkIOSOnly
 
 ```sh

@@ -31,6 +31,8 @@ platform :ios do
     buildMacOS
 
     internalOutputXCFramework
+
+    checkBinaryPaths
   end
 
   desc "Run Tests for iOS/tvOS and Build NewRelic.XCFramework for all platforms"
