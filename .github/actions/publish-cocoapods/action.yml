@@ -1,0 +1,28 @@
+name: Publish CocoaPods podspec
+description: Builds NewRelicAgent.podspec from the template for a version and pushes it to CocoaPods trunk
+
+inputs:
+  version:
+    description: Agent version to publish (ex 7.4.0)
+    required: true
+  trunk-token:
+    description: CocoaPods trunk token
+    required: true
+  working-directory:
+    description: Directory containing the checked out repo
+    required: false
+    default: "."
+
+runs:
+  using: "composite"
+  steps:
+    - name: Create Prod Podspec for XCFramework version
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        sed "s/X.XX/$VERSION/g" cocoapods/NewRelicAgent.podspec.template > NewRelicAgent.podspec
+
+        pod trunk push --allow-warnings NewRelicAgent.podspec
+      env:
+        VERSION: ${{ inputs.version }}
+        COCOAPODS_TRUNK_TOKEN: ${{ inputs.trunk-token }}
