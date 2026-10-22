@@ -187,7 +187,7 @@ typedef NS_ENUM(NSInteger, NRMAViewDeparture) {
 /// caller-supplied attribute of the same name. Returns `attributes` unchanged (nil stays nil, never
 /// promoted to an empty dictionary) unless at least one Mobile Views flag is enabled and a view is
 /// currently set. Shared by every non-view producer §5.5 requires the referrer plumbing for:
-/// breadcrumbs, MobileRequest, MobileRequestError, and Handled Exceptions.
+/// breadcrumbs, MobileRequest, MobileRequestError, Handled Exceptions, and SessionReplay.
 + (nullable NSDictionary<NSString *, id> *)mergeReferrerAttributesInto:(nullable NSDictionary<NSString *, id> *)attributes;
 
 #pragma mark - Crash-time referrer recovery

@@ -2,7 +2,7 @@
 
 > Markdown copy of the Confluence page
 > [Mobile Views Initiative Design Doc (IDD)](https://newrelic.atlassian.net/wiki/spaces/APPEXP/pages/5548769647),
-> synced 2026-10-20. Inline comments are not copied.
+> synced 2026-10-21. Inline comments are not copied.
 
 | | | |
 | --- | --- | --- |
@@ -35,8 +35,12 @@ customers tend to use our breadcrumb feature for view tracking. This is error-pr
 single app, and inconsistent *between* platforms.
 
 - Collision Analysis: It was determined no customers use “MobileView” or “MobileViewTiming” event name
-  currently so we can use it. This was proven by Justin Rush. NR1, Slack context
+  currently so we can use it. Checked on 10/19/2026 by Justin Rush with this
+  [NR1 query](https://onenr.io/0Bj35OaOJwX). After upgrading, recordCustomEvent rejects both names, so release
+  notes must say an app already sending either one stops sending it. Slack context
   [here](https://newrelic.slack.com/archives/C08T8SS3V8X/p1792091952893629?thread_ts=1792088433.878829&cid=C08T8SS3V8X).
+- MobileViews documentation and MobileViews release notes will incorporate information about how
+  recordCustomEvent rejects both names “MobileView” and “MobileViewTiming”.
 
 ## 2. Background
 
@@ -78,7 +82,11 @@ than add infrastructure:
 - A typical-session estimate would be 100s of views every 10 minutes.
 - Events are billable ingest.
 - These events can push customer events out of the 1000-event buffer. (The cap of 16 only covers customer
-  timings.) This could cause event eviction if 1000 event limit is reached between harvests.
+  timings.) At 100s of views per 10 minutes and about 2 events per view, that's on the order of 100 events per
+  60-second harvest, well below the 1000-event limit. Eviction takes very rapid navigation or many views with
+  customer timings near the cap of 16.
+
+## 5. Specification
 
 ### 5.1 Architecture
 
@@ -125,7 +133,9 @@ many it needs and how each hooks its runtime, that is CDD material. What every p
 | Be inert when its gating flag is off | Goal 5 |
 
 Hybrid agents (Capacitor, Cordova, MAUI) **reuse the native iOS and Android producers** through their
-bridge layer and expose only a thin JS/C# surface. React Native and Flutter require their own producers,
+bridge layer and expose only a thin JS/C# surface. Screens the native producer sees report the native
+uiFramework (UIKit, SwiftUI, AndroidActivity, …); screens the wrapper names through capability 3 report
+Capacitor, Cordova or MAUI. React Native and Flutter require their own producers,
 because navigation state lives in JS/Dart and native lifecycle callbacks do not fire per screen.
 
 ### 5.3 MobileView Event schema
@@ -133,7 +143,8 @@ because navigation state lives in JS/Dart and native lifecycle callbacks do not 
 Event namespace `Mobile General`; event name `MobileView`.
 
 1. All durations on MobileView and MobileViewTiming are in milliseconds. This is a deliberate exception to
-   timeSinceLoad, the existing attribute on every mobile event, which is in seconds and so isn't listed here.
+   timeSinceLoad, the existing attribute on every mobile event, which is in seconds and so isn't listed here. Every agent also adds its standard event attributes (sessionId,
+   appName, hasReplay while Session Replay is recording, …); they aren't listed here either.
 
 | Attribute | Type | Required | Notes |
 | --- | --- | --- | --- |
@@ -141,13 +152,13 @@ Event namespace `Mobile General`; event name `MobileView`.
 | `viewName` | string | ✅<br>In Manual case the viewName is passed in | Customer override (capability 4), else the inferred route pattern, class or struct name. |
 | `viewInstanceId` | string (UUID) | ✅ | Unique per visible lifetime; the join key |
 | `loadTime` | double (milliseconds) (ms) | or if not available: loadTimeUnavailable | Best-effort; semantics and accuracy tier per §5.4 |
-| `loadTimeUnavailable` | string | only if loadTime unavailable. | - noConstructionObserved: no construction start was seen for this visit, or it was more than 600000 ms before the screen appeared."<br>- notRebuilt: the view's identity was preserved, so nothing was rebuilt.<br>- noLoadStartDeclared: a manual view without capability 9. |
+| `loadTimeUnavailable` | string | only if loadTime unavailable. | - noConstructionObserved: no construction start was seen for this visit, or it was more than 600000 ms before the screen appeared.<br>- notRebuilt: the view's identity was preserved, so nothing was rebuilt.<br>- noLoadStartDeclared: a manual view without capability 9.<br>Closed set; new values only by amending this IDD. |
 | `timeVisible` | double (milliseconds) (ms) | ✅ | Appear → disappear, clamped ≥ 0 |
-| uiFramework | string | ✅ | Enum: `UIKit`, `SwiftUI`, `AndroidActivity`, `AndroidFragment`, `Compose`, `ReactNative`, `Flutter`, `Capacitor`, `Cordova`, `MAUI`, `Manual`<br>“Manual” only used when passed uiFramework is nil or empty.<br>`WebView` will be added when supported post GA. |
+| uiFramework | string | ✅ | Enum: `UIKit`, `SwiftUI`, `AndroidActivity`, `AndroidFragment`, `Compose`, `ReactNative`, `Flutter`, `Capacitor`, `Cordova`, `MAUI`, `Manual`<br>Manual: a manual view whose caller passed Manual or no uiFramework. Values are added by IDD amendment and never renamed or removed; queries treat unknown values as other.<br>`WebView` will be added when supported post GA. |
 | `previousView` | string | when known | Referrer: the screen navigated from |
 | `previousViewInstanceId` | string | when known | Referrer identity, for exact-visit joins |
 
-**5.3.1 Additional Future Attributes for post-GA:**
+#### 5.3.1 Additional Future Attributes for post-GA:
 
 - restarted, reappeared: out of scope for GA.
 - **App Hang Detection, Slow/Frozen/Janky Frame Detection**:
@@ -160,7 +171,7 @@ Event namespace `Mobile General`; event name `MobileView`.
   - frozenFrameCount — occurrences over the frozen threshold (700 ms, matching Android's definition), a strict
     subset of jankyFrameCount.
 
-**5.3.2 uiFramework Discussion**
+#### 5.3.2 uiFramework Discussion
 
 The implemented iOS agent emits `uiFramework` and avoids collision with the ambient notion of platform
 elsewhere in the product. Adopting the implemented name is also the only option that does not require a
@@ -168,25 +179,25 @@ breaking rename in shipped iOS code. **Every other agent must emit** `uiFramewor
 
 - `uiFramework` names the producer; use `platform` for the SDK.
 
-**5.3.3 navigation graph**
+#### 5.3.3 navigation graph
 
 `previousView` / `previousViewInstanceId` are new attributes added to MobileView events. They turn a list of
 screen visits into a **navigation graph ([demo](https://newrelic.atlassian.net/wiki/spaces/APPEXP/pages/4387242580))**,
 which is what makes the data explanatory rather than descriptive: the same screen can be shown to be fast when
 reached from search and slow when reached from a deeplink.
 
-**5.3.4 loadTime and loadTimeUnavailable**
+#### 5.3.4 loadTime and loadTimeUnavailable
 
 exactly one of the two attributes is always present. A manual view declared without a load start will get
 **loadTimeUnavailable**. A manual view with capability 9 carries a loadTime.
 
-**5.3.5 viewName Privacy**
+#### 5.3.5 viewName Privacy
 
 Producers that name screens from routes (React Native, Flutter, Capacitor/Cordova) emit the route pattern
 (/user/:id/orders), never the resolved path. viewName, previousView and currentView are truncated at 128
 characters. Agents don't scrub view names; customers who name screens from data use capability 4.
 
-### 5.3.6 Agent-owned MobileViewTiming emission
+#### 5.3.6 Agent-owned MobileViewTiming emission
 
 Independently of anything the customer calls, **every agent emits one baseline timing per MobileView event
 automatically.**
@@ -219,15 +230,15 @@ Consequently the `timeToInitialDisplay` baseline is exempt from the per-view cap
 
 `loadTime` is **best-effort and not equally meaningful across runtimes**. Some runtimes expose an exact
 construction-to-visible boundary; others only permit an approximation. Comparing an exact value against an
-approximate one without knowing which is which produces confidently wrong conclusions, so the IDD requires the
-distinction be declarable rather than inferred.
+approximate one without knowing which is which produces confidently wrong conclusions, so the tier is declared
+per platform in the table below.
 
 **Contract:**
 
 1. Each agent's CDD **declares its own mapping** from runtime lifecycle signals to `loadTime`, and states the
    resulting tier.
 2. `loadTime` is **only for a genuine first construction**. A screen that resurfaced without being rebuilt has
-   nothing to time and should omit loadTime in this case, its never zero.
+   nothing to time: it omits loadTime and sets loadTimeUnavailable: notRebuilt. A measured 0 ms is sent as 0.
     1. attribute **loadTimeUnavailable**: with value **noLoadStartDeclared**, **noConstructionObserved**, or
        **notRebuilt** will be added to specify loadTime omission reason.
 3. Values are non-negative and monotonic-clock derived. Wall-clock deltas are not acceptable, clock adjustment
@@ -273,7 +284,7 @@ the JS layer is the only thing that knows the real screen names. One combined fl
 between no data and bad data. This is the load-bearing reason the split exists, and it generalizes to every
 hybrid runtime.
 
-**5.6 Config**
+### 5.6 Config
 
 We will follow the remote configuration mechanism that is used for Mobile Logs.
 
@@ -301,7 +312,7 @@ We will follow the remote configuration mechanism that is used for Mobile Logs.
     }
 ```
 
-### 5.7 Companion event: `MobileViewTiming`
+#### 5.7 Companion event: `MobileViewTiming`
 
 `loadTime` is fixed at the moment a screen becomes visible. For most runtimes that is *also* the moment the
 screen is still showing a spinner: a screen that renders a skeleton in 80 ms and real content in 900 ms
@@ -327,9 +338,6 @@ Initiative-level requirements:
 
 Event namespace `Mobile General`; event name `MobileViewTiming`.
 
-1. We are keeping all durations added to MobileView and MobileViewTiming as ms and record it here as a
-   deliberate exception,
-
 | Attribute | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `timingName` | string | ✅ | timeToInitialDisplay (agent-owned, §5.3.6) or a customer-supplied name (§6.2). Customer names are validated per §6.3. |
@@ -338,7 +346,7 @@ Event namespace `Mobile General`; event name `MobileViewTiming`.
 | `viewInstanceId` | string (UUID) | when a view is current | Join key back to the exact `MobileView` **visit** that produced it |
 | `previousView` | string | when known | Referrer, so timings are queryable by route rather than only by destination |
 
-**5.8.1 MobileViewTiming timing details**
+### 5.8.1 MobileViewTiming timing details
 
 *The timing origin is the time that view construction starts.* This value is shown as loadStart below.
 
@@ -400,7 +408,7 @@ no loadTime, so no baseline timing is sent.
 }
 ```
 
-**5.9 Adding additional MobileViewTiming Marks for Infinite Load Scenarios**
+### 5.9 Adding additional MobileViewTiming Marks for Infinite Load Scenarios
 
 Frequently a pattern that appears in mobile applications is a single screen that shows a list or collection of
 content. Typically scrolling to the bottom of the feed will perform a “loadMore” or load the next page of data.
@@ -412,15 +420,11 @@ visit.
 A customer can use capability 8 with the duration the caller measures for each page, under the name “loadMore”.
 This is capped to 16 timings per view and will reject the 17th.
 
-timeSinceLoad exception:
-
-1. “timeSinceLoad” is in seconds and is a preexisting feature that adds that attribute to every event agent
-   produces. that is why its not in the MobileView table/schema. We are keeping all durations added to
-   MobileView and MobileViewTiming as ms and record it here as a deliberate exception,
-
 ---
 
 ## 6. Public API contract
+
+### 6.1 Screen capabilities
 
 | # | Capability | Contract |
 | --- | --- | --- |
@@ -466,7 +470,9 @@ own code or another SDK.
 | View currently tracked | Emits with `viewName`, `viewInstanceId`, `previousView` | Emits with `viewName`, `viewInstanceId`, `previousView` |
 
 **Both capabilities must report success or failure to the caller.** A timing can be rejected for six distinct
-reasons. Agents return a boolean where the language convention allows it.
+reasons. Agents return a boolean where the language convention allows it; async bridges return Promise<boolean>
+(React Native, Capacitor/Cordova) or Future<bool> (Flutter). Every rejection is also logged with its reason at
+warning level.
 
 **Gating.** Both are active when **either** Mobile Views flag is enabled (§5.5), and both fail when both flags
 are off.
@@ -476,6 +482,7 @@ are off.
 | Constant | Value | Applies to | Rationale |
 | --- | --- | --- | --- |
 | Baseline timing name | `timeToInitialDisplay` | §5.3.6 | Cross-app comparability; reserved from customer use |
+| Standard timing names | timeToFullDisplay, timeToInteractive | Capabilities 7, 8 | Same string on every agent so dashboards line up across apps; not reserved; agents ship them as constants |
 | Max customer timings per view instance | **16** | Capabilities 7, 8 | The event buffer is bounded (1000 by default). An unguarded mark inside a list-row callback would evict the customer's own real events. Warn once when exceeded, then drop silently |
 | Max timing name length | **128** characters | Capabilities 7, 8 | Bounds attribute cardinality |
 | Max accepted duration | **600000** ms (10 minutes) | All timings and loadTime | Catches the seconds-passed-where-milliseconds-expected mistake instead of recording it as a ten-hour screen load |
@@ -495,23 +502,27 @@ Timings with no `viewInstanceId` — capability 8 called with no current view �
 bucket, reset on session start. Otherwise an uncapped path exists in precisely the case where no view identity
 is available to key a cap on.
 
-**6.4 Proposed Public API naming**: (Implemented in the iOS POC) To be implemented on other platforms.
+### 6.4 Proposed Public API naming
+
+(Implemented in the iOS POC) To be implemented on other platforms.
 
 | # | iOS | Android |
 | --- | --- | --- |
 | 1 Enable automatic tracking | `NRFeatureFlag_AutomaticMobileViews` | `FeatureFlag.AutomaticMobileViews` |
 | 2 Enable manual tracking | `NRFeatureFlag_ManualMobileViews` | `FeatureFlag.ManualMobileViews` |
-| 3 Set current view manually | `+setCurrentView:viewClass:uiFramework:attributes: -> BOOL` | `NewRelic.setCurrentView(String,String,String, Map<String, Object>)-> boolean` |
+| 3 Set current view manually | `+(BOOL)setCurrentView:viewClass:uiFramework:attributes:` | `boolean NewRelic.setCurrentView(String name, String viewClass, String uiFramework, Map<String, Object> attributes)` |
 | 4 Override display name per screen | `.NRMobileView(name:attributes:)`<br>`nrMobileViewName` hook in SwiftUI, UIKit | `Modifier.nrMobileView(name, attributes)` (Compose);<br>`nrMobileViewName()` on Activity/Fragment |
 | 6 Attach custom attributes per screen | `nrMobileViewAttributes` hook in SwiftUI, UIKit | `nrMobileViewAttributes()` on Activity/Fragment;<br>Compose passes attributes through row 4 |
-| 7 **Mark** a timing against the current view | `+(BOOL)markViewTiming: -> BOOL` | `NewRelic.markViewTiming(String name) -> boolean` |
-| 8 **Record** a timing with a caller-supplied duration | `+(BOOL)recordViewTiming:milliseconds: -> BOOL` | `NewRelic.recordViewTiming(String name, double milliseconds) -> boolean` |
+| 7 **Mark** a timing against the current view | `+(BOOL)markViewTiming:` | `boolean NewRelic.markViewTiming(String name)` |
+| 8 **Record** a timing with a caller-supplied duration | `+(BOOL)recordViewTiming:milliseconds:` | `boolean NewRelic.recordViewTiming(String name, double milliseconds)` |
 | 9 **Declare a load start** for the next manually-set view | `+beginViewLoad` | `NewRelic.beginViewLoad()` |
 
-## §7. Decorate existing events
+React Native, Flutter, Capacitor/Cordova and MAUI names are defined in each agent's CDD before GA.
 
-**Decorate** `MobileRequest`, `MobileRequestError`, `MobileBreadcrumb`, `SessionReplay`, Android:
-`MobileApplicationExit` and Handled Exceptions with the current/previous view (`currentView`,
+## 7. Decorate existing events
+
+**Decorate** `MobileRequest`, `MobileRequestError`, `MobileHandledException` and `MobileBreadcrumb` on every
+platform, and `MobileApplicationExit` on Android, with the current/previous view (`currentView`,
 `currentViewInstanceId`, `previousView`, `previousViewInstanceId`), so a request, a request error, or a handled
 exception can be joined back to the screen it happened on.
 
@@ -556,16 +567,16 @@ HeX showing currentView
 
 <https://staging.onenr.io/0BQ1AgeoXQx>
 
-## §8. DECORATING **MobileCrash** with **MobileView** data
+## 8. DECORATING **MobileCrash** with **MobileView** data
 
    Decorating crashes on iOS needs the current/previous view persisted to disk on every transition so it
    survives the crash. Every platform should make sure the view context survives the crash and makes it to the
-   MobileCrash event. **Implemented on iOS (**`mobile-views-2`**).** `MobileRequest`, `MobileRequestError`, and
-   `MobileHandledException`, `MobileBreadcrumb` now all carry `currentView`/`currentViewInstanceId`/
+   MobileCrash event. **Implemented on iOS (**`mobile-views-2`**).** `MobileRequest`, `MobileRequestError`,
+   `MobileHandledException` and `MobileBreadcrumb` now all carry. now all carry `currentView`/`currentViewInstanceId`/
    `previousView`/ `previousViewInstanceId` when a Mobile Views flag is on and a view is current — one shared,
    flag-gated merge point (`NRMAViewContext`) feeding all producers and breadcrumbs. **Every other agent should
    decorate the equivalent of these four event types identically.** The requirement is the four attributes above on
-   the request, request-error, and handled-exception events, not iOS's specific mechanism.
+   the request, request-error, handled-exception and breadcrumb events, not iOS's specific mechanism.
 
    `MobileCrash` is decorated too, but by a different, cross-platform-relevant mechanism worth stating
    explicitly: **crash reporting and handled-exception reporting are two different pipelines on iOS**
@@ -609,6 +620,14 @@ previousViewInstanceId
 }
 ```
 
+Verified on iOS with
+
+```
+SELECT currentView, currentViewInstanceId, previousView FROM MobileCrash SINCE 1 day ago
+
+result = currentView UtilitiesViewController, previousView Main ViewController.
+```
+
 **MobileView Term Glossary**
 
 - **TTID: “timeToInitialDisplay”** is the Out of the box appearance timing that should be included with each
@@ -621,9 +640,9 @@ previousViewInstanceId
 
 ---
 
-## C. MobileView and Interaction Will remain completely independent
+## 9. MobileView and Interaction remain completely independent.
 
-**11. Customer Zero**
+## 10. Customer Zero
 
 **New Relic Mobile Apps team** (the team that ships our own NR1 mobile clients) — if they run iOS + Android +
 any hybrid, they dogfood three agents at once and validate cross-platform dashboard parity in real conditions.
@@ -640,7 +659,7 @@ List all teams that you expect to have work for this initiative.
 | Mobile Agents - telemetry | [iOS Implementation](https://newrelic.atlassian.net/wiki/spaces/APPEXP/pages/5536055442/Mobile+Views+iOS+Telemetry+-+Change+Design+Document)<br>[Android Implementation](https://newrelic.atlassian.net/wiki/x/A4AVTAE)<br>Hybrids (Flutter & React Native) |
 | App Experience Mobile - app settings, charts, experiences, etc. | [App Exp feature](https://new-relic.atlassian.net/browse/NR-562386)<br>[UI Entry Points](https://newrelic.atlassian.net/wiki/spaces/APPEXP/pages/5558075536/Entry+Points+in+the+UI+for+Mobile+Views) |
 
-## D. API Review Board Prerequisites
+## 11. API Review Board Prerequisites
 
 The following must be completed prior to API review board submission
 
