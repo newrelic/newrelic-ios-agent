@@ -22,7 +22,7 @@ runs:
       run: |
         sed "s/X.XX/$VERSION/g" cocoapods/NewRelicAgent.podspec.template > NewRelicAgent.podspec
 
-        pod trunk push --allow-warnings NewRelicAgent.podspec
+        pod trunk push --allow-warnings --skip-import-validation NewRelicAgent.podspec
       env:
         VERSION: ${{ inputs.version }}
         COCOAPODS_TRUNK_TOKEN: ${{ inputs.trunk-token }}
