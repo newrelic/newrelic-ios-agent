@@ -1,0 +1,252 @@
+dsyms/TestApp.app.dSYM/Contents/Resources/DWARF/TestApp [x86_64, 0.000486 seconds]:
+    A6A08248-13A1-3BCE-AED8-0B6F92DFAB3B /private/tmp/symtool/dsyms/TestApp.app.dSYM/Contents/Resources/DWARF/TestApp [dSYM_v3, FaultedFromDisk, Found-dSYM]  
+        0x0000000000000000 (0x100000000) __PAGEZERO SEGMENT
+        0x0000000100000000 (  0x3000) __TEXT SEGMENT
+            0x0000000100000000 (   0xaa0) MACH_HEADER
+            0x0000000100000aa0 (  0x16bb) __TEXT __text
+                0x0000000100000aa0 (   0x151) main [FUNC, EXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100000aa0 (     0xa) app.swift:0
+                    0x0000000100000aaa (    0x1c) app.swift:5
+                    0x0000000100000ac6 (    0x13) app.swift:5
+                    0x0000000100000ad9 (    0x18) app.swift:5
+                    0x0000000100000af1 (    0x19) app.swift:6
+                    0x0000000100000b0a (    0x16) app.swift:6
+                    0x0000000100000b20 (     0x7) app.swift:6
+                    0x0000000100000b27 (    0x15) app.swift:6
+                    0x0000000100000b3c (     0xc) app.swift:6
+                    0x0000000100000b48 (    0x57) app.swift:6
+                    0x0000000100000b9f (    0x28) app.swift:0
+                    0x0000000100000bc7 (    0x20) app.swift:6
+                    0x0000000100000be7 (     0xa) /<compiler-generated>:0
+                0x0000000100000c00 (     0xc) Greeter.init(name:) [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100000c00 (     0xa) app.swift:1
+                    0x0000000100000c0a (     0x2) app.swift:0
+                0x0000000100000c10 (    0x16) type metadata accessor for Counter [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100000c10 (    0x16) /<compiler-generated>:0
+                0x0000000100000c30 (    0x29) Counter.__allocating_init() [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100000c30 (    0x14) app.swift:3
+                    0x0000000100000c44 (    0x15) app.swift:0
+                0x0000000100000c60 (    0xbf) Counter.bump(by:) [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100000c60 (    0x34) app.swift:3
+                    0x0000000100000c94 (    0x29) app.swift:0
+                    0x0000000100000cbd (     0xf) app.swift:3
+                    0x0000000100000ccc (     0x8) app.swift:0
+                    0x0000000100000cd4 (     0x7) app.swift:3
+                    0x0000000100000cdb (     0x9) app.swift:0
+                    0x0000000100000ce4 (    0x2a) app.swift:3
+                    0x0000000100000d0e (     0x9) app.swift:0
+                    0x0000000100000d17 (     0x6) app.swift:3
+                    0x0000000100000d1d (     0x2) /<compiler-generated>:0
+                0x0000000100000d20 (   0x174) Greeter.greet(times:) [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100000d20 (    0x33) app.swift:2
+                    0x0000000100000d53 (     0xc) app.swift:0
+                    0x0000000100000d5f (    0x5d) app.swift:2
+                    0x0000000100000dbc (    0x11) /<compiler-generated>:0
+                    0x0000000100000dcd (     0xc) app.swift:2
+                    0x0000000100000dd9 (    0x10) app.swift:0
+                    0x0000000100000de9 (     0x8) app.swift:2
+                    0x0000000100000df1 (    0x65) app.swift:2
+                    0x0000000100000e56 (    0x15) app.swift:0
+                    0x0000000100000e6b (     0xc) app.swift:2
+                    0x0000000100000e77 (     0xd) app.swift:2
+                    0x0000000100000e84 (     0x9) app.swift:0
+                    0x0000000100000e8d (     0x7) app.swift:2
+                0x0000000100000ea0 (   0x1cd) helper<A>(_:) [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100000ea0 (    0x2e) app.swift:4
+                    0x0000000100000ece (     0x4) app.swift:0
+                    0x0000000100000ed2 (     0x4) app.swift:4
+                    0x0000000100000ed6 (    0x2c) app.swift:4
+                    0x0000000100000f02 (    0x22) app.swift:0
+                    0x0000000100000f24 (    0x5f) app.swift:4
+                    0x0000000100000f83 (    0x12) app.swift:0
+                    0x0000000100000f95 (    0x1c) app.swift:4
+                    0x0000000100000fb1 (    0x24) app.swift:4
+                    0x0000000100000fd5 (    0x5c) app.swift:4
+                    0x0000000100001031 (    0x1f) app.swift:4
+                    0x0000000100001050 (     0xd) app.swift:4
+                    0x000000010000105d (     0x9) app.swift:0
+                    0x0000000100001066 (     0x7) app.swift:4
+                0x0000000100001070 (    0x33) _finalizeUninitializedArray<A>(_:) [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100001070 (     0xa) /<compiler-generated>:0
+                    0x000000010000107a (    0x29) /<compiler-generated>:0
+                0x00000001000010b0 (    0x1c) default argument 1 of print(_:separator:terminator:) [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x00000001000010b0 (    0x1c) /<compiler-generated>:0
+                0x00000001000010d0 (    0x1c) default argument 2 of print(_:separator:terminator:) [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x00000001000010d0 (    0x1c) /<compiler-generated>:0
+                0x00000001000010f0 (    0x2a) Greeter.name.getter [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x00000001000010f0 (     0x8) /<compiler-generated>:0
+                    0x00000001000010f8 (    0x22) /<compiler-generated>:0
+                0x0000000100001120 (   0x1c8) closure #1 in Greeter.greet(times:) [FUNC, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100001120 (    0x32) app.swift:2
+                    0x0000000100001152 (    0x20) <stdin>:0
+                    0x0000000100001172 (    0x3b) app.swift:2
+                    0x00000001000011ad (    0x1c) app.swift:0
+                    0x00000001000011c9 (    0x1b) app.swift:2
+                    0x00000001000011e4 (    0x30) app.swift:2
+                    0x0000000100001214 (     0x8) app.swift:0
+                    0x000000010000121c (    0x1e) app.swift:2
+                    0x000000010000123a (    0x1c) app.swift:0
+                    0x0000000100001256 (     0x4) app.swift:2
+                    0x000000010000125a (    0x1e) app.swift:2
+                    0x0000000100001278 (    0x1a) app.swift:2
+                    0x0000000100001292 (    0x34) app.swift:0
+                    0x00000001000012c6 (    0x17) app.swift:2
+                    0x00000001000012dd (     0xb) app.swift:2
+                0x00000001000012f0 (   0x5ba) Collection.map<A, B>(_:) [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x00000001000012f0 (     0xd) /<compiler-generated>:0
+                    0x00000001000012fd (   0x5ad) /<compiler-generated>:0
+                0x00000001000018b0 (     0x8) variable initialization expression of Counter.value [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x00000001000018b0 (     0x4) /<compiler-generated>:0
+                    0x00000001000018b4 (     0x4) /<compiler-generated>:0
+                0x00000001000018c0 (    0x40) Counter.value.getter [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x00000001000018c0 (    0x40) /<compiler-generated>:0
+                0x0000000100001900 (    0x40) Counter.value.setter [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100001900 (     0x8) /<compiler-generated>:0
+                    0x0000000100001908 (    0x38) /<compiler-generated>:0
+                0x0000000100001940 (    0x3a) Counter.value.modify [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100001940 (     0x8) /<compiler-generated>:0
+                    0x0000000100001948 (    0x32) /<compiler-generated>:0
+                0x0000000100001980 (     0xb) Counter.value.modify [FUNC, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100001980 (     0xb) /<compiler-generated>:0
+                0x0000000100001990 (     0xb) default argument 0 of Counter.bump(by:) [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100001990 (     0xb) app.swift:0
+                0x00000001000019a0 (    0x15) Counter.deinit [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x00000001000019a0 (     0x7) app.swift:3
+                    0x00000001000019a7 (     0x8) app.swift:3
+                    0x00000001000019af (     0x6) app.swift:0
+                0x00000001000019c0 (    0x31) Counter.__deallocating_deinit [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x00000001000019c0 (     0x8) app.swift:3
+                    0x00000001000019c8 (     0x8) app.swift:3
+                    0x00000001000019d0 (    0x21) app.swift:0
+                0x0000000100001a00 (    0x1d) Counter.init() [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100001a00 (     0xf) app.swift:3
+                    0x0000000100001a0f (     0x4) app.swift:0
+                    0x0000000100001a13 (     0x8) app.swift:3
+                    0x0000000100001a1b (     0x2) app.swift:0
+                0x0000000100001a20 (    0x1f) partial apply for closure #1 in Greeter.greet(times:) [FUNC, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100001a20 (    0x1f) /<compiler-generated>:0
+                0x0000000100001a40 (    0x6f) __swift_instantiateConcreteTypeFromMangledNameV2 [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100001a40 (     0x8) /<compiler-generated>:0
+                    0x0000000100001a48 (    0x67) /<compiler-generated>:0
+                0x0000000100001ab0 (    0x73) lazy protocol witness table accessor for type Range<Int> and conformance <> Range<A> [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100001ab0 (    0x73) /<compiler-generated>:0
+                0x0000000100001b30 (    0x61) __swift_instantiateConcreteTypeFromMangledNameAbstractV2 [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100001b30 (     0x8) /<compiler-generated>:0
+                    0x0000000100001b38 (    0x59) /<compiler-generated>:0
+                0x0000000100001ba0 (    0x47) lazy protocol witness table accessor for type Int and conformance Int [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100001ba0 (    0x47) /<compiler-generated>:0
+                0x0000000100001bf0 (    0x3a) key path getter for CustomStringConvertible.description : <A>A [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100001bf0 (     0xd) /<compiler-generated>:0
+                    0x0000000100001bfd (    0x2d) /<compiler-generated>:0
+                0x0000000100001c70 (    0x48) implicit closure #1 in helper<A>(_:) [FUNC, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100001c70 (     0x8) /<compiler-generated>:0
+                    0x0000000100001c78 (    0x40) /<compiler-generated>:0
+                0x0000000100001cc0 (    0x1f) partial apply for implicit closure #1 in helper<A>(_:) [FUNC, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100001cc0 (    0x1f) /<compiler-generated>:0
+                0x0000000100001ce0 (    0x56) lazy protocol witness table accessor for type [String] and conformance [A] [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100001ce0 (    0x56) /<compiler-generated>:0
+                0x0000000100001d40 (    0x1e) outlined destroy of [String] [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100001d40 (     0x8) /<compiler-generated>:0
+                    0x0000000100001d48 (    0x16) /<compiler-generated>:0
+                0x0000000100001d60 (    0x31) initializeBufferWithCopyOfBuffer for Greeter [FUNC, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100001d60 (     0x8) /<compiler-generated>:0
+                    0x0000000100001d68 (    0x29) /<compiler-generated>:0
+                0x0000000100001da0 (     0xf) destroy for Greeter [FUNC, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100001da0 (     0xf) /<compiler-generated>:0
+                0x0000000100001db0 (    0x31) initializeWithCopy for Greeter [FUNC, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100001db0 (     0x8) /<compiler-generated>:0
+                    0x0000000100001db8 (    0x29) /<compiler-generated>:0
+                0x0000000100001df0 (    0x3e) assignWithCopy for Greeter [FUNC, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100001df0 (     0x8) /<compiler-generated>:0
+                    0x0000000100001df8 (    0x36) /<compiler-generated>:0
+                0x0000000100001e30 (    0x17) __swift_memcpy16_8 [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100001e30 (    0x17) /<compiler-generated>:0
+                0x0000000100001e50 (    0x30) assignWithTake for Greeter [FUNC, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100001e50 (     0xb) /<compiler-generated>:0
+                    0x0000000100001e5b (    0x25) /<compiler-generated>:0
+                0x0000000100001e80 (    0xf0) getEnumTagSinglePayload for Greeter [FUNC, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100001e80 (     0x4) /<compiler-generated>:0
+                    0x0000000100001e84 (    0xec) /<compiler-generated>:0
+                0x0000000100001f70 (   0x13d) storeEnumTagSinglePayload for Greeter [FUNC, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100001f70 (     0x4) /<compiler-generated>:0
+                    0x0000000100001f74 (   0x139) /<compiler-generated>:0
+                0x00000001000020b0 (     0xc) type metadata accessor for Greeter [FUNC, OMIT-FP, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x00000001000020b0 (     0xc) /<compiler-generated>:0
+                0x00000001000020c0 (    0x1f) outlined destroy of String [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x00000001000020c0 (     0x8) /<compiler-generated>:0
+                    0x00000001000020c8 (    0x17) /<compiler-generated>:0
+                0x00000001000020e0 (    0x1f) outlined destroy of DefaultStringInterpolation [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x00000001000020e0 (     0x8) /<compiler-generated>:0
+                    0x00000001000020e8 (    0x17) /<compiler-generated>:0
+                0x0000000100002100 (     0x6) Array._endMutation() [FUNC, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf] 
+                    0x0000000100002100 (     0x6) /<compiler-generated>:0
+                0x0000000100002110 (    0x20) __chkstk_darwin [FUNC, PEXT, NameNList, MangledNameNList, NList] 
+                0x0000000100002130 (    0x2b) __chkstk_darwin_llvm_probe [FUNC, PEXT, NameNList, MangledNameNList, NList] 
+            0x000000010000215c (    0xf0) __TEXT __stubs
+            0x0000000100002250 (    0x9c) __TEXT __cstring
+            0x00000001000022f0 (    0x3f) __TEXT __swift5_typeref
+                0x00000001000022f0 (     0x8) symbolic SnySiG [PEXT, NameNList, MangledNameNList, NList] 
+                0x00000001000022f8 (     0x8) symbolic x [PEXT, NameNList, MangledNameNList, NList] 
+                0x0000000100002300 (    0x14) generic environment s23CustomStringConvertibleRzl [PEXT, NameNList, MangledNameNList, NList] 
+                0x0000000100002314 (     0x4) symbolic SS [PEXT, NameNList, MangledNameNList, NList] 
+                0x0000000100002318 (     0x8) symbolic SaySSG [PEXT, NameNList, MangledNameNList, NList] 
+                0x0000000100002320 (     0x6) symbolic _____ 4main7GreeterV [PEXT, NameNList, MangledNameNList, NList] 
+                0x0000000100002326 (     0x6) symbolic _____ 4main7CounterC [PEXT, NameNList, MangledNameNList, NList] 
+                0x000000010000232c (     0x3) symbolic Si [PEXT, NameNList, MangledNameNList, NList] 
+            0x0000000100002330 (    0x62) __TEXT __const
+                0x0000000100002330 (    0x38) mangled name ref for type metadata for Range<Int> [PEXT, NameNList, MangledNameNList, NList] 
+                0x0000000100002368 (    0x18) mangled name ref for type metadata for [String] [PEXT, NameNList, MangledNameNList, NList] 
+                0x0000000100002380 (    0x10) direct field offset for Counter.value [PEXT, NameNList, MangledNameNList, NList] 
+                0x0000000100002390 (     0x2) __swift_reflection_version [PEXT, NameNList, MangledNameNList, NList] 
+            0x0000000100002394 (     0x8) __TEXT __swift5_entry
+            0x000000010000239c (    0x64) __TEXT __constg_swiftt
+                0x000000010000239c (     0xc) module descriptor  [PEXT, NameNList, MangledNameNList, NList] 
+                0x00000001000023a8 (    0x1c) nominal type descriptor for Greeter [PEXT, NameNList, MangledNameNList, NList] 
+                0x00000001000023c4 (    0x34) nominal type descriptor for Counter [PEXT, NameNList, MangledNameNList, NList] 
+                0x00000001000023f8 (     0x8) method descriptor for Counter.__allocating_init() [PEXT, NameNList, MangledNameNList, NList] 
+            0x0000000100002400 (     0xb) __TEXT __swift5_reflstr
+            0x000000010000240c (    0x38) __TEXT __swift5_fieldmd
+                0x000000010000240c (    0x1c) reflection metadata field descriptor Greeter [NameNList, MangledNameNList, NList] 
+                0x0000000100002428 (    0x1c) reflection metadata field descriptor Counter [NameNList, MangledNameNList, NList] 
+            0x0000000100002450 (    0x12) __TEXT __objc_classname
+            0x0000000100002462 (     0x6) __TEXT __objc_methname
+            0x0000000100002468 (     0x1) __TEXT __objc_methtype
+            0x000000010000246c (     0x8) __TEXT __swift5_types
+            0x0000000100002474 (    0xb0) __TEXT __unwind_info
+            0x0000000100002528 (    0x78) __TEXT __eh_frame
+        0x0000000100003000 (  0x1000) __DATA_CONST SEGMENT
+            0x0000000100003000 (    0x80) __DATA_CONST __const
+                0x0000000100003000 (    0x58) value witness table for Greeter [NameNList, MangledNameNList, NList] 
+                0x0000000100003058 (    0x10) full type metadata for Greeter [NameNList, MangledNameNList, NList] 
+                0x0000000100003068 (    0x18) type metadata for Greeter [PEXT, NameNList, MangledNameNList, NList] 
+            0x0000000100003080 (     0x8) __DATA_CONST __objc_classlist
+            0x0000000100003088 (     0x8) __DATA_CONST __objc_imageinfo
+            0x0000000100003090 (   0x1e8) __DATA_CONST __got
+        0x0000000100004000 (  0x1000) __DATA SEGMENT
+            0x0000000100004000 (    0xb8) __DATA __objc_const
+                0x0000000100004000 (    0x48) _METACLASS_DATA__TtC4main7Counter [NameNList, MangledNameNList, NList] 
+                0x0000000100004048 (    0x28) _IVARS__TtC4main7Counter [NameNList, MangledNameNList, NList] 
+                0x0000000100004070 (    0x48) _DATA__TtC4main7Counter [NameNList, MangledNameNList, NList] 
+            0x00000001000040b8 (    0xc8) __DATA __data
+                0x00000001000040b8 (     0x8) demangling cache variable for type metadata for Range<Int> [PEXT, NameNList, MangledNameNList, NList] 
+                0x00000001000040c0 (     0x8) lazy protocol witness table cache variable for type Range<Int> and conformance <> Range<A> [PEXT, NameNList, MangledNameNList, NList] 
+                0x00000001000040c8 (     0x8) lazy protocol witness table cache variable for type Int and conformance Int [PEXT, NameNList, MangledNameNList, NList] 
+                0x00000001000040d0 (     0x8) demangling cache variable for type metadata for [String] [PEXT, NameNList, MangledNameNList, NList] 
+                0x00000001000040d8 (     0x8) lazy protocol witness table cache variable for type [String] and conformance [A] [PEXT, NameNList, MangledNameNList, NList] 
+                0x00000001000040e0 (    0x28) metaclass for Counter [PEXT, NameNList, MangledNameNList, NList] 
+                0x0000000100004108 (    0x18) full type metadata for Counter [NameNList, MangledNameNList, NList] 
+                0x0000000100004120 (    0x60) type metadata for Counter [PEXT, NameNList, MangledNameNList, NList] 
+            0x0000000100004180 (    0x18) __DATA __common
+                0x0000000100004180 (    0x10) g [PEXT, NameNList, MangledNameNList, NList] 
+                0x0000000100004190 (     0x8) c [PEXT, NameNList, MangledNameNList, NList] 
+        0x0000000100005000 (  0x1000) __LINKEDIT SEGMENT
+        0x0000000100006000 (  0x3000) __DWARF SEGMENT
+            0x0000000100006000 (   0x52a) __DWARF __debug_line
+            0x000000010000652a (   0x821) __DWARF __debug_info
+            0x0000000100006d4b (   0x2a0) __DWARF __debug_aranges
+            0x0000000100006feb (   0x2f1) __DWARF __debug_abbrev
+            0x00000001000072dc (   0xee4) __DWARF __debug_str
+            0x00000001000081c0 (    0x24) __DWARF __apple_namespac
+            0x00000001000081e4 (   0x668) __DWARF __apple_names
+            0x000000010000884c (   0x2a8) __DWARF __apple_types
+            0x0000000100008af4 (    0x24) __DWARF __apple_objc

@@ -2,26 +2,100 @@
 
 # 2022 New Relic
 # Shell wrapper script used to upload a builds debug symbols to New Relic.
-# run-symbol-tool 
+# run-symbol-tool <APP_TOKEN> [--debug] [-appVersion <version>] [--foreground]
 
 if [ ! $1 ]; then
-    echo "New Relic: usage: $0 <NEW_RELIC_APP_TOKEN> [--debug] [-appVersion <version>]"
+    echo "New Relic: usage: $0 <NEW_RELIC_APP_TOKEN> [--debug] [-appVersion <version>] [--foreground]"
     exit -1
 fi
 
 API_KEY=$1
-# Consume the app token and forward any remaining optional arguments (--debug, -appVersion <version>)
-# to the Swift script verbatim. Using "$@" preserves quoting so a version value with spaces is safe.
 shift
+
+# --foreground is handled here; every other argument (--debug, -appVersion <version>) is forwarded to
+# the Swift tool verbatim. Rebuilding "$@" this way preserves quoting, so a version with spaces is safe.
+FOREGROUND=0
+for ARG in "$@"; do
+    shift
+    if [ "$ARG" = "--foreground" ]; then
+        FOREGROUND=1
+    else
+        set -- "$@" "$ARG"
+    fi
+done
+
+# BASH_SOURCE when /bin/sh is bash; $0 for other POSIX shells.
+WORK_DIRECTORY=$( cd "$( dirname "${BASH_SOURCE:-$0}" )" && pwd )
+SOURCES="$WORK_DIRECTORY/Sources/SymbolTool"
+
+if [ ! -f "$SOURCES/main.swift" ]; then
+    # Shown as a build warning in Xcode; like other upload problems, it doesn't fail the build.
+    echo "warning: New Relic: $SOURCES not found, so no dSYMs were uploaded. Copy the entire dsym-upload-tools folder (including Sources/) into your project."
+    exit 0
+fi
+
+# The tool spans several Swift files, so it is compiled with swiftc rather than run as a script.
+# --sdk macosx is required because Run Script phases inherit the iOS/tvOS SDKROOT.
+SWIFTC_FLAGS="-O -swift-version 5"
+
+compile_tool() {
+    /usr/bin/xcrun --sdk macosx swiftc $SWIFTC_FLAGS "$SOURCES"/*.swift -o "$1"
+}
+
+# Compiled binaries are cached in the per-user cache directory, keyed on a hash of the sources and
+# flags, so the optimized compile only happens after the tool changes.
+# Prints the cached binary's path. Returns 1 if the cache can't be used, 2 if compiling failed.
+cached_tool() {
+    CACHE_DIR=$(/usr/bin/getconf DARWIN_USER_CACHE_DIR 2>/dev/null)
+    SOURCES_HASH=$( { echo "$SWIFTC_FLAGS"; /bin/cat "$SOURCES"/*.swift; } | /usr/bin/shasum -a 256 | /usr/bin/cut -c1-16 )
+    [ -n "$CACHE_DIR" ] && [ -n "$SOURCES_HASH" ] || return 1
+
+    CACHE_DIR="${CACHE_DIR%/}/com.newrelic.dsym-upload-tools"
+    BINARY="$CACHE_DIR/run-symbol-tool-$SOURCES_HASH"
+    if [ -x "$BINARY" ]; then
+        # Keep binaries in use from being pruned below.
+        /usr/bin/touch "$BINARY" 2>/dev/null
+        echo "$BINARY"
+        return 0
+    fi
+
+    # Build to a unique file and move it into place, so concurrent builds never run a partial binary.
+    /bin/mkdir -p "$CACHE_DIR" 2>/dev/null &&
+        TEMP_BINARY=$(/usr/bin/mktemp "$CACHE_DIR/build.XXXXXX" 2>/dev/null) || return 1
+    if ! compile_tool "$TEMP_BINARY"; then
+        /bin/rm -f "$TEMP_BINARY"
+        return 2
+    fi
+    /bin/mv -f "$TEMP_BINARY" "$BINARY" || { /bin/rm -f "$TEMP_BINARY"; return 1; }
+    # Prune binaries for tool versions unused for 30 days, and builds abandoned over an hour ago.
+    /usr/bin/find "$CACHE_DIR" \( \( -name 'run-symbol-tool-*' -mtime +30 \) -o \( -name 'build.*' -mmin +60 \) \) -delete 2>/dev/null
+    echo "$BINARY"
+}
+
+run_tool() {
+    BINARY=$(cached_tool)
+    case $? in
+        0) "$BINARY" "$API_KEY" "$@"; return $? ;;
+        2) return 1 ;; # The compiler has already reported the error.
+    esac
+
+    # No usable cache directory: build a throwaway binary.
+    TEMP_BINARY=$(/usr/bin/mktemp -t nr-run-symbol-tool) &&
+        compile_tool "$TEMP_BINARY" &&
+        "$TEMP_BINARY" "$API_KEY" "$@"
+    STATUS=$?
+    /bin/rm -f "$TEMP_BINARY"
+    return $STATUS
+}
+
+# --foreground shows the output in the Xcode build log (and returns the tool's exit status), but the
+# build waits while the dSYMs process and upload.
+if [ "$FOREGROUND" = 1 ]; then
+    run_tool "$@"
+    exit $?
+fi
 
 echo "New Relic: Processing dSYMs and uploading to New Relic. (In background...)"
 echo "New Relic: For troubleshooting, see upload_dsym_results.log file in project root folder. Add --debug after app token in Run Script for additional information."
 
-WORK_DIRECTORY=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-SCRIPT="$WORK_DIRECTORY/run-symbol-tool.swift"
-
-## Running with below command is useful for seeing output in Xcode,
-## but it will incur delays in the build process while the dSYMs process and upload.
-# /usr/bin/xcrun --sdk macosx swift "$SCRIPT" "$API_KEY" "$@"
-
-/usr/bin/xcrun --sdk macosx swift "$SCRIPT" "$API_KEY" "$@" > upload_dsym_results.log 2>&1 &
+run_tool "$@" > upload_dsym_results.log 2>&1 &
