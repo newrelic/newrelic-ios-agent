@@ -186,6 +186,7 @@ struct TintedSymbolsView: View {
             .padding()
         }
         .NRTrackView(name: "TintedSymbolsView")
+
     }
 }
 

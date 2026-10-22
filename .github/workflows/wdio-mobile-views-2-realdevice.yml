@@ -42,12 +42,12 @@ on:
         type: string
         default: ""
       device_name:
-        description: "Real device to target (default iPhone 15)."
+        description: "Real device to target (default iPhone 17)."
         required: false
         type: string
         default: ""
       platform_version:
-        description: "iOS version to target (default 18)."
+        description: "iOS version to target (default 26.0)."
         required: false
         type: string
         default: ""
@@ -82,7 +82,11 @@ jobs:
             # wdio config throws a clear error in that case rather than falling
             # back to a stale hardcoded app id.
             echo "No app ID supplied; falling back to LambdaTest/last-app-id-realdevice (absent unless committed)"
-          elif printf '%s' "$APP_ID_INPUT" | grep -Eq '^[A-Za-z0-9._:-]{1,200}$'; then
+          # Two shapes are legal: an `lt://APP...` app URL (what LambdaTest returns
+          # for a real-device upload, and what a real-device session needs) or a
+          # dotted custom_id. The virtual pipeline's allowlist had no "/" and so
+          # silently rejected every lt:// id.
+          elif printf '%s' "$APP_ID_INPUT" | grep -Eq '^(lt://[A-Za-z0-9]{1,190}|[A-Za-z0-9._:-]{1,200})$'; then
             echo "LT_APP_ID=$APP_ID_INPUT" >> "$GITHUB_ENV"
             echo "Using app ID: $APP_ID_INPUT"
           else

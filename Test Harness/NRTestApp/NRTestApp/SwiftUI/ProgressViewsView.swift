@@ -56,6 +56,7 @@ struct ProgressViewsView: View {
         }
         .padding()
         .NRTrackView(name: "ProgressViewsView")
+
     }
 }
 
