@@ -92,6 +92,21 @@ static NSString* __processLock = @"NRMAProcessLock";
     [_crashReporter purgePendingCrashReport];
 }
 
++ (nullable NSString *) pendingCrashSessionId {
+#if TARGET_OS_WATCH
+    return nil;
+#else
+    PLCrashReporterConfig *config = [[PLCrashReporterConfig alloc] initWithSignalHandlerType:PLCrashReporterSignalHandlerTypeBSD
+                                                                        symbolicationStrategy:PLCrashReporterSymbolicationStrategyNone];
+    PLCrashReporter *reporter = [[PLCrashReporter alloc] initWithConfiguration:config];
+    if (![reporter hasPendingCrashReport]) {
+        return nil;
+    }
+    NRMACrashReportFileManager *fileManager = [[NRMACrashReportFileManager alloc] initWithCrashReporter:reporter];
+    return [fileManager getMetaData][@kNRMAMetaKey_Session];
+#endif
+}
+
 - (NSDictionary*) getMetaData
 {
 

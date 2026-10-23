@@ -124,25 +124,38 @@ final class NRFileEventStore {
     // MARK: - Retention
 
     /// Hard age cap: deletes any record whose own `timestamp` is older than
-    /// `maxAgeMs`, regardless of upload/confirmation state.
-    func evictRecords(olderThanMs maxAgeMs: Int64, nowMs: Int64) {
+    /// `maxAgeMs`, regardless of upload/confirmation state. Then evicts the oldest
+    /// remaining records (by `timestamp`) if still over `maxCount`.
+    func evictRecords(olderThanMs maxAgeMs: Int64, nowMs: Int64, maxCount: Int) {
         queue.async { [directoryURL] in
             let uuids = self.readIndex()
             var survivors: [String] = []
-            var staleUUIDs: [String] = []
+            var timestamps: [String: Int64] = [:]
+            var evictedUUIDs: Set<String> = []
             for uuid in uuids {
                 guard let record = NRFileEventStore.readRecord(uuid: uuid, directoryURL: directoryURL) else {
-                    staleUUIDs.append(uuid) // corrupt/missing -- drop from the index too
+                    evictedUUIDs.insert(uuid) // corrupt/missing -- drop from the index too
                     continue
                 }
                 if nowMs - record.timestamp > maxAgeMs {
-                    staleUUIDs.append(uuid)
+                    evictedUUIDs.insert(uuid)
                 } else {
                     survivors.append(uuid)
+                    timestamps[uuid] = record.timestamp
                 }
             }
-            guard !staleUUIDs.isEmpty else { return }
-            for uuid in staleUUIDs {
+
+            if survivors.count > maxCount {
+                let overflow = survivors.count - maxCount
+                let oldestFirst = survivors.sorted { (timestamps[$0] ?? 0) < (timestamps[$1] ?? 0) }
+                for uuid in oldestFirst.prefix(overflow) {
+                    evictedUUIDs.insert(uuid)
+                }
+                survivors.removeAll { evictedUUIDs.contains($0) }
+            }
+
+            guard !evictedUUIDs.isEmpty else { return }
+            for uuid in evictedUUIDs {
                 try? FileManager.default.removeItem(at: directoryURL.appendingPathComponent("\(uuid).json"))
             }
             self.writeIndex(survivors)

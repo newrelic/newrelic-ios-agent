@@ -21,4 +21,7 @@
 
 - (void) processReportsWithSessionAttributes:(NSDictionary*)attributes
                              analyticsEvents:(NSArray*)events;
+
+// Returns the sessionId of the pending crash report, if any, without consuming it.
++ (nullable NSString *) pendingCrashSessionId;
 @end

@@ -31,6 +31,13 @@ void EventManager::persistIfBridged(std::shared_ptr<AnalyticEvent> event) const 
     _persistenceBridge->persistEvent(event->getEventUUID(), event->getEventType(), ss.str());
 }
 
+void EventManager::discardIfBridged(std::shared_ptr<AnalyticEvent> event) const {
+    if (!_persistenceBridge || !event) {
+        return;
+    }
+    _persistenceBridge->discardEvent(event->getEventUUID());
+}
+
 void EventManager::markEventsPendingConfirmationIfBridged(const std::vector<std::shared_ptr<AnalyticEvent>>& events) {
     if (!_persistenceBridge || events.empty()) {
         return;
@@ -110,6 +117,7 @@ EventAddResult EventManager::addEvent(std::shared_ptr<AnalyticEvent> event) {
         if (index < _events.size()) {
             //iterator the event to remove
             auto eventIterator = _events.begin() + index;
+            std::shared_ptr<AnalyticEvent> evictedEvent = *eventIterator;
             //remove it from the duplication store, under the same key it was stored with
             _eventDuplicationStore.remove(EventManager::createKey(*eventIterator));
             //remove it from the vector
@@ -121,6 +129,7 @@ EventAddResult EventManager::addEvent(std::shared_ptr<AnalyticEvent> event) {
             result.added = true;
             _events_recorded++;
             persistIfBridged(event);
+            discardIfBridged(evictedEvent);
         }
         // else: the random removal index landed outside the queue's current bounds --
         // drop the incoming event instead of silently losing it (matches the Android

@@ -11,12 +11,17 @@
 #import "NRMAAnalytics.h"
 #import "NRMACrashDataUploader.h"
 #import "NRMAJSON.h"
+#import "NRMAFlags.h"
 
 @implementation NRMAExceptionHandlerStartupManager
 
 - (void) fetchLastSessionsAnalytics{
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
         @synchronized (self) {
+            // Unused when event persistence is on -- NRMACrashDataWriter sources this instead.
+            if ([NRMAFlags shouldEnableEventPersistence]) {
+                return;
+            }
             self.attributeJson = [NRMAAnalytics getLastSessionsAttributes];
 
             self.eventJson = [NRMAAnalytics getLastSessionsEvents];

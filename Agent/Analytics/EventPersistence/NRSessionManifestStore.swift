@@ -61,20 +61,23 @@ final class NRSessionManifestStore {
         queue.sync {}
     }
 
-    /// Evicts a manifest once it's both unreferenced by any still-live event
-    /// record and older than the retention cap -- `liveSessionIds` is the set
-    /// of sessionIds any currently-persisted `NREventRecord` still points at,
-    /// so a manifest a long-running session keeps refreshing isn't evicted out
-    /// from under events that still need it.
-    func evictManifests(olderThanMs maxAgeMs: Int64, nowMs: Int64, liveSessionIds: Set<String>) {
+    /// Evicts a manifest once unreferenced by any live event and older than the
+    /// retention cap, then evicts the oldest remaining non-live manifests (by
+    /// `lastUpdateMs`) if still over `maxCount`. Live sessions are never evicted.
+    func evictManifests(olderThanMs maxAgeMs: Int64, nowMs: Int64, liveSessionIds: Set<String>, maxCount: Int) {
         queue.async { [directoryURL] in
             let fileManager = FileManager.default
             guard let contents = try? fileManager.contentsOfDirectory(at: directoryURL, includingPropertiesForKeys: nil) else {
                 return
             }
+
+            var survivingNonLive: [(url: URL, lastUpdateMs: Int64)] = []
+            var liveCount = 0
+
             for url in contents where url.pathExtension == "json" {
                 let sessionId = url.deletingPathExtension().lastPathComponent
                 if liveSessionIds.contains(sessionId) {
+                    liveCount += 1
                     continue
                 }
                 guard let manifest = NRSessionManifestStore.readManifest(at: url) else {
@@ -83,7 +86,16 @@ final class NRSessionManifestStore {
                 }
                 if nowMs - manifest.lastUpdateMs > maxAgeMs {
                     try? fileManager.removeItem(at: url)
+                    continue
                 }
+                survivingNonLive.append((url, manifest.lastUpdateMs))
+            }
+
+            let overflow = (liveCount + survivingNonLive.count) - maxCount
+            guard overflow > 0 else { return }
+            survivingNonLive.sort { $0.lastUpdateMs < $1.lastUpdateMs }
+            for entry in survivingNonLive.prefix(overflow) {
+                try? fileManager.removeItem(at: entry.url)
             }
         }
     }

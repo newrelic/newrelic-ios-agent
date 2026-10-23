@@ -103,12 +103,45 @@ final class NRFileEventStoreTests: XCTestCase {
         sut.synchronize()
         XCTAssertEqual(sut.fetchAll().count, 2)
 
-        sut.evictRecords(olderThanMs: maxAgeMs, nowMs: nowMs)
+        sut.evictRecords(olderThanMs: maxAgeMs, nowMs: nowMs, maxCount: 1_000)
         sut.synchronize()
 
         let survivors = sut.fetchAll()
         XCTAssertEqual(survivors.count, 1)
         XCTAssertEqual(survivors.first?.eventUUID, freshRecord.eventUUID)
+    }
+
+    func testRetentionEvictsOldestRecordsOverCountCap() {
+        let nowMs: Int64 = 100 * 24 * 60 * 60 * 1000
+        let oldest = makeRecord(timestampMs: nowMs - 3_000)
+        let middle = makeRecord(timestampMs: nowMs - 2_000)
+        let newest = makeRecord(timestampMs: nowMs - 1_000)
+        sut.store(oldest)
+        sut.store(middle)
+        sut.store(newest)
+        sut.synchronize()
+        XCTAssertEqual(sut.fetchAll().count, 3)
+
+        // Only the count cap can fire here.
+        sut.evictRecords(olderThanMs: Int64.max, nowMs: nowMs, maxCount: 2)
+        sut.synchronize()
+
+        let survivors = sut.fetchAll()
+        let survivingUUIDs = Set(survivors.map { $0.eventUUID })
+        XCTAssertEqual(survivors.count, 2)
+        XCTAssertTrue(survivingUUIDs.contains(middle.eventUUID))
+        XCTAssertTrue(survivingUUIDs.contains(newest.eventUUID))
+        XCTAssertFalse(survivingUUIDs.contains(oldest.eventUUID), "the oldest record by timestamp must be evicted first when over the count cap")
+    }
+
+    func testRetentionCountCapIsNoopWhenUnderCap() {
+        sut.store(makeRecord(timestampMs: 1_000))
+        sut.synchronize()
+
+        sut.evictRecords(olderThanMs: Int64.max, nowMs: 1_000, maxCount: 1_000)
+        sut.synchronize()
+
+        XCTAssertEqual(sut.fetchAll().count, 1)
     }
 
     func testDirectoryIsExcludedFromBackup() {

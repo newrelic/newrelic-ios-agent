@@ -149,24 +149,28 @@
         }
     }
 
-    NSMutableDictionary* mutableAttributes = [NSMutableDictionary dictionaryWithDictionary:attributes];
+    NSString* crashSessionId = [metaDictionary objectForKey:@kNRMAMetaKey_Session];
+    NSMutableDictionary* mutableAttributes;
 
-    // If attribute sessionId doesn't match crash's session id, the attributes we read
-    // (asynchronously, at next launch) belong to the wrong session -- most likely a new
-    // session already started before that read ran. Try to recover the crash's *true*
-    // session's attributes from its persisted manifest before falling back to dropping.
-    if (![[metaDictionary objectForKey:@kNRMAMetaKey_Session] isEqualToString:[mutableAttributes objectForKey:@"sessionId"]]) {
-        NSDictionary *reattributedAttributes = nil;
-        if ([NRMAFlags shouldEnableEventPersistence]) {
-            reattributedAttributes = [[NREventPersistenceController shared] reattributeCrashAttributesForSessionId:[metaDictionary objectForKey:@kNRMAMetaKey_Session]];
-        }
-        if (reattributedAttributes != nil) {
-            // Events carry no per-event session identity in this at-rest format, so
-            // the mismatch doesn't invalidate them -- only the session-level
-            // attributes needed correcting.
-            attributes = reattributedAttributes;
-            mutableAttributes = [NSMutableDictionary dictionaryWithDictionary:reattributedAttributes];
+    if ([NRMAFlags shouldEnableEventPersistence]) {
+        // Source of truth, keyed by the crash's true sessionId. Claiming events here
+        // deletes them, so -onSessionStart's recovery sweep must exclude this session
+        // or they'd be sent twice.
+        NSDictionary *persistedAttributes = [[NREventPersistenceController shared] reattributeCrashAttributesForSessionId:crashSessionId];
+        if (persistedAttributes != nil) {
+            attributes = persistedAttributes;
+            mutableAttributes = [NSMutableDictionary dictionaryWithDictionary:persistedAttributes];
+            events = [[NREventPersistenceController shared] claimPersistedEventsForCrashSessionId:crashSessionId];
         } else {
+            // No manifest found -- drop everything rather than guess.
+            attributes = nil;
+            mutableAttributes = nil;
+            events = nil;
+        }
+    } else {
+        // Flag off: unchanged old behavior -- drop on a sessionId mismatch.
+        mutableAttributes = [NSMutableDictionary dictionaryWithDictionary:attributes];
+        if (![crashSessionId isEqualToString:[mutableAttributes objectForKey:@"sessionId"]]) {
             attributes = nil;
             mutableAttributes = nil;
             events = nil;

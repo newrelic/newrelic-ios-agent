@@ -18,7 +18,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) NSString *eventType;
 @property (strong) NSMutableDictionary<NSString *, id> *attributes;
 @property (nonatomic, strong) NSString *eventUUID;
-@property (nonatomic) BOOL isRecoveredEvent;
 
 @property (weak) id <AttributeValidatorProtocol> attributeValidator;
 

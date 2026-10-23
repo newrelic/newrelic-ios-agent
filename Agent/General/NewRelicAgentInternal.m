@@ -29,6 +29,7 @@
 #import "NRMAMethodProfiler.h"
 #import "NRMACPUVitals.h"
 #import "NRMAExceptionHandlerManager.h"
+#import "NRMACrashReportFileManager.h"
 #import "NRMAExceptionMetaDataStore.h"
 #import "NRMAInteractionHistoryObjCInterface.h"
 #import "NRMAExceptionDataCollectionWrapper.h"
@@ -698,8 +699,17 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
             }
         }
 
-        NSArray *recoveredEvents = [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:currentAttributes];
+        // Leave a pending crash's session untouched -- NRMACrashDataWriter claims it instead.
+        NSString *pendingCrashSessionId = nil;
+        if ([NRMAFlags shouldEnableCrashReporting]) {
+            pendingCrashSessionId = [NRMACrashReportFileManager pendingCrashSessionId];
+        }
+
+        NSArray *recoveredEvents = [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:currentAttributes
+                                                                                                                             excludingSessionId:pendingCrashSessionId];
         if (recoveredEvents.count > 0) {
+            NRLOG_AGENT_VERBOSE(@"NREventPersistence: adding %lu recovered event(s) to harvest data: %@",
+                                (unsigned long)recoveredEvents.count, recoveredEvents);
             [NRMAHarvestController addRecoveredAnalyticsEvents:recoveredEvents];
         }
     }

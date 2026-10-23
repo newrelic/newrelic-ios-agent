@@ -21,6 +21,8 @@ namespace NewRelic {
                                    const std::string& jsonAttributes) override;
 
         virtual void markEventsPendingConfirmation(const std::vector<std::string>& eventUUIDs) override;
+
+        virtual void discardEvent(const std::string& eventUUID) override;
     };
 }
 

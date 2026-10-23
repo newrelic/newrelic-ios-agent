@@ -138,11 +138,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
         // Handle New Event System NRMAnalytics Constructor
         if([NRMAFlags shouldEnableNewEventSystem]){
-            NSString *filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:kNRMA_EventStoreFilename];
-
-            PersistentEventStore *eventStore = [[PersistentEventStore alloc] initWithFilename:filename andMinimumDelay:.025];
-            
-            _eventManager = [[NRMAEventManager alloc] initWithPersistentStore:[eventStore autorelease]];
+            _eventManager = [[NRMAEventManager alloc] init];
             _attributeValidator = [[NRMAAttributeValidator alloc] init];
             _sessionAttributeManager = [[NRMASAM alloc] initWithAttributeValidator:_attributeValidator];
             _eventManager.sessionAttributeManager = _sessionAttributeManager;
@@ -1141,8 +1137,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 + (NSString*) getLastSessionsEvents{
     if([NRMAFlags shouldEnableNewEventSystem]) {
-        NSString *filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:kNRMA_EventStoreFilename];
-        return [NRMAEventManager getLastSessionEventsFromFilename:filename];
+        // Event recovery now goes through NREventPersistenceController instead.
+        return nil;
     } else {
         try {
             auto events = AnalyticsController::fetchDuplicatedEvents([self eventDupStore], true);

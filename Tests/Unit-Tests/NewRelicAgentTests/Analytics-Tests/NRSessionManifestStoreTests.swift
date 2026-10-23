@@ -66,7 +66,7 @@ final class NRSessionManifestStoreTests: XCTestCase {
         sut.store(staleButLive)
         sut.synchronize()
 
-        sut.evictManifests(olderThanMs: maxAgeMs, nowMs: nowMs, liveSessionIds: ["live-session"])
+        sut.evictManifests(olderThanMs: maxAgeMs, nowMs: nowMs, liveSessionIds: ["live-session"], maxCount: 32)
         sut.synchronize()
 
         XCTAssertNotNil(sut.manifest(forSessionId: "live-session"), "a manifest still referenced by a live event must not be evicted")
@@ -81,11 +81,56 @@ final class NRSessionManifestStoreTests: XCTestCase {
         sut.store(fresh)
         sut.synchronize()
 
-        sut.evictManifests(olderThanMs: maxAgeMs, nowMs: nowMs, liveSessionIds: [])
+        sut.evictManifests(olderThanMs: maxAgeMs, nowMs: nowMs, liveSessionIds: [], maxCount: 32)
         sut.synchronize()
 
         XCTAssertNil(sut.manifest(forSessionId: "stale-session"))
         XCTAssertNotNil(sut.manifest(forSessionId: "fresh-session"))
+    }
+
+    func testEvictionRemovesOldestNonLiveManifestsOverCountCap() {
+        let nowMs: Int64 = 100 * 24 * 60 * 60 * 1000
+        let oldest = makeManifest(sessionId: "oldest-session", sessionStartMs: 0, lastUpdateMs: nowMs - 3_000)
+        let middle = makeManifest(sessionId: "middle-session", sessionStartMs: 0, lastUpdateMs: nowMs - 2_000)
+        let newest = makeManifest(sessionId: "newest-session", sessionStartMs: 0, lastUpdateMs: nowMs - 1_000)
+        sut.store(oldest)
+        sut.store(middle)
+        sut.store(newest)
+        sut.synchronize()
+
+        // Only the count cap can fire here.
+        sut.evictManifests(olderThanMs: Int64.max, nowMs: nowMs, liveSessionIds: [], maxCount: 2)
+        sut.synchronize()
+
+        XCTAssertNil(sut.manifest(forSessionId: "oldest-session"), "the oldest manifest by lastUpdateMs must be evicted first when over the count cap")
+        XCTAssertNotNil(sut.manifest(forSessionId: "middle-session"))
+        XCTAssertNotNil(sut.manifest(forSessionId: "newest-session"))
+    }
+
+    func testEvictionCountCapNeverEvictsLiveSessions() {
+        let nowMs: Int64 = 100 * 24 * 60 * 60 * 1000
+        let live = makeManifest(sessionId: "live-session", sessionStartMs: 0, lastUpdateMs: nowMs - 10_000)
+        let nonLive = makeManifest(sessionId: "non-live-session", sessionStartMs: 0, lastUpdateMs: nowMs - 1_000)
+        sut.store(live)
+        sut.store(nonLive)
+        sut.synchronize()
+
+        // Only the non-live manifest is evictable.
+        sut.evictManifests(olderThanMs: Int64.max, nowMs: nowMs, liveSessionIds: ["live-session"], maxCount: 1)
+        sut.synchronize()
+
+        XCTAssertNotNil(sut.manifest(forSessionId: "live-session"), "a live session's manifest must never be evicted by the count cap")
+        XCTAssertNil(sut.manifest(forSessionId: "non-live-session"))
+    }
+
+    func testEvictionCountCapIsNoopWhenUnderCap() {
+        sut.store(makeManifest(sessionId: "session-A", sessionStartMs: 0, lastUpdateMs: 1_000))
+        sut.synchronize()
+
+        sut.evictManifests(olderThanMs: Int64.max, nowMs: 1_000, liveSessionIds: [], maxCount: 32)
+        sut.synchronize()
+
+        XCTAssertNotNil(sut.manifest(forSessionId: "session-A"))
     }
 
     func testDirectoryIsExcludedFromBackup() {

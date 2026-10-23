@@ -102,4 +102,12 @@ namespace NewRelic {
             NRLOG_AGENT_ERROR(@"NREventPersistence: failed to mark legacy-path events pending confirmation: %@", exception.reason);
         }
     }
+
+    void NRMAEventPersistenceBridge::discardEvent(const std::string& eventUUID) {
+        @try {
+            [[NREventPersistenceController shared] discardPersistedEventWithEventUUID:[NSString stringWithUTF8String:eventUUID.c_str()]];
+        } @catch (NSException *exception) {
+            NRLOG_AGENT_ERROR(@"NREventPersistence: failed to discard evicted legacy-path event: %@", exception.reason);
+        }
+    }
 }

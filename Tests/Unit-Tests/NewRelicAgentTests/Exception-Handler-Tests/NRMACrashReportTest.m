@@ -212,7 +212,7 @@
     return json;
 }
 
-- (void)testCrashDataWriterReattributesAttributesOnSessionMismatchWhenManifestFound {
+- (void)testCrashDataWriterUsesPersistedManifestAttributesWhenFlagEnabledRegardlessOfPassedInAttributes {
     [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
 
     NSString *crashSessionId = @"crash-true-session-reattribution-test";
@@ -222,27 +222,76 @@
                                                               stableAttributes:@{@"appVersion": @"2.0"}];
 
     NSDictionary *metaDictionary = @{@kNRMAMetaKey_Session: crashSessionId};
-    // Attributes read at next launch belong to the WRONG (mismatched) session.
-    NSDictionary *mismatchedAttributes = @{@"sessionId": @"some-other-session", @"stale": @"shouldNotAppear"};
+    // Primary source now when the flag is on, so these must be ignored.
+    NSDictionary *passedInAttributes = @{@"sessionId": @"some-other-session", @"stale": @"shouldNotAppear"};
 
     NSDictionary *json = [self writeCrashReportAndReadBackJSONWithMetaData:metaDictionary
-                                                           sessionAttributes:mismatchedAttributes
+                                                           sessionAttributes:passedInAttributes
                                                              analyticsEvents:@[@{@"eventType": @"testEvent"}]];
 
     NSDictionary *writtenAttributes = json[kNRMA_CR_sessionAttributes];
     XCTAssertEqualObjects(writtenAttributes[@"appVersion"], @"2.0",
-                          @"a session mismatch with a manifest available must substitute the TRUE session's attributes");
-    XCTAssertNil(writtenAttributes[@"stale"], @"the wrong session's stale attributes must not survive reattribution");
+                          @"when a manifest is found for the crash's true session, its attributes must be used");
+    XCTAssertNil(writtenAttributes[@"stale"], @"the passed-in attributes must not survive -- NREventPersistenceController is authoritative");
     XCTAssertNotEqual(json[kNRMA_CR_analyticsEvents], [NSNull null],
-                      @"events carry no per-event session identity in this format, so they must not be dropped");
+                      @"events must not be dropped just because a manifest was found (even if none were persisted, it resolves to an empty array, not nil)");
 
     [NRMAFlags disableFeatures:NRFeatureFlag_EventPersistence];
 }
 
-- (void)testCrashDataWriterStillDropsOnSessionMismatchWhenNoManifestFound {
+- (void)testCrashDataWriterDropsEverythingWhenFlagEnabledButNoManifestFound {
     [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
 
     NSDictionary *metaDictionary = @{@kNRMAMetaKey_Session: @"crash-session-with-no-manifest"};
+    NSDictionary *passedInAttributes = @{@"sessionId": @"crash-session-with-no-manifest", @"stale": @"shouldNotAppear"};
+
+    NSDictionary *json = [self writeCrashReportAndReadBackJSONWithMetaData:metaDictionary
+                                                           sessionAttributes:passedInAttributes
+                                                             analyticsEvents:@[@{@"eventType": @"testEvent"}]];
+
+    XCTAssertEqualObjects(json[kNRMA_CR_sessionAttributes], [NSNull null],
+                          @"with no manifest to resolve from, attributes (and events) must be dropped -- never attribute a crash to a guessed session");
+    XCTAssertEqualObjects(json[kNRMA_CR_analyticsEvents], [NSNull null]);
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_EventPersistence];
+}
+
+- (void)testCrashDataWriterUsesPersistedEventsAsPrimarySourceAndClaimsThem {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+
+    NSString *crashSessionId = @"crash-primary-event-source-test";
+    [[NREventPersistenceController shared] writeSessionManifestWithSessionId:crashSessionId
+                                                                   realAgentId:7
+                                                                sessionStartMs:0
+                                                              stableAttributes:@{@"appVersion": @"2.0"}];
+    [[NREventPersistenceController shared] recordEventWithEventUUID:@"primary-event-source-uuid"
+                                                            eventType:@"Mobile"
+                                                          timestampMs:1000
+                                                           attributes:@{@"name": @"MyEvent", @"orderId": @"XYZ"}
+                                                            sessionId:crashSessionId
+                                                          realAgentId:7
+                                            mutableAttributesSnapshot:@{}];
+
+    NSDictionary *metaDictionary = @{@kNRMAMetaKey_Session: crashSessionId};
+    // Must be ignored in favor of the persisted events.
+    NSDictionary *json = [self writeCrashReportAndReadBackJSONWithMetaData:metaDictionary
+                                                           sessionAttributes:@{@"sessionId": crashSessionId}
+                                                             analyticsEvents:@[@{@"eventType": @"shouldNotAppear"}]];
+
+    NSArray *writtenEvents = json[kNRMA_CR_analyticsEvents];
+    XCTAssertEqual(writtenEvents.count, 1);
+    XCTAssertEqualObjects(writtenEvents.firstObject[@"orderId"], @"XYZ");
+    XCTAssertEqualObjects(writtenEvents.firstObject[@"appVersion"], @"2.0");
+
+    XCTAssertEqual([[NREventPersistenceController shared] claimPersistedEventsForCrashSessionId:crashSessionId].count, 0,
+                   @"writeCrashReport: must have already claimed (and deleted) this session's events, so a later claim finds nothing -- "
+                   @"otherwise the same events could also be delivered via the next ordinary harvest's recovery sweep");
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_EventPersistence];
+}
+
+- (void)testCrashDataWriterStillDropsOnSessionMismatchWhenFlagDisabled {
+    NSDictionary *metaDictionary = @{@kNRMAMetaKey_Session: @"crash-true-session"};
     NSDictionary *mismatchedAttributes = @{@"sessionId": @"some-other-session", @"stale": @"shouldNotAppear"};
 
     NSDictionary *json = [self writeCrashReportAndReadBackJSONWithMetaData:metaDictionary
@@ -250,9 +299,22 @@
                                                              analyticsEvents:@[@{@"eventType": @"testEvent"}]];
 
     XCTAssertEqualObjects(json[kNRMA_CR_sessionAttributes], [NSNull null],
-                          @"with no manifest to recover from, a session mismatch must still drop attributes exactly as before this feature existed");
+                          @"with the flag disabled, a session mismatch must drop attributes exactly as before this feature existed");
+    XCTAssertEqualObjects(json[kNRMA_CR_analyticsEvents], [NSNull null]);
+}
 
-    [NRMAFlags disableFeatures:NRFeatureFlag_EventPersistence];
+- (void)testCrashDataWriterUsesPassedInAttributesAndEventsWhenFlagDisabledAndSessionMatches {
+    NSDictionary *metaDictionary = @{@kNRMAMetaKey_Session: @"matching-session"};
+    NSDictionary *matchingAttributes = @{@"sessionId": @"matching-session", @"appVersion": @"1.0"};
+
+    NSDictionary *json = [self writeCrashReportAndReadBackJSONWithMetaData:metaDictionary
+                                                           sessionAttributes:matchingAttributes
+                                                             analyticsEvents:@[@{@"eventType": @"testEvent"}]];
+
+    NSDictionary *writtenAttributes = json[kNRMA_CR_sessionAttributes];
+    XCTAssertEqualObjects(writtenAttributes[@"appVersion"], @"1.0",
+                          @"with the flag disabled and a matching session, the passed-in attributes must be used unchanged");
+    XCTAssertNotEqual(json[kNRMA_CR_analyticsEvents], [NSNull null]);
 }
 
  -(void) testExceptionHandlerManager {

@@ -131,6 +131,10 @@ namespace NewRelic {
     private:
         static std::shared_ptr<EventPersistenceBridge> _persistenceBridge;
         void persistIfBridged(std::shared_ptr<AnalyticEvent> event) const;
+
+        // Called when an event is evicted from _events (buffer full), so its persisted
+        // copy doesn't outlive it and get resurrected by a later recovery sweep.
+        void discardIfBridged(std::shared_ptr<AnalyticEvent> event) const;
     };
 }
 #endif

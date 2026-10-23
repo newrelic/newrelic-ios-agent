@@ -52,6 +52,40 @@ final class NREventPersistenceControllerTests: XCTestCase {
         XCTAssertEqual(records.first?.mutableAttributesSnapshot["userId"] as? String, "u1")
     }
 
+    func testDiscardPersistedEventDeletesIt() {
+        eventStore.store(makeRecord(uuid: "uuid-1", sessionId: "session-1"))
+        eventStore.store(makeRecord(uuid: "uuid-2", sessionId: "session-1"))
+        eventStore.synchronize()
+
+        sut.discardPersistedEvent(eventUUID: "uuid-1")
+        eventStore.synchronize()
+
+        let remaining = eventStore.fetchAll()
+        XCTAssertEqual(remaining.count, 1)
+        XCTAssertEqual(remaining.first?.eventUUID, "uuid-2")
+    }
+
+    func testDiscardPersistedEventOfUnknownUUIDIsHarmless() {
+        eventStore.store(makeRecord(uuid: "uuid-1", sessionId: "session-1"))
+        eventStore.synchronize()
+
+        sut.discardPersistedEvent(eventUUID: "does-not-exist")
+        eventStore.synchronize()
+
+        XCTAssertEqual(eventStore.fetchAll().count, 1)
+    }
+
+    func testDiscardPersistedEventIsNoopWhenFlagDisabled() {
+        eventStore.store(makeRecord(uuid: "uuid-1", sessionId: "session-1"))
+        eventStore.synchronize()
+
+        NRMAFlags.disableFeatures(NRMAFeatureFlags.NRFeatureFlag_EventPersistence)
+        sut.discardPersistedEvent(eventUUID: "uuid-1")
+        eventStore.synchronize()
+
+        XCTAssertEqual(eventStore.fetchAll().count, 1)
+    }
+
     func testRecordEventIsNoopWhenFlagDisabled() {
         NRMAFlags.disableFeatures(NRMAFeatureFlags.NRFeatureFlag_EventPersistence)
         sut.recordEvent(eventUUID: "uuid-1",
@@ -205,6 +239,110 @@ final class NREventPersistenceControllerTests: XCTestCase {
         NRMAFlags.disableFeatures(NRMAFeatureFlags.NRFeatureFlag_EventPersistence)
         XCTAssertNil(sut.reattributeCrashAttributes(forSessionId: "crashed-session"),
                      "reattribution must be a no-op when the feature flag is disabled")
+    }
+
+    func testClaimPersistedEventsForCrashSessionIdReturnsOnlyThatSessionsEvents() {
+        manifestStore.store(NRSessionManifest(sessionId: "crashed-session", realAgentId: 7, sessionStartMs: 0, lastUpdateMs: 0,
+                                               stableAttributes: ["appVersion": "2.0"]))
+        eventStore.store(makeRecord(uuid: "crash-uuid", sessionId: "crashed-session",
+                                     eventAttributes: ["orderId": "ABC123"]))
+        eventStore.store(makeRecord(uuid: "other-uuid", sessionId: "other-session"))
+        manifestStore.synchronize()
+        eventStore.synchronize()
+
+        let payloads = sut.claimPersistedEvents(forCrashSessionId: "crashed-session")
+        XCTAssertEqual(payloads.count, 1)
+        XCTAssertEqual(payloads[0]["appVersion"] as? String, "2.0")
+        XCTAssertEqual(payloads[0]["orderId"] as? String, "ABC123")
+        XCTAssertEqual(payloads[0][kNRMA_RA_sessionId] as? String, "crashed-session")
+
+        eventStore.synchronize()
+        let remaining = eventStore.fetchAll()
+        XCTAssertEqual(remaining.count, 1, "claiming must delete only the claimed session's events")
+        XCTAssertEqual(remaining.first?.sessionId, "other-session")
+    }
+
+    func testClaimPersistedEventsForCrashSessionIdDeletesClaimedEvents() {
+        eventStore.store(makeRecord(uuid: "crash-uuid", sessionId: "crashed-session"))
+        eventStore.synchronize()
+
+        _ = sut.claimPersistedEvents(forCrashSessionId: "crashed-session")
+        eventStore.synchronize()
+
+        XCTAssertTrue(sut.claimPersistedEvents(forCrashSessionId: "crashed-session").isEmpty,
+                      "a second claim for the same session must find nothing left to claim")
+    }
+
+    func testClaimPersistedEventsForCrashSessionIdReturnsEmptyWhenNoRecordsForSession() {
+        XCTAssertTrue(sut.claimPersistedEvents(forCrashSessionId: "no-such-session").isEmpty)
+    }
+
+    func testClaimPersistedEventsForCrashSessionIdReturnsEmptyWhenFlagDisabled() {
+        eventStore.store(makeRecord(uuid: "crash-uuid", sessionId: "crashed-session"))
+        eventStore.synchronize()
+
+        NRMAFlags.disableFeatures(NRMAFeatureFlags.NRFeatureFlag_EventPersistence)
+        XCTAssertTrue(sut.claimPersistedEvents(forCrashSessionId: "crashed-session").isEmpty)
+    }
+
+    func testClaimPersistedEventsForCrashSessionIdFallsBackToMutableSnapshotWhenManifestMissing() {
+        eventStore.store(makeRecord(uuid: "crash-uuid", sessionId: "no-manifest-session",
+                                     mutableSnapshot: ["userId": "u1"]))
+        eventStore.synchronize()
+
+        let payloads = sut.claimPersistedEvents(forCrashSessionId: "no-manifest-session")
+        XCTAssertEqual(payloads.count, 1)
+        XCTAssertEqual(payloads[0]["userId"] as? String, "u1")
+    }
+
+    // MARK: - excludingSessionId (crash/recovery partitioning)
+
+    func testRecoverExcludingSessionIdOmitsOnlyThatSessionsEvents() {
+        eventStore.store(makeRecord(uuid: "uuid-a", sessionId: "session-A"))
+        eventStore.store(makeRecord(uuid: "uuid-b", sessionId: "session-B"))
+        eventStore.synchronize()
+
+        let payloads = sut.recoverPersistedEventsStagingForHarvest(currentSessionAttributes: [:], excludingSessionId: "session-A")
+        XCTAssertEqual(payloads.count, 1)
+        XCTAssertEqual(payloads[0][kNRMA_RA_sessionId] as? String, "session-B")
+    }
+
+    func testRecoverExcludingSessionIdLeavesExcludedEventOnDiskForLaterClaim() {
+        eventStore.store(makeRecord(uuid: "uuid-a", sessionId: "session-A"))
+        eventStore.synchronize()
+
+        _ = sut.recoverPersistedEventsStagingForHarvest(currentSessionAttributes: [:], excludingSessionId: "session-A")
+        sut.confirmLastRecoveryHarvestSucceeded()
+        eventStore.synchronize()
+
+        XCTAssertEqual(eventStore.fetchAll().count, 1,
+                       "an excluded session's event must not be staged (and thus never confirmed/deleted) by the ordinary recovery sweep")
+
+        let claimed = sut.claimPersistedEvents(forCrashSessionId: "session-A")
+        XCTAssertEqual(claimed.count, 1, "the excluded event must still be available for the crash path to claim")
+    }
+
+    func testRecoverWithNilExcludingSessionIdBehavesAsBefore() {
+        eventStore.store(makeRecord(uuid: "uuid-a", sessionId: "session-A"))
+        eventStore.synchronize()
+
+        let payloads = sut.recoverPersistedEventsStagingForHarvest(currentSessionAttributes: [:], excludingSessionId: nil)
+        XCTAssertEqual(payloads.count, 1)
+    }
+
+    func testRecoverAndClaimPartitionEventsWithNoDuplicatesOrGaps() {
+        eventStore.store(makeRecord(uuid: "uuid-a", sessionId: "session-A"))
+        eventStore.store(makeRecord(uuid: "uuid-b", sessionId: "session-B"))
+        eventStore.synchronize()
+
+        let recovered = sut.recoverPersistedEventsStagingForHarvest(currentSessionAttributes: [:], excludingSessionId: "session-A")
+        let claimed = sut.claimPersistedEvents(forCrashSessionId: "session-A")
+
+        let recoveredSessionIds = Set(recovered.map { $0[kNRMA_RA_sessionId] as? String })
+        let claimedSessionIds = Set(claimed.map { $0[kNRMA_RA_sessionId] as? String })
+        XCTAssertEqual(recoveredSessionIds, ["session-B"])
+        XCTAssertEqual(claimedSessionIds, ["session-A"])
+        XCTAssertTrue(recoveredSessionIds.isDisjoint(with: claimedSessionIds))
     }
 
     // MARK: - Pending confirmation (fresh events pulled for a normal harvest)

@@ -22,11 +22,6 @@
 // filename / dedup key) -- never sent in the harvest JSON payload.
 @property (nonatomic, strong) NSString *eventUUID;
 
-// YES if this event was reloaded from the on-disk persisted-event store (e.g.
-// during startup recovery) rather than freshly recorded. Recovered events are
-// never re-persisted -- they're already on disk under their original UUID.
-@property (nonatomic) BOOL isRecoveredEvent;
-
 - (BOOL) addAttribute:(NSString *)name value:(id)value;
 - (NSTimeInterval)getEventAge;
 

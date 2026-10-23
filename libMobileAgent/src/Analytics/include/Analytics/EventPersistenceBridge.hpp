@@ -31,6 +31,11 @@ namespace NewRelic {
         // harvest actually succeeded -- a failed/unattempted harvest must still
         // find them on disk for the next retry or for next-launch recovery.
         virtual void markEventsPendingConfirmation(const std::vector<std::string>& eventUUIDs) = 0;
+
+        // Called when an event is evicted from the live in-memory buffer (buffer full),
+        // so its persisted copy doesn't outlive it and get resurrected by a later
+        // recovery sweep.
+        virtual void discardEvent(const std::string& eventUUID) = 0;
     };
 }
 

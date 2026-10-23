@@ -25,6 +25,7 @@
 #import "NewRelicAgentInternal.h"
 #import "NewRelicInternalUtils.h"
 #import "NRAutoLogCollector.h"
+#import <NewRelic/NewRelic-Swift.h>
 
 #define kNRSupportabilityResponseCode kNRSupportabilityPrefix @"/Collector/ResponseStatusCodes"
 
@@ -432,6 +433,9 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
     if (response.isError) {
         // failure
         if([self checkOfflineAndPersist:response]) {
+            if ([NRMAFlags shouldEnableEventPersistence]) {
+                [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+            }
             // If the harvest was persisted for offline storage clear the harvest.
             [self.harvestData clear];
         } else {

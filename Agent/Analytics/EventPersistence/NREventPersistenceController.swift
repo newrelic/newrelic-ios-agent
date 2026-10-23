@@ -29,14 +29,16 @@ public class NREventPersistenceController: NSObject {
     /// Hard retention cap, in milliseconds -- 7 days, per the CDD.
     static let defaultRetentionMs: Int64 = 7 * 24 * 60 * 60 * 1000
 
+    /// Hard count caps, oldest-evicted first.
+    static let defaultMaxEventCount: Int = 1000
+    static let defaultMaxSessionManifestCount: Int = 32
+
     private let eventStore: NRFileEventStore
     private let manifestStore: NRSessionManifestStore
 
-    // UUIDs most recently staged into an outgoing recovery-harvest payload,
-    // awaiting confirmation. Only dropped from the event store once that
-    // harvest is confirmed *successful* -- a failed/unattempted harvest must
-    // leave them on disk for the next try.
-    private var pendingConfirmationUUIDs: [String] = []
+    // UUIDs staged for an outgoing harvest, dropped only once that harvest succeeds.
+    // A Set to dedup repeated staging across multiple -onSessionStart calls.
+    private var pendingConfirmationUUIDs: Set<String> = []
     private let stateLock = NSLock()
 
     public override convenience init() {
@@ -78,6 +80,15 @@ public class NREventPersistenceController: NSObject {
                                     realAgentId: realAgentId,
                                     mutableAttributesSnapshot: mutableAttributesSnapshot)
         eventStore.store(record)
+    }
+
+    /// Deletes one persisted event immediately, bypassing pending-confirmation. Used when
+    /// an event is evicted from the live in-memory buffer, so it isn't resurrected by a
+    /// future recovery sweep.
+    @objc(discardPersistedEventWithEventUUID:)
+    public func discardPersistedEvent(eventUUID: String) {
+        guard NRMAFlags.shouldEnableEventPersistence() else { return }
+        eventStore.delete(eventUUIDs: [eventUUID])
     }
 
     // MARK: - Session manifest
@@ -123,12 +134,14 @@ public class NREventPersistenceController: NSObject {
     ///      degradation; the record is still delivered, never dropped).
     ///
     /// `currentSessionAttributes` is only consulted in case 3.
+    /// `excludingSessionId` skips that session's events, left for the crash path to claim instead.
     @discardableResult
-    @objc(recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:)
-    public func recoverPersistedEventsStagingForHarvest(currentSessionAttributes: [String: Any]) -> [[String: Any]] {
+    @objc(recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:excludingSessionId:)
+    public func recoverPersistedEventsStagingForHarvest(currentSessionAttributes: [String: Any],
+                                                          excludingSessionId: String? = nil) -> [[String: Any]] {
         guard NRMAFlags.shouldEnableEventPersistence() else { return [] }
         guard eventStore.hasPersistedRecords() else { return [] }
-        let records = eventStore.fetchAll()
+        let records = eventStore.fetchAll().filter { $0.sessionId != excludingSessionId }
         guard !records.isEmpty else { return [] }
         NRLOG_AGENT_VERBOSE("NREventPersistence: recovering \(records.count) persisted event(s) from a previous session")
 
@@ -161,7 +174,7 @@ public class NREventPersistenceController: NSObject {
         }
 
         stateLock.lock()
-        pendingConfirmationUUIDs.append(contentsOf: stagedUUIDs)
+        pendingConfirmationUUIDs.formUnion(stagedUUIDs)
         stateLock.unlock()
 
         return payloads
@@ -213,6 +226,31 @@ public class NREventPersistenceController: NSObject {
         return manifest.stableAttributes
     }
 
+    /// Fetches and deletes every persisted event for `sessionId`, for attaching to a crash report.
+    @discardableResult
+    @objc(claimPersistedEventsForCrashSessionId:)
+    public func claimPersistedEvents(forCrashSessionId sessionId: String) -> [[String: Any]] {
+        guard NRMAFlags.shouldEnableEventPersistence() else { return [] }
+        let records = eventStore.fetchAll().filter { $0.sessionId == sessionId }
+        guard !records.isEmpty else { return [] }
+
+        let fallbackAttributes = manifestStore.manifest(forSessionId: sessionId)?.stableAttributes ?? [:]
+        var payloads: [[String: Any]] = []
+        for record in records {
+            var json = resolveAttributes(for: record, currentSessionAttributes: fallbackAttributes)
+            for (key, value) in record.attributes {
+                json[key] = value
+            }
+            json[kNRMA_RA_timestamp] = record.timestamp
+            json[kNRMA_RA_eventType] = record.eventType
+            json[kNRMA_RA_sessionId] = record.sessionId
+            payloads.append(json)
+        }
+
+        eventStore.delete(eventUUIDs: records.map { $0.eventUUID })
+        return payloads
+    }
+
     // MARK: - Pending confirmation (fresh events pulled for a harvest attempt)
 
     /// Called when a batch of *freshly-recorded* (not recovered) events is
@@ -226,7 +264,7 @@ public class NREventPersistenceController: NSObject {
     public func markEventsPendingConfirmation(eventUUIDs: [String]) {
         guard !eventUUIDs.isEmpty else { return }
         stateLock.lock()
-        pendingConfirmationUUIDs.append(contentsOf: eventUUIDs)
+        pendingConfirmationUUIDs.formUnion(eventUUIDs)
         stateLock.unlock()
     }
 
@@ -242,19 +280,21 @@ public class NREventPersistenceController: NSObject {
         let uuids = pendingConfirmationUUIDs
         pendingConfirmationUUIDs.removeAll()
         stateLock.unlock()
-        eventStore.delete(eventUUIDs: uuids)
+        eventStore.delete(eventUUIDs: Array(uuids))
     }
 
     // MARK: - Retention
 
-    /// Hard 7-day eviction, "regardless of upload state" -- run at startup
-    /// (before replay) and on every harvest tick.
+    /// 7-day age cap plus count cap on both stores.
     @objc(performRetentionSweepWithNowMs:)
     public func performRetentionSweep(nowMs: Int64) {
-        eventStore.evictRecords(olderThanMs: NREventPersistenceController.defaultRetentionMs, nowMs: nowMs)
+        eventStore.evictRecords(olderThanMs: NREventPersistenceController.defaultRetentionMs,
+                                 nowMs: nowMs,
+                                 maxCount: NREventPersistenceController.defaultMaxEventCount)
         let liveSessionIds = Set(eventStore.fetchAll().map { $0.sessionId })
         manifestStore.evictManifests(olderThanMs: NREventPersistenceController.defaultRetentionMs,
                                       nowMs: nowMs,
-                                      liveSessionIds: liveSessionIds)
+                                      liveSessionIds: liveSessionIds,
+                                      maxCount: NREventPersistenceController.defaultMaxSessionManifestCount)
     }
 }

@@ -60,16 +60,13 @@
 
 @implementation TestIntegratedEventManager
 
-    static NSString *testFilename = @"fbstest_tempStore";
-
 - (void)setUp {
-    
+
     [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
 
     // Put setup code here. This method is called before the invocation of each test method in the class.
-    sut = [[NRMAEventManager alloc] initWithPersistentStore:[[PersistentEventStore alloc] initWithFilename:testFilename
-                                                                                           andMinimumDelay:1]];
-    
+    sut = [[NRMAEventManager alloc] init];
+
     if(agreeableAttributeValidator == nil) {
         agreeableAttributeValidator = [[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
             return YES;
@@ -353,8 +350,7 @@
 }
 
 - (void)testOutOfBoundsEvictionIndexDropsIncomingEventInstead {
-    DropAllEventManager *dropSut = [[DropAllEventManager alloc] initWithPersistentStore:[[PersistentEventStore alloc] initWithFilename:@"fbstest_dropall"
-                                                                                                                        andMinimumDelay:1]];
+    DropAllEventManager *dropSut = [[DropAllEventManager alloc] init];
     [dropSut setMaxEventBufferSize:1];
     NRMACustomEvent *first = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 1"
                                                                timestamp:3
@@ -382,8 +378,7 @@
 // An event added while the buffer is being drained was not in the JSON just produced, so it must
 // still be there for the next drain rather than cleared along with the events that were.
 - (void)testEventAddedDuringDrainSurvivesForTheNextDrain {
-    ConcurrentInsertEventManager *drainSut = [[ConcurrentInsertEventManager alloc] initWithPersistentStore:[[PersistentEventStore alloc] initWithFilename:@"fbstest_concurrentinsert"
-                                                                                                                                       andMinimumDelay:1]];
+    ConcurrentInsertEventManager *drainSut = [[ConcurrentInsertEventManager alloc] init];
     [drainSut addEvent:[[NRMACustomEvent alloc] initWithEventType:@"Custom Event 1"
                                                         timestamp:3
                                       sessionElapsedTimeInSeconds:20
@@ -415,7 +410,7 @@
 // controller's own internal queue, asynchronously relative to -addEvent:.
 - (void)waitForRecoveredEventType:(NSString *)eventType {
     NSPredicate *predicate = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
-        for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{}]) {
+        for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
             if ([candidate[@"eventType"] isEqualToString:eventType]) {
                 return YES;
             }
@@ -428,9 +423,7 @@
 - (void)testAddEventWithPersistenceEnabledIsRecoverableWithItsAttributeSnapshot {
     [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
 
-    NSString *filename = @"fbstest_eventpersistence_wiring";
-    [[NSFileManager defaultManager] removeItemAtPath:filename error:nil];
-    NRMAEventManager *manager = [[NRMAEventManager alloc] initWithPersistentStore:[[PersistentEventStore alloc] initWithFilename:filename andMinimumDelay:.025]];
+    NRMAEventManager *manager = [[NRMAEventManager alloc] init];
 
     NRMASAM *sam = [[NRMASAM alloc] initWithAttributeValidator:agreeableAttributeValidator];
     [sam setSessionAttribute:@"userId" value:@"test-user-123"];
@@ -445,7 +438,7 @@
     [self waitForRecoveredEventType:@"PersistenceWiringSentinel"];
 
     NSDictionary *found = nil;
-    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{}]) {
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
         if ([candidate[@"eventType"] isEqualToString:@"PersistenceWiringSentinel"]) {
             found = candidate;
             break;
@@ -456,15 +449,12 @@
                           @"the public attribute snapshot captured at write time must ride along with the recovered event");
 
     [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
-    [[NSFileManager defaultManager] removeItemAtPath:filename error:nil];
 }
 
 - (void)testAddEventDoesNotPersistWhenFlagDisabled {
     [NRMAFlags disableFeatures:NRFeatureFlag_EventPersistence];
 
-    NSString *filename = @"fbstest_eventpersistence_flagoff";
-    [[NSFileManager defaultManager] removeItemAtPath:filename error:nil];
-    NRMAEventManager *manager = [[NRMAEventManager alloc] initWithPersistentStore:[[PersistentEventStore alloc] initWithFilename:filename andMinimumDelay:.025]];
+    NRMAEventManager *manager = [[NRMAEventManager alloc] init];
 
     NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:@"FlagOffSentinel"
                                                                 timestamp:1
@@ -484,13 +474,12 @@
     XCTAssertTrue([manager addEvent:sentinel]);
     [self waitForRecoveredEventType:@"FlushSentinel"];
 
-    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{}]) {
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
         XCTAssertNotEqualObjects(candidate[@"eventType"], @"FlagOffSentinel",
                                  @"an event added while the flag was disabled must never be persisted");
     }
 
     [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
-    [[NSFileManager defaultManager] removeItemAtPath:filename error:nil];
 }
 
 // Regression guard for a real bug found via manual testing: a freshly-recorded
@@ -500,9 +489,7 @@
 - (void)testFreshlyHarvestedEventIsNotRecoverableAfterConfirmedHarvestSuccess {
     [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
 
-    NSString *filename = @"fbstest_eventpersistence_freshharvestconfirm";
-    [[NSFileManager defaultManager] removeItemAtPath:filename error:nil];
-    NRMAEventManager *manager = [[NRMAEventManager alloc] initWithPersistentStore:[[PersistentEventStore alloc] initWithFilename:filename andMinimumDelay:.025]];
+    NRMAEventManager *manager = [[NRMAEventManager alloc] init];
 
     NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:@"FreshHarvestConfirmSentinel"
                                                                 timestamp:1
@@ -518,12 +505,43 @@
     XCTAssertTrue([json containsString:@"FreshHarvestConfirmSentinel"]);
     [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
 
-    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{}]) {
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
         XCTAssertNotEqualObjects(candidate[@"eventType"], @"FreshHarvestConfirmSentinel",
                                  @"an event already confirmed delivered via a normal harvest must never be recovered again");
     }
+}
 
-    [[NSFileManager defaultManager] removeItemAtPath:filename error:nil];
+// Regression guard: an event evicted from the live buffer (buffer full) must have its
+// persisted copy discarded too, or it could be resurrected by a future recovery sweep.
+- (void)testEvictedEventDiscardsPersistedCopy {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+
+    NRMAEventManager *manager = [[NRMAEventManager alloc] init];
+    [manager setMaxEventBufferSize:1];
+
+    NRMACustomEvent *first = [[NRMACustomEvent alloc] initWithEventType:@"EvictedSentinel"
+                                                               timestamp:3
+                                             sessionElapsedTimeInSeconds:20
+                                                  withAttributeValidator:agreeableAttributeValidator];
+    NRMACustomEvent *second = [[NRMACustomEvent alloc] initWithEventType:@"EvictedSentinelReplacement"
+                                                                timestamp:5
+                                              sessionElapsedTimeInSeconds:15
+                                                   withAttributeValidator:agreeableAttributeValidator];
+
+    XCTAssertTrue([manager addEvent:first]);
+    [self waitForRecoveredEventType:@"EvictedSentinel"];
+
+    // Deterministic eviction (see testOverflowEvictsAndIncrementsEvictedCount) -- this
+    // evicts EvictedSentinel from the live buffer.
+    XCTAssertTrue([manager addEvent:second]);
+    [self waitForRecoveredEventType:@"EvictedSentinelReplacement"];
+
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+        XCTAssertNotEqualObjects(candidate[@"eventType"], @"EvictedSentinel",
+                                 @"an event evicted from the live buffer must not still be in the persisted store");
+    }
+
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
 }
 
 @end
