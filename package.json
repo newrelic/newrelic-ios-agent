@@ -20,7 +20,9 @@
     "test:wdio-ios": "./node_modules/.bin/wdio LambdaTest/wdio-config-ios.js",
     "test:wdio-ios-realdevice": "./node_modules/.bin/wdio LambdaTest/wdio-config-ios-realdevice.js",
     "test:wdio-expensestracker": "./node_modules/.bin/wdio LambdaTest/wdio-config-expensestracker.js",
-    "test:wdio-expensestracker-realdevice": "./node_modules/.bin/wdio LambdaTest/wdio-config-expensestracker-realdevice.js"
+    "test:wdio-expensestracker-realdevice": "./node_modules/.bin/wdio LambdaTest/wdio-config-expensestracker-realdevice.js",
+    "test:wdio-homesearch": "./node_modules/.bin/wdio LambdaTest/wdio-config-homesearch.js",
+    "test:wdio-homesearch-realdevice": "./node_modules/.bin/wdio LambdaTest/wdio-config-homesearch-realdevice.js"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

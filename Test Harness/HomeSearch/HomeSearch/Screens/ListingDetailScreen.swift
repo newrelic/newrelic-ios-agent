@@ -94,19 +94,16 @@ struct ListingDetailScreen: View {
 //        )
         // Item-driven sheet: the name closure receives the item, so it could vary per agent. It
         // deliberately does not — see the cardinality note in ViewName.
-//        .NRMobileSheet(item: $contactTarget, name: { _ in ViewName.contactAgent.rawValue }) { target in
-//            ContactAgentScreen(listing: target) {
-//                contactTarget = nil
-//                onTourRequested(target.id)
-//            }
-//        }
+        .sheet(item: $contactTarget) { target in
+                 // name: { _ in ViewName.contactAgent.rawValue }) { target in
+            ContactAgentScreen(listing: target) {
+                contactTarget = nil
+                onTourRequested(target.id)
+            }
+        }
         .fullScreenCover(isPresented: $showingGallery) {
                            //      name: ViewName.photoGallery.rawValue) {
             PhotoGalleryScreen(listing: listing)
-        }
-        .popover(isPresented: $showingMortgageCalculator) {
-                        // name: ViewName.mortgageCalculator.rawValue) {
-            MortgageCalculatorScreen(listing: listing)
         }
     }
 
@@ -162,6 +159,7 @@ struct ListingDetailScreen: View {
             }
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("detail.photos")
     }
 
     private func header(for listing: Listing) -> some View {
@@ -207,6 +205,13 @@ struct ListingDetailScreen: View {
                 Label("Estimate monthly payment", systemImage: "percent")
             }
             .buttonStyle(.bordered)
+            .accessibilityIdentifier("detail.mortgage")
+            // Anchored to the button, not the screen: attached to the whole scroll view, an iPhone
+            // popover has nowhere to go but the strip under the status bar, and renders 44pt tall.
+            .popover(isPresented: $showingMortgageCalculator) {
+                            // name: ViewName.mortgageCalculator.rawValue) {
+                MortgageCalculatorScreen(listing: listing)
+            }
             .padding(.top, 4)
         }
         .padding(.horizontal)
@@ -251,6 +256,7 @@ struct ListingDetailScreen: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
+            .accessibilityIdentifier("detail.requestTour")
         }
         .padding(.horizontal)
     }
@@ -270,5 +276,6 @@ struct ListingDetailScreen: View {
             Image(systemName: savedHomes.isSaved(listing.id) ? "heart.fill" : "heart")
         }
         .accessibilityLabel(savedHomes.isSaved(listing.id) ? "Remove from saved" : "Save home")
+        .accessibilityIdentifier("detail.save")
     }
 }

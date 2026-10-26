@@ -40,19 +40,24 @@ struct ProfileTab: View {
 
                 Section("Activity") {
                     statRow("Saved homes", value: savedHomes.savedIDs.count, symbol: "heart.fill")
+                        .accessibilityIdentifier("profile.stat.saved")
                     statRow("Recently viewed", value: savedHomes.recentlyViewedIDs.count,
                             symbol: "clock.fill")
+                        .accessibilityIdentifier("profile.stat.recent")
                     statRow("Conversations", value: store.threads.count, symbol: "envelope.fill")
+                        .accessibilityIdentifier("profile.stat.conversations")
                 }
 
                 Section("Settings") {
                     NavigationLink(value: ProfileRoute.notificationSettings) {
                         Label("Notifications", systemImage: "bell")
                     }
+                    .accessibilityIdentifier("profile.notifications")
 
                     NavigationLink(value: ProfileRoute.searchPreferences) {
                         Label("Search preferences", systemImage: "slider.horizontal.3")
                     }
+                    .accessibilityIdentifier("profile.searchPreferences")
                 }
 
                 Section {
@@ -61,6 +66,7 @@ struct ProfileTab: View {
                     NavigationLink(value: ProfileRoute.debugInfo) {
                         Label("Debug info", systemImage: "ladybug")
                     }
+                    .accessibilityIdentifier("profile.debugInfo")
                 } footer: {
                     Text("Debug info carries no MobileView modifier, so it should never appear in MobileView data.")
                 }
@@ -88,5 +94,7 @@ struct ProfileTab: View {
                 .foregroundStyle(.secondary)
                 .monospacedDigit()
         }
+        // One element ("Saved homes, 2") rather than two, so the count can be read with the row.
+        .accessibilityElement(children: .combine)
     }
 }

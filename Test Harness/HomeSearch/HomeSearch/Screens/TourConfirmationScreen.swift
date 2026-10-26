@@ -51,6 +51,7 @@ struct TourConfirmationScreen: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
+            .accessibilityIdentifier("tour.done")
             .padding(.horizontal)
             .padding(.bottom, 24)
         }

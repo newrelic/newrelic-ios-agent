@@ -7,7 +7,4 @@
    <FileRef
       location = "container:Test Harness/NRTestApp/NRTestApp.xcodeproj">
    </FileRef>
-   <FileRef
-      location = "container:Test Harness/HomeSearch/HomeSearch.xcodeproj">
-   </FileRef>
 </Workspace>

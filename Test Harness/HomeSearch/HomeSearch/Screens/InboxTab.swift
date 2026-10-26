@@ -36,6 +36,7 @@ struct InboxTab: View {
                             ThreadRow(thread: thread)
                         }
                         .buttonStyle(.plain)
+                        .accessibilityIdentifier("inbox.thread.\(thread.id)")
                     }
                     .listStyle(.plain)
                 }

@@ -50,6 +50,7 @@ struct SavedTab: View {
                     }
                 }
                 .pickerStyle(.segmented)
+                .accessibilityIdentifier("saved.mode")
                 .padding(.horizontal)
                 .padding(.bottom, 8)
 
@@ -90,6 +91,7 @@ struct SavedTab: View {
                         ListingCard(listing: listing)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityIdentifier("saved.listing.\(listing.id)")
                 }
             }
             .listStyle(.plain)

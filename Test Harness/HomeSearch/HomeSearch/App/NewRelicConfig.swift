@@ -9,10 +9,12 @@
 //    capture — the agent reports to NRCollectorStub on localhost, which prints every MobileView
 //              event from each harvest to the console. Fast feedback, no account needed. Default.
 //
-//    live    — the agent reports to the real collector using your application token, so the data can
-//              be queried with NRQL. Set the token with the NR_APP_TOKEN environment variable in the
+//    live    — the agent reports to the staging collector using your application token, so the data
+//              can be queried with NRQL. Set the token with the NR_APP_TOKEN environment variable in the
 //              scheme (Product ▸ Scheme ▸ Edit Scheme ▸ Run ▸ Arguments ▸ Environment Variables), or
-//              fall back to editing `fallbackApplicationToken` below.
+//              fill in NRAPIKey in NRAPI-Info.plist. The plist is what CI writes: uploadApp-homesearch.yml
+//              sets it from a repository secret before building the LambdaTest upload, since an app
+//              launched by LambdaTest has no scheme environment. Same file and keys as ExpensesTracker.
 //
 //  Choose with NR_MODE=capture|live. With no NR_MODE set, live is used when a token is available and
 //  capture otherwise, so a fresh clone does something useful without configuration.
@@ -26,8 +28,30 @@ import NewRelic
 
 enum NewRelicConfig {
 
-    /// Used when NR_APP_TOKEN is not set in the environment. Replace to run in live mode without
-    /// editing the scheme.
+    /// Used when NR_APP_TOKEN is not set. Empty in the committed plist — never commit a token —
+    /// which makes a fresh clone fall through to capture mode.
+    private static var fallbackApplicationToken: String {
+        apiInfo("NRAPIKey")
+    }
+
+    /// Collector overrides from NRAPI-Info.plist; empty means the staging collectors below.
+    static var collectorAddress: String {
+        let fromPlist = apiInfo("collectorAddress")
+        return fromPlist.isEmpty ? "staging-mobile-collector.newrelic.com" : fromPlist
+    }
+
+    private static var crashCollectorAddress: String {
+        let fromPlist = apiInfo("crashCollectorAddress")
+        return fromPlist.isEmpty ? "staging-mobile-crash.newrelic.com" : fromPlist
+    }
+
+    private static func apiInfo(_ key: String) -> String {
+        guard let url = Bundle.main.url(forResource: "NRAPI-Info", withExtension: "plist"),
+              let values = NSDictionary(contentsOf: url) else {
+            return ""
+        }
+        return (values[key] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    }
 
     enum Mode: String {
         case capture
@@ -81,13 +105,11 @@ enum NewRelicConfig {
             """)
 
         case .live:
-            // NewRelic.start(withApplicationToken: applicationToken)
-
-             NewRelic.start(withApplicationToken: applicationToken,
-                            andCollectorAddress: "staging-mobile-collector.newrelic.com",
-                            andCrashCollectorAddress: "staging-mobile-crash.newrelic.com")
+            NewRelic.start(withApplicationToken: applicationToken,
+                           andCollectorAddress: collectorAddress,
+                           andCrashCollectorAddress: crashCollectorAddress)
             appLog("""
-            [HomeSearch] Agent started in LIVE mode.
+            [HomeSearch] Agent started in LIVE mode → \(collectorAddress)
                          Query with:  SELECT * FROM MobileView SINCE 30 MINUTES AGO
             """)
         }

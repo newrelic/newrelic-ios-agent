@@ -45,6 +45,7 @@ struct MessageThreadScreen: View {
                 TextField("Message \(thread.correspondent)", text: $draft, axis: .vertical)
                     .lineLimit(1...4)
                     .textFieldStyle(.roundedBorder)
+                    .accessibilityIdentifier("thread.draft")
 
                 Button {
                     // Local only — this app has no message backend, and sending is not the point.
@@ -53,6 +54,8 @@ struct MessageThreadScreen: View {
                     Image(systemName: "arrow.up.circle.fill").font(.title2)
                 }
                 .disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty)
+                .accessibilityLabel("Send")
+                .accessibilityIdentifier("thread.send")
             }
             .padding(12)
         }

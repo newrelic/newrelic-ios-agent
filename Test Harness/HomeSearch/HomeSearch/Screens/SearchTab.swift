@@ -98,10 +98,12 @@ struct SearchTab: View {
                                 ListingCard(listing: listing)
                             }
                             .buttonStyle(.plain)
+                            .accessibilityIdentifier("search.listing.\(listing.id)")
                         }
                     } header: {
                         Text("\(store.results.count) of \(store.listings.count) homes")
                             .font(.footnote)
+                            .accessibilityIdentifier("search.count")
                     }
                 }
                 .listStyle(.plain)
@@ -124,6 +126,7 @@ struct SearchTab: View {
         } label: {
             Label("Sort", systemImage: "arrow.up.arrow.down")
         }
+        .accessibilityIdentifier("search.sort")
     }
 
     private var filterButton: some View {
@@ -133,16 +136,22 @@ struct SearchTab: View {
             Label("Filters", systemImage: store.filters.isDefault
                   ? "line.3.horizontal.decrease.circle"
                   : "line.3.horizontal.decrease.circle.fill")
+                // The badge sits inside the label: as an overlay on the Button itself, the iOS 26
+                // toolbar treats it as the item, and taps on the button stop opening the sheet.
+                .overlay(alignment: .topTrailing) {
+                    if store.filters.activeCount > 0 {
+                        Text("\(store.filters.activeCount)")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.white)
+                            .padding(4)
+                            .background(Circle().fill(.red))
+                            .offset(x: 8, y: -8)
+                            .accessibilityHidden(true)
+                    }
+                }
         }
-        .overlay(alignment: .topTrailing) {
-            if store.filters.activeCount > 0 {
-                Text("\(store.filters.activeCount)")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(.white)
-                    .padding(4)
-                    .background(Circle().fill(.red))
-                    .offset(x: 8, y: -8)
-            }
-        }
+        .accessibilityIdentifier("search.filters")
+        .accessibilityLabel("Filters")
+        .accessibilityValue(store.filters.isDefault ? "" : "\(store.filters.activeCount) active")
     }
 }

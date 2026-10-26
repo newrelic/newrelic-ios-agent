@@ -13,6 +13,7 @@
 		21644146991DF81AD1061A54 /* MortgageCalculatorScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146B2FB545A9B7451F423014 /* MortgageCalculatorScreen.swift */; };
 		255DEC29951177B080BF1BEC /* HttpServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C99B0974DFACC7B672A584BE /* HttpServer.swift */; };
 		28368166B9FF548719BFFA23 /* Scopes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E6FAFF4497041048C4D795 /* Scopes.swift */; };
+		2914B44C4704F856D51F5114 /* NRAPI-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 037B201A9EF9B2E04296DF0C /* NRAPI-Info.plist */; };
 		29ED2ED24313D0249EEED256 /* DebugInfoScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EB907B6E91ACB0308437CAC /* DebugInfoScreen.swift */; };
 		3149488F91A35659B71C57EB /* HttpServerIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 342A9E670BA329480CBBD3A0 /* HttpServerIO.swift */; };
 		3245B2A6CA834304DE026E62 /* ContactAgentScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 397934C7F0603546DFFF39A1 /* ContactAgentScreen.swift */; };
@@ -137,6 +138,7 @@
 
 /* Begin PBXFileReference section */
 		0128F7FDA80DEE341949F447 /* NewRelicConfig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NewRelicConfig.swift; sourceTree = "<group>"; };
+		037B201A9EF9B2E04296DF0C /* NRAPI-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "NRAPI-Info.plist"; sourceTree = "<group>"; };
 		096F9E6A2A0254B713C8DD1C /* MessageThreadScreen.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MessageThreadScreen.swift; sourceTree = "<group>"; };
 		099D3649BF455061F15944B4 /* Errno.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Errno.swift; sourceTree = "<group>"; };
 		0E5F41B59078B87D4286C78D /* listings.json */ = {isa = PBXFileReference; includeInIndex = 1; name = listings.json; path = Data/listings.json; sourceTree = "<group>"; };
@@ -362,6 +364,7 @@
 			children = (
 				0E5F41B59078B87D4286C78D /* listings.json */,
 				AE2C02ADD08084EA1AA29D90 /* Assets.xcassets */,
+				037B201A9EF9B2E04296DF0C /* NRAPI-Info.plist */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -492,6 +495,7 @@
 			files = (
 				AFE05229977D1A14EA10E9C0 /* listings.json in Resources */,
 				3CFB2B9F37237A51EFFF8713 /* Assets.xcassets in Resources */,
+				2914B44C4704F856D51F5114 /* NRAPI-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -692,12 +696,15 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
+				HS_BUNDLE_ID = com.newrelic.HomeSearch;
+				HS_PROVISIONING_PROFILE = "";
 				INFOPLIST_FILE = HomeSearch/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.HomeSearch;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(HS_BUNDLE_ID)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "$(HS_PROVISIONING_PROFILE)";
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -719,12 +726,15 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
+				HS_BUNDLE_ID = com.newrelic.HomeSearch;
+				HS_PROVISIONING_PROFILE = "";
 				INFOPLIST_FILE = HomeSearch/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.HomeSearch;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(HS_BUNDLE_ID)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "$(HS_PROVISIONING_PROFILE)";
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;

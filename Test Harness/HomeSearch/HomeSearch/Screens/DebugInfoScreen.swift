@@ -69,10 +69,12 @@ struct DebugInfoScreen: View {
                     NewRelic.recordBreadcrumb("debug_probe", attributes: ["source": "debug-info"])
                     lastBreadcrumb = Date().formatted(date: .omitted, time: .standard)
                 }
+                .accessibilityIdentifier("debug.breadcrumb")
                 if let lastBreadcrumb {
                     Text("Recorded at \(lastBreadcrumb) — check which view it names.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("debug.breadcrumb.recorded")
                 }
 
                 if NewRelicConfig.mode == .capture {
@@ -89,6 +91,6 @@ struct DebugInfoScreen: View {
     }
 
     private var collectorDescription: String {
-        NewRelicConfig.mode == .capture ? NRCollectorStub.address : "collector.newrelic.com"
+        NewRelicConfig.mode == .capture ? NRCollectorStub.address : NewRelicConfig.collectorAddress
     }
 }

@@ -55,14 +55,17 @@ struct ContactAgentScreen: View {
                 Section("Your details") {
                     TextField("Full name", text: $name)
                         .textContentType(.name)
+                        .accessibilityIdentifier("contact.name")
                     TextField("Email", text: $email)
                         .textContentType(.emailAddress)
                         .keyboardType(.emailAddress)
                         .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)
+                        .accessibilityIdentifier("contact.email")
                     TextField("Phone (optional)", text: $phone)
                         .textContentType(.telephoneNumber)
                         .keyboardType(.phonePad)
+                        .accessibilityIdentifier("contact.phone")
                 }
 
                 Section("When works for you?") {
@@ -78,6 +81,7 @@ struct ContactAgentScreen: View {
                               text: $message,
                               axis: .vertical)
                         .lineLimit(3...6)
+                        .accessibilityIdentifier("contact.message")
                 }
 
                 Section {
@@ -88,6 +92,7 @@ struct ContactAgentScreen: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(!canSubmit)
+                    .accessibilityIdentifier("contact.submit")
                 }
             }
             .navigationTitle("Request a tour")
@@ -95,6 +100,7 @@ struct ContactAgentScreen: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .accessibilityIdentifier("contact.cancel")
                 }
             }
         }

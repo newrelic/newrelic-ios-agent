@@ -70,7 +70,11 @@ final class ListingStubServer {
         }
 
         do {
-            try server.start(Self.port, forceIPv4: true)
+            // Swifter defaults to .background QoS for its accept loop and handlers. The UI waits on this
+            // server for its content, and under load (a UI-automation session snapshotting the app, a
+            // freshly booted simulator) background threads can be starved for long enough that the
+            // Search tab never leaves "Finding homes…".
+            try server.start(Self.port, forceIPv4: true, priority: .userInitiated)
             isRunning = true
             appLog("[HomeSearch] Listing stub server on \(Self.baseURL)")
         } catch {

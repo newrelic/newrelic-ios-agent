@@ -31,6 +31,7 @@ struct FilterSheetScreen: View {
 
                 Section("Bedrooms & bathrooms") {
                     Stepper("Beds: \(draft.minBeds)+", value: $draft.minBeds, in: 0...6)
+                        .accessibilityIdentifier("filters.beds")
                     Stepper("Baths: \(draft.minBaths)+", value: $draft.minBaths, in: 0...5)
                 }
 
@@ -53,11 +54,13 @@ struct FilterSheetScreen: View {
 
                 Section {
                     Toggle("New listings only", isOn: $draft.newListingsOnly)
+                        .accessibilityIdentifier("filters.newOnly")
                 }
 
                 Section {
                     Button("Reset all filters") { draft = Filters() }
                         .disabled(draft.isDefault)
+                        .accessibilityIdentifier("filters.reset")
                 }
             }
             .navigationTitle("Filters")
@@ -65,10 +68,12 @@ struct FilterSheetScreen: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .accessibilityIdentifier("filters.cancel")
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Apply") { apply() }
                         .fontWeight(.semibold)
+                        .accessibilityIdentifier("filters.apply")
                 }
             }
             .onAppear {

@@ -44,6 +44,7 @@ struct PhotoGalleryScreen: View {
                             .foregroundStyle(.white)
                     }
                     .accessibilityLabel("Close gallery")
+                    .accessibilityIdentifier("gallery.close")
                     .padding()
                 }
                 Spacer()
@@ -52,6 +53,7 @@ struct PhotoGalleryScreen: View {
                     .font(.footnote)
                     .foregroundStyle(.white.opacity(0.85))
                     .padding(.bottom, 44)
+                    .accessibilityIdentifier("gallery.counter")
             }
         }
     }

@@ -37,7 +37,13 @@ target = project.new_target(:application, 'HomeSearch', :ios, DEPLOYMENT_TARGET)
 # ── Build settings ────────────────────────────────────────────────────────────────────────────────
 target.build_configurations.each do |config|
   settings = config.build_settings
-  settings['PRODUCT_BUNDLE_IDENTIFIER']       = BUNDLE_ID
+  # Indirected through HS_* settings so the real-device archive (uploadApp-homesearch-realdevice.yml) can
+  # retarget the app's bundle id and profile from the command line. Setting PRODUCT_BUNDLE_IDENTIFIER or
+  # PROVISIONING_PROFILE_SPECIFIER there directly would apply to Agent_iOS too, and fail the archive.
+  settings['HS_BUNDLE_ID']                    = BUNDLE_ID
+  settings['HS_PROVISIONING_PROFILE']         = ''
+  settings['PRODUCT_BUNDLE_IDENTIFIER']       = '$(HS_BUNDLE_ID)'
+  settings['PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]'] = '$(HS_PROVISIONING_PROFILE)'
   settings['PRODUCT_NAME']                    = '$(TARGET_NAME)'
   settings['INFOPLIST_FILE']                  = 'HomeSearch/Info.plist'
   settings['GENERATE_INFOPLIST_FILE']         = 'NO'
@@ -84,6 +90,11 @@ target.add_resources([listings])
 
 assets = resources_group.new_file('Assets.xcassets')
 target.add_resources([assets])
+
+# Copied into the bundle so NewRelicConfig can read the token from it. CI fills the keys in with PlistBuddy
+# before building (uploadApp-homesearch.yml); committed, they stay empty.
+api_info = resources_group.new_file('NRAPI-Info.plist')
+target.add_resources([api_info])
 
 # ── Vendored Swifter, referenced in place rather than copied ───────────────────────────────────────
 # The stub servers need an HTTP server. Swifter already lives in this repo for NRTestApp, so it is

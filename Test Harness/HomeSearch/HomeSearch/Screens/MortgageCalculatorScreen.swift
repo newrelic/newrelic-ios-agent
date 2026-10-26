@@ -47,6 +47,7 @@ struct MortgageCalculatorScreen: View {
                 .font(.system(.largeTitle, design: .rounded).bold())
                 .monospacedDigit()
                 .contentTransition(.numericText())
+                .accessibilityIdentifier("mortgage.payment")
 
             VStack(alignment: .leading, spacing: 14) {
                 slider("Down payment",
@@ -68,6 +69,7 @@ struct MortgageCalculatorScreen: View {
                         Text("30 yr").tag(30)
                     }
                     .pickerStyle(.segmented)
+                    .accessibilityIdentifier("mortgage.term")
                 }
             }
 

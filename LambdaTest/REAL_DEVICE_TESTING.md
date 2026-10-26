@@ -214,3 +214,34 @@ case LambdaTest's resigning changes it again. The certificate is still `BUILD_CE
 To re-run only the tests against an IPA already uploaded, dispatch **WDIO: automate ExpensesTracker iOS
 tests on real device (mobile-views-2)** with the `lt://APP...` URL from the upload run's summary, and the
 bundle id if it was the NRTestApp fallback.
+
+## HomeSearch on real devices
+
+`Test Harness/HomeSearch` follows the ExpensesTracker layout exactly:
+
+|                 | Virtual device                       | Real device                                          |
+| --------------- | ------------------------------------ | ---------------------------------------------------- |
+| Build workflow  | `uploadApp-homesearch.yml` (daily)   | `uploadApp-homesearch-realdevice.yml` (dispatch)     |
+| Test workflow   | `wdio-homesearch.yml`                | `wdio-homesearch-realdevice.yml`                     |
+| WDIO config     | `wdio-config-homesearch.js`          | `wdio-config-homesearch-realdevice.js`               |
+| npm script      | `test:wdio-homesearch`               | `test:wdio-homesearch-realdevice`                    |
+| App-id file     | `last-app-id` (shared upload script) | `last-app-id-homesearch-realdevice`                  |
+| Results file    | `test-results.json`                  | `test-results-homesearch-realdevice.json`            |
+| Specs           | `tests-homesearch/*.test.js`         | the same 5, sequentially                             |
+
+Secrets: `HOMESEARCH_APP_TOKEN` (required), `HOMESEARCH_MAIN_COLLECTOR_ADDRESS` and
+`HOMESEARCH_CRASH_COLLECTOR_ADDRESS` (optional), and `HOMESEARCH_PROVISION_PROFILE_BASE64` (optional, for
+`com.newrelic.HomeSearch`). Signing falls back to NRTestApp's profile the same way, through `HS_BUNDLE_ID` /
+`HS_PROVISIONING_PROFILE`.
+
+HomeSearch has no crash trigger, so there are no crash-upload checks. Instead both LambdaTest configs set
+`HS_EXPECT_MODE=live`, and `05-profile` asserts Debug Info reports the agent in live mode: proof that the
+token the build wrote into `NRAPI-Info.plist` actually took. The app's listings come from its in-process stub
+server on `127.0.0.1:8082`, so the suite needs no network beyond the collector.
+
+To run it against a local simulator (Appium with the xcuitest driver):
+
+```sh
+npx appium &
+HS_LOCAL_APP="/path/to/Release-iphonesimulator/HomeSearch.app" npm run test:wdio-homesearch
+```

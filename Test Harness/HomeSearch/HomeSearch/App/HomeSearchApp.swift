@@ -19,6 +19,9 @@
 //
 //  See ViewName for the complete inventory of names this app can emit.
 //
+//  Controls carry accessibilityIdentifiers ("search.filters", "detail.save", ...) because the LambdaTest
+//  suite in LambdaTest/tests-homesearch selects on them. Keep them stable.
+//
 
 import SwiftUI
 
