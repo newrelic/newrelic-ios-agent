@@ -1,0 +1,111 @@
+# Runs the HomeSearch LambdaTest suite (LambdaTest/tests-homesearch/) against an uploaded build.
+#
+# Chained from uploadApp-homesearch.yml, which passes the LambdaTest app ID in as a workflow_call
+# input rather than as an artifact (see wdio-mobile-views-2.yml for why: consuming another run's artifact
+# is the "artifact poisoning" pattern). Can also be dispatched by hand against an existing upload.
+#
+# Every spec file is its own LambdaTest session (and so a fresh install), so one failing spec cannot leave
+# the next starting on the wrong screen. Runs appear in the LambdaTest dashboard as
+# "[mobile-views-2] Build_HomeSearch - iOS:<timestamp>" with HomeSearch and mobile-views-2 tags.
+
+name: "WDIO: automate HomeSearch iOS tests (mobile-views-2)"
+
+permissions:
+  contents: read
+
+on:
+  workflow_call:
+    inputs:
+      app_id:
+        description: "LambdaTest custom_id of the HomeSearch app to test."
+        required: true
+        type: string
+
+  workflow_dispatch:
+    inputs:
+      app_id:
+        description: "LambdaTest custom_id to test (com.newrelic.HomeSearch.<timestamp>, from the upload run's summary)."
+        required: true
+        type: string
+
+jobs:
+  ios-data:
+    name: Run HomeSearch suite
+    runs-on: ubuntu-latest
+    env:
+      LT_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
+      LT_ACCESSKEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
+      LT_RUN_LABEL: mobile-views-2
+    steps:
+      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # pin@v4
+        with:
+          ref: mobile-views-2
+      - name: Setup environment
+        uses: ./.github/actions/env-setup
+
+      # Validated before it reaches $GITHUB_ENV. Unlike the NRTestApp workflow there is no fallback: a
+      # missing or malformed ID fails the run rather than testing some other app.
+      - name: Set LT_APP_ID environment variable
+        env:
+          APP_ID_INPUT: ${{ inputs.app_id }}
+        run: |
+          if ! printf '%s' "$APP_ID_INPUT" | grep -Eq '^com\.newrelic\.HomeSearch\.[A-Za-z0-9._:-]{1,160}$'; then
+            echo "::error::app_id must be a HomeSearch custom_id (com.newrelic.HomeSearch.<timestamp>)"
+            exit 1
+          fi
+          echo "LT_APP_ID=$APP_ID_INPUT" >> "$GITHUB_ENV"
+          echo "Using app ID: $APP_ID_INPUT"
+
+      - name: Execute HomeSearch tests
+        run: npm run test:wdio-homesearch
+
+      - name: Read test results
+        if: ${{ always() }}
+        run: |
+          RESULTS_FILE="LambdaTest/test-results.json"
+          if [ -f "$RESULTS_FILE" ]; then
+            PASSED="$(node -pe "JSON.parse(require('fs').readFileSync('$RESULTS_FILE')).passed")"
+            FAILED="$(node -pe "JSON.parse(require('fs').readFileSync('$RESULTS_FILE')).failed")"
+          else
+            PASSED="unknown"
+            FAILED="unknown"
+          fi
+          echo "TESTS_PASSED=$PASSED" >> $GITHUB_ENV
+          echo "TESTS_FAILED=$FAILED" >> $GITHUB_ENV
+
+      - name: Log success
+        if: ${{ success() }}
+        run: echo "[ RUNNER ] - successfully executed HomeSearch iOS tests (passed=$TESTS_PASSED, failed=$TESTS_FAILED)"
+
+      - name: Log failure
+        if: ${{ failure() || cancelled() }}
+        run: echo "[ RUNNER ] - failed to execute HomeSearch iOS tests (passed=$TESTS_PASSED, failed=$TESTS_FAILED)"
+
+      - name: Notify failure
+        if: ${{ failure() || cancelled() }}
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # pin@v2
+        with:
+          webhook-type: incoming-webhook
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            blocks:
+              - type: "header"
+                text:
+                  type: "plain_text"
+                  text: ":rotating_light: HomeSearch LambdaTest Run Failed (mobile-views-2)"
+              - type: "divider"
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "*Branch:* mobile-views-2\n*Passed:* ${{ env.TESTS_PASSED }}\n*Failed:* ${{ env.TESTS_FAILED }}"
+                accessory:
+                  type: "button"
+                  text:
+                    type: "plain_text"
+                    text: "View logs"
+                    emoji: true
+                  value: "view_logs"
+                  url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  action_id: "button-action"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
