@@ -15,7 +15,7 @@ jobs:
   # inputs: version (String): The version number to promote to production. (ex 7.4.0)
   deployS3Production:
     name: deployS3Production
-    runs-on: macos-15
+    runs-on: xcode-27
     if: github.ref == 'refs/heads/main'
     outputs:
       version: ${{ steps.setOutput.outputs.version }}
@@ -55,7 +55,7 @@ jobs:
   # The deployProductionSpecs job creates the prod Podspec and Prod Package.swift from template and pushes to cp trunk.
   deployProductionSpecs:
     name: deployProductionSpecs
-    runs-on: macos-14
+    runs-on: xcode-27
     needs: [deployS3Production]
     if: github.ref == 'refs/heads/main'
     permissions:
@@ -85,20 +85,13 @@ jobs:
       - name: Print XCFramework name
         run: echo "${{ env.version }}"
 
-      - name: Create Prod Podspec for XCFramework version
+      - name: Publish Prod Podspec for XCFramework version
         continue-on-error: true
-        run: |
-          cd main
-
-          cp cocoapods/NewRelicAgent.podspec.template NewRelicAgent.podspec
-          REPLACE=X.XX
-          sed -i bak "s/$REPLACE/${{ env.version }}/g" NewRelicAgent.podspec
-
-          rm NewRelicAgent.podspecbak
-
-          pod trunk push --allow-warnings NewRelicAgent.podspec
-        env:
-          COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
+        uses: ./main/.github/actions/publish-cocoapods
+        with:
+          version: ${{ env.version }}
+          trunk-token: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
+          working-directory: main
 
       - name: Create Prod Package.swift for XCFramework version
         run: |
