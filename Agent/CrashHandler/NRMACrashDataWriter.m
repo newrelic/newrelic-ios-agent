@@ -158,12 +158,15 @@
         // or they'd be sent twice.
         NSDictionary *persistedAttributes = [[NREventPersistenceController shared] reattributeCrashAttributesForSessionId:crashSessionId];
         if (persistedAttributes != nil) {
-            attributes = persistedAttributes;
             mutableAttributes = [NSMutableDictionary dictionaryWithDictionary:persistedAttributes];
+            // hasReplay is computed by the caller from on-disk error-mode session replay
+            // frames at crash-processing time -- never part of the persisted manifest.
+            if (attributes[kNRMA_RA_hasReplay]) {
+                mutableAttributes[kNRMA_RA_hasReplay] = attributes[kNRMA_RA_hasReplay];
+            }
             events = [[NREventPersistenceController shared] claimPersistedEventsForCrashSessionId:crashSessionId];
         } else {
             // No manifest found -- drop everything rather than guess.
-            attributes = nil;
             mutableAttributes = nil;
             events = nil;
         }
@@ -171,7 +174,6 @@
         // Flag off: unchanged old behavior -- drop on a sessionId mismatch.
         mutableAttributes = [NSMutableDictionary dictionaryWithDictionary:attributes];
         if (![crashSessionId isEqualToString:[mutableAttributes objectForKey:@"sessionId"]]) {
-            attributes = nil;
             mutableAttributes = nil;
             events = nil;
         }

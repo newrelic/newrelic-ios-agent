@@ -26,6 +26,7 @@
  #import "NRMAFlags.h"
  #import "NRMAExceptionMetaDataStore.h"
  #import "NRMAExceptionhandlerConstants.h"
+ #import "Constants.h"
  #import "NRMAJSON.h"
  #import <NewRelic/NewRelic-Swift.h>
 
@@ -235,6 +236,34 @@
     XCTAssertNil(writtenAttributes[@"stale"], @"the passed-in attributes must not survive -- NREventPersistenceController is authoritative");
     XCTAssertNotEqual(json[kNRMA_CR_analyticsEvents], [NSNull null],
                       @"events must not be dropped just because a manifest was found (even if none were persisted, it resolves to an empty array, not nil)");
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_EventPersistence];
+}
+
+// Regression guard: hasReplay is computed by NRMAExceptionHandlerManager from on-disk
+// error-mode session replay frames at crash-processing time, not from the persisted
+// manifest -- it must survive even though persisted attributes are otherwise authoritative.
+- (void)testCrashDataWriterPreservesCallerHasReplayWhenFlagEnabled {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+
+    NSString *crashSessionId = @"crash-has-replay-preservation-test";
+    [[NREventPersistenceController shared] writeSessionManifestWithSessionId:crashSessionId
+                                                                   realAgentId:7
+                                                                sessionStartMs:0
+                                                              stableAttributes:@{@"appVersion": @"2.0"}];
+
+    NSDictionary *metaDictionary = @{@kNRMAMetaKey_Session: crashSessionId};
+    NSDictionary *passedInAttributes = @{kNRMA_RA_hasReplay: @YES};
+
+    NSDictionary *json = [self writeCrashReportAndReadBackJSONWithMetaData:metaDictionary
+                                                           sessionAttributes:passedInAttributes
+                                                             analyticsEvents:@[]];
+
+    NSDictionary *writtenAttributes = json[kNRMA_CR_sessionAttributes];
+    XCTAssertEqualObjects(writtenAttributes[@"appVersion"], @"2.0");
+    XCTAssertEqualObjects(writtenAttributes[kNRMA_RA_hasReplay], @YES,
+                          @"hasReplay is computed by the caller at crash-processing time and must not be dropped "
+                          @"just because persisted manifest attributes are otherwise authoritative");
 
     [NRMAFlags disableFeatures:NRFeatureFlag_EventPersistence];
 }
