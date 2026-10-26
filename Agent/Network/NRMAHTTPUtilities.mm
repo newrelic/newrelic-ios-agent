@@ -26,6 +26,8 @@
 #import "W3CTraceState.h"
 #import "NRLogger.h"
 #import "NRMANetworkRequestData+CppInterface.h"
+#import "NRMANSURLConnectionSupport.h"
+#import "NRMAInFlightTraces.h"
 #include <Utilities/Application.hpp>
 #import "NRMAHarvestController.h"
 
@@ -127,6 +129,11 @@ NSString* currentParentId = @"";
                        scope:@""]];
     }
 
+    // The agent's own uploads would otherwise tag customer log records with traces nobody sees.
+    if(![NRMANSURLConnectionSupport isNewRelicServiceRequest:request]) {
+        [NRMAInFlightTraces traceStarted:payload traceId:payload.traceId spanId:payload.id];
+    }
+
     return payload;
 }
 
@@ -171,7 +178,14 @@ NSString* currentParentId = @"";
                            value:@1
                        scope:@""]];
     }
-        
+
+    if(![NRMANSURLConnectionSupport isNewRelicServiceRequest:request]) {
+        const std::unique_ptr<NewRelic::Connectivity::Payload>& payload = [payloadContainer getReference];
+        [NRMAInFlightTraces traceStarted:payloadContainer
+                                 traceId:@(payload->getTraceId().c_str())
+                                  spanId:@(payload->getId().c_str())];
+    }
+
     return payloadContainer;
 }
 
@@ -280,6 +294,11 @@ NSString* currentParentId = @"";
     }
 
     return nil;
+}
+
++ (void) finishTraceForRequest:(NSURLRequest*)request {
+    [NRMAInFlightTraces traceFinished:[NRMAAssociate retrieveFrom:request
+                                                             with:kNRMA_ASSOCIATED_PAYLOAD_KEY]];
 }
 
 + (NSDictionary<NSString*, NSString*> *) generateConnectivityHeadersWithPayload:(NRMAPayloadContainer*)payloadContainer {

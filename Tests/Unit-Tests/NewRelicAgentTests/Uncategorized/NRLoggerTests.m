@@ -25,6 +25,7 @@
 #import "NRAutoLogCollector.h"
 #import <os/log.h>
 #import "NewRelicAgentInternal.h"
+#import "NRMAInFlightTraces.h"
 #import <OCMock/OCMock.h>
 
 @interface NRLogger()
@@ -67,6 +68,7 @@ static NewRelicAgentInternal* _sharedInstance;
     [NRMAMeasurements addMeasurementConsumer:helper];
 
     [NRLogger clearLog];
+    [NRMAInFlightTraces reset];
 
     // Open a file descriptor for the file
     self.fileDescriptor = open([[NRLogger logFilePath] fileSystemRepresentation], O_EVTONLY);
@@ -107,6 +109,8 @@ static NewRelicAgentInternal* _sharedInstance;
     _sharedInstance = nil;
     [NRMAMeasurements shutdown];
     [NRMAFlags disableFeatures: NRFeatureFlag_LogReporting];
+    [NRMAFlags enableFeatures: NRFeatureFlag_DistributedTracing];
+    [NRMAInFlightTraces reset];
     [NRLogger setLogTargets:NRLogTargetConsole];
 
     [super tearDown];
@@ -498,5 +502,116 @@ static NewRelicAgentInternal* _sharedInstance;
     }
 
     XCTAssertEqual(foundCount, 5, @"Five remote messages should be found.");
+}
+
+#pragma mark - Trace context
+
+// The record written to the log file with `message`, or nil if none appears in time.
+- (NSDictionary*) waitForLogRecordWithMessage:(NSString*)message {
+    NSDate *timeoutDate = [NSDate dateWithTimeIntervalSinceNow:10.0];
+    while ([timeoutDate timeIntervalSinceNow] > 0) {
+        NSData* logData = [NRLogger logFileData:nil];
+        if (logData.length > 0) {
+            NSString* records = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
+            NSArray* decoded = [NSJSONSerialization JSONObjectWithData:[records dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
+            for (NSDictionary* record in decoded) {
+                if ([record[@"message"] isEqualToString:message]) {
+                    return record;
+                }
+            }
+        }
+        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+    }
+    return nil;
+}
+
+- (void) testLogRecordCarriesInFlightTrace {
+    NSObject* payload = [NSObject new];
+    [NRMAInFlightTraces traceStarted:payload traceId:@"trace-1" spanId:@"span-1"];
+
+    [NewRelic logInfo:@"Traced log"];
+    [NewRelic logAttributes:@{@"logLevel": @"WARN", @"message": @"Traced log with attributes", @"other": @"value"}];
+
+    NSDictionary* record = [self waitForLogRecordWithMessage:@"Traced log"];
+    XCTAssertEqualObjects(record[@"trace.id"], @"trace-1");
+    XCTAssertEqualObjects(record[@"span.id"], @"span-1");
+
+    record = [self waitForLogRecordWithMessage:@"Traced log with attributes"];
+    XCTAssertEqualObjects(record[@"trace.id"], @"trace-1");
+    XCTAssertEqualObjects(record[@"span.id"], @"span-1");
+    XCTAssertEqualObjects(record[@"other"], @"value");
+}
+
+- (void) testLogRecordHasNoTraceWhenNoneIsInFlight {
+    [NewRelic logInfo:@"Untraced log"];
+
+    NSDictionary* record = [self waitForLogRecordWithMessage:@"Untraced log"];
+    XCTAssertNotNil(record);
+    XCTAssertNil(record[@"trace.id"]);
+    XCTAssertNil(record[@"span.id"]);
+}
+
+- (void) testLogRecordHasNoTraceAfterRequestFinishes {
+    NSObject* payload = [NSObject new];
+    [NRMAInFlightTraces traceStarted:payload traceId:@"trace-1" spanId:@"span-1"];
+    [NRMAInFlightTraces traceFinished:payload];
+
+    [NewRelic logInfo:@"Log after request"];
+
+    NSDictionary* record = [self waitForLogRecordWithMessage:@"Log after request"];
+    XCTAssertNotNil(record);
+    XCTAssertNil(record[@"trace.id"]);
+    XCTAssertNil(record[@"span.id"]);
+}
+
+- (void) testCallerTraceAttributesDoNotOverrideAgentTrace {
+    NSObject* payload = [NSObject new];
+    [NRMAInFlightTraces traceStarted:payload traceId:@"trace-1" spanId:@"span-1"];
+
+    [NewRelic logAttributes:@{@"logLevel": @"WARN",
+                              @"message": @"Caller trace log",
+                              @"trace.id": @"caller-trace",
+                              @"span.id": @"caller-span"}];
+
+    NSDictionary* record = [self waitForLogRecordWithMessage:@"Caller trace log"];
+    XCTAssertEqualObjects(record[@"trace.id"], @"trace-1");
+    XCTAssertEqualObjects(record[@"span.id"], @"span-1");
+}
+
+- (void) testCallerTraceAttributesAreKeptWhenNoTraceIsInFlight {
+    [NewRelic logAttributes:@{@"logLevel": @"WARN",
+                              @"message": @"Caller trace log, nothing in flight",
+                              @"trace.id": @"caller-trace",
+                              @"span.id": @"caller-span"}];
+
+    NSDictionary* record = [self waitForLogRecordWithMessage:@"Caller trace log, nothing in flight"];
+    XCTAssertEqualObjects(record[@"trace.id"], @"caller-trace");
+    XCTAssertEqualObjects(record[@"span.id"], @"caller-span");
+}
+
+- (void) testLogRecordHasNoTraceWhenDistributedTracingIsDisabled {
+    NSObject* payload = [NSObject new];
+    [NRMAInFlightTraces traceStarted:payload traceId:@"trace-1" spanId:@"span-1"];
+    [NRMAFlags disableFeatures:NRFeatureFlag_DistributedTracing];
+
+    [NewRelic logInfo:@"Log without DT"];
+
+    NSDictionary* record = [self waitForLogRecordWithMessage:@"Log without DT"];
+    XCTAssertNotNil(record);
+    XCTAssertNil(record[@"trace.id"]);
+    XCTAssertNil(record[@"span.id"]);
+}
+
+- (void) testLogRecordHasNoTraceWhenLogReportingIsDisabled {
+    NSObject* payload = [NSObject new];
+    [NRMAInFlightTraces traceStarted:payload traceId:@"trace-1" spanId:@"span-1"];
+    [NRMAFlags disableFeatures:NRFeatureFlag_LogReporting];
+
+    [NewRelic logInfo:@"Log without log reporting"];
+
+    NSDictionary* record = [self waitForLogRecordWithMessage:@"Log without log reporting"];
+    XCTAssertNotNil(record);
+    XCTAssertNil(record[@"trace.id"]);
+    XCTAssertNil(record[@"span.id"]);
 }
 @end
