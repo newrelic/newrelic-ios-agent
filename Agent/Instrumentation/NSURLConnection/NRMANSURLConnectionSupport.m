@@ -294,6 +294,8 @@ static SEL swizzleSelectors[swizzleCount] = {NULL, NULL};
 
 + (void)noticeError:(NSError*)error forRequest:(NSURLRequest *)request withTimer:(NRTimer *)timer
 {
+    [NRMAHTTPUtilities finishTraceForRequest:request];
+
     // ignore self-instrumentation here, the agent records this stuff into Supportability metrics elsewhere
     if ([NRMANSURLConnectionSupport isNewRelicServiceRequest:request]) {
         return;
@@ -323,6 +325,8 @@ static SEL swizzleSelectors[swizzleCount] = {NULL, NULL};
              bytesSent:(NSUInteger)sent
          bytesReceived:(NSUInteger)received
 {
+    [NRMAHTTPUtilities finishTraceForRequest:request];
+
     // ignore self-instrumentation here, the agent records this stuff into Supportability metrics elsewhere
     if ([NRMANSURLConnectionSupport isNewRelicServiceRequest:request]) {
         return;

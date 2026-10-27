@@ -39,5 +39,9 @@ NS_ASSUME_NONNULL_BEGIN
 + (void) addTrackedHeaders:(NSDictionary *)headers to:(NRMANetworkRequestData*)requestData;
 + (void) attachPayload:(NRMAPayloadContainer*)payload to:(id)object;
 + (NRMAPayloadContainer*) addConnectivityHeader:(NSMutableURLRequest*)request;
+
+// Marks the trace attached to `request` as no longer in flight, leaving the payload attached for
+// the network event to report against.
++ (void) finishTraceForRequest:(NSURLRequest*)request;
 @end
 NS_ASSUME_NONNULL_END
