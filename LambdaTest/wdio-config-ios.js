@@ -84,6 +84,10 @@ exports.config = {
   port: 443,
   protocol: "https",
 
+  // WebdriverIO v10 makes `$` throw when a selector matches more than one element.
+  // Keep the v9 behavior (use the first match) that these specs were written against.
+  strictSelectors: false,
+
   framework: "mocha",
   mochaOpts: {
     ui: "bdd",

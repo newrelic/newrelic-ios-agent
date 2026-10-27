@@ -175,6 +175,22 @@ Copy dsym-upload-tools to xcframework
 
 Codesign xcframework
 
+### ios checkBinaryPaths
+
+```sh
+[bundle exec] fastlane ios checkBinaryPaths
+```
+
+Fail if any NewRelic.xcframework binary embeds an absolute build-machine path
+
+### ios checkSwiftInterfaces
+
+```sh
+[bundle exec] fastlane ios checkSwiftInterfaces
+```
+
+Fail if any NewRelic.xcframework .swiftinterface can't be parsed by Xcode 26
+
 ### ios internalOutputXCFrameworkIOSOnly
 
 ```sh
@@ -262,6 +278,14 @@ Run Tests for iOS/tvOS and Build NewRelic.XCFramework for all platforms
 ```
 
 Build NewRelic.XCFramework for iOS Only
+
+### ios uploadNRTestApp
+
+```sh
+[bundle exec] fastlane ios uploadNRTestApp
+```
+
+Upload a prebuilt NRTestApp IPA to App Store Connect (TestFlight) using an ASC API key
 
 ----
 

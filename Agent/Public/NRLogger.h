@@ -212,11 +212,12 @@ withTimestamp:(NSNumber *)timestamp;
 @end
 
 
+// __FILE__ here would embed the absolute build-machine path in the compiled binary.
 #define NRLOG(level, agentLogs, format, ...) \
-    [NRLogger log:level inFile:[[NSString stringWithUTF8String:__FILE__] lastPathComponent] atLine:__LINE__ inMethod:[NSString stringWithUTF8String:__func__] withMessage:[NSString stringWithFormat:format, ##__VA_ARGS__] withAgentLogsOn:agentLogs]
+    [NRLogger log:level inFile:[NSString stringWithUTF8String:__FILE_NAME__] atLine:__LINE__ inMethod:[NSString stringWithUTF8String:__func__] withMessage:[NSString stringWithFormat:format, ##__VA_ARGS__] withAgentLogsOn:agentLogs]
 
 #define NRLOG_ATTRS(level, format, attrs, ...) \
-    [NRLogger log:level inFile:[[NSString stringWithUTF8String:__FILE__] lastPathComponent] atLine:__LINE__ inMethod:[NSString stringWithUTF8String:__func__] withMessage:[NSString stringWithFormat:format, ##__VA_ARGS__] withAttributes: attrs]
+    [NRLogger log:level inFile:[NSString stringWithUTF8String:__FILE_NAME__] atLine:__LINE__ inMethod:[NSString stringWithUTF8String:__func__] withMessage:[NSString stringWithFormat:format, ##__VA_ARGS__] withAttributes: attrs]
 
 #define NRLOG_ERROR(format, ...) NRLOG(NRLogLevelError, false, format, ##__VA_ARGS__)
 #define NRLOG_WARNING(format, ...) NRLOG(NRLogLevelWarning, false, format, ##__VA_ARGS__)
