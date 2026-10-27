@@ -7,7 +7,7 @@
     "@wdio/mocha-framework": "^10.0.1",
     "appium": "^3.8.0",
     "basic-ftp": "^6.2.1",
-    "body-parser": "^2.2.2",
+    "body-parser": "^2.4.0",
     "dayjs": "^1.11.19",
     "diff": "^5.2.2",
     "undici": "^7.30.1",
