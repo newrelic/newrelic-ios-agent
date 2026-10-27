@@ -1028,7 +1028,6 @@
 		2BCA57B42B7E85AD00991C5E /* NRLoggerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BCA57B32B7E85AD00991C5E /* NRLoggerTests.m */; };
 		2BCA57B52B7E85AD00991C5E /* NRLoggerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BCA57B32B7E85AD00991C5E /* NRLoggerTests.m */; };
 		2BD073892EB0386A00E3556B /* NRMAWebViewSupportability.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BD073752EB0386000E3556B /* NRMAWebViewSupportability.h */; };
-		2BD0738A2EB0387600E3556B /* NRMAWebViewSupportability.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BD073752EB0386000E3556B /* NRMAWebViewSupportability.h */; };
 		2BD0738C2EB038B600E3556B /* NRMAWebViewSupportability.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BD0738B2EB038AB00E3556B /* NRMAWebViewSupportability.m */; };
 		2BDB78D12E8C42B900357BC1 /* SwiftUIViewAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BDB78D02E8C42B400357BC1 /* SwiftUIViewAttributes.swift */; };
 		2BDCA8A42A8C40D50005740D /* NRMASAM.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BDCA8A32A8C40D50005740D /* NRMASAM.h */; };
@@ -1375,19 +1374,19 @@
 		348232FB2BC5F20B0070FAC3 /* NRMAHarvesterConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF495C24DC628F00115469 /* NRMAHarvesterConfiguration.h */; };
 		348232FC2BC5F20B0070FAC3 /* NRMATraceConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF496024DC629000115469 /* NRMATraceConfiguration.m */; };
 		348232FD2BC5F20B0070FAC3 /* NRMAHarvestData.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF495824DC628F00115469 /* NRMAHarvestData.m */; };
-		348232FE2BC5F2140070FAC3 /* BuildFile in Headers */ = {isa = PBXBuildFile; };
+		348232FE2BC5F2140070FAC3 /* (null) in Headers */ = {isa = PBXBuildFile; };
 		348232FF2BC5F2140070FAC3 /* HexUploadPublisher.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF492724DC625A00115469 /* HexUploadPublisher.mm */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		348233002BC5F2140070FAC3 /* BuildFile in Sources */ = {isa = PBXBuildFile; };
+		348233002BC5F2140070FAC3 /* (null) in Sources */ = {isa = PBXBuildFile; };
 		348233012BC5F2140070FAC3 /* NRMAExceptionReportAdaptor.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF492924DC625A00115469 /* NRMAExceptionReportAdaptor.h */; };
 		348233022BC5F2140070FAC3 /* NRMARetryTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF492D24DC625A00115469 /* NRMARetryTracker.h */; };
-		348233032BC5F2140070FAC3 /* BuildFile in Headers */ = {isa = PBXBuildFile; };
+		348233032BC5F2140070FAC3 /* (null) in Headers */ = {isa = PBXBuildFile; };
 		348233042BC5F2140070FAC3 /* NRMAHexUploader.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF492524DC625A00115469 /* NRMAHexUploader.m */; };
 		348233052BC5F2140070FAC3 /* NRMARetryTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF492624DC625A00115469 /* NRMARetryTracker.m */; };
 		348233062BC5F2140070FAC3 /* NRMAHandledExceptions.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF492824DC625A00115469 /* NRMAHandledExceptions.h */; };
 		348233072BC5F2140070FAC3 /* NRMAHexUploader.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF492B24DC625A00115469 /* NRMAHexUploader.h */; };
 		348233082BC5F2140070FAC3 /* NRMAExceptionReportAdaptor.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF492A24DC625A00115469 /* NRMAExceptionReportAdaptor.mm */; };
 		348233092BC5F2140070FAC3 /* NRMAHandledExceptions.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF492F24DC625A00115469 /* NRMAHandledExceptions.mm */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		3482330A2BC5F2140070FAC3 /* BuildFile in Sources */ = {isa = PBXBuildFile; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		3482330A2BC5F2140070FAC3 /* (null) in Sources */ = {isa = PBXBuildFile; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		3482330B2BC5F2140070FAC3 /* HexUploadPublisher.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 02FF492324DC625A00115469 /* HexUploadPublisher.hpp */; };
 		3482330D2BC5F21B0070FAC3 /* NRMAExceptionHandlerManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48D524DC622600115469 /* NRMAExceptionHandlerManager.h */; };
 		3482330E2BC5F21B0070FAC3 /* NRMACrashDataUploader.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48D724DC622700115469 /* NRMACrashDataUploader.h */; };
@@ -1582,10 +1581,24 @@
 		34EA78E02A3924CC0071CC95 /* TestCustomEvents.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78DF2A3924CC0071CC95 /* TestCustomEvents.m */; };
 		3815DBFD4E3986391C08820D /* NRSessionManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 288A179D64B7F09964470B1B /* NRSessionManifest.swift */; };
 		40F96BBB07C73E4DF54CAA0D /* NRMAEventPersistenceBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2DAD7BA83545FDA1775DD352 /* NRMAEventPersistenceBridge.mm */; };
+		280EBE0A4C223BDC99652B19 /* NRMAEventPersistenceBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2DAD7BA83545FDA1775DD352 /* NRMAEventPersistenceBridge.mm */; };
+		538DF67C32D02CF62B824802 /* NRMAEventPersistenceBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2DAD7BA83545FDA1775DD352 /* NRMAEventPersistenceBridge.mm */; };
 		471C24AF2EAC11B89528A08D /* NRMAEventDuplicationStoreTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = F7B230ED67A6A98DA7DB0F8E /* NRMAEventDuplicationStoreTests.mm */; };
 		6F782469220480030F46990C /* NREventRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAF477F7878EB58F9A357381 /* NREventRecord.swift */; };
 		79A0C299EFDE7326117DD693 /* NREventPersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF2D94373D02FBD4BA34ED2 /* NREventPersistenceController.swift */; };
 		79D1F449EE53D7E2BF957ABF /* NRSessionManifestStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DF4BCF85F775B00808CB344 /* NRSessionManifestStore.swift */; };
+		CD7B568366E7A77761E26EC1 /* NREventPersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF2D94373D02FBD4BA34ED2 /* NREventPersistenceController.swift */; };
+		1561CCFA9F44442D307F3282 /* NRFileEventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 726E617FC862C3DA3F61F113 /* NRFileEventStore.swift */; };
+		FB3B683305849C4A1B025968 /* NRSessionManifestStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DF4BCF85F775B00808CB344 /* NRSessionManifestStore.swift */; };
+		737AE5A663A595C50E07A9DB /* NRSessionManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 288A179D64B7F09964470B1B /* NRSessionManifest.swift */; };
+		B95F3017F43E86743040CA20 /* NREventRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAF477F7878EB58F9A357381 /* NREventRecord.swift */; };
+		C34FC2B1987CEC301FB10B3D /* NREventPersistenceFileSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AD23EEDED47813EE5C9F9A /* NREventPersistenceFileSupport.swift */; };
+		E9B84E3B9BB25162079987BD /* NREventPersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF2D94373D02FBD4BA34ED2 /* NREventPersistenceController.swift */; };
+		3E06340B9FE67A3A657F3B65 /* NRFileEventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 726E617FC862C3DA3F61F113 /* NRFileEventStore.swift */; };
+		219CF03582CEAEEA9B5D05F7 /* NRSessionManifestStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DF4BCF85F775B00808CB344 /* NRSessionManifestStore.swift */; };
+		09878047265E53E3A3E20C99 /* NRSessionManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 288A179D64B7F09964470B1B /* NRSessionManifest.swift */; };
+		39AA724C3F740AAA0207FAD7 /* NREventRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAF477F7878EB58F9A357381 /* NREventRecord.swift */; };
+		07EC0C2FCBB7893ADA0012A4 /* NREventPersistenceFileSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AD23EEDED47813EE5C9F9A /* NREventPersistenceFileSupport.swift */; };
 		8672BC060E2E6F2DB55255A7 /* NREventPersistenceControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 211E17D2CBA445C41F75AA9C /* NREventPersistenceControllerTests.swift */; };
 		8B498242383AF7020CD36D72 /* NRMANetworkFacadeTraceHeaderTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 578D57D9E9373167EBE8C0CF /* NRMANetworkFacadeTraceHeaderTests.mm */; };
 		8C672328F5A42BAB6B34BB8A /* NRMAMethodSwizzlingTest.m in Sources */ = {isa = PBXBuildFile; fileRef = A4DECDA19300C86CE55C9A25 /* NRMAMethodSwizzlingTest.m */; };
@@ -1642,7 +1655,6 @@
 		F806E4282D9C7E3F0003B9D6 /* SessionReplayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F806E4272D9C7E3F0003B9D6 /* SessionReplayManager.swift */; };
 		F80C1D6A2DA07691007C0F52 /* ViewDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80C1D692DA07691007C0F52 /* ViewDetails.swift */; };
 		F810620E2E16D02D00B8CC81 /* UIVisualEffectViewThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81061FA2E16D01D00B8CC81 /* UIVisualEffectViewThingy.swift */; };
-		F81C3D223049FD410063C9C0 /* NRMAWebViewSupportability.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BD0738B2EB038AB00E3556B /* NRMAWebViewSupportability.m */; };
 		F81E70682EC7A75C00698BF8 /* UIColorHexStringTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81E70672EC7A75C00698BF8 /* UIColorHexStringTests.swift */; };
 		F81E707C2EC7AB4800698BF8 /* UIColor+HexString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34D0401D2D86036D007BE92D /* UIColor+HexString.swift */; };
 		F824A43129AEAD63000886A6 /* NRViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRViewModifier.swift */; };
@@ -1958,7 +1970,7 @@
 		};
 		34666B252924556A005A7010 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 34A929292912D72F001449B6 /* json.xcodeproj */;
+			containerPortal = 34A929292912D72F001449B6 /* JSON.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 34BF4DDC29108DE200E4D170;
 			remoteInfo = JSON;
@@ -1993,7 +2005,7 @@
 		};
 		34A9292D2912D72F001449B6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 34A929292912D72F001449B6 /* json.xcodeproj */;
+			containerPortal = 34A929292912D72F001449B6 /* JSON.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 34BF4DDD29108DE200E4D170;
 			remoteInfo = JSON;
@@ -2042,7 +2054,7 @@
 		};
 		34DD72F42912F04700481FA9 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 34A929292912D72F001449B6 /* json.xcodeproj */;
+			containerPortal = 34A929292912D72F001449B6 /* JSON.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 34BF4DDC29108DE200E4D170;
 			remoteInfo = JSON;
@@ -2070,7 +2082,7 @@
 		};
 		F89167402BC9D1CB0085BCFC /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 34A929292912D72F001449B6 /* json.xcodeproj */;
+			containerPortal = 34A929292912D72F001449B6 /* JSON.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 34BF4DDC29108DE200E4D170;
 			remoteInfo = JSON;
@@ -2670,7 +2682,7 @@
 		2BF42C6B28B8106F006E9C27 /* NRMAStartTimer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAStartTimer.m; sourceTree = "<group>"; };
 		2BFFB1D728CA683F00392E3B /* NRMASupportMetricHelperTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMASupportMetricHelperTests.h; sourceTree = "<group>"; };
 		2BFFB1EA28CA683F00392E3B /* NRMASupportMetricHelperTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMASupportMetricHelperTests.m; sourceTree = "<group>"; };
-		2DAD7BA83545FDA1775DD352 /* NRMAEventPersistenceBridge.mm */ = {isa = PBXFileReference; includeInIndex = 1; path = NRMAEventPersistenceBridge.mm; sourceTree = "<group>"; };
+		2DAD7BA83545FDA1775DD352 /* NRMAEventPersistenceBridge.mm */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.objcpp; path = NRMAEventPersistenceBridge.mm; sourceTree = "<group>"; };
 		340A8CE32DAD8EAB00BC2B01 /* IncrementalDiffGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncrementalDiffGenerator.swift; sourceTree = "<group>"; };
 		340D64122AA92FCE00E63CC1 /* PersistentEventStore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PersistentEventStore.h; sourceTree = "<group>"; };
 		340D64132AA92FCE00E63CC1 /* PersistentEventStore.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PersistentEventStore.m; sourceTree = "<group>"; };
@@ -4333,7 +4345,6 @@
 				0DF4BCF85F775B00808CB344 /* NRSessionManifestStore.swift */,
 				1FF2D94373D02FBD4BA34ED2 /* NREventPersistenceController.swift */,
 			);
-			name = EventPersistence;
 			path = EventPersistence;
 			sourceTree = "<group>";
 		};
@@ -4726,7 +4737,6 @@
 				02FF4B6524E3201400115469 /* NRMACrashDataUploader.h in Headers */,
 				02FF4B6624E3201400115469 /* NRMAUserActionBuilder.h in Headers */,
 				F6E79C7E25A65347006277FB /* W3CTraceParent.h in Headers */,
-				2BD0738A2EB0387600E3556B /* NRMAWebViewSupportability.h in Headers */,
 				02FF4B6724E3201400115469 /* NRMAScopedHTTPTransactionMeasurement.h in Headers */,
 				02FF4B6824E3201400115469 /* NRMAURLSessionTaskDelegateBase_Private.h in Headers */,
 				02FF4B6924E3201400115469 /* NRMAActivityTraceMeasurement.h in Headers */,
@@ -4946,7 +4956,7 @@
 				348233842BC5F3120070FAC3 /* NRMALastActivityTraceController.h in Headers */,
 				348232D52BC5F2050070FAC3 /* NRMAHarvestableMethodMetric.h in Headers */,
 				348232B42BC5F1F60070FAC3 /* NRMAHarvesterConnection+GZip.h in Headers */,
-				348232FE2BC5F2140070FAC3 /* BuildFile in Headers */,
+				348232FE2BC5F2140070FAC3 /* (null) in Headers */,
 				3482336E2BC5F3040070FAC3 /* NRMANetworkResponseData+CppInterface.h in Headers */,
 				348233782BC5F3040070FAC3 /* NRMANetworkRequestData.h in Headers */,
 				348232962BC5F1D70070FAC3 /* NRMAMeasurementException.h in Headers */,
@@ -5029,7 +5039,7 @@
 				3482323E2BC5F0DC0070FAC3 /* NRMAHTTPUtilities.h in Headers */,
 				3482325A2BC5F16E0070FAC3 /* NRMAFileCleanup.h in Headers */,
 				348233832BC5F3120070FAC3 /* NRMATraceMachineAgentUserInterface.h in Headers */,
-				348233032BC5F2140070FAC3 /* BuildFile in Headers */,
+				348233032BC5F2140070FAC3 /* (null) in Headers */,
 				348233672BC5F3040070FAC3 /* NRMAAnalyticEventProtocol.h in Headers */,
 				348233072BC5F2140070FAC3 /* NRMAHexUploader.h in Headers */,
 				348233A72BC5F32B0070FAC3 /* NewRelicCustomInteractionInterface.h in Headers */,
@@ -5717,7 +5727,6 @@
 				F85ABB652F155B780098A2CF /* UIFont+CSSConversion.swift in Sources */,
 				F8BF15512F3A38B700EF5628 /* XrayDecoder+Children.swift in Sources */,
 				F8A455482AFBE31E0057B1E0 /* NRMAURLSessionHeaderTrackingTestsOldEventSystem.m in Sources */,
-				F81C3D223049FD410063C9C0 /* NRMAWebViewSupportability.m in Sources */,
 				343883562834405700B31C2E /* NRMAURLTransformerTests.m in Sources */,
 				0209AC0C24E7071500E45C90 /* APIMethodTraceTest.m in Sources */,
 				0209ABD824E706AE00E45C90 /* TestRetryTracker.m in Sources */,
@@ -6237,6 +6246,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				280EBE0A4C223BDC99652B19 /* NRMAEventPersistenceBridge.mm in Sources */,
+				CD7B568366E7A77761E26EC1 /* NREventPersistenceController.swift in Sources */,
+				1561CCFA9F44442D307F3282 /* NRFileEventStore.swift in Sources */,
+				FB3B683305849C4A1B025968 /* NRSessionManifestStore.swift in Sources */,
+				737AE5A663A595C50E07A9DB /* NRSessionManifest.swift in Sources */,
+				B95F3017F43E86743040CA20 /* NREventRecord.swift in Sources */,
+				C34FC2B1987CEC301FB10B3D /* NREventPersistenceFileSupport.swift in Sources */,
 				02FF4BEF24E3201400115469 /* NRMAAnalytics.h in Sources */,
 				2B570A5D2EF0C2CC007D9E39 /* SerializedNode.swift in Sources */,
 				2B570A822EF0C54B007D9E39 /* UIImage+PngData.swift in Sources */,
@@ -6573,6 +6589,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				538DF67C32D02CF62B824802 /* NRMAEventPersistenceBridge.mm in Sources */,
+				E9B84E3B9BB25162079987BD /* NREventPersistenceController.swift in Sources */,
+				3E06340B9FE67A3A657F3B65 /* NRFileEventStore.swift in Sources */,
+				219CF03582CEAEEA9B5D05F7 /* NRSessionManifestStore.swift in Sources */,
+				09878047265E53E3A3E20C99 /* NRSessionManifest.swift in Sources */,
+				39AA724C3F740AAA0207FAD7 /* NREventRecord.swift in Sources */,
+				07EC0C2FCBB7893ADA0012A4 /* NREventPersistenceFileSupport.swift in Sources */,
 				348232AF2BC5F1EB0070FAC3 /* NRMAAppUpgradeMetricGenerator.m in Sources */,
 				3482328F2BC5F1D70070FAC3 /* NRMAActivityTraceMeasurement.m in Sources */,
 				348233932BC5F31E0070FAC3 /* NRMAApplicationInstrumentation.m in Sources */,
@@ -6683,7 +6706,7 @@
 				3482325D2BC5F16E0070FAC3 /* NRMABool.m in Sources */,
 				348233212BC5F2270070FAC3 /* NRMACrashReport_CodeType.m in Sources */,
 				3482328B2BC5F1B30070FAC3 /* NRMAMetric.m in Sources */,
-				348233002BC5F2140070FAC3 /* BuildFile in Sources */,
+				348233002BC5F2140070FAC3 /* (null) in Sources */,
 				3482337E2BC5F3120070FAC3 /* NRMAActivityTrace.m in Sources */,
 				348232732BC5F1A80070FAC3 /* NRMAMeasurementEngine.m in Sources */,
 				348232462BC5F0F60070FAC3 /* NRMAPayloadContainer.mm in Sources */,
@@ -6728,7 +6751,7 @@
 				348232E92BC5F2050070FAC3 /* NRMAHTTPTransactions.m in Sources */,
 				348232C62BC5F1FE0070FAC3 /* NRMAHarvestable.m in Sources */,
 				348233142BC5F21B0070FAC3 /* NRMAUncaughtExceptionHandler.m in Sources */,
-				3482330A2BC5F2140070FAC3 /* BuildFile in Sources */,
+				3482330A2BC5F2140070FAC3 /* (null) in Sources */,
 				348233622BC5F2DD0070FAC3 /* NRMANetworkErrorEvent.m in Sources */,
 				2B3BA8522EF1C7B0007B798A /* SessionReplayFrame.swift in Sources */,
 				348232972BC5F1D70070FAC3 /* NRMAMethodSummaryMeasurement.m in Sources */,

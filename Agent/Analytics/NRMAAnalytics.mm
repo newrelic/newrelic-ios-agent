@@ -235,8 +235,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (void) dealloc {
     [__eventTypeRegex release];
-    [_eventManager dealloc];
-    [_sessionAttributeManager dealloc];
+    [_eventManager release];
+    [_sessionAttributeManager release];
     [_attributeValidator release];
     [_sessionStartTime release];
 

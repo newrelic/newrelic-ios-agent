@@ -700,10 +700,13 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         }
 
         // Leave a pending crash's session untouched -- NRMACrashDataWriter claims it instead.
+        // NRMACrashReportFileManager isn't built for watchOS (no PLCrashReporter pipeline there).
         NSString *pendingCrashSessionId = nil;
+#if !TARGET_OS_WATCH
         if ([NRMAFlags shouldEnableCrashReporting]) {
             pendingCrashSessionId = [NRMACrashReportFileManager pendingCrashSessionId];
         }
+#endif
 
         NSArray *recoveredEvents = [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:currentAttributes
                                                                                                                              excludingSessionId:pendingCrashSessionId];
