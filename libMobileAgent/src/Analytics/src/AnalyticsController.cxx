@@ -955,7 +955,6 @@ namespace NewRelic {
             // a later confirmation that this attempt actually succeeded.
             EventManager::markEventsPendingConfirmationIfBridged(_eventManager._events);
             _eventManager.empty();
-            _eventsDuplicationStore.clear();
         }
         return json;
     }

@@ -83,7 +83,6 @@ void EventManager::empty() {
     std::unique_lock<std::recursive_mutex> lock1(this->_eventsMutex, std::defer_lock);
     lock1.lock();
     _events.clear();
-    _eventDuplicationStore.clear();
     //we're empty so let's reset the total number of attempted inserts.
     _total_attempted_inserts = 0;
 }
@@ -118,14 +117,10 @@ EventAddResult EventManager::addEvent(std::shared_ptr<AnalyticEvent> event) {
             //iterator the event to remove
             auto eventIterator = _events.begin() + index;
             std::shared_ptr<AnalyticEvent> evictedEvent = *eventIterator;
-            //remove it from the duplication store, under the same key it was stored with
-            _eventDuplicationStore.remove(EventManager::createKey(*eventIterator));
             //remove it from the vector
             _events.erase(eventIterator);
             //add new event to the vector
             _events.push_back(event);
-            //insert new event into the duplication store
-            _eventDuplicationStore.store(EventManager::createKey(event), event);
             result.added = true;
             _events_recorded++;
             persistIfBridged(event);
@@ -140,8 +135,6 @@ EventAddResult EventManager::addEvent(std::shared_ptr<AnalyticEvent> event) {
         //buffer size limit not reached
         //simply add new event to vector
         _events.push_back(event);
-        //and to duplication store.
-        _eventDuplicationStore.store(EventManager::createKey(event), event);
         if (_events.size() == 1) {
             //wait until the event is actually pushed before we assume it's the oldest event.
             _oldest_event_timestamp_ms = event->_timestamp_epoch_millis;
