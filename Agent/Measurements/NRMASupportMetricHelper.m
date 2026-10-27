@@ -12,6 +12,7 @@
 #import "NRMATaskQueue.h"
 #import "NRMAFlags.h"
 #import "NRMAStartTimer.h"
+#import "NRConstants.h"
 
 @implementation NRMASupportMetricHelper
 
@@ -117,6 +118,36 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
                                                     produceUnscoped:YES
                                                     additionalValue:nil]];
     }
+}
+
+// MARK: - Retry backoff metrics
+
++ (void) enqueueHarvestFailedUploadMetric:(NSString*)endpoint {
+    if (endpoint.length == 0) { return; }
+    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMAHarvestFailedUploadMetricFormat, endpoint]
+                                                    value:@1
+                                                    scope:@""]];
+}
+
++ (void) enqueueHarvestRetrySuccessMetric:(NSString*)endpoint {
+    if (endpoint.length == 0) { return; }
+    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMAHarvestRetrySuccessMetricFormat, endpoint]
+                                                    value:@1
+                                                    scope:@""]];
+}
+
++ (void) enqueueHarvestRetryFailedMetric:(NSString*)endpoint {
+    if (endpoint.length == 0) { return; }
+    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMAHarvestRetryFailedMetricFormat, endpoint]
+                                                    value:@1
+                                                    scope:@""]];
+}
+
++ (void) enqueueHarvestRetryNetworkSuspendedMetric:(NSString*)endpoint {
+    if (endpoint.length == 0) { return; }
+    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMAHarvestRetryNetworkSuspendedMetricFormat, endpoint]
+                                                    value:@1
+                                                    scope:@""]];
 }
 
 + (void) enqueueMaxBufferTimeConfiguration:(unsigned int)seconds {
@@ -288,25 +319,6 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
 }
 
 // End JS Error
-
-// Retry
-+ (void) enqueueRetrySuccessMetric:(NSString*)endpoint {
-    @synchronized (deferredMetrics) {
-        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMARetrySuccessMetricFormatString, endpoint]
-                                                              value:@1
-                                                              scope:nil]];
-    }
-}
-
-+ (void) enqueueRetryFailedMetric:(NSString*)endpoint {
-    @synchronized (deferredMetrics) {
-        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMARetryFailedMetricFormatString, endpoint]
-                                                              value:@1
-                                                              scope:nil]];
-    }
-}
-
-// End Retry
 
 // KMP Detection (Kotlin Multiplatform)
 + (void) enqueueKMMDetectionMetric {

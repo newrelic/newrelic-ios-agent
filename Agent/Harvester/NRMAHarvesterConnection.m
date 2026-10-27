@@ -16,6 +16,7 @@
 #import "NRMAHarvesterConnection+GZip.h"
 #import "NRMASupportMetricHelper.h"
 #import "NRMAFlags.h"
+#import <NewRelic/NewRelic-Swift.h>
 
 @implementation NRMAHarvesterConnection
 @synthesize connectionInformation = _connectionInformation;
@@ -23,7 +24,7 @@
 {
     self = [super init];
     if (self) {
-        self.harvestSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
+        self.httpClient = [[NRMARetryingHTTPClient alloc] init];
         self.offlineStorage = [[NRMAOfflineStorage alloc] initWithEndpoint:@"data"];
     }
     return self;
@@ -96,80 +97,79 @@
     return postRequest;
 }
 
-- (NRMAHarvestResponse*) send:(NSURLRequest *)post
+// Delegates upload+retry to NRMARetryingHTTPClient, blocking synchronously via
+// a semaphore so the harvest thread's existing call contract is unchanged.
+- (NRMAHarvestResponse*) send:(NSURLRequest*)post
 {
-    NRMAHarvestResponse* harvestResponse = [[NRMAHarvestResponse alloc] init];
-    __block NSHTTPURLResponse* response;
-    __block NSError* error;
-    __block NSData* data;
-
-    __block dispatch_semaphore_t harvestRequestSemaphore = dispatch_semaphore_create(0);
-    
+    // Pre-flight payload size check — not retryable.
     BOOL wasCompressed = [post.allHTTPHeaderFields[kNRMAContentEncodingHeader] isEqualToString:kNRMAGZipHeader];
     long size = wasCompressed ? [post.allHTTPHeaderFields[kNRMAActualSizeHeader] longLongValue] : [post.HTTPBody length];
     if (size > kNRMAMaxPayloadSizeLimit) {
         NSString* subDest = [[post URL] lastPathComponent];
         NRLOG_AGENT_ERROR(@"Unable to send %@ harvest because payload is larger than 1 MB.", subDest);
         [NRMASupportMetricHelper enqueueMaxPayloadSizeLimitMetric:subDest];
-        harvestResponse.statusCode = ENTITY_TOO_LARGE;
-        return harvestResponse;
+        NRMAHarvestResponse* oversized = [[NRMAHarvestResponse alloc] init];
+        oversized.statusCode = ENTITY_TOO_LARGE;
+        return oversized;
     }
-    
+
+    NSString* endpoint = [[post URL] lastPathComponent] ?: @"";
+
+    // NSURLSessionUploadTask requires the body via fromData:, not HTTPBody.
+    NSData* body = [post.HTTPBody copy];
+    NSMutableURLRequest* req = [post mutableCopy];
+    [req setHTTPBody:nil];
+
+    __block NRMAHarvestResponse* result = nil;
+    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+
     NRLOG_AGENT_VERBOSE(@"NEWRELIC - REQUEST: %@", post);
-    NRLOG_AGENT_VERBOSE(@"NEWRELIC - REQUEST BODY: %@", post.HTTPBody);
 
-    NSData *initialReqBody = [post.HTTPBody copy];
-    NSMutableURLRequest *modifiedRequest = [post mutableCopy];
-    [modifiedRequest setHTTPBody:nil];
+    [self.httpClient uploadRequest:[req copy]
+                              data:body
+                          endpoint:endpoint
+                        completion:^(NSData* responseData, NSHTTPURLResponse* response, NSError* error) {
+        NRLOG_AGENT_VERBOSE(@"NEWRELIC CONNECT - RESPONSE: %@", [response debugDescription]);
 
-    [[self.harvestSession uploadTaskWithRequest:modifiedRequest
-                                       fromData:initialReqBody
-                              completionHandler:^(NSData* responseBody, NSURLResponse* bresponse, NSError* berror){
-        @autoreleasepool {
-            data = responseBody;
-            error = berror;
-            response = (NSHTTPURLResponse*)bresponse;
-            dispatch_semaphore_signal(harvestRequestSemaphore);
-            
-            NRLOG_AGENT_VERBOSE(@"NEWRELIC CONNECT - RESPONSE: %@", [response debugDescription]);
-            
-            // Enqueue Data Usage Supportability Metric for /data or /connect if the harvest request was successful.
-            if (!error) {
-                BOOL wasCompressed = [post.allHTTPHeaderFields[kNRMAContentEncodingHeader] isEqualToString:kNRMAGZipHeader];
-                long size = wasCompressed ? [post.allHTTPHeaderFields[kNRMAActualSizeHeader] longLongValue] : [post.HTTPBody length];
-                NSString* subDest = [[post URL] lastPathComponent];
+        NRMAHarvestResponse* r = [[NRMAHarvestResponse alloc] init];
+        r.statusCode  = response ? (int)response.statusCode : ZERO_STATUS_CODE;
+        r.error       = error;
+        r.responseBody = [[NSString alloc] initWithData:responseData encoding:NSUTF8StringEncoding];
+        [r parseRetryAfterFromHeaders:response.allHeaderFields];
 
-                [NRMASupportMetricHelper enqueueDataUseMetric:subDest size:size received:responseBody.length];
+        if (error) {
+            NRLOG_AGENT_ERROR(@"NEWRELIC CONNECT - Failed to retrieve collector response: %@", error);
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+            @try {
+#endif
+                [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRSupportabilityPrefix@"/Collector/ResponseErrorCodes/%"NRMA_NSI, [error code]]
+                                                                value:@1
+                                                                scope:@""]];
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+            } @catch (NSException* exception) {
+                [NRMAExceptionHandler logException:exception
+                                             class:NSStringFromClass([NRMAHarvesterConnection class])
+                                          selector:@"send:"];
             }
-        }
-    }] resume];
-
-    dispatch_semaphore_wait(harvestRequestSemaphore, dispatch_time(DISPATCH_TIME_NOW,  (uint64_t)(post.timeoutInterval*(double)(NSEC_PER_SEC))));
-    
-    if (error) {
-        NRLOG_AGENT_ERROR(@"NEWRELIC CONNECT - Failed to retrieve collector response: %@",error);
-
-#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
-        @try {
 #endif
-            [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRSupportabilityPrefix@"/Collector/ResponseErrorCodes/%"NRMA_NSI,[error code]]
-                                                            value:@1
-                                                            scope:@""]];
-#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
-        } @catch (NSException* exception) {
-            [NRMAExceptionHandler logException:exception
-                                         class:NSStringFromClass([self class])
-                                      selector:NSStringFromSelector(_cmd)];
+        } else {
+            // Bytes-transferred metric, emitted on each successful upload.
+            long payloadSize = wasCompressed
+                ? [post.allHTTPHeaderFields[kNRMAActualSizeHeader] longLongValue]
+                : [body length];
+            [NRMASupportMetricHelper enqueueDataUseMetric:endpoint
+                                                     size:payloadSize
+                                                 received:responseData.length];
         }
-#endif
-        harvestResponse.error = error;
-    }
 
-    harvestResponse.statusCode = (int)response.statusCode;
-    harvestResponse.responseBody = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    [harvestResponse parseRetryAfterFromHeaders:response.allHeaderFields];
-    NRLOG_AGENT_VERBOSE(@"NEWRELIC CONNECT - RESPONSE DATA: %@", harvestResponse.responseBody);
-    return harvestResponse;
+        NRLOG_AGENT_VERBOSE(@"NEWRELIC CONNECT - RESPONSE DATA: %@", r.responseBody);
+        result = r;
+        dispatch_semaphore_signal(sema);
+    }];
+
+    // Block until the client calls completion (after all retries, if any).
+    dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+    return result;
 }
 
 - (NRMAHarvestResponse*) sendConnect
