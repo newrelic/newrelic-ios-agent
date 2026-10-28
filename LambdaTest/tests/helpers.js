@@ -36,6 +36,12 @@ const HOME = sel.text("Hello, World");
 /** The strip at the bottom of the screen kept clear of taps and drags. */
 const HOME_INDICATOR = 40;
 
+/**
+ * How far inside the viewport an element has to be to count as in it. A row scrolled up against a table's top edge is reported
+ * clipped to it, and a tap at the middle of that sliver does not select the row.
+ */
+const EDGE = 10;
+
 async function rectOf(el) {
   return driver.getElementRect(el.elementId);
 }
@@ -94,9 +100,11 @@ async function viewport() {
 async function contentMark(view) {
   if (!view.scroller) return null;
   const texts = await view.scroller.$$("-ios class chain:**/XCUIElementTypeStaticText");
-  for (const text of texts.slice(0, 25)) {
+  // Off-screen rows and recycled cells come first in a long table's tree.
+  for (const text of texts.slice(0, 60)) {
     const rect = await rectOf(text);
-    if (rect.y >= view.y && rect.y + rect.height <= view.y + view.height) {
+    // Clear of the edges: a table parks its recycled cells at the viewport's top edge, where they never move.
+    if (rect.y >= view.y + EDGE && rect.y + rect.height <= view.y + view.height - EDGE) {
       return `${text.elementId}|${await text.getAttribute("label")}|${rect.y}`;
     }
   }
@@ -129,6 +137,9 @@ async function drag(direction, area, checkEnd = false) {
   return before === null || before !== (await contentMark(view));
 }
 
+/** WebdriverIO puts "stale element reference" in the error's name, not its message. */
+const isStale = (err) => /stale element/i.test(`${err.name} ${err.message}`);
+
 /** Taps the status bar, which scrolls the screen's scroll view back to its top. */
 async function scrollToTop() {
   const { width } = await driver.getWindowRect();
@@ -143,12 +154,6 @@ async function isAtRest(el) {
   const after = await rectOf(el);
   return before.x === after.x && before.y === after.y;
 }
-
-/**
- * How far inside the viewport an element has to be. A row scrolled up against a table's top edge is reported
- * clipped to it, and a tap at the middle of that sliver does not select the row.
- */
-const EDGE = 10;
 
 /** Where an element sits relative to the viewport: "above", "below", "inside", or "missing". */
 async function placement(selector, view) {
@@ -215,7 +220,7 @@ async function scrollTo(selector, maxDrags = 25) {
       await drag(where === "below" ? "down" : "up", view);
     } catch (err) {
       // A table that reloads (a new page of rows, say) replaces the cell that was just looked up.
-      if (!/stale element/i.test(err.message)) throw err;
+      if (!isStale(err)) throw err;
       lastY = null;
     }
   }
@@ -237,7 +242,7 @@ async function scrollAndTap(selector) {
       await el.click();
       return el;
     } catch (err) {
-      if (attempt === 3 || !/stale element/i.test(err.message)) throw err;
+      if (attempt === 3 || !isStale(err)) throw err;
     }
   }
 }
@@ -340,6 +345,7 @@ async function flushHarvest(seconds = 5) {
 
 module.exports = {
   sel,
+  isStale,
   HOME,
   viewport,
   drag,

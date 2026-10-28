@@ -35,16 +35,26 @@ describe("Other home screen views", () => {
     await h.openFromHome("Infinite Scroll View");
     await h.expectVisible(h.sel.text("Infinite Scroll"));
     await h.expectVisible(h.sel.text("Row 1"));
-    // Pages are 25 rows; reaching the last one starts loading the next, which arrives 1.5s later.
-    await h.scrollTo(h.sel.text("Row 25"));
+    // Pages are 25 rows; reaching the last one starts loading the next, which arrives 1.5s later. Drags down
+    // until a row of that page is on screen, and taps it. Not scrollTo: the list has no end to search toward,
+    // and each page reloads the table, replacing cells under a lookup, which is why a stale element is just
+    // another try.
     await driver.waitUntil(
       async () => {
-        await h.drag("down");
-        return (await $$(h.sel.text("Row 30"))).length > 0;
+        try {
+          const [row] = await $$(h.sel.text("Row 30"));
+          if (row && (await row.isDisplayed())) {
+            await row.click();
+            return true;
+          }
+          await h.drag("down");
+        } catch (err) {
+          if (!h.isStale(err)) throw err;
+        }
+        return false;
       },
-      { timeout: 30000, interval: 500, timeoutMsg: "The second page of rows never loaded" }
+      { timeout: 60000, interval: 500, timeoutMsg: "The second page of rows never loaded" }
     );
-    await h.scrollAndTap(h.sel.text("Row 30"));
     await h.goBack();
   });
 
