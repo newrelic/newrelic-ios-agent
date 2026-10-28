@@ -1,0 +1,356 @@
+# Builds a SIGNED HomeSearch IPA from `mobile-views-2`, uploads it to LambdaTest's real-device app
+# store, and runs the HomeSearch suite on real hardware.
+#
+# Real-device sibling of uploadApp-homesearch.yml (unsigned simulator .app, virtual devices), and the
+# HomeSearch counterpart of uploadApp-expensestracker-realdevice.yml, whose archive/export/signing steps
+# this follows.
+#
+# Signing. The app's own bundle id is com.newrelic.HomeSearch. If an App Store or ad-hoc profile for it
+# exists as secrets.HOMESEARCH_PROVISION_PROFILE_BASE64, that is used. Otherwise this falls back to the
+# NRTestApp profile already in secrets.APP_STORE_PROVISION_PROFILE_BASE64 and archives the app under
+# NRTestApp's bundle id (com.newrelic.NRApp.bitcode), so no new Apple portal work is needed to get a run.
+# Either way the bundle id, team and export method are read off the profile, and only the app target is
+# retargeted: the project routes PRODUCT_BUNDLE_IDENTIFIER and PROVISIONING_PROFILE_SPECIFIER through
+# HS_BUNDLE_ID / HS_PROVISIONING_PROFILE, because setting those two directly on the command line would hit
+# Agent_iOS as well and fail the archive. LambdaTest then resigns the IPA with its own profile, as it does for
+# NRTestApp. See LambdaTest/REAL_DEVICE_TESTING.md.
+#
+# The app token comes from secrets.HOMESEARCH_APP_TOKEN exactly as in the virtual workflow.
+#
+# Manual dispatch only, like the NRTestApp real-device pipeline: a signed archive is slow and real-device
+# minutes are limited.
+
+name: Upload iOS HomeSearch IPA (mobile-views-2) to LambdaTest real devices
+
+permissions:
+  contents: read
+  actions: read
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  build-ipa:
+    name: Archive + export signed IPA
+    runs-on: macos-15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # pin@v4
+        with:
+          ref: mobile-views-2
+          submodules: true
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "26.2"
+
+      - name: Install Apple distribution certificate and provisioning profile
+        id: signing
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          HOMESEARCH_PROVISION_PROFILE_BASE64: ${{ secrets.HOMESEARCH_PROVISION_PROFILE_BASE64 }}
+          APP_STORE_PROVISION_PROFILE_BASE64: ${{ secrets.APP_STORE_PROVISION_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          PP_PATH=$RUNNER_TEMP/HomeSearch.mobileprovision
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+          if [ -n "$HOMESEARCH_PROVISION_PROFILE_BASE64" ]; then
+            echo "Using secrets.HOMESEARCH_PROVISION_PROFILE_BASE64"
+            PROFILE_BASE64="$HOMESEARCH_PROVISION_PROFILE_BASE64"
+          else
+            echo "::notice::HOMESEARCH_PROVISION_PROFILE_BASE64 is not set; signing with the NRTestApp profile (APP_STORE_PROVISION_PROFILE_BASE64) under its bundle id"
+            PROFILE_BASE64="$APP_STORE_PROVISION_PROFILE_BASE64"
+          fi
+
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+          echo -n "$PROFILE_BASE64" | base64 --decode -o $PP_PATH
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
+          PROFILE_PLIST_PATH=$RUNNER_TEMP/profile.plist
+          security cms -D -i "$PP_PATH" > "$PROFILE_PLIST_PATH"
+          PROFILE_NAME=$(/usr/libexec/PlistBuddy -c "Print :Name" "$PROFILE_PLIST_PATH" 2>/dev/null || true)
+          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print :UUID" "$PROFILE_PLIST_PATH" 2>/dev/null || true)
+          TEAM_ID=$(/usr/libexec/PlistBuddy -c "Print :TeamIdentifier:0" "$PROFILE_PLIST_PATH" 2>/dev/null || true)
+          APP_IDENTIFIER=$(/usr/libexec/PlistBuddy -c "Print :Entitlements:application-identifier" "$PROFILE_PLIST_PATH" 2>/dev/null || true)
+          if [ -z "$PROFILE_NAME" ] || [ -z "$PROFILE_UUID" ] || [ -z "$TEAM_ID" ] || [ -z "$APP_IDENTIFIER" ]; then
+            echo "::error::Could not read Name/UUID/TeamIdentifier/application-identifier from the provisioning profile."
+            exit 1
+          fi
+
+          # application-identifier is "<TEAM>.<bundle id>"; a wildcard profile ("<TEAM>.*") signs the app's own id.
+          BUNDLE_ID="${APP_IDENTIFIER#*.}"
+          if [ "$BUNDLE_ID" = "*" ] || [ -z "$BUNDLE_ID" ]; then
+            BUNDLE_ID="com.newrelic.HomeSearch"
+          fi
+          if ! printf '%s' "$BUNDLE_ID" | grep -Eq '^[A-Za-z0-9.-]{1,155}$'; then
+            echo "::error::Profile's bundle id ($BUNDLE_ID) is not a concrete bundle identifier."
+            exit 1
+          fi
+
+          PLATFORM=$(/usr/libexec/PlistBuddy -c "Print :Platform:0" "$PROFILE_PLIST_PATH" 2>/dev/null || true)
+          if [ -n "$PLATFORM" ] && [ "$PLATFORM" != "iOS" ]; then
+            echo "::error::The provisioning profile is for $PLATFORM, not iOS."
+            exit 1
+          fi
+
+          # The export method and certificate have to match the kind of profile. A device list means ad hoc,
+          # unless get-task-allow is on, which makes it a development profile; all devices means enterprise.
+          SIGNING_CERT="Apple Distribution"
+          GET_TASK_ALLOW=$(/usr/libexec/PlistBuddy -c "Print :Entitlements:get-task-allow" "$PROFILE_PLIST_PATH" 2>/dev/null || echo false)
+          if /usr/libexec/PlistBuddy -c "Print :ProvisionedDevices" "$PROFILE_PLIST_PATH" >/dev/null 2>&1; then
+            if [ "$GET_TASK_ALLOW" = "true" ]; then
+              EXPORT_METHOD=debugging
+              SIGNING_CERT="Apple Development"
+            else
+              EXPORT_METHOD=release-testing
+            fi
+          elif /usr/libexec/PlistBuddy -c "Print :ProvisionsAllDevices" "$PROFILE_PLIST_PATH" >/dev/null 2>&1; then
+            EXPORT_METHOD=enterprise
+          else
+            EXPORT_METHOD=app-store-connect
+          fi
+
+          {
+            echo "PROFILE_NAME=$PROFILE_NAME"
+            echo "PROFILE_UUID=$PROFILE_UUID"
+            echo "TEAM_ID=$TEAM_ID"
+            echo "BUNDLE_ID=$BUNDLE_ID"
+            echo "EXPORT_METHOD=$EXPORT_METHOD"
+            echo "SIGNING_CERT=$SIGNING_CERT"
+          } >> $GITHUB_ENV
+
+          for PROFILE_DIR in \
+            "$HOME/Library/MobileDevice/Provisioning Profiles" \
+            "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"; do
+            mkdir -p "$PROFILE_DIR"
+            cp "$PP_PATH" "$PROFILE_DIR/$PROFILE_UUID.mobileprovision"
+          done
+
+          echo "Installed profile: $PROFILE_NAME ($PROFILE_UUID), team $TEAM_ID"
+          echo "Archiving as $BUNDLE_ID, exporting with method $EXPORT_METHOD ($SIGNING_CERT)"
+          security find-identity -v -p codesigning $KEYCHAIN_PATH
+
+      - name: Set plist secrets
+        env:
+          HOMESEARCH_APP_TOKEN: ${{ secrets.HOMESEARCH_APP_TOKEN }}
+          HOMESEARCH_MAIN_COLLECTOR_ADDRESS: ${{ secrets.HOMESEARCH_MAIN_COLLECTOR_ADDRESS }}
+          HOMESEARCH_CRASH_COLLECTOR_ADDRESS: ${{ secrets.HOMESEARCH_CRASH_COLLECTOR_ADDRESS }}
+        run: |
+          if [ -z "$HOMESEARCH_APP_TOKEN" ]; then
+            echo "::error::secrets.HOMESEARCH_APP_TOKEN is not set; the app would start in capture mode and report nothing"
+            exit 1
+          fi
+          PLIST_PATH="./Test Harness/HomeSearch/HomeSearch/NRAPI-Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :NRAPIKey ${HOMESEARCH_APP_TOKEN}" "$PLIST_PATH"
+          if [ -n "$HOMESEARCH_MAIN_COLLECTOR_ADDRESS" ]; then
+            /usr/libexec/PlistBuddy -c "Set :collectorAddress ${HOMESEARCH_MAIN_COLLECTOR_ADDRESS}" "$PLIST_PATH"
+          fi
+          if [ -n "$HOMESEARCH_CRASH_COLLECTOR_ADDRESS" ]; then
+            /usr/libexec/PlistBuddy -c "Set :crashCollectorAddress ${HOMESEARCH_CRASH_COLLECTOR_ADDRESS}" "$PLIST_PATH"
+          fi
+
+      - name: Write ExportOptions.plist
+        run: |
+          cat > $RUNNER_TEMP/ExportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>${EXPORT_METHOD}</string>
+            <key>teamID</key><string>${TEAM_ID}</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>signingCertificate</key><string>${SIGNING_CERT}</string>
+            <key>stripSwiftSymbols</key><true/>
+            <key>destination</key><string>export</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>${BUNDLE_ID}</key>
+              <string>${PROFILE_NAME}</string>
+            </dict>
+          </dict>
+          </plist>
+          EOF
+          cat $RUNNER_TEMP/ExportOptions.plist
+
+      - name: Archive HomeSearch
+        run: |
+          # The project ships with signing off (it is normally a simulator app), so turn it on here. Everything
+          # on this command line applies to Agent_iOS too, which is why the bundle id and profile go through
+          # the app-only HS_* settings rather than PRODUCT_BUNDLE_IDENTIFIER / PROVISIONING_PROFILE_SPECIFIER.
+          set +e   # so a non-zero pipeline doesn't abort before PIPESTATUS is read
+          xcodebuild archive \
+            -project "Test Harness/HomeSearch/HomeSearch.xcodeproj" \
+            -scheme HomeSearch \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath $RUNNER_TEMP/HomeSearch.xcarchive \
+            CODE_SIGNING_ALLOWED=YES \
+            CODE_SIGNING_REQUIRED=YES \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            CODE_SIGN_IDENTITY="$SIGNING_CERT" \
+            HS_BUNDLE_ID="$BUNDLE_ID" \
+            HS_PROVISIONING_PROFILE="$PROFILE_NAME" \
+            2>&1 | tee $RUNNER_TEMP/archive.log | xcpretty
+          STATUS=${PIPESTATUS[0]}
+          set -e
+          if [ "$STATUS" -ne 0 ]; then
+            echo "::error::Archive failed (xcodebuild exit $STATUS) -- raw output below."
+            echo "::group::error lines"
+            grep -E "error:" $RUNNER_TEMP/archive.log || echo "(no 'error:' lines in log)"
+            echo "::endgroup::"
+            echo "::group::full xcodebuild output"
+            cat $RUNNER_TEMP/archive.log
+            echo "::endgroup::"
+            exit "$STATUS"
+          fi
+
+      - name: Export IPA
+        run: |
+          set +e
+          xcodebuild -exportArchive \
+            -archivePath $RUNNER_TEMP/HomeSearch.xcarchive \
+            -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist \
+            -exportPath $RUNNER_TEMP/export \
+            2>&1 | tee $RUNNER_TEMP/export.log | xcpretty
+          STATUS=${PIPESTATUS[0]}
+          set -e
+          if [ "$STATUS" -ne 0 ]; then
+            echo "::error::Export failed (xcodebuild exit $STATUS) -- raw output below."
+            echo "::group::error lines"
+            grep -E "error:" $RUNNER_TEMP/export.log || echo "(no 'error:' lines in log)"
+            echo "::endgroup::"
+            echo "::group::full xcodebuild output"
+            cat $RUNNER_TEMP/export.log
+            echo "::endgroup::"
+            exit "$STATUS"
+          fi
+          ls -la $RUNNER_TEMP/export/
+
+      - name: Stage IPA for upload
+        run: |
+          IPA_PATH="$(ls $RUNNER_TEMP/export/*.ipa | head -1)"
+          if [ -z "$IPA_PATH" ]; then
+            echo "::error::export produced no .ipa"
+            exit 1
+          fi
+          mkdir -p "$GITHUB_WORKSPACE/builds"
+          cp "$IPA_PATH" "$GITHUB_WORKSPACE/builds/homesearch-ios.ipa"
+          ls -la "$GITHUB_WORKSPACE/builds/homesearch-ios.ipa"
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: homesearch-ios-ipa
+          path: builds/homesearch-ios.ipa
+          compression-level: 0
+          retention-days: 1
+
+      - name: Cleanup keychain
+        if: always()
+        run: security delete-keychain $RUNNER_TEMP/app-signing.keychain-db || true
+
+  upload-ipa:
+    name: Upload signed IPA to LT real devices
+    needs: [build-ipa]
+    runs-on: ubuntu-latest
+    outputs:
+      # Handed to wdio-homesearch-realdevice.yml as a workflow_call input (not an artifact; see that file).
+      app_id: ${{ steps.app-id.outputs.app_id }}
+    env:
+      LT_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
+      LT_ACCESSKEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
+      LT_APP_IPA: homesearch-ios.ipa
+      LT_APP_ID_PREFIX: com.newrelic.HomeSearch
+      LT_APP_ID_FILE: last-app-id-homesearch-realdevice
+    steps:
+      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # pin@v4
+        with:
+          ref: mobile-views-2
+
+      - name: Setup environment
+        uses: ./.github/actions/env-setup
+
+      - name: Download IPA artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: homesearch-ios-ipa
+          path: ${{ github.workspace }}/builds
+
+      - name: Run upload script
+        run: node LambdaTest/uploadAppToLambdaTest-realDevice.mjs
+
+      # Two shapes are legal, as in the NRTestApp real-device workflow: the `lt://APP...` URL LambdaTest
+      # returns (what a real-device session needs), or the dotted custom_id the script falls back to.
+      - name: Capture uploaded app ID
+        id: app-id
+        run: |
+          APP_ID_FILE="LambdaTest/$LT_APP_ID_FILE"
+          if [ ! -f "$APP_ID_FILE" ]; then
+            echo "::error::upload script did not write $APP_ID_FILE"
+            exit 1
+          fi
+          APP_ID="$(tr -d '\n' < "$APP_ID_FILE")"
+          if ! printf '%s' "$APP_ID" | grep -Eq '^(lt://[A-Za-z0-9]{1,190}|com\.newrelic\.HomeSearch\.realdevice\.[A-Za-z0-9._:-]{1,160})$'; then
+            echo "::error::uploaded app ID is not in the expected format"
+            exit 1
+          fi
+          echo "app_id=$APP_ID" >> "$GITHUB_OUTPUT"
+          echo "Uploaded HomeSearch IPA to LambdaTest real devices as \`$APP_ID\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Log success
+        if: ${{ success() }}
+        run: echo "[ RUNNER ] - successfully uploaded the HomeSearch IPA to LambdaTest real devices"
+
+      - name: Log failure
+        if: ${{ failure() || cancelled() }}
+        run: echo "[ RUNNER ] - failed to upload the HomeSearch IPA to LambdaTest real devices"
+
+      - name: Notify failure
+        if: ${{ failure() || cancelled() }}
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # pin@v2
+        with:
+          webhook-type: incoming-webhook
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            blocks:
+              - type: "header"
+                text:
+                  type: "plain_text"
+                  text: ":crying-sunglasses-cowboy: LambdaTest Real Device Upload Failed (HomeSearch)"
+              - type: "divider"
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "Something went wrong while building or uploading the signed mobile-views-2 HomeSearch IPA. If the error mentions signing or resigning, see LambdaTest/REAL_DEVICE_TESTING.md."
+                accessory:
+                  type: "button"
+                  text:
+                    type: "plain_text"
+                    text: "View logs"
+                    emoji: true
+                  value: "view_logs"
+                  url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  action_id: "button-action"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  run-tests:
+    name: Run HomeSearch suite on real device
+    needs: [upload-ipa]
+    uses: ./.github/workflows/wdio-homesearch-realdevice.yml
+    secrets: inherit
+    with:
+      app_id: ${{ needs.upload-ipa.outputs.app_id }}

@@ -10,9 +10,10 @@ Runs the same 9 iOS specs as the virtual-device suite, on real hardware.
 | Upload endpoint    | `/app/upload/virtualDevice`             | `/app/upload/realDevice`                               |
 | Upload script      | `uploadAppToLambdaTest.mjs`             | `uploadAppToLambdaTest-realDevice.mjs`                 |
 | App-id file        | `last-app-id`                           | `last-app-id-realdevice`                               |
+| App id form        | upload `custom_id`                      | **`lt://APP...` URL** returned by the upload           |
 | WDIO config        | `wdio-config-ios.js`                    | `wdio-config-ios-realdevice.js`                        |
 | Concurrency        | `maxInstances: 10`                      | `maxInstances: 1`                                      |
-| Default target     | iPhone 17 / iOS 26.0                    | iPhone 15 / iOS 18                                     |
+| Default target     | iPhone 17 / iOS 26.0                    | iPhone 17 / iOS 26.0                                   |
 | npm script         | `test:wdio-ios`                         | `test:wdio-ios-realdevice`                             |
 | Build workflow     | `uploadApp-mobile-views-2.yml` (daily)  | `uploadApp-mobile-views-2-realdevice.yml` (dispatch)   |
 | Test workflow      | `wdio-mobile-views-2.yml`               | `wdio-mobile-views-2-realdevice.yml`                   |
@@ -53,7 +54,7 @@ node LambdaTest/uploadAppToLambdaTest-realDevice.mjs
 npm run test:wdio-ios-realdevice
 
 # Optional: retarget hardware
-LT_DEVICE_NAME="iPhone 14" LT_PLATFORM_VERSION=17 npm run test:wdio-ios-realdevice
+LT_DEVICE_NAME="iPhone 16" LT_PLATFORM_VERSION=18 npm run test:wdio-ios-realdevice
 ```
 
 `last-app-id-realdevice` is not tracked in git, so `LT_APP_ID` (or a local upload)
@@ -123,9 +124,124 @@ thing to swap for their device-log REST API.
 `LT_BUNDLE_ID` overrides the bundle id used for relaunch. By default it is read
 off the live session, because LambdaTest's resigning can rewrite it.
 
+## If session creation times out (UND_ERR_HEADERS_TIMEOUT)
+
+Symptom: `POST /wd/hub/session` fails after ~180s (matching
+`connectionRetryTimeout`) with `UND_ERR_HEADERS_TIMEOUT`, before any test runs.
+That error is client-side: LambdaTest never answered. It means device/app
+allocation never completed, so look upstream of the specs.
+
+**Most likely cause: the wrong `app` identifier.** The real-device cloud
+identifies builds by the `lt://APP...` URL returned from the upload, not by the
+`custom_id` the virtual pipeline uses. Given an id it cannot resolve, LambdaTest
+hangs rather than returning an error. `uploadAppToLambdaTest-realDevice.mjs` now
+prefers the returned URL and writes it to `last-app-id-realdevice`; it logs the
+full upload response so you can see what came back.
+
+Note the app-id allowlist in both workflows accepts two shapes only --
+`lt://APP...` or a dotted `custom_id`. The virtual pipeline's pattern had no `/`
+and silently rejected every `lt://` id, falling back instead of failing loudly.
+
+**Next most likely: the device is not in the real fleet.** The real-device
+catalogue is not the same as the virtual one, so a device/OS pair that works
+virtually may not exist as hardware. Check with:
+
+```sh
+LT_USERNAME=... LT_ACCESSKEY=... node LambdaTest/scripts/diagnose-realdevice.mjs
+```
+
+It reports whether the requested device/OS is offered as a real device, whether
+LambdaTest created a session at all (and that session's own error, which beats
+guessing), and whether the uploaded app resolves. It only reads.
+
+**Also possible: signing.** The documented real-device recipe exports
+`method: ad-hoc`; this pipeline uses `app-store-connect` and relies on
+LambdaTest resigning. If the diagnostic shows the app failing to prepare, switch
+to the ad-hoc fallback described above.
+
+Raising `connectionRetryTimeout` is only a fix if the session was genuinely
+progressing and just needed longer. Confirm that from the session list first --
+otherwise a longer timeout just fails more slowly.
+
 ## Expect some spec churn on the first run
 
 The 9 specs were written against a simulator. Real hardware differs in keyboard
 behaviour, animation timing, and scroll physics, so some may need waits or
 selectors adjusted. Nothing was pre-emptively changed — better to see which
 actually fail than to guess.
+
+## ExpensesTracker on real devices
+
+`Test Harness/ExpensesTracker` has the same pair of pipelines, built the same way:
+
+|                 | Virtual device                        | Real device                                             |
+| --------------- | ------------------------------------- | ------------------------------------------------------- |
+| Build workflow  | `uploadApp-expensestracker.yml` (daily) | `uploadApp-expensestracker-realdevice.yml` (dispatch) |
+| Test workflow   | `wdio-expensestracker.yml`            | `wdio-expensestracker-realdevice.yml`                   |
+| WDIO config     | `wdio-config-expensestracker.js`      | `wdio-config-expensestracker-realdevice.js`             |
+| npm script      | `test:wdio-expensestracker`           | `test:wdio-expensestracker-realdevice`                  |
+| App-id file     | `last-app-id` (shared upload script)  | `last-app-id-expensestracker-realdevice`                |
+| Results file    | `test-results.json`                   | `test-results-expensestracker-realdevice.json`          |
+| Specs           | `tests-expensestracker/*.test.js`     | the same 8, sequentially, plus crash-upload checks      |
+
+Both upload scripts are shared with NRTestApp; the ExpensesTracker workflows point them at their own files
+with `LT_APP_ZIP` / `LT_APP_IPA`, `LT_APP_ID_PREFIX` and `LT_APP_ID_FILE`. Unset, the scripts behave
+exactly as before.
+
+**Crash uploads.** On real devices (`ET_VERIFY_CRASH_UPLOAD=1`, set by the real-device config) the two crash
+specs check the device syslog the way `tests-realdevice/crash-reporting.test.js` does: agent console lines
+are visible before the crash, and after the relaunch the uploader logged an attempt and a 200 response
+(`tests-expensestracker/crash-upload.js`). ExpensesTracker meets the same two preconditions NRTestApp does —
+Debug log level, and no `AutoCollectLogs`. It enables `LogReporting`, which keeps the console target.
+
+**Signing.** ExpensesTracker's bundle id is `com.newrelic.ExpensesTracker`, which has no profile among the
+repo secrets. The workflow takes, in order:
+
+1. `EXPENSESTRACKER_PROVISION_PROFILE_BASE64`, if set — an App Store, ad hoc or enterprise profile for
+   `com.newrelic.ExpensesTracker` (or a wildcard ad hoc one). This is the clean option.
+2. Otherwise NRTestApp's `APP_STORE_PROVISION_PROFILE_BASE64`, archiving the app under
+   `com.newrelic.NRApp.bitcode`. It works with no Apple portal changes; the cost is that, on the device,
+   ExpensesTracker installs with NRTestApp's bundle id. Its data still reports under its own app token.
+
+The bundle id, team and export method (`app-store-connect`, `release-testing`, `enterprise`, or
+`debugging` for a development profile) are all read off whichever profile is used. Only the app target is
+retargeted: the project routes `PRODUCT_BUNDLE_IDENTIFIER` and `PROVISIONING_PROFILE_SPECIFIER` through
+`ET_BUNDLE_ID` / `ET_PROVISIONING_PROFILE`, because passing those two directly to `xcodebuild` would apply
+them to `Agent_iOS` as well and fail the archive. The bundle id actually used is passed on to the test
+workflow so the crash specs relaunch the right app; the specs prefer the id the live session reports, in
+case LambdaTest's resigning changes it again. The certificate is still `BUILD_CERTIFICATE_BASE64`.
+
+To re-run only the tests against an IPA already uploaded, dispatch **WDIO: automate ExpensesTracker iOS
+tests on real device (mobile-views-2)** with the `lt://APP...` URL from the upload run's summary, and the
+bundle id if it was the NRTestApp fallback.
+
+## HomeSearch on real devices
+
+`Test Harness/HomeSearch` follows the ExpensesTracker layout exactly:
+
+|                 | Virtual device                       | Real device                                          |
+| --------------- | ------------------------------------ | ---------------------------------------------------- |
+| Build workflow  | `uploadApp-homesearch.yml` (daily)   | `uploadApp-homesearch-realdevice.yml` (dispatch)     |
+| Test workflow   | `wdio-homesearch.yml`                | `wdio-homesearch-realdevice.yml`                     |
+| WDIO config     | `wdio-config-homesearch.js`          | `wdio-config-homesearch-realdevice.js`               |
+| npm script      | `test:wdio-homesearch`               | `test:wdio-homesearch-realdevice`                    |
+| App-id file     | `last-app-id` (shared upload script) | `last-app-id-homesearch-realdevice`                  |
+| Results file    | `test-results.json`                  | `test-results-homesearch-realdevice.json`            |
+| Specs           | `tests-homesearch/*.test.js`         | the same 5, sequentially                             |
+
+Secrets: `HOMESEARCH_APP_TOKEN` (required), `HOMESEARCH_MAIN_COLLECTOR_ADDRESS` and
+`HOMESEARCH_CRASH_COLLECTOR_ADDRESS` (optional), and `HOMESEARCH_PROVISION_PROFILE_BASE64` (optional, for
+`com.newrelic.HomeSearch`). Signing falls back to NRTestApp's profile the same way, through `HS_BUNDLE_ID` /
+`HS_PROVISIONING_PROFILE`.
+
+HomeSearch has no crash trigger, so there are no crash-upload checks. Instead both LambdaTest configs set
+`HS_EXPECT_MODE=live`, and `05-profile` asserts Debug Info reports the agent in live mode: proof that the
+token the build wrote into `NRAPI-Info.plist` actually took. The app's listings come from its in-process stub
+server on `127.0.0.1:8082`, so the suite needs no network beyond the collector.
+
+To run it against a local simulator (Appium with the xcuitest driver):
+
+```sh
+npx appium &
+HS_LOCAL_APP="/path/to/Release-iphonesimulator/HomeSearch.app" npm run test:wdio-homesearch
+```

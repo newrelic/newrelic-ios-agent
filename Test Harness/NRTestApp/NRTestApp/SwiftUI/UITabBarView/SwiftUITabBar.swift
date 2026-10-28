@@ -73,6 +73,7 @@ struct SwiftUITabBar: View {
                 .tag(6)
         }
         .tint(Color(red: 1.0, green: 0.27, blue: 0.23)) // Custom red/coral tint
+
         .onAppear {
             configureCustomTabBarAppearance()
         }
@@ -184,6 +185,7 @@ struct NotificationsPlaceholderView: View {
                 }
             }
         }
+
     }
 }
 

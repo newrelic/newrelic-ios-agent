@@ -24,13 +24,15 @@ struct SlidersView: View {
             Text("Discrete Slider")
                 .font(.headline)
             Slider(value: $discreteValue, in: 1...5, step: 1)
-            Text("Value: \(Int(discreteValue))")
+            // Rounded, not truncated: at the top of its track the slider reports 4.999, not 5.
+            Text("Value: \(Int(discreteValue.rounded()))")
 
             Spacer()
         }
         .padding()
         .navigationBarTitle("Sliders", displayMode: .inline)
         .NRTrackView(name: "SlidersView")
+
     }
 }
 
