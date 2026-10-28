@@ -38,5 +38,6 @@
 #import "NRMASessionFlowRenderer.h"
 #import "NRMASessionFlowMonitor.h"
 #import "NRMAViewContext.h"
+#import "NRMAWebViewPresence.h"
 #import "NRMAViewTiming.h"
 #endif /* APrivateHeader_h */

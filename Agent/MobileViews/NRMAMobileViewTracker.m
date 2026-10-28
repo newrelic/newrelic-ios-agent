@@ -19,6 +19,7 @@
 #import "NRMAViewContext.h"
 #import "NRMAViewTiming.h"
 #import "NRMAFlags.h"
+#import "NRMAWebViewPresence.h"
 #import <NewRelic/NewRelic-Swift.h>
 
 // Associated-object keys (pointer address acts as unique key)
@@ -34,6 +35,10 @@ static const char kNRReferrerKey;
 // the emitted event cannot report a different viewName than the appearance it describes -- and so
 // the mirror walk in the resolver runs once per screen instead of once per appearance.
 static const char kNRSwiftUIScreenKey;
+// Whether this visit is a top-level screen, decided at viewDidAppear: and held for the visit (and
+// across a background flush and re-open) so the event and the context bookkeeping agree. See
+// NRMA_IsTopLevelController.
+static const char kNRTopLevelKey;
 
 // Attribute names, the event type, and the loadTime-vs-loadTimeUnavailable rule all live in
 // MobileViewEmitter.swift now. This file reports facts; it does not build events.
@@ -87,7 +92,12 @@ NSArray<NSString *> * const NRMAExcludedViewClassPrefixes(void) {
             // confirmation became a visit of its own and the referrer of the screen after it.
             @"UIAlertController",
             @"NotifyingMulticolumnSplitViewController",
-            @"_UIContextMenu"
+            @"_UIContextMenu",
+            // Screen Time's controllers, which WebKit attaches inside every WKWebView. Reported, each
+            // web screen was followed by an STWebpageController "visit" with no parent of its own,
+            // which then became the previousView of whatever screen the user went to next.
+            @"STWebpageController",
+            @"STWebRemoteViewController"
         ];
     });
     return prefixes;
@@ -238,6 +248,7 @@ static NSArray<UIViewController *> *NRMA_OnScreenControllers(void) {
 // Storage for original IMPs — set once during swizzle setup
 static void (*orig_viewDidLoad)(id, SEL);
 static void (*orig_viewDidAppear)(id, SEL, BOOL);
+static void (*orig_viewWillDisappear)(id, SEL, BOOL);
 static void (*orig_viewDidDisappear)(id, SEL, BOOL);
 
 #pragma mark - Helpers
@@ -363,6 +374,73 @@ NS_INLINE NRMASwiftUIScreen * _Nullable NRMA_SwiftUIScreenForController(UIViewCo
     return resolved;
 }
 
+/**
+ * The name a controller reports under, or nil when it is not a screen the agent reports: a system
+ * container or host, or a SwiftUI host the resolver does not vouch for. `swiftUIScreen` receives the
+ * resolved SwiftUI screen, if any.
+ *
+ * The one definition of "tracked", shared by viewDidAppear: and by the top-level walk, so a parent is
+ * judged by the same rule its own appearance was.
+ */
+static NSString * _Nullable NRMA_TrackedViewName(UIViewController *vc,
+                                                 NRMASwiftUIScreen * _Nullable * _Nullable swiftUIScreen) {
+    // A SwiftUI host reports as a screen only when the resolver vouches for it. Resolved first
+    // because it is what lifts the class-prefix exclusion that would otherwise drop every
+    // hosting controller.
+    NRMASwiftUIScreen *screen = NRMA_SwiftUIScreenForController(vc);
+    if (swiftUIScreen) { *swiftUIScreen = screen; }
+
+    if (!screen && NRMA_ShouldSkipClass([vc class])) return nil;
+
+    NSString *viewName = screen ? screen.viewName : NRMA_ViewNameForController(vc);
+    if (NRMA_ShouldSkipViewName(viewName)) return nil;
+    return viewName;
+}
+
+/*
+ * A container whose children are the screens: navigation, tab bar, split view and page controllers,
+ * subclasses included, and SwiftUI's private equivalents (the same rule the SwiftUI resolver uses to
+ * decide a host was navigated to).
+ *
+ * Subclasses count because nearly every app subclasses UINavigationController or UITabBarController;
+ * judged by class name instead, every screen in such an app would read as embedded in its own
+ * navigation stack.
+ */
+static BOOL NRMA_IsNavigationContainer(UIViewController *vc) {
+    return [vc isKindOfClass:[UISplitViewController class]]
+        || [vc isKindOfClass:[UIPageViewController class]]
+        || [NRMASwiftUIScreenResolver isNavigationContainer:vc];
+}
+
+/*
+ * YES when `vc` is a screen in its own right; NO when it is embedded in another screen the agent
+ * reports.
+ *
+ * Walks up the parent chain to the first ancestor that decides it. A navigation container (see above)
+ * means `vc` fills one of its screen slots: top level. A tracked controller means `vc` was embedded
+ * with addChild(_:), directly or through a customer's own container: not top level. Anything else --
+ * a SwiftUI host that is not a screen, a system host the agent excludes -- is transparent and the walk
+ * continues. No parent at all, as for a modal root, is top level.
+ *
+ * Stopping at the *first* navigation container rather than requiring every ancestor to be one is
+ * deliberate. Apps commonly put their whole navigation inside a root container of their own: a
+ * drawer, a custom chrome, or (ExpensesTracker's Home) a screen that embeds a UITabBarController. The
+ * stricter rule would mark every screen in such an app as embedded and empty its navigation flow.
+ */
+BOOL NRMA_IsTopLevelController(UIViewController *vc) {
+    for (UIViewController *ancestor = vc.parentViewController; ancestor != nil;
+         ancestor = ancestor.parentViewController) {
+        if (NRMA_IsNavigationContainer(ancestor)) return YES;
+        if (NRMA_TrackedViewName(ancestor, NULL) != nil) return NO;
+    }
+    return YES;
+}
+
+NS_INLINE BOOL NRMA_VisitIsTopLevel(UIViewController *vc) {
+    NSNumber *topLevel = objc_getAssociatedObject(vc, &kNRTopLevelKey);
+    return topLevel ? topLevel.boolValue : YES;
+}
+
 #pragma mark - Swizzled method implementations
 
 static void NRMA_ViewDidLoad(UIViewController *self, SEL _cmd) {
@@ -393,15 +471,9 @@ static void NRMA_ViewDidLoad(UIViewController *self, SEL _cmd) {
 static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) {
     if (orig_viewDidAppear) orig_viewDidAppear(self, _cmd, animated);
 
-    // A SwiftUI host reports as a screen only when the resolver vouches for it. Resolved first
-    // because it is what lifts the class-prefix exclusion that would otherwise drop every
-    // hosting controller.
-    NRMASwiftUIScreen *swiftUIScreen = NRMA_SwiftUIScreenForController(self);
-
-    if (!swiftUIScreen && NRMA_ShouldSkipClass([self class])) return;
-
-    NSString *viewName = swiftUIScreen ? swiftUIScreen.viewName : NRMA_ViewNameForController(self);
-    if (NRMA_ShouldSkipViewName(viewName)) return;
+    NRMASwiftUIScreen *swiftUIScreen = nil;
+    NSString *viewName = NRMA_TrackedViewName(self, &swiftUIScreen);
+    if (viewName == nil) return;
 
     // Appeared, but not where the user can see it. No visit is opened, so its viewDidDisappear: finds
     // nothing to close, and it never sits on the visible stack to be "uncovered" later.
@@ -431,6 +503,22 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
     // since that load, up to kNRMAViewTimingMaxMilliseconds. Past that the start is not vouched for.
     NSNumber *loadTimestamp = objc_getAssociatedObject(self, &kNRLoadTimestampKey);
 
+    // An embedded child still gets its own visit and event, but stays out of the shared context: it
+    // never becomes the current view, so it is never the previousView of the next screen, breadcrumbs
+    // and timing marks recorded while it is visible belong to the screen embedding it, and it cannot
+    // be "uncovered" when something above it goes away. Its event carries no referrer.
+    BOOL topLevel = NRMA_IsTopLevelController(self);
+    objc_setAssociatedObject(self, &kNRTopLevelKey, @(topLevel), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+
+    // Enumerable from outside a lifecycle callback, which is what backgrounding needs: it must
+    // close out every visit that is still open, and no per-controller callback fires for it.
+    NRMA_MarkOnScreen(self);
+
+    // Web content seen during the visit, sampled now and until the visit ends.
+    [NRMAWebViewPresence beginVisitForController:self];
+
+    if (!topLevel) return;
+
     // Make this view current in the shared context so it becomes the referrer for the next view
     // and for breadcrumbs recorded while it is visible.
     // The toolkit that observed this view. A resolved SwiftUI host reports "SwiftUI" so its
@@ -457,10 +545,6 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
     objc_setAssociatedObject(self, &kNRReferrerKey,
                              referrer.count > 0 ? referrer : nil,
                              OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-
-    // Enumerable from outside a lifecycle callback, which is what backgrounding needs: it must
-    // close out every visit that is still open, and no per-controller callback fires for it.
-    NRMA_MarkOnScreen(self);
 
     // The out-of-the-box baseline, so MobileViewTiming dashboards populate with no customer
     // instrumentation and customer marks such as timeToFullDisplay share its origin. Derived from
@@ -522,13 +606,23 @@ static void NRMA_CloseVisit(UIViewController *vc, NRMASwiftUIScreen *swiftUIScre
         fields.loadTimeUnavailable = kNRLoadUnavailableNoConstructionObserved;
     }
 
+    BOOL topLevel = NRMA_VisitIsTopLevel(vc);
+    NRMAWebViewPresence *web = [NRMAWebViewPresence endVisitForController:vc];
+    [fields setContainsWebView:web.containsWebView
+           isFullScreenWebView:web.isFullScreenWebView
+                isTopLevelView:topLevel];
+
     [NRMAMobileViewRecorder record:fields];
 
-    // Drop this instance from the visible-view stack. For UIKit this is bookkeeping rather than a
-    // fix: viewDidAppear: fires on pop, so the uncovered screen reports a real appearance moments
-    // from now, which supersedes anything synthesized here. Keeping the stack accurate matters
-    // because a UIKit controller can be what a *SwiftUI* view was covering.
-    [[NRMAViewContext sharedInstance] viewDidDisappearNamed:viewName instanceId:instanceId departure:departure];
+    // An embedded child never joined the visible-view stack (see viewDidAppear:), so it has nothing
+    // to leave.
+    if (topLevel) {
+        // Drop this instance from the visible-view stack. For UIKit this is bookkeeping rather than
+        // a fix: viewDidAppear: fires on pop, so the uncovered screen reports a real appearance
+        // moments from now, which supersedes anything synthesized here. Keeping the stack accurate
+        // matters because a UIKit controller can be what a *SwiftUI* view was covering.
+        [[NRMAViewContext sharedInstance] viewDidDisappearNamed:viewName instanceId:instanceId departure:departure];
+    }
 
     // Clear per-instance timing so stale data isn't carried forward. Clearing the appear timestamp
     // is also what marks the visit closed, so a later viewDidDisappear: for a controller already
@@ -569,6 +663,12 @@ static void NRMA_ReopenVisit(UIViewController *vc, NRMASwiftUIScreen *swiftUIScr
     objc_setAssociatedObject(vc, &kNRAppearTimestampKey, @(startTime), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     objc_setAssociatedObject(vc, &kNRViewInstanceIdKey,  uuid,        OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
+    [NRMAWebViewPresence beginVisitForController:vc];
+
+    // Top-level-ness is kept from the appearance: nothing about the controller's place moved while
+    // the app was away.
+    if (!NRMA_VisitIsTopLevel(vc)) { return; }
+
     [[NRMAViewContext sharedInstance] transitionToView:viewName
                                            instanceId:uuid
                                            appearTime:startTime
@@ -596,6 +696,19 @@ static NRMAViewDeparture NRMA_DepartureOf(UIViewController *vc) {
     return NRMAViewDepartureCovered;
 }
 
+/*
+ * The disappear sample for containsWebView / isFullScreenWebView. Taken here, not in
+ * viewDidDisappear:, because by then a popped or covered controller's view has normally left the
+ * window and there is nothing left to measure. A no-op for a controller with no visit in progress.
+ *
+ * An interactive pop the user abandons fires this without a viewDidDisappear:; the sample then just
+ * counts as one more look during a visit that goes on.
+ */
+static void NRMA_ViewWillDisappear(UIViewController *self, SEL _cmd, BOOL animated) {
+    [NRMAWebViewPresence sampleController:self];
+    if (orig_viewWillDisappear) orig_viewWillDisappear(self, _cmd, animated);
+}
+
 static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animated) {
     if (orig_viewDidDisappear) orig_viewDidDisappear(self, _cmd, animated);
 
@@ -613,8 +726,9 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
     NRMA_CloseVisit(self, swiftUIScreen, [NRMAViewContext monotonicNow], NRMA_DepartureOf(self));
 
     // The referrer outlives a background-flushed visit (see NRMA_CloseVisit), but not a real
-    // disappearance -- the next appearance of this controller gets its own.
+    // disappearance -- the next appearance of this controller gets its own, and is placed afresh.
     objc_setAssociatedObject(self, &kNRReferrerKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(self, &kNRTopLevelKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 #endif
 
@@ -648,10 +762,19 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
                                      @selector(viewDidAppear:),
                                      (IMP)NRMA_ViewDidAppear);
 
+        orig_viewWillDisappear = (void(*)(id,SEL,BOOL))
+            NRMAReplaceInstanceMethod(vcClass,
+                                     @selector(viewWillDisappear:),
+                                     (IMP)NRMA_ViewWillDisappear);
+
         orig_viewDidDisappear = (void(*)(id,SEL,BOOL))
             NRMAReplaceInstanceMethod(vcClass,
                                      @selector(viewDidDisappear:),
                                      (IMP)NRMA_ViewDidDisappear);
+
+        // Web views added or removed during a visit. Mobile Views' own observer, installed whether or
+        // not NRFeatureFlag_WebViewInstrumentation is on, and it turns none of that on.
+        [NRMAWebViewPresence installWindowObservers];
         NRLOG_AGENT_INFO(@"[MobileViews] UIViewController lifecycle tracking started.");
 #endif
 

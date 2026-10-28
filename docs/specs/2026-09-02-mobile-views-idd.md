@@ -157,6 +157,9 @@ Event namespace `Mobile General`; event name `MobileView`.
 | uiFramework | string | ✅ | Enum: `UIKit`, `SwiftUI`, `AndroidActivity`, `AndroidFragment`, `Compose`, `ReactNative`, `Flutter`, `Capacitor`, `Cordova`, `MAUI`, `Manual`<br>Manual: a manual view whose caller passed Manual or no uiFramework. Values are added by IDD amendment and never renamed or removed; queries treat unknown values as other.<br>`WebView` will be added when supported post GA. |
 | `previousView` | string | when known | Referrer: the screen navigated from |
 | `previousViewInstanceId` | string | when known | Referrer identity, for exact-visit joins |
+| `containsWebView` | boolean | ✅ automatic producers; omitted on Manual | A visible in-process web view was in the screen's view tree, including embedded children, at any point in the visit. §5.3.7 |
+| `isFullScreenWebView` | boolean | ✅ automatic producers; omitted on Manual | One web view covered ≥ 80% of the screen's content area at any point in the visit. Implies `containsWebView`. §5.3.7 |
+| `isTopLevelView` | boolean | ✅ automatic producers; omitted on Manual | A screen in its own right; `false` for a controller embedded in another tracked screen. §5.3.7 |
 
 #### 5.3.1 Additional Future Attributes for post-GA:
 
@@ -225,6 +228,44 @@ This matters for three reasons that are all cross-platform:
 
 Consequently the `timeToInitialDisplay` baseline is exempt from the per-view cap. `timeToInitialDisplay` is
 **reserved** — capabilities 7 and 8 must reject it.
+
+#### 5.3.7 Screen composition: containsWebView, isFullScreenWebView, isTopLevelView
+
+Why: web content loads after the screen appears, so a web screen's `loadTime` / `timeVisible` read
+differently from a native one's; and embedded child views are visits of their own that do not belong in
+flow and funnel queries.
+
+- **Always present on automatic events.** `WHERE containsWebView IS false` must match every native
+  screen. Manual (`setCurrentView:`) events omit all three: the agent never sees those screens.
+- **Any point in the visit.** The event is written when the visit ends, so a web view added or grown
+  after appear still counts. iOS samples at appear, `viewWillDisappear:`, close (if still on screen),
+  and whenever a `WKWebView` moves into or out of a window. There is no sampling on layout: a web view
+  that grows and shrinks back between those moments is reported at the size it had at them.
+- **What counts as a web view.** In-process `WKWebView` (and subclasses) that is visible: not hidden or
+  transparent, itself or any ancestor, and not clipped away entirely. Out-of-process web content
+  (`SFSafariViewController`, `ASWebAuthenticationSession`) and the deprecated `UIWebView` do not count.
+- **Content area.** The controller's visible bounds minus its safe area, which removes the status bar,
+  home indicator and any navigation, tab or tool bar laid over it. That is what makes the 80% threshold
+  hold on iPhone, iPad and in landscape. The threshold applies to *one* web view; several small ones
+  never add up. A child controller's own event is measured against the child's content area.
+- **isTopLevelView.** Walk up the parent chain to the first ancestor that decides it: a navigation
+  container (navigation, tab bar, split view, page view controller, subclasses included, and SwiftUI's
+  private equivalents) → `true`; a tracked screen (embedding via `addChild`, directly or through a
+  customer's own container) → `false`; no parent (a modal root) → `true`. Untracked hosts are skipped.
+  Stopping at the *first* container rather than requiring every ancestor to be one keeps apps whose
+  navigation lives inside a custom root container (a drawer, a screen embedding a `UITabBarController`)
+  from reporting every screen as embedded.
+- **Embedded visits stay out of the flow (UIKit).** A non-top-level controller still reports its visit,
+  but never becomes the current view: it is never another screen's `previousView`, carries none of its
+  own, and records no `timeToInitialDisplay` baseline; breadcrumbs and `markViewTiming:` while it is up
+  belong to the screen that embeds it. The `.NRMobileView` modifier reports `isTopLevelView` but does
+  not yet apply this rule, because it opens its visit before its hosting controller is known.
+- **Independent of `NRFeatureFlag_WebViewInstrumentation`.** Detection uses its own `WKWebView`
+  window-move observer and enables no web view network instrumentation.
+- **Hybrid frameworks.** Capacitor and Cordova render in a `WKWebView` filling their bridge controller,
+  so the natively observed screen reports `true` / `true`. React Native and Flutter render natively and
+  report `false` / `false`. Routes the wrapper names through `setCurrentView:` are manual events and omit
+  the attributes.
 
 ### 5.4 `loadTime` semantics and accuracy tiers
 

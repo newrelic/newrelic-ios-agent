@@ -112,7 +112,7 @@ internal enum SwiftUIScreenResolver {
         return isNavigationContainer(parent)
     }
 
-    private static func isNavigationContainer(_ controller: UIViewController) -> Bool {
+    internal static func isNavigationContainer(_ controller: UIViewController) -> Bool {
         if controller is UINavigationController || controller is UITabBarController { return true }
 
         // SwiftUI's own containers are private classes that do not inherit from the UIKit ones:
@@ -755,6 +755,12 @@ public class NRMASwiftUIScreenResolver: NSObject {
     /// without paying an Objective-C → Swift call per screen.
     public static func isSwiftUIHost(_ controller: UIViewController) -> Bool {
         SwiftUIScreenResolver.isSwiftUIHost(controller)
+    }
+
+    /// A navigation or tab container, UIKit's or SwiftUI's private equivalent. Shared with the
+    /// tracker's isTopLevelView walk so the two agree on what a container is.
+    public static func isNavigationContainer(_ controller: UIViewController) -> Bool {
+        SwiftUIScreenResolver.isNavigationContainer(controller)
     }
 
     /// The screen this host represents, or `nil` when it must not be reported -- a decorative

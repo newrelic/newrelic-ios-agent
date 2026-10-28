@@ -25,6 +25,9 @@ internal enum NRViewAttribute {
     static let loadTime               = "loadTime"
     static let loadTimeUnavailable    = "loadTimeUnavailable"
     static let timeVisible            = "timeVisible"
+    static let containsWebView        = "containsWebView"
+    static let isFullScreenWebView    = "isFullScreenWebView"
+    static let isTopLevelView         = "isTopLevelView"
     static let timingName             = "timingName"
     static let timingValue            = "timingValue"
 
@@ -33,6 +36,7 @@ internal enum NRViewAttribute {
     static let reservedForMobileView: Set<String> = [
         viewClass, viewName, viewInstanceId, previousView, previousViewInstanceId,
         uiFramework, loadTime, loadTimeUnavailable, timeVisible,
+        containsWebView, isFullScreenWebView, isTopLevelView,
     ]
 }
 
@@ -80,6 +84,21 @@ internal enum NRViewReferrer {
     case explicit(name: String?, instanceId: String?)
 }
 
+/// What the agent saw of one visit's view tree.
+///
+/// Every automatic producer supplies one, so its three attributes are always present on those events
+/// and `WHERE containsWebView IS false` matches every native screen rather than missing the ones that
+/// left the attribute out. A manual view has none: the agent never sees the customer's screen, and
+/// writing `false` would claim it had looked.
+internal struct NRViewComposition {
+    /// A visible web view was in the tree at some point during the visit.
+    var containsWebView: Bool
+    /// One web view covered the content area (NRMAWebViewPresence) at some point during the visit.
+    var isFullScreenWebView: Bool
+    /// A screen in its own right rather than a child embedded in another tracked screen.
+    var isTopLevelView: Bool
+}
+
 // MARK: - Records
 
 /// One MobileView event, as facts rather than as a dictionary.
@@ -107,6 +126,8 @@ internal struct MobileViewRecord {
     var load: NRViewLoadOutcome?
     /// Milliseconds the view was on screen.
     var timeVisibleMs: Double?
+    /// `nil` omits containsWebView, isFullScreenWebView and isTopLevelView.
+    var composition: NRViewComposition?
     var custom: [String: Any]?
 
     /// Reserved keys are dropped from customer-supplied attributes, so the schema is stable no
@@ -172,6 +193,15 @@ internal struct MobileViewRecord {
         // itself rather than from a decision the agent baked in.
         if let timeVisibleMs = timeVisibleMs {
             attrs[NRViewAttribute.timeVisible] = NSNumber(value: timeVisibleMs)
+        }
+
+        if let composition = composition {
+            // A full-screen web view is a web view: enforced here rather than trusted from each
+            // producer, so no event can say the screen is a web page that contains no web view.
+            let isFullScreen = composition.isFullScreenWebView
+            attrs[NRViewAttribute.containsWebView] = NSNumber(value: composition.containsWebView || isFullScreen)
+            attrs[NRViewAttribute.isFullScreenWebView] = NSNumber(value: isFullScreen)
+            attrs[NRViewAttribute.isTopLevelView] = NSNumber(value: composition.isTopLevelView)
         }
 
         return attrs
@@ -284,6 +314,16 @@ public class NRMAMobileViewFields: NSObject {
     public var previousView: String?
     public var previousViewInstanceId: String?
     public var custom: [String: Any]?
+    internal private(set) var composition: NRViewComposition?
+
+    /// What the producer saw of the view tree. Unset omits all three attributes, which is right only
+    /// for a producer that never sees the screen.
+    @objc(setContainsWebView:isFullScreenWebView:isTopLevelView:)
+    public func setComposition(containsWebView: Bool, isFullScreenWebView: Bool, isTopLevelView: Bool) {
+        composition = NRViewComposition(containsWebView: containsWebView,
+                                        isFullScreenWebView: isFullScreenWebView,
+                                        isTopLevelView: isTopLevelView)
+    }
 
     internal func record() -> MobileViewRecord? {
         guard !viewName.isEmpty else { return nil }
@@ -318,6 +358,7 @@ public class NRMAMobileViewFields: NSObject {
             referrer: referrer,
             load: load,
             timeVisibleMs: timeVisibleMs?.doubleValue,
+            composition: composition,
             custom: custom)
     }
 }

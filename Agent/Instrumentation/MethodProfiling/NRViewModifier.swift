@@ -126,6 +126,11 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
     @State private var referrerName: String?
     @State private var referrerInstanceId: String?
 
+#if !os(watchOS)
+    /// The hosting controller, once found, for the visit's web view and top-level attributes.
+    @State private var host = NRMobileViewHostRef()
+#endif
+
     // Approximation of "load time": modifier creation → onAppear.
     //
     // The approximation breaks for any view SwiftUI *constructs* long before it *shows*. TabView is
@@ -173,6 +178,11 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
 #if !os(watchOS)
         guard let host = host as? UIViewController else { return }
         SwiftUIScreenResolver.claimForModifier(host)
+
+        // Placed now, while the host is in the hierarchy -- by onDisappear a popped host has no parent.
+        self.host.controller = host
+        self.host.isTopLevel = NRMA_IsTopLevelController(host)
+        if appearTime != nil { beginWebViewTracking() }
 
         guard declaredName == nil else { return }
         if hostName == nil {
@@ -258,6 +268,8 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
         // measured from different instants. No-ops on its own when no construction start was
         // vouched for, which is the same condition that withheld loadTime.
         NRMAViewTiming.sharedInstance().recordInitialDisplayForCurrentView()
+
+        beginWebViewTracking()
     }
 
     /// Ends the current visit and records its one event.
@@ -294,6 +306,7 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
                                              instanceId: referrerInstanceId),
                          load: loadOutcome,
                          timeVisibleMs: timeVisibleMs,
+                         composition: endWebViewTracking(),
                          custom: customAttributes).emit()
 
         // Tell the shared context this instance is gone, so whatever this view was covering
@@ -327,6 +340,7 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
         appearTime  = startTime
         instanceId  = id
         loadOutcome = .unavailable(.notRebuilt)
+        beginWebViewTracking()
 
         NRMAViewContext.sharedInstance().transition(
             toView: viewName,
@@ -335,7 +349,49 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
             loadStartTime: nil,
             platform: "SwiftUI")
     }
+
+    /// Starts sampling the host's view tree for this visit, once both the visit and the host exist --
+    /// whichever arrives second calls this to effect.
+    ///
+    /// Samples the whole host, so two `.NRMobileView` modifiers in one host see the same web views. A
+    /// representable wrapping a WKWebView is found the same way a UIKit subview is.
+    private func beginWebViewTracking() {
+#if !os(watchOS)
+        guard let controller = host.controller, !host.tracksWebViews else { return }
+        host.tracksWebViews = true
+        NRMAWebViewPresence.beginVisit(for: controller)
+#endif
+    }
+
+    /// What this visit showed. A host never found reports a native, top-level screen: nothing else was
+    /// observed, and a modifier is most often on a navigated-to screen.
+    ///
+    /// isTopLevelView is reported but does not keep an embedded host out of the shared view context, as
+    /// it does for UIKit: a modifier with a declared name opens its visit at onAppear, usually before
+    /// its host has been found.
+    private func endWebViewTracking() -> NRViewComposition {
+#if os(watchOS)
+        return NRViewComposition(containsWebView: false, isFullScreenWebView: false, isTopLevelView: true)
+#else
+        let presence = host.tracksWebViews ? NRMAWebViewPresence.endVisit(for: host.controller) : nil
+        host.tracksWebViews = false
+        return NRViewComposition(containsWebView: presence?.containsWebView ?? false,
+                                 isFullScreenWebView: presence?.isFullScreenWebView ?? false,
+                                 isTopLevelView: host.isTopLevel)
+#endif
+    }
 }
+
+#if !os(watchOS)
+/// The modifier's hosting controller, held weakly so the agent never keeps a screen alive. A class so
+/// the reference survives SwiftUI re-creating the modifier value.
+private final class NRMobileViewHostRef {
+    weak var controller: UIViewController?
+    var isTopLevel = true
+    /// This visit attached a web view accumulator to `controller`, so it is detached exactly once.
+    var tracksWebViews = false
+}
+#endif
 
 /// Delivers the hosting controller a MobileView modifier's content is shown in.
 ///

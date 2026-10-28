@@ -23,6 +23,14 @@ NS_ASSUME_NONNULL_BEGIN
  *   viewInstanceId  (NSString) — UUID unique to this single visible lifetime of the view
  *   loadTime        (NSNumber/double, milliseconds) — viewDidLoad → viewDidAppear
  *   timeVisible     (NSNumber/double, milliseconds) — viewDidAppear → viewDidDisappear
+ *   containsWebView     (BOOL) — a visible WKWebView was in the view tree at some point in the visit
+ *   isFullScreenWebView (BOOL) — one such web view covered ≥ 80% of the content area (see
+ *                                NRMAWebViewPresence.h); implies containsWebView
+ *   isTopLevelView      (BOOL) — a screen in its own right, not a child embedded in another tracked
+ *                                screen (see NRMA_IsTopLevelController)
+ *
+ * The three booleans are always written, so `WHERE containsWebView IS false` matches every native
+ * screen. They are not written on manual (setCurrentView:) events: the agent never sees those screens.
  *
  * ─── Customising viewName ────────────────────────────────────────────────────
  *
@@ -50,7 +58,7 @@ NS_ASSUME_NONNULL_BEGIN
  * Optionally implement nrMobileViewAttributes to attach extra attributes to every
  * MobileView event emitted for the view. Reserved keys (viewClass, viewName,
  * viewInstanceId, previousView, previousViewInstanceId, uiFramework, loadTime,
- * loadTimeUnavailable, timeVisible) are dropped.
+ * loadTimeUnavailable, timeVisible, containsWebView, isFullScreenWebView, isTopLevelView) are dropped.
  *
  * Objective-C:
  *   - (nullable NSDictionary<NSString *, id> *)nrMobileViewAttributes {
@@ -70,6 +78,13 @@ FOUNDATION_EXPORT BOOL NRMA_ShouldSkipViewName(NSString *viewName);
 #if !TARGET_OS_WATCH
 /// YES when some part of the controller's view is visible in its window. See NRMAMobileViewTracker.m.
 FOUNDATION_EXPORT BOOL NRMA_IsControllerViewOnScreen(UIViewController *vc);
+
+/// YES when the controller is a screen in its own right; NO when it is embedded in another screen the
+/// agent reports. The isTopLevelView attribute. See NRMAMobileViewTracker.m.
+///
+/// An embedded controller's visit is reported, but never becomes the shared context's current view:
+/// it is never the previousView of another screen, and its own event carries no previousView.
+FOUNDATION_EXPORT BOOL NRMA_IsTopLevelController(UIViewController *vc);
 #endif
 
 + (instancetype)sharedInstance;

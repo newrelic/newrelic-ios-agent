@@ -21,6 +21,18 @@
 @interface NRMAMobileViewTrackerTests : XCTestCase
 @end
 
+// A customer's own container: a plain UIViewController that embeds children.
+@interface NRMATestDashboardContainer : UIViewController
+@end
+@implementation NRMATestDashboardContainer
+@end
+
+// A customer's navigation controller subclass -- the norm in real apps, not the exception.
+@interface NRMATestAppNavigationController : UINavigationController
+@end
+@implementation NRMATestAppNavigationController
+@end
+
 @implementation NRMAMobileViewTrackerTests {
     UIWindow *_window;
     UIViewController *_root;
@@ -100,8 +112,113 @@
     XCTAssertTrue(NRMA_ShouldSkipViewName(@"UIAlertController"));
 }
 
+// WebKit attaches Screen Time's controllers inside every WKWebView. Observed in NRTestApp: each visit
+// to its web view screen was followed by an "STWebpageController" visit that became the next screen's
+// previousView.
+- (void)testScreenTimeWebControllersAreNotScreens {
+    XCTAssertTrue(NRMA_ShouldSkipViewName(@"STWebpageController"));
+    XCTAssertTrue(NRMA_ShouldSkipViewName(@"STWebRemoteViewController"));
+}
+
 - (void)testAnAppControllerIsStillAScreen {
     XCTAssertFalse(NRMA_ShouldSkipViewName(@"CheckoutViewController"));
+}
+
+#pragma mark - isTopLevelView
+
+- (UIViewController *)embed:(UIViewController *)child in:(UIViewController *)parent {
+    [parent addChildViewController:child];
+    [parent.view addSubview:child.view];
+    [child didMoveToParentViewController:parent];
+    return child;
+}
+
+- (void)testAPushedScreenIsTopLevel {
+    UIViewController *root = [[UIViewController alloc] init];
+    UIViewController *pushed = [[UIViewController alloc] init];
+    UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:root];
+    [nav pushViewController:pushed animated:NO];
+
+    XCTAssertTrue(NRMA_IsTopLevelController(root));
+    XCTAssertTrue(NRMA_IsTopLevelController(pushed));
+}
+
+- (void)testATabRootIsTopLevel {
+    UIViewController *first = [[UIViewController alloc] init];
+    UIViewController *inStack = [[UIViewController alloc] init];
+    UITabBarController *tabs = [[UITabBarController alloc] init];
+    tabs.viewControllers = @[first, [[UINavigationController alloc] initWithRootViewController:inStack]];
+
+    XCTAssertTrue(NRMA_IsTopLevelController(first));
+    XCTAssertTrue(NRMA_IsTopLevelController(inStack));
+}
+
+- (void)testASplitViewColumnIsTopLevel {
+    UIViewController *primary = [[UIViewController alloc] init];
+    UIViewController *secondary = [[UIViewController alloc] init];
+    UISplitViewController *split = [[UISplitViewController alloc] init];
+    split.viewControllers = @[primary, secondary];
+
+    XCTAssertTrue(NRMA_IsTopLevelController(primary));
+    XCTAssertTrue(NRMA_IsTopLevelController(secondary));
+}
+
+// A presented controller has no parent; a presented navigation stack's root has only the stack.
+- (void)testAModalRootIsTopLevel {
+    XCTAssertTrue(NRMA_IsTopLevelController([[UIViewController alloc] init]));
+
+    UIViewController *root = [[UIViewController alloc] init];
+    (void)[[UINavigationController alloc] initWithRootViewController:root];
+    XCTAssertTrue(NRMA_IsTopLevelController(root));
+}
+
+- (void)testAPageIsTopLevel {
+    UIViewController *page = [[UIViewController alloc] init];
+    UIPageViewController *pager = [[UIPageViewController alloc]
+        initWithTransitionStyle:UIPageViewControllerTransitionStyleScroll
+          navigationOrientation:UIPageViewControllerNavigationOrientationHorizontal
+                        options:nil];
+    [pager setViewControllers:@[page] direction:UIPageViewControllerNavigationDirectionForward
+                     animated:NO completion:nil];
+
+    XCTAssertTrue(NRMA_IsTopLevelController(page));
+}
+
+- (void)testAChildEmbeddedWithAddChildIsNotTopLevel {
+    UIViewController *card = [self embed:[[UIViewController alloc] init] in:_root];
+    XCTAssertFalse(NRMA_IsTopLevelController(card));
+}
+
+- (void)testAChildOfACustomersContainerIsNotTopLevel {
+    NRMATestDashboardContainer *container = [[NRMATestDashboardContainer alloc] init];
+    UIViewController *card = [self embed:[[UIViewController alloc] init] in:container];
+    UIViewController *nested = [self embed:[[UIViewController alloc] init] in:card];
+
+    XCTAssertTrue(NRMA_IsTopLevelController(container));
+    XCTAssertFalse(NRMA_IsTopLevelController(card));
+    XCTAssertFalse(NRMA_IsTopLevelController(nested));
+}
+
+- (void)testAScreenInACustomersNavigationSubclassIsTopLevel {
+    UIViewController *root = [[UIViewController alloc] init];
+    (void)[[NRMATestAppNavigationController alloc] initWithRootViewController:root];
+    XCTAssertTrue(NRMA_IsTopLevelController(root));
+}
+
+// ExpensesTracker's Home: a screen that embeds a UITabBarController and a side-menu drawer. The tabs
+// are screens -- they sit in a tab container's slots -- while the drawer is part of Home.
+- (void)testATabInsideAScreensEmbeddedTabBarIsTopLevelButItsDrawerIsNot {
+    NRMATestDashboardContainer *home = [[NRMATestDashboardContainer alloc] init];
+    (void)[[NRMATestAppNavigationController alloc] initWithRootViewController:home];
+    UIViewController *dashboard = [[UIViewController alloc] init];
+    UITabBarController *tabs = [[UITabBarController alloc] init];
+    tabs.viewControllers = @[dashboard];
+    [self embed:tabs in:home];
+    UIViewController *sideMenu = [self embed:[[UIViewController alloc] init] in:home];
+
+    XCTAssertTrue(NRMA_IsTopLevelController(home));
+    XCTAssertTrue(NRMA_IsTopLevelController(dashboard));
+    XCTAssertFalse(NRMA_IsTopLevelController(sideMenu));
 }
 
 @end
