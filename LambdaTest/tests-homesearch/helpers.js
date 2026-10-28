@@ -88,11 +88,17 @@ async function expectLabel(id, label, timeout = 10000) {
   return el;
 }
 
-/** Lists are lazy, so a row below the fold is not in the tree at all until it is scrolled to. */
+/**
+ * Lists are lazy, so a row off screen is not in the tree at all until it is scrolled to. A list keeps its
+ * scroll position when a pushed screen is popped, so the row can be above the fold as well as below it:
+ * search down first, then back up.
+ */
 async function scrollTo(element, maxSwipes = 6) {
   const el = await element;
-  for (let i = 0; i < maxSwipes && !(await el.isExisting()); i++) {
-    await driver.execute("mobile: scroll", { direction: "down" });
+  for (const direction of ["down", "up"]) {
+    for (let i = 0; i < maxSwipes && !(await el.isExisting()); i++) {
+      await driver.execute("mobile: scroll", { direction });
+    }
   }
   await el.waitForExist({ timeout: 5000 });
   if (!(await el.isDisplayed())) {

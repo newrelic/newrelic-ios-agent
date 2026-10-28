@@ -55,7 +55,9 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
             scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            // Stops above the keyboard, so the fields at the bottom of the page can still be scrolled to
+            // while one of them is being edited.
+            scrollView.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor),
 
             mainStack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
             mainStack.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor),

@@ -80,7 +80,8 @@ describe("HomeSearch: Search", () => {
 
   it("resets every filter", async () => {
     await openFilters();
-    await h.tapId("filters.reset");
+    // The last row of the Form, below the fold on a real iPhone 17.
+    await h.tap(await h.scrollTo(h.byId("filters.reset")));
     await expect(h.byId("filters.reset")).not.toBeEnabled();
     await h.tapId("filters.apply");
     await h.expectResultCount(h.TOTAL_LISTINGS);
