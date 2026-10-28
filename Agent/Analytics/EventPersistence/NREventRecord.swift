@@ -24,10 +24,6 @@ struct NREventRecord {
     /// The session this event originated in -- preserved verbatim through replay.
     let sessionId: String
     let realAgentId: UInt64
-    /// User-set attributes (via setAttribute/setUserId) captured at write time,
-    /// kept separate from the session's stableAttributes so replay can overlay
-    /// them onto whichever SessionManifest is found for `sessionId`.
-    let mutableAttributesSnapshot: [String: Any]
 
     init(eventUUID: String,
          eventType: String,
@@ -36,7 +32,6 @@ struct NREventRecord {
          attributes: [String: Any],
          sessionId: String,
          realAgentId: UInt64,
-         mutableAttributesSnapshot: [String: Any],
          schemaVersion: Int = NREventRecord.currentSchemaVersion) {
         self.schemaVersion = schemaVersion
         self.eventUUID = eventUUID
@@ -46,7 +41,6 @@ struct NREventRecord {
         self.attributes = attributes
         self.sessionId = sessionId
         self.realAgentId = realAgentId
-        self.mutableAttributesSnapshot = mutableAttributesSnapshot
     }
 
     /// Reconstructs a record from a decoded JSON dictionary. Returns nil only
@@ -68,7 +62,6 @@ struct NREventRecord {
         self.attributes = (dictionary["attributes"] as? [String: Any]) ?? [:]
         self.sessionId = sessionId
         self.realAgentId = (dictionary["realAgentId"] as? NSNumber)?.uint64Value ?? 0
-        self.mutableAttributesSnapshot = (dictionary["mutableAttributesSnapshot"] as? [String: Any]) ?? [:]
     }
 
     var dictionaryRepresentation: [String: Any] {
@@ -79,8 +72,7 @@ struct NREventRecord {
             "timestamp": timestamp,
             "attributes": attributes,
             "sessionId": sessionId,
-            "realAgentId": realAgentId,
-            "mutableAttributesSnapshot": mutableAttributesSnapshot
+            "realAgentId": realAgentId
         ]
         if let name {
             dict["name"] = name

@@ -39,8 +39,7 @@ final class NREventPersistenceControllerTests: XCTestCase {
                          timestampMs: 1_000,
                          attributes: ["name": "MyEvent", "foo": "bar"],
                          sessionId: "session-1",
-                         realAgentId: 7,
-                         mutableAttributesSnapshot: ["userId": "u1"])
+                         realAgentId: 7)
         eventStore.synchronize()
 
         let records = eventStore.fetchAll()
@@ -49,7 +48,6 @@ final class NREventPersistenceControllerTests: XCTestCase {
         XCTAssertEqual(records.first?.name, "MyEvent")
         XCTAssertEqual(records.first?.sessionId, "session-1")
         XCTAssertEqual(records.first?.realAgentId, 7)
-        XCTAssertEqual(records.first?.mutableAttributesSnapshot["userId"] as? String, "u1")
     }
 
     func testDiscardPersistedEventDeletesIt() {
@@ -93,8 +91,7 @@ final class NREventPersistenceControllerTests: XCTestCase {
                          timestampMs: 1_000,
                          attributes: [:],
                          sessionId: "session-1",
-                         realAgentId: 7,
-                         mutableAttributesSnapshot: [:])
+                         realAgentId: 7)
         eventStore.synchronize()
         XCTAssertTrue(eventStore.fetchAll().isEmpty)
     }
@@ -140,40 +137,25 @@ final class NREventPersistenceControllerTests: XCTestCase {
         XCTAssertTrue(sut.recoverPersistedEventsStagingForHarvest(currentSessionAttributes: [:]).isEmpty)
     }
 
-    func testRecoverOverlaysMutableSnapshotOnManifestStableAttributesMutableWins() {
+    func testRecoverUsesManifestStableAttributesWhenFound() {
         manifestStore.store(NRSessionManifest(sessionId: "session-1", realAgentId: 7, sessionStartMs: 0, lastUpdateMs: 0,
-                                               stableAttributes: ["appVersion": "1.0", "shared": "fromManifest"]))
+                                               stableAttributes: ["appVersion": "1.0"]))
         manifestStore.synchronize()
-        eventStore.store(makeRecord(uuid: "uuid-1", sessionId: "session-1",
-                                     mutableSnapshot: ["userId": "u1", "shared": "fromEvent"]))
+        eventStore.store(makeRecord(uuid: "uuid-1", sessionId: "session-1"))
         eventStore.synchronize()
 
         let payloads = sut.recoverPersistedEventsStagingForHarvest(currentSessionAttributes: [:])
         XCTAssertEqual(payloads.count, 1)
-        let payload = payloads[0]
-        XCTAssertEqual(payload["appVersion"] as? String, "1.0")
-        XCTAssertEqual(payload["userId"] as? String, "u1")
-        XCTAssertEqual(payload["shared"] as? String, "fromEvent", "the record's own mutable snapshot must win over the manifest's stable attribute on conflict")
+        XCTAssertEqual(payloads[0]["appVersion"] as? String, "1.0")
     }
 
-    func testRecoverFallsBackToRecordSnapshotWhenManifestMissing() {
-        eventStore.store(makeRecord(uuid: "uuid-1", sessionId: "no-manifest-session",
-                                     mutableSnapshot: ["userId": "u1"]))
-        eventStore.synchronize()
-
-        let payloads = sut.recoverPersistedEventsStagingForHarvest(currentSessionAttributes: ["shouldNotBeUsed": true])
-        XCTAssertEqual(payloads.count, 1)
-        XCTAssertEqual(payloads[0]["userId"] as? String, "u1")
-        XCTAssertNil(payloads[0]["shouldNotBeUsed"])
-    }
-
-    func testRecoverFallsBackToCurrentSessionAttributesWhenManifestAndSnapshotBothMissing() {
-        eventStore.store(makeRecord(uuid: "uuid-1", sessionId: "no-manifest-session", mutableSnapshot: [:]))
+    func testRecoverFallsBackToCurrentSessionAttributesWhenManifestMissing() {
+        eventStore.store(makeRecord(uuid: "uuid-1", sessionId: "no-manifest-session"))
         eventStore.synchronize()
 
         let payloads = sut.recoverPersistedEventsStagingForHarvest(currentSessionAttributes: ["currentUserId": "fallback-user"])
         XCTAssertEqual(payloads.count, 1)
-        XCTAssertEqual(payloads[0]["currentUserId"] as? String, "fallback-user", "a record with no manifest and no snapshot must never be dropped -- it falls back to current-session attributes")
+        XCTAssertEqual(payloads[0]["currentUserId"] as? String, "fallback-user", "a record with no manifest must never be dropped -- it falls back to current-session attributes")
     }
 
     func testRecoverPreservesOriginalTimestampAndSessionId() {
@@ -283,16 +265,6 @@ final class NREventPersistenceControllerTests: XCTestCase {
 
         NRMAFlags.disableFeatures(NRMAFeatureFlags.NRFeatureFlag_EventPersistence)
         XCTAssertTrue(sut.claimPersistedEvents(forCrashSessionId: "crashed-session").isEmpty)
-    }
-
-    func testClaimPersistedEventsForCrashSessionIdFallsBackToMutableSnapshotWhenManifestMissing() {
-        eventStore.store(makeRecord(uuid: "crash-uuid", sessionId: "no-manifest-session",
-                                     mutableSnapshot: ["userId": "u1"]))
-        eventStore.synchronize()
-
-        let payloads = sut.claimPersistedEvents(forCrashSessionId: "no-manifest-session")
-        XCTAssertEqual(payloads.count, 1)
-        XCTAssertEqual(payloads[0]["userId"] as? String, "u1")
     }
 
     // MARK: - excludingSessionId (crash/recovery partitioning)
@@ -450,7 +422,6 @@ final class NREventPersistenceControllerTests: XCTestCase {
     private func makeRecord(uuid: String,
                              sessionId: String,
                              timestampMs: Int64 = 1_000,
-                             mutableSnapshot: [String: Any] = [:],
                              eventAttributes: [String: Any] = [:]) -> NREventRecord {
         NREventRecord(eventUUID: uuid,
                        eventType: "Mobile",
@@ -458,7 +429,6 @@ final class NREventPersistenceControllerTests: XCTestCase {
                        timestamp: timestampMs,
                        attributes: eventAttributes,
                        sessionId: sessionId,
-                       realAgentId: 7,
-                       mutableAttributesSnapshot: mutableSnapshot)
+                       realAgentId: 7)
     }
 }

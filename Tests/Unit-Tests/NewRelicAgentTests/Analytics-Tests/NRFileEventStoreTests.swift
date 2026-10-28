@@ -32,8 +32,7 @@ final class NRFileEventStoreTests: XCTestCase {
                        timestamp: timestampMs,
                        attributes: ["foo": "bar"],
                        sessionId: "session-1",
-                       realAgentId: 42,
-                       mutableAttributesSnapshot: ["userId": "u1"])
+                       realAgentId: 42)
     }
 
     func testEmptyStoreHasNoPersistedRecords() {
@@ -51,7 +50,6 @@ final class NRFileEventStoreTests: XCTestCase {
         XCTAssertEqual(fetched.count, 1)
         XCTAssertEqual(fetched.first?.eventUUID, record.eventUUID)
         XCTAssertEqual(fetched.first?.sessionId, "session-1")
-        XCTAssertEqual(fetched.first?.mutableAttributesSnapshot["userId"] as? String, "u1")
     }
 
     func testDeleteRemovesRecord() {

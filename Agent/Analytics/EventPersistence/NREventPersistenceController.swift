@@ -16,8 +16,8 @@ import Foundation
 /// harvest is confirmed delivered), and the 7-day retention sweep.
 ///
 /// This class owns no reference to `NRMAEventManager`/`AnalyticsController`/
-/// `NRMASAM` -- callers hand it the values it needs (sessionId, realAgentId,
-/// attribute snapshots) so it stays decoupled and independently testable.
+/// `NRMASAM` -- callers hand it the values it needs (sessionId, realAgentId)
+/// so it stays decoupled and independently testable.
 /// ObjC-visible (`@objcMembers`) since it's called from `NRMAEventManager`,
 /// the legacy C++ bridge, `NewRelicAgentInternal`, `NRMAHarvester`, and
 /// `NRMACrashDataWriter`.
@@ -62,14 +62,13 @@ public class NREventPersistenceController: NSObject {
     /// timestamp/sessionElapsedTime/eventType/name alongside custom
     /// attributes) -- callers don't need to pick those apart. No-ops when
     /// the feature flag is disabled.
-    @objc(recordEventWithEventUUID:eventType:timestampMs:attributes:sessionId:realAgentId:mutableAttributesSnapshot:)
+    @objc(recordEventWithEventUUID:eventType:timestampMs:attributes:sessionId:realAgentId:)
     public func recordEvent(eventUUID: String,
                              eventType: String,
                              timestampMs: Int64,
                              attributes: [String: Any],
                              sessionId: String,
-                             realAgentId: UInt64,
-                             mutableAttributesSnapshot: [String: Any]) {
+                             realAgentId: UInt64) {
         guard NRMAFlags.shouldEnableEventPersistence() else { return }
         let record = NREventRecord(eventUUID: eventUUID,
                                     eventType: eventType,
@@ -77,8 +76,7 @@ public class NREventPersistenceController: NSObject {
                                     timestamp: timestampMs,
                                     attributes: attributes,
                                     sessionId: sessionId,
-                                    realAgentId: realAgentId,
-                                    mutableAttributesSnapshot: mutableAttributesSnapshot)
+                                    realAgentId: realAgentId)
         eventStore.store(record)
     }
 
@@ -126,14 +124,12 @@ public class NREventPersistenceController: NSObject {
     /// `NRMAHarvestController +addRecoveredAnalyticsEvents:`. Cheap no-op
     /// (just checks the shadow file) when there's nothing to recover.
     ///
-    /// Fallback ladder, matching the CDD:
-    ///   1. Manifest found -> stableAttributes overlaid by the record's own
-    ///      mutableAttributesSnapshot (mutable wins on conflict).
-    ///   2. Manifest missing, record has its own snapshot -> that snapshot alone.
-    ///   3. Both missing/corrupt -> `currentSessionAttributes` (graceful
+    /// Fallback ladder, matching Android's `reattributeRecoveredEvents`:
+    ///   1. Manifest found -> its stableAttributes.
+    ///   2. Manifest missing/corrupt -> `currentSessionAttributes` (graceful
     ///      degradation; the record is still delivered, never dropped).
     ///
-    /// `currentSessionAttributes` is only consulted in case 3.
+    /// `currentSessionAttributes` is only consulted in case 2.
     /// `excludingSessionId` skips that session's events, left for the crash path to claim instead.
     @discardableResult
     @objc(recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:excludingSessionId:)
@@ -183,17 +179,10 @@ public class NREventPersistenceController: NSObject {
     private func resolveAttributes(for record: NREventRecord, currentSessionAttributes: [String: Any]) -> [String: Any] {
         if let manifest = manifestStore.manifest(forSessionId: record.sessionId) {
             NRMASupportMetricHelper.enqueueEventPersistenceReattributedMetric()
-            var merged = manifest.stableAttributes
-            for (key, value) in record.mutableAttributesSnapshot {
-                merged[key] = value
-            }
-            return merged
+            return manifest.stableAttributes
         }
 
         NRMASupportMetricHelper.enqueueEventPersistenceManifestMissingMetric()
-        if !record.mutableAttributesSnapshot.isEmpty {
-            return record.mutableAttributesSnapshot
-        }
         return currentSessionAttributes
     }
 

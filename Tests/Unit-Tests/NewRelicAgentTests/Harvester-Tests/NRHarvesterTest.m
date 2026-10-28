@@ -1244,8 +1244,7 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
                                                           timestampMs:1000
                                                            attributes:@{}
                                                             sessionId:@"offline-persist-confirm-test-session"
-                                                          realAgentId:7
-                                            mutableAttributesSnapshot:@{}];
+                                                          realAgentId:7];
 
     BOOL (^containsSentinel)(void) = ^BOOL{
         for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {

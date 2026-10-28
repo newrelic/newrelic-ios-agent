@@ -258,12 +258,6 @@
     return [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
 }
 
-- (NSDictionary*) currentPublicAttributes {
-    @synchronized (attributeDict) {
-        return [attributeDict copy];
-    }
-}
-
 - (NSDictionary*) currentPrivateAttributes {
     @synchronized (privateAttributeDict) {
         return [privateAttributeDict copy];

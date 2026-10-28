@@ -13,7 +13,6 @@
 #import "NRMACustomEvent.h"
 #import "BlockAttributeValidator.h"
 #import "NRMAFlags.h"
-#import "NRMASAM.h"
 #import <NewRelic/NewRelic-Swift.h>
 
 @interface TestIntegratedEventManager : XCTestCase {
@@ -420,14 +419,10 @@
     [self waitForExpectations:@[[[XCTNSPredicateExpectation alloc] initWithPredicate:predicate object:nil]] timeout:5];
 }
 
-- (void)testAddEventWithPersistenceEnabledIsRecoverableWithItsAttributeSnapshot {
+- (void)testAddEventWithPersistenceEnabledIsRecoverable {
     [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
 
     NRMAEventManager *manager = [[NRMAEventManager alloc] init];
-
-    NRMASAM *sam = [[NRMASAM alloc] initWithAttributeValidator:agreeableAttributeValidator];
-    [sam setSessionAttribute:@"userId" value:@"test-user-123"];
-    manager.sessionAttributeManager = sam;
 
     NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:@"PersistenceWiringSentinel"
                                                                 timestamp:12345
@@ -445,8 +440,6 @@
         }
     }
     XCTAssertNotNil(found, @"the event persisted by addEvent: must be recoverable through the controller");
-    XCTAssertEqualObjects(found[@"userId"], @"test-user-123",
-                          @"the public attribute snapshot captured at write time must ride along with the recovered event");
 
     [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
 }

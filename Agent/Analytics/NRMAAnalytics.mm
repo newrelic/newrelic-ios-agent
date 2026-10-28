@@ -141,7 +141,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             _eventManager = [[NRMAEventManager alloc] init];
             _attributeValidator = [[NRMAAttributeValidator alloc] init];
             _sessionAttributeManager = [[NRMASAM alloc] initWithAttributeValidator:_attributeValidator];
-            _eventManager.sessionAttributeManager = _sessionAttributeManager;
 
             NSString* attributes = [self sessionAttributeJSONString];
             if (attributes != nil && [attributes length] > 0) {

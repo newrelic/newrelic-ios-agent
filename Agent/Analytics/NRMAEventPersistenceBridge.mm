@@ -7,10 +7,7 @@
 
 #import <Foundation/Foundation.h>
 #include "NRMAEventPersistenceBridge.hpp"
-#include <sstream>
-#include <iomanip>
 #import "NewRelicAgentInternal.h"
-#import "NRMAAnalytics+cppInterface.h"
 #import "NRMAExceptionMetaDataStore.h"
 #import "NRMAJSON.h"
 #import "Constants.h"
@@ -43,36 +40,6 @@ namespace NewRelic {
             NewRelicAgentInternal *agent = [NewRelicAgentInternal sharedInstance];
             NSString *sessionId = [agent currentSessionId] ?: @"";
 
-            // The legacy system has no public/private attribute split like
-            // NRMASAM -- getSessionAttributeJSON() returns everything that's
-            // been set (reserved NR-prefixed keys included), used here as the
-            // closest available "mutableAttributesSnapshot".
-            NSDictionary *mutableSnapshot = @{};
-            NRMAAnalytics *analytics = agent.analyticsController;
-            if (analytics != nil) {
-                try {
-                    std::shared_ptr<NewRelic::AnalyticsController> cppController = [analytics analyticsController];
-                    if (cppController) {
-                        auto attributeJson = cppController->getSessionAttributeJSON();
-                        if (attributeJson) {
-                            std::stringstream ss;
-                            ss << std::setprecision(15) << *attributeJson;
-                            NSString *snapshotJsonString = [NSString stringWithUTF8String:ss.str().c_str()];
-                            NSDictionary *parsedSnapshot = [NRMAJSON JSONObjectWithData:[snapshotJsonString dataUsingEncoding:NSUTF8StringEncoding]
-                                                                                  options:0
-                                                                                    error:nil];
-                            if ([parsedSnapshot isKindOfClass:[NSDictionary class]]) {
-                                mutableSnapshot = parsedSnapshot;
-                            }
-                        }
-                    }
-                } catch (std::exception& e) {
-                    NRLOG_AGENT_VERBOSE(@"NREventPersistence: failed to read session attributes: %s", e.what());
-                } catch (...) {
-                    NRLOG_AGENT_VERBOSE(@"NREventPersistence: failed to read session attributes.");
-                }
-            }
-
             NSString *eventUUIDString = [NSString stringWithUTF8String:eventUUID.c_str()];
             NSString *eventTypeString = [NSString stringWithUTF8String:eventType.c_str()];
 
@@ -81,8 +48,7 @@ namespace NewRelic {
                                                                   timestampMs:timestampMs
                                                                    attributes:attributes
                                                                     sessionId:sessionId
-                                                                  realAgentId:NRMA_getAgentId()
-                                                    mutableAttributesSnapshot:mutableSnapshot];
+                                                                  realAgentId:NRMA_getAgentId()];
         } @catch (NSException *exception) {
             NRLOG_AGENT_ERROR(@"NREventPersistence: failed to persist legacy-path event: %@", exception.reason);
         }

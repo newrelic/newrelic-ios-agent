@@ -133,14 +133,12 @@ static const double kMillisecondsPerSecond = 1000.0; // milliseconds to seconds 
             // Persist freshly-recorded events for crash/force-quit recovery.
             if ([NRMAFlags shouldEnableEventPersistence]) {
                 NSString *sessionId = [[NewRelicAgentInternal sharedInstance] currentSessionId] ?: @"";
-                NSDictionary *mutableSnapshot = [self.sessionAttributeManager currentPublicAttributes] ?: @{};
                 [[NREventPersistenceController shared] recordEventWithEventUUID:event.eventUUID
                                                                         eventType:event.eventType
                                                                       timestampMs:(int64_t)event.timestamp
                                                                        attributes:(NSDictionary *)[event JSONObject]
                                                                         sessionId:sessionId
-                                                                      realAgentId:NRMA_getAgentId()
-                                                        mutableAttributesSnapshot:mutableSnapshot];
+                                                                      realAgentId:NRMA_getAgentId()];
             }
         }
     }

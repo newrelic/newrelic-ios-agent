@@ -298,8 +298,7 @@
                                                           timestampMs:1000
                                                            attributes:@{@"name": @"MyEvent", @"orderId": @"XYZ"}
                                                             sessionId:crashSessionId
-                                                          realAgentId:7
-                                            mutableAttributesSnapshot:@{}];
+                                                          realAgentId:7];
 
     NSDictionary *metaDictionary = @{@kNRMAMetaKey_Session: crashSessionId};
     // Must be ignored in favor of the persisted events.

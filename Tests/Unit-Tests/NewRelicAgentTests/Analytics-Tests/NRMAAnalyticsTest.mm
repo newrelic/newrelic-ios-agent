@@ -1929,11 +1929,10 @@
     [self waitForExpectations:@[[[XCTNSPredicateExpectation alloc] initWithPredicate:predicate object:nil]] timeout:5];
 }
 
-- (void)testLegacyAddCustomEventIsRecoverableWithSessionAttributes {
+- (void)testLegacyAddCustomEventIsRecoverable {
     [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
 
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
-    [analytics setSessionAttribute:@"userId" value:@"legacy-test-user"];
 
     XCTAssertTrue([analytics addCustomEvent:@"LegacyPersistenceWiringSentinel" withAttributes:@{}]);
 
@@ -1947,8 +1946,6 @@
         }
     }
     XCTAssertNotNil(found, @"a custom event added through the legacy C++ path must be recoverable through the controller");
-    XCTAssertEqualObjects(found[@"userId"], @"legacy-test-user",
-                          @"the legacy session's attribute snapshot at write time must ride along with the recovered event");
 
     [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
     [NRMAAnalytics clearDuplicationStores];
