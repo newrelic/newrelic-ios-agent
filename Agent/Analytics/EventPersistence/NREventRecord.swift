@@ -43,10 +43,7 @@ struct NREventRecord {
         self.realAgentId = realAgentId
     }
 
-    /// Reconstructs a record from a decoded JSON dictionary. Returns nil only
-    /// when a field required to safely replay the event (uuid/type/timestamp/
-    /// sessionId) is missing or malformed -- corrupt storage should be treated
-    /// as "no record", never crash the caller.
+    /// Returns nil for corrupt/incomplete storage rather than crashing the caller.
     init?(dictionary: [String: Any]) {
         guard let eventUUID = dictionary["eventUUID"] as? String,
               let eventType = dictionary["eventType"] as? String,

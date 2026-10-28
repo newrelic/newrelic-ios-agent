@@ -22,11 +22,9 @@
 - (NSUInteger) getEventsRecordedCount;
 - (NSUInteger) getEventsEvictedCount;
 
-// Session-stable attributes (os/device/app version, carrier, etc.) only --
-// used to populate a session's persisted manifest at session start. New
-// Event System: the private "NR" attribute set. Legacy: there's no
-// public/private split at that layer, so this returns the full current
-// session attribute set.
+// Session-stable attributes (os/device/app version, carrier, etc.) for a session's
+// persisted manifest. New system: the private "NR" attributes. Legacy: no
+// public/private split, so this is the full current session attribute set.
 - (NSDictionary*) currentSessionStableAttributesForPersistence;
 
 - (id) initWithSessionStartTimeMS:(long long) sessionStartTime;

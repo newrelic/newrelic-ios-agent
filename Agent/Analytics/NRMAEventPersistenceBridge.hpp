@@ -12,9 +12,8 @@
 
 namespace NewRelic {
     // Legacy (C++) event-system implementation of EventPersistenceBridge --
-    // forwards into NREventPersistenceController, gathering the session/agent
-    // context (sessionId, realAgentId, the public attribute snapshot) itself
-    // since the Analytics library has no notion of either.
+    // forwards into NREventPersistenceController, since the Analytics library
+    // has no notion of sessionId/realAgentId itself.
     class NRMAEventPersistenceBridge : public EventPersistenceBridge {
         virtual void persistEvent(const std::string& eventUUID,
                                    const std::string& eventType,

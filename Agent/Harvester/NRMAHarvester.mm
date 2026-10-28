@@ -434,7 +434,7 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
         // failure
         if([self checkOfflineAndPersist:response]) {
             if ([NRMAFlags shouldEnableEventPersistence]) {
-                // Erase the events stored in the NREventPersistenceController because they are moved to offline storage.
+                // These events are now durably in offline storage -- confirm so they aren't recovered again.
                 [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
             }
             // If the harvest was persisted for offline storage clear the harvest.

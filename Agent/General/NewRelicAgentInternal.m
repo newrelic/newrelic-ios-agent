@@ -390,8 +390,7 @@ static NewRelicAgentInternal* _sharedInstance;
      * initialization.
      */
     [NRMAMeasurements initializeMeasurements];
-    // +[NRMAHarvestController start] is called after -onSessionStart instead
-    // (see its recovery comment) -- not here.
+    // +[NRMAHarvestController start] is called after -onSessionStart instead, not here.
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     // SESSION REPLAY INITIALIZATION
     if (@available(iOS 13.0, *)) {
@@ -408,9 +407,8 @@ static NewRelicAgentInternal* _sharedInstance;
 #endif
 }
 
-// Starts the harvest timer/first execute cycle, unless the app is currently
-// backgrounded. Split out of -initialize so it can be called after
-// -onSessionStart's recovered-event staging -- see that method's comment.
+// Starts the harvest timer/first execute cycle unless backgrounded. Split out of
+// -initialize so it can run after -onSessionStart's recovered-event staging.
 - (void) startHarvestControllerIfNotBackground {
 #if TARGET_OS_WATCH
     if ([WKExtension sharedExtension].applicationState != WKApplicationStateBackground) {
@@ -662,10 +660,8 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     [self.analyticsController setNRSessionAttribute:@"sessionId"
                                               value:self->_agentConfiguration.sessionIdentifier];
 
-    // Write this session's persisted manifest (stable attributes snapshot)
-    // now that both the sessionId and the stable attributes above are set,
-    // so a recovered event from this session can later be correctly
-    // reattributed if the app force-quits before harvesting it.
+    // Write this session's manifest now that sessionId/stable attributes are set, so a
+    // recovered event can be reattributed if the app force-quits before harvesting.
     if ([NRMAFlags shouldEnableEventPersistence] && self->_agentConfiguration.sessionIdentifier.length > 0) {
         int64_t sessionStartMs = (int64_t)([self.appSessionStartDate timeIntervalSince1970] * 1000.0);
         NSDictionary *stableAttributes = [self.analyticsController currentSessionStableAttributesForPersistence] ?: @{};
@@ -675,15 +671,9 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
                                                                   stableAttributes:stableAttributes];
     }
 
-    // Recover any events persisted (but never harvested) by a previous
-    // session that force-quit/crashed, and stage them for the next harvest.
-    // Runs here, synchronously, rather than from -initialize, for two
-    // reasons: -sessionStartInitialization can recreate the harvester (and
-    // harvestData) after -initialize returns, so -initialize's harvestData
-    // isn't always this session's final one; and every caller of this
-    // method starts the harvester (+[NRMAHarvestController start]) only
-    // *after* calling it, so staging here is guaranteed to land before the
-    // harvester's first async execute can clear what was just staged.
+    // Recover events persisted by a previous force-quit/crashed session and stage them
+    // for the next harvest. Runs here, not in -initialize, since every caller starts the
+    // harvester only *after* this method, guaranteeing staging lands before its first execute.
     if ([NRMAFlags shouldEnableEventPersistence]) {
         int64_t nowMs = (int64_t)([[NSDate date] timeIntervalSince1970] * 1000.0);
         [[NREventPersistenceController shared] performRetentionSweepWithNowMs:nowMs];
@@ -981,9 +971,7 @@ static const NSString *kNRMA_APPLICATION_WILL_TERMINATE =
     // Update session duration manager with new session start time for 4-hour session timeout
     [[NRMASessionDurationManager shared] updateSessionStartTime:self.appSessionStartDate];
     [self onSessionStart];
-    // After -onSessionStart, not before -- see its recovery comment.
-    // (Unconditional here, same as before this reordering -- unlike
-    // -initialize's call, this one was never background-gated.)
+    // After -onSessionStart, not before -- see its recovery comment above.
     [NRMAHarvestController start];
 }
 

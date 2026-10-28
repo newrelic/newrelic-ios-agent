@@ -8,14 +8,10 @@
 import Foundation
 
 /// File-per-event persisted store for `NREventRecord`s, under
-/// `<storePath>/nr_event_cache/`. Each event is its own `<eventUUID>.json`
-/// file; `eventIndex.json` is the "shadow file" the CDD describes -- a single
-/// sentinel listing the UUIDs currently on disk, checked first at startup
-/// (and kept current on every store/delete) so replay never needs to list the
-/// directory to know whether there's anything to recover.
-///
-/// All reads/writes/deletes run on one serial queue, so a write can never
-/// land after -- and resurrect -- a delete for the same event.
+/// `<storePath>/nr_event_cache/`. Each event is its own `<eventUUID>.json` file;
+/// `eventIndex.json` lists the UUIDs currently on disk, so replay never needs to
+/// list the directory. All reads/writes/deletes run on one serial queue, so a
+/// write can never land after -- and resurrect -- a delete for the same event.
 final class NRFileEventStore {
 
     private let directoryURL: URL
@@ -49,10 +45,8 @@ final class NRFileEventStore {
         queue.sync { !readIndex().isEmpty }
     }
 
-    /// Blocks until every store/delete/evict enqueued before this call has
-    /// finished (the queue is serial/FIFO, so an empty sync drains it). Used
-    /// by tests; production callers don't need this since all public reads
-    /// already run on the same queue.
+    /// Blocks until every store/delete/evict enqueued so far has finished. Used by tests;
+    /// production reads already run on the same queue.
     func synchronize() {
         queue.sync {}
     }

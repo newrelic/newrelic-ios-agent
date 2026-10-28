@@ -184,11 +184,8 @@ static const double kMillisecondsPerSecond = 1000.0; // milliseconds to seconds 
         // Clear under the same lock the events were read under. Clearing after releasing it
         // also wiped any event -addEvent: inserted in between, which was never serialized.
         if (clearEvents) {
-            // This batch is about to be handed to a harvest attempt whose outcome
-            // isn't known yet -- mark pending (not delete) so the persisted copies
-            // survive until a later confirmed success. Otherwise a successfully
-            // harvested event's on-disk copy would linger forever and get wrongly
-            // recovered/re-sent as a duplicate on a future relaunch.
+            // Mark pending (not delete) until the harvest is confirmed successful --
+            // otherwise a successfully harvested event would be recovered again later.
             if ([NRMAFlags shouldEnableEventPersistence]) {
                 NSMutableArray<NSString *> *eventUUIDs = [NSMutableArray arrayWithCapacity:events.count];
                 for (id<NRMAAnalyticEventProtocol> event in events) {

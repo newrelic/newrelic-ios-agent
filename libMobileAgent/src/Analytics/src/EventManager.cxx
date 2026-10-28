@@ -126,9 +126,7 @@ EventAddResult EventManager::addEvent(std::shared_ptr<AnalyticEvent> event) {
             persistIfBridged(event);
             discardIfBridged(evictedEvent);
         }
-        // else: the random removal index landed outside the queue's current bounds --
-        // drop the incoming event instead of silently losing it (matches the Android
-        // agent's handling of the equivalent case).
+        // else: index landed outside the queue's bounds -- drop the incoming event instead.
         result.evicted = true;
         _events_evicted++;
     } else {

@@ -9,18 +9,9 @@ import Foundation
 @_implementationOnly import NewRelicPrivate
 
 /// Coordinates the two event-persistence stores (`NRFileEventStore`,
-/// `NRSessionManifestStore`): the write path (persist a fresh event / refresh
-/// a session's manifest), the replay path (recover persisted events on next
-/// launch and resolve their final attributes via the manifest-overlay
-/// fallback ladder), confirmation (drop persisted events once a recovery
-/// harvest is confirmed delivered), and the 7-day retention sweep.
-///
-/// This class owns no reference to `NRMAEventManager`/`AnalyticsController`/
-/// `NRMASAM` -- callers hand it the values it needs (sessionId, realAgentId)
-/// so it stays decoupled and independently testable.
-/// ObjC-visible (`@objcMembers`) since it's called from `NRMAEventManager`,
-/// the legacy C++ bridge, `NewRelicAgentInternal`, `NRMAHarvester`, and
-/// `NRMACrashDataWriter`.
+/// `NRSessionManifestStore`): write, replay/recovery, confirmation, and
+/// retention. Owns no reference to `NRMAEventManager`/`AnalyticsController`/
+/// `NRMASAM` -- callers pass in whatever it needs (sessionId, realAgentId).
 @objcMembers
 public class NREventPersistenceController: NSObject {
 
@@ -37,7 +28,6 @@ public class NREventPersistenceController: NSObject {
     private let manifestStore: NRSessionManifestStore
 
     // UUIDs staged for an outgoing harvest, dropped only once that harvest succeeds.
-    // A Set to dedup repeated staging across multiple -onSessionStart calls.
     private var pendingConfirmationUUIDs: Set<String> = []
     private let stateLock = NSLock()
 
@@ -56,12 +46,9 @@ public class NREventPersistenceController: NSObject {
 
     // MARK: - Write path
 
-    /// Persists a freshly-recorded event. `attributes` should be the event's
-    /// already-flattened JSON representation (as produced by
-    /// `-[NRMAAnalyticEventProtocol JSONObject]`, which already folds in
-    /// timestamp/sessionElapsedTime/eventType/name alongside custom
-    /// attributes) -- callers don't need to pick those apart. No-ops when
-    /// the feature flag is disabled.
+    /// Persists a freshly-recorded event. `attributes` is the event's already-flattened
+    /// JSON representation (`-[NRMAAnalyticEventProtocol JSONObject]`), not just custom
+    /// attributes. No-ops when the feature flag is disabled.
     @objc(recordEventWithEventUUID:eventType:timestampMs:attributes:sessionId:realAgentId:)
     public func recordEvent(eventUUID: String,
                              eventType: String,
@@ -80,9 +67,8 @@ public class NREventPersistenceController: NSObject {
         eventStore.store(record)
     }
 
-    /// Deletes one persisted event immediately, bypassing pending-confirmation. Used when
-    /// an event is evicted from the live in-memory buffer, so it isn't resurrected by a
-    /// future recovery sweep.
+    /// Deletes one persisted event immediately. Called when an event is evicted from the
+    /// live buffer, so it isn't resurrected by a later recovery sweep.
     @objc(discardPersistedEventWithEventUUID:)
     public func discardPersistedEvent(eventUUID: String) {
         guard NRMAFlags.shouldEnableEventPersistence() else { return }
@@ -106,9 +92,8 @@ public class NREventPersistenceController: NSObject {
         manifestStore.store(manifest)
     }
 
-    /// Bumps a manifest's `lastUpdateMs` on each harvest tick, so a
-    /// long-running session's manifest retention is judged independently of
-    /// whether any event referencing it is also still live.
+    /// Bumps a manifest's `lastUpdateMs` on each harvest tick, so a long-running
+    /// session's manifest isn't evicted just because it's quiet between harvests.
     @objc(refreshSessionManifestWithSessionId:nowMs:)
     public func refreshSessionManifest(sessionId: String, nowMs: Int64) {
         guard NRMAFlags.shouldEnableEventPersistence() else { return }
@@ -119,17 +104,8 @@ public class NREventPersistenceController: NSObject {
 
     // MARK: - Replay
 
-    /// Recovers every persisted event, resolves its attributes via the
-    /// fallback ladder below, and returns the per-event JSON ready to hand to
-    /// `NRMAHarvestController +addRecoveredAnalyticsEvents:`. Cheap no-op
-    /// (just checks the shadow file) when there's nothing to recover.
-    ///
-    /// Fallback ladder, matching Android's `reattributeRecoveredEvents`:
-    ///   1. Manifest found -> its stableAttributes.
-    ///   2. Manifest missing/corrupt -> `currentSessionAttributes` (graceful
-    ///      degradation; the record is still delivered, never dropped).
-    ///
-    /// `currentSessionAttributes` is only consulted in case 2.
+    /// Recovers every persisted event (resolving attributes via `resolveAttributes`) and
+    /// returns per-event JSON ready for `NRMAHarvestController +addRecoveredAnalyticsEvents:`.
     /// `excludingSessionId` skips that session's events, left for the crash path to claim instead.
     @discardableResult
     @objc(recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:excludingSessionId:)
@@ -144,24 +120,14 @@ public class NREventPersistenceController: NSObject {
         var payloads: [[String: Any]] = []
         var stagedUUIDs: [String] = []
         for record in records {
-            // Start from the resolved SESSION-level attributes (stable +
-            // mutable snapshot / fallback), then overlay the event's own
-            // captured content on top -- record.attributes is exactly
-            // `[event JSONObject]`/`generateJSONObject()`'s original output,
-            // so it already carries this event's own timestamp,
-            // sessionElapsedTime, eventType, and any custom attributes the
-            // event itself was recorded with. Without this overlay, a
-            // recovered custom event would be sent as an empty shell missing
-            // all of its actual content.
+            // Session-level attributes first, then the event's own JSONObject output on top
+            // (custom attributes + its own timestamp/eventType) -- otherwise a recovered
+            // custom event would ship as an empty shell.
             var json = resolveAttributes(for: record, currentSessionAttributes: currentSessionAttributes)
             for (key, value) in record.attributes {
                 json[key] = value
             }
-            // Re-assert after the merge, as a guarantee independent of
-            // whatever record.attributes does or doesn't contain (e.g. a
-            // partially-corrupt blob) -- these three must always reflect the
-            // record's own authoritative fields, never silently fall back to
-            // something stale or missing.
+            // Re-assert in case record.attributes was corrupt/stale.
             json[kNRMA_RA_timestamp] = record.timestamp
             json[kNRMA_RA_eventType] = record.eventType
             json[kNRMA_RA_sessionId] = record.sessionId
@@ -176,6 +142,8 @@ public class NREventPersistenceController: NSObject {
         return payloads
     }
 
+    /// Manifest found -> its stableAttributes. Missing/corrupt -> `currentSessionAttributes`
+    /// (graceful degradation; the record is still delivered, never dropped).
     private func resolveAttributes(for record: NREventRecord, currentSessionAttributes: [String: Any]) -> [String: Any] {
         if let manifest = manifestStore.manifest(forSessionId: record.sessionId) {
             NRMASupportMetricHelper.enqueueEventPersistenceReattributedMetric()
@@ -188,22 +156,9 @@ public class NREventPersistenceController: NSObject {
 
     // MARK: - Crash path
 
-    /// Called from the crash-write path when the crash's own recorded
-    /// sessionId (authoritative -- captured synchronously at crash time)
-    /// doesn't match the sessionId embedded in the "last session" attributes
-    /// read at next launch (a race against a new session already starting
-    /// before that async read runs). Rather than dropping the crash's
-    /// attributes/events outright, looks up the crash's *true* session's
-    /// manifest and returns its stableAttributes as a corrected replacement.
-    ///
-    /// The events themselves are not touched here and don't need to be --
-    /// in this at-rest format they carry no per-event session identity of
-    /// their own (unlike a `NREventRecord`), so a session-level attribute
-    /// mismatch doesn't invalidate them.
-    ///
-    /// Returns nil if no manifest is found either (flag disabled, or the
-    /// manifest already evicted/never written) -- caller should fall back
-    /// to dropping, exactly as before this feature existed.
+    /// Resolves a crash's true session's attributes from its manifest, for when the crash's
+    /// authoritative sessionId doesn't match whatever "last session" attributes were read at
+    /// next launch. Returns nil if no manifest is found -- caller falls back to dropping.
     @objc(reattributeCrashAttributesForSessionId:)
     public func reattributeCrashAttributes(forSessionId crashSessionId: String) -> [String: Any]? {
         guard NRMAFlags.shouldEnableEventPersistence() else { return nil }
@@ -242,13 +197,9 @@ public class NREventPersistenceController: NSObject {
 
     // MARK: - Pending confirmation (fresh events pulled for a harvest attempt)
 
-    /// Called when a batch of *freshly-recorded* (not recovered) events is
-    /// pulled out of the live buffer for a harvest attempt -- i.e. the normal,
-    /// non-crash harvest path. Without this, a persisted event's on-disk copy
-    /// would never be deleted after it's successfully delivered the ordinary
-    /// way, and it would get wrongly recovered and re-sent as a duplicate the
-    /// next time the app restarts (the exact bug Android hit historically).
-    /// Shares the same pending set/confirmation mechanism as recovered events.
+    /// Called when freshly-recorded (not recovered) events are pulled from the live buffer
+    /// for an ordinary harvest attempt, so their persisted copies get cleaned up on success
+    /// too -- otherwise they'd be wrongly recovered and re-sent on a later relaunch.
     @objc(markEventsPendingConfirmationWithEventUUIDs:)
     public func markEventsPendingConfirmation(eventUUIDs: [String]) {
         guard !eventUUIDs.isEmpty else { return }
@@ -259,11 +210,8 @@ public class NREventPersistenceController: NSObject {
 
     // MARK: - Confirmation
 
-    /// Call once the harvest carrying the most recently staged recovered
-    /// and/or freshly-harvested events is confirmed *successful* -- not
-    /// merely attempted. Deletes those events' on-disk records; a
-    /// failed/unattempted harvest should never call this, so the records
-    /// remain for the next try.
+    /// Call once the harvest carrying the staged events is confirmed *successful*, not
+    /// merely attempted -- a failed harvest must never call this.
     public func confirmLastRecoveryHarvestSucceeded() {
         stateLock.lock()
         let uuids = pendingConfirmationUUIDs

@@ -78,11 +78,9 @@
 
 + (void) addHarvestableAnalytics:(NRMAHarvestableAnalytics* _Nonnull)analytics;
 
-// Stages previously-persisted events recovered from a prior session's
-// unfinished harvest, as plain JSON dictionaries (already fully resolved --
-// original timestamp/sessionId/attributes). Unlike +addHarvestableAnalytics:,
-// this never touches harvestData.analyticsAttributes, so a recovered
-// session's attributes can never clobber the current session's.
+// Stages already-resolved recovered events as plain JSON dictionaries. Unlike
+// +addHarvestableAnalytics:, never touches harvestData.analyticsAttributes, so a
+// recovered session's attributes can't clobber the current session's.
 + (void) addRecoveredAnalyticsEvents:(NSArray* _Nonnull)events;
 @end
 

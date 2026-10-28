@@ -153,9 +153,8 @@
     NSMutableDictionary* mutableAttributes;
 
     if ([NRMAFlags shouldEnableEventPersistence]) {
-        // Source of truth, keyed by the crash's true sessionId. Claiming events here
-        // deletes them, so -onSessionStart's recovery sweep must exclude this session
-        // or they'd be sent twice.
+        // Claiming deletes these events, so -onSessionStart's recovery sweep must
+        // exclude this session or they'd be sent twice.
         NSDictionary *persistedAttributes = [[NREventPersistenceController shared] reattributeCrashAttributesForSessionId:crashSessionId];
         if (persistedAttributes != nil) {
             mutableAttributes = [NSMutableDictionary dictionaryWithDictionary:persistedAttributes];

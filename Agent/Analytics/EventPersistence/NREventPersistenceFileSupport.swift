@@ -11,11 +11,8 @@ import Foundation
 /// `NRFileEventStore` and `NRSessionManifestStore` don't each reimplement it.
 enum NREventPersistenceFileSupport {
 
-    /// Creates `url` (if needed) with the same file-protection level already
-    /// used for Session Replay's frame storage, and marks it excluded from
-    /// iCloud/iTunes backup -- there's no existing precedent for the backup
-    /// exclusion elsewhere in the agent, since this is the first on-disk store
-    /// built specifically to hold data that must not outlive a 7-day cap.
+    /// Creates `url` (if needed) with Session Replay's file-protection level, and
+    /// excludes it from iCloud/iTunes backup (data here must not outlive the 7-day cap).
     static func prepareProtectedDirectory(at url: URL) {
         do {
             try FileManager.default.createDirectory(
