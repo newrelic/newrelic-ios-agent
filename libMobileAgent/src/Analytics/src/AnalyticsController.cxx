@@ -70,7 +70,6 @@ namespace NewRelic {
     }
 
     AnalyticsController::AnalyticsController(unsigned long long sessionStartTime_ms, const char *sharedPath,
-                                             PersistentStore <std::string, AnalyticEvent> &eventDupStore,
                                              PersistentStore <std::string, BaseValue> &attributeDupStore) :
             _session_start_time_ms(sessionStartTime_ms),//todo: ensure these things are floats when sent to server
             _attributeValidator(
@@ -157,8 +156,7 @@ namespace NewRelic {
             _attributeDuplicationStore(attributeDupStore),
             _attributeStore(ATTRIBUTE_STORE_DB_FILENAME, sharedPath,
                             (std::shared_ptr<BaseValue>(*)(std::istream & )) & Value::createValue),
-            _eventsDuplicationStore(eventDupStore),
-            _eventManager(_eventsDuplicationStore),
+            _eventManager(),
             _sessionAttributeManager(_attributeStore,
                                      _attributeDuplicationStore,
                                      _attributeValidator) {}
@@ -979,23 +977,6 @@ namespace NewRelic {
     };
 
 
-    std::shared_ptr <NRJSON::JsonArray> AnalyticsController::fetchDuplicatedEvents(
-            PersistentStore <std::string, AnalyticEvent> &eventStore,
-            bool shouldClearStore) {
-
-        std::map <std::string, std::shared_ptr<AnalyticEvent>> events;
-        if (shouldClearStore) {
-            events = eventStore.swap();
-        } else {
-            events = eventStore.load();
-        }
-        std::vector <std::shared_ptr<AnalyticEvent>> vector;
-        for (auto it = events.begin(); it != events.end(); it++) {
-            vector.push_back(it->second);
-        }
-        return EventManager::toJSON(vector);
-    }
-
     std::shared_ptr <NRJSON::JsonObject> AnalyticsController::fetchDuplicatedAttributes(
             PersistentStore <std::string, BaseValue> &attributeStore,
             bool shouldClearStore) {
@@ -1016,10 +997,6 @@ namespace NewRelic {
             attributeStore.clear();
         }
         return SessionAttributeManager::generateJSONObject(attributesMap);
-    }
-
-    void AnalyticsController::clearEventsDuplicationStore() {
-        _eventsDuplicationStore.clear();
     }
 
     void AnalyticsController::clearAttributesDuplicationStore() {

@@ -49,7 +49,6 @@
 static NSString* __processLock = @"NRMAProcessLock";
 
 - (void) processReportsWithSessionAttributes:(NSDictionary*)attributes
-                             analyticsEvents:(NSArray*)events
 {
     NSError* error = nil;
     if (!_crashReporter) {
@@ -84,8 +83,7 @@ static NSString* __processLock = @"NRMAProcessLock";
         } else {
             [NRMACrashDataWriter writeCrashReport:report
                                      withMetaData:metadict
-                                sessionAttributes:attributes
-                                  analyticsEvents:events];
+                                sessionAttributes:attributes];
         }
     }
 

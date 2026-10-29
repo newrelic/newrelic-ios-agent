@@ -64,7 +64,6 @@
 
 + (void) clearDuplicationStores;
 + (NSString*) getLastSessionsAttributes;
-+ (NSString*) getLastSessionsEvents;
 - (void) clearLastSessionsAnalytics;
 
 - (BOOL) checkOfflineStatus;

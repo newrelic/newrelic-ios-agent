@@ -37,7 +37,6 @@ namespace NewRelic {
     private :
         mutable std::recursive_mutex _eventsMutex;
         std::vector<std::shared_ptr<AnalyticEvent>> _events;
-        PersistentStore<std::string,AnalyticEvent>&  _eventDuplicationStore;
 
         //helper function for deserialization.
         static std::stringstream readStreamToDelimiter(std::istream& is, char delimiter);
@@ -49,7 +48,7 @@ namespace NewRelic {
         unsigned int _events_evicted = 0;
 
     public:
-        EventManager(PersistentStore<std::string,AnalyticEvent>& store);
+        EventManager();
 
         virtual ~EventManager();
 

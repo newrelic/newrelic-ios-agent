@@ -31,8 +31,8 @@
 + (BOOL) writeCrashReport:(PLCrashReport* _Nonnull)report
              withMetaData:(NSDictionary* _Nonnull)metaDictionary
         sessionAttributes:(NSDictionary* _Nonnull)attributes
-          analyticsEvents:(NSArray* _Nonnull)events
 {
+    NSArray* events;
 
     NSNumber* diskUsage = [metaDictionary objectForKey:@kNRMAMetaKey_DiskFree];
     NSMutableArray* diskUsageArray = [[NSMutableArray alloc] init];
@@ -170,12 +170,13 @@
             events = nil;
         }
     } else {
-        // Flag off: unchanged old behavior -- drop on a sessionId mismatch.
+        // Flag off: no event source exists for this path anymore, so events is always
+        // empty. Attributes: unchanged old behavior -- drop on a sessionId mismatch.
         mutableAttributes = [NSMutableDictionary dictionaryWithDictionary:attributes];
         if (![crashSessionId isEqualToString:[mutableAttributes objectForKey:@"sessionId"]]) {
             mutableAttributes = nil;
-            events = nil;
         }
+        events = nil;
     }
 
     // CrashTime is generated at crash time using time.h time(). This will return -1 if it fails.

@@ -52,8 +52,7 @@ void EventManager::markEventsPendingConfirmationIfBridged(const std::vector<std:
     _persistenceBridge->markEventsPendingConfirmation(uuids);
 }
 
-EventManager::EventManager(PersistentStore<std::string, AnalyticEvent>& store) :
-        _eventDuplicationStore(store) {
+EventManager::EventManager() {
 }
 
 EventManager::~EventManager() {

@@ -173,15 +173,14 @@
      XCTAssertEqualObjects([[report signalInfo] name], @"SIGTRAP", @"Incorrect signal name");
      XCTAssertEqualObjects([[report signalInfo] code], @"TRAP_TRACE", @"Incorrect signal code");
 
-     XCTAssertNoThrow([NRMACrashDataWriter writeCrashReport:report withMetaData:Nil sessionAttributes:Nil analyticsEvents:Nil], @"should not throw exception even with missing data.");
+     XCTAssertNoThrow([NRMACrashDataWriter writeCrashReport:report withMetaData:Nil sessionAttributes:Nil], @"should not throw exception even with missing data.");
 
  }
 
 // Writes the crash report via NRMACrashDataWriter and returns the JSON of
 // whichever report file is newest in the crash report directory afterward.
 - (NSDictionary *)writeCrashReportAndReadBackJSONWithMetaData:(NSDictionary *)metaDictionary
-                                              sessionAttributes:(NSDictionary *)sessionAttributes
-                                                analyticsEvents:(NSArray *)events {
+                                              sessionAttributes:(NSDictionary *)sessionAttributes {
     NSError *error;
     PLCrashReporter *reporter = [[PLCrashReporter alloc] initWithConfiguration:[PLCrashReporterConfig defaultConfiguration]];
     NSData *reportData = [reporter generateLiveReportAndReturnError:&error];
@@ -192,8 +191,7 @@
 
     BOOL success = [NRMACrashDataWriter writeCrashReport:report
                                              withMetaData:metaDictionary
-                                        sessionAttributes:sessionAttributes
-                                          analyticsEvents:events];
+                                        sessionAttributes:sessionAttributes];
     XCTAssertTrue(success);
 
     NSArray *filesAfter = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:reportDirectory error:nil];
@@ -227,8 +225,7 @@
     NSDictionary *passedInAttributes = @{@"sessionId": @"some-other-session", @"stale": @"shouldNotAppear"};
 
     NSDictionary *json = [self writeCrashReportAndReadBackJSONWithMetaData:metaDictionary
-                                                           sessionAttributes:passedInAttributes
-                                                             analyticsEvents:@[@{@"eventType": @"testEvent"}]];
+                                                           sessionAttributes:passedInAttributes];
 
     NSDictionary *writtenAttributes = json[kNRMA_CR_sessionAttributes];
     XCTAssertEqualObjects(writtenAttributes[@"appVersion"], @"2.0",
@@ -256,8 +253,7 @@
     NSDictionary *passedInAttributes = @{kNRMA_RA_hasReplay: @YES};
 
     NSDictionary *json = [self writeCrashReportAndReadBackJSONWithMetaData:metaDictionary
-                                                           sessionAttributes:passedInAttributes
-                                                             analyticsEvents:@[]];
+                                                           sessionAttributes:passedInAttributes];
 
     NSDictionary *writtenAttributes = json[kNRMA_CR_sessionAttributes];
     XCTAssertEqualObjects(writtenAttributes[@"appVersion"], @"2.0");
@@ -275,8 +271,7 @@
     NSDictionary *passedInAttributes = @{@"sessionId": @"crash-session-with-no-manifest", @"stale": @"shouldNotAppear"};
 
     NSDictionary *json = [self writeCrashReportAndReadBackJSONWithMetaData:metaDictionary
-                                                           sessionAttributes:passedInAttributes
-                                                             analyticsEvents:@[@{@"eventType": @"testEvent"}]];
+                                                           sessionAttributes:passedInAttributes];
 
     XCTAssertEqualObjects(json[kNRMA_CR_sessionAttributes], [NSNull null],
                           @"with no manifest to resolve from, attributes (and events) must be dropped -- never attribute a crash to a guessed session");
@@ -301,10 +296,8 @@
                                                           realAgentId:7];
 
     NSDictionary *metaDictionary = @{@kNRMAMetaKey_Session: crashSessionId};
-    // Must be ignored in favor of the persisted events.
     NSDictionary *json = [self writeCrashReportAndReadBackJSONWithMetaData:metaDictionary
-                                                           sessionAttributes:@{@"sessionId": crashSessionId}
-                                                             analyticsEvents:@[@{@"eventType": @"shouldNotAppear"}]];
+                                                           sessionAttributes:@{@"sessionId": crashSessionId}];
 
     NSArray *writtenEvents = json[kNRMA_CR_analyticsEvents];
     XCTAssertEqual(writtenEvents.count, 1);
@@ -323,26 +316,26 @@
     NSDictionary *mismatchedAttributes = @{@"sessionId": @"some-other-session", @"stale": @"shouldNotAppear"};
 
     NSDictionary *json = [self writeCrashReportAndReadBackJSONWithMetaData:metaDictionary
-                                                           sessionAttributes:mismatchedAttributes
-                                                             analyticsEvents:@[@{@"eventType": @"testEvent"}]];
+                                                           sessionAttributes:mismatchedAttributes];
 
     XCTAssertEqualObjects(json[kNRMA_CR_sessionAttributes], [NSNull null],
                           @"with the flag disabled, a session mismatch must drop attributes exactly as before this feature existed");
     XCTAssertEqualObjects(json[kNRMA_CR_analyticsEvents], [NSNull null]);
 }
 
-- (void)testCrashDataWriterUsesPassedInAttributesAndEventsWhenFlagDisabledAndSessionMatches {
+- (void)testCrashDataWriterUsesPassedInAttributesWhenFlagDisabledAndSessionMatches {
     NSDictionary *metaDictionary = @{@kNRMAMetaKey_Session: @"matching-session"};
     NSDictionary *matchingAttributes = @{@"sessionId": @"matching-session", @"appVersion": @"1.0"};
 
     NSDictionary *json = [self writeCrashReportAndReadBackJSONWithMetaData:metaDictionary
-                                                           sessionAttributes:matchingAttributes
-                                                             analyticsEvents:@[@{@"eventType": @"testEvent"}]];
+                                                           sessionAttributes:matchingAttributes];
 
     NSDictionary *writtenAttributes = json[kNRMA_CR_sessionAttributes];
     XCTAssertEqualObjects(writtenAttributes[@"appVersion"], @"1.0",
                           @"with the flag disabled and a matching session, the passed-in attributes must be used unchanged");
-    XCTAssertNotEqual(json[kNRMA_CR_analyticsEvents], [NSNull null]);
+    // The legacy event duplication store is no longer written to, so there is no
+    // event source left for this path -- events must always be absent here.
+    XCTAssertEqualObjects(json[kNRMA_CR_analyticsEvents], [NSNull null]);
 }
 
  -(void) testExceptionHandlerManager {
@@ -378,8 +371,8 @@
      NRMACrashReportFileManager* fileManager = [[NRMACrashReportFileManager alloc] init];
      NRMACrashReportFileManager* fileManagerWithReporter = [[NRMACrashReportFileManager alloc] initWithCrashReporter:reporter];
 
-     XCTAssertNoThrow([fileManagerWithReporter processReportsWithSessionAttributes:nil analyticsEvents:nil], @"missing attributes and events should not cause exception");
-     XCTAssertNoThrow([fileManager processReportsWithSessionAttributes:nil analyticsEvents:nil], @"missing attributes and events should not cause exception");
+     XCTAssertNoThrow([fileManagerWithReporter processReportsWithSessionAttributes:nil], @"missing attributes should not cause exception");
+     XCTAssertNoThrow([fileManager processReportsWithSessionAttributes:nil], @"missing attributes should not cause exception");
  }
 
 - (void) testGetOperatingDevice {
