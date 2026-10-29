@@ -258,6 +258,22 @@
     return [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
 }
 
+- (NSDictionary*) currentSessionAttributes {
+    @synchronized (attributeDict) {
+        @synchronized (privateAttributeDict) {
+            NSMutableDictionary *merged = [attributeDict mutableCopy];
+            [merged addEntriesFromDictionary:privateAttributeDict];
+            return [merged copy];
+        }
+    }
+}
+
+- (NSDictionary*) currentPrivateAttributes {
+    @synchronized (privateAttributeDict) {
+        return [privateAttributeDict copy];
+    }
+}
+
 + (NSString*) getLastSessionsAttributes {
     NSError *error;
     NSString *lastSessionAttributesJsonString = nil;

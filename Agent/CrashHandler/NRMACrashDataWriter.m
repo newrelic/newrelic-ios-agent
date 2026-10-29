@@ -16,6 +16,8 @@
 #import "NRMAExceptionhandlerConstants.h"
 #import "Constants.h"
 #import "NRMATimestampContainer.h"
+#import "NRMAFlags.h"
+#import <NewRelic/NewRelic-Swift.h>
 
 #define kNRMASYSOS_iOS              @"iOS Device"
 #define kNRMASYSOS_OSX              @"OSX"
@@ -29,8 +31,8 @@
 + (BOOL) writeCrashReport:(PLCrashReport* _Nonnull)report
              withMetaData:(NSDictionary* _Nonnull)metaDictionary
         sessionAttributes:(NSDictionary* _Nonnull)attributes
-          analyticsEvents:(NSArray* _Nonnull)events
 {
+    NSArray* events;
 
     NSNumber* diskUsage = [metaDictionary objectForKey:@kNRMAMetaKey_DiskFree];
     NSMutableArray* diskUsageArray = [[NSMutableArray alloc] init];
@@ -147,12 +149,33 @@
         }
     }
 
-    NSMutableDictionary* mutableAttributes = [NSMutableDictionary dictionaryWithDictionary:attributes];
+    NSString* crashSessionId = [metaDictionary objectForKey:@kNRMAMetaKey_Session];
+    NSMutableDictionary* mutableAttributes;
 
-    // If attribute sessionId doesn't match crash's session id, don't send analytics data.
-    if (![[metaDictionary objectForKey:@kNRMAMetaKey_Session] isEqualToString:[mutableAttributes objectForKey:@"sessionId"]]) {
-        attributes = nil;
-        mutableAttributes = nil;
+    if ([NRMAFlags shouldEnableEventPersistence]) {
+        // Claiming deletes these events, so -onSessionStart's recovery sweep must
+        // exclude this session or they'd be sent twice.
+        NSDictionary *persistedAttributes = [[NREventPersistenceController shared] reattributeCrashAttributesForSessionId:crashSessionId];
+        if (persistedAttributes != nil) {
+            mutableAttributes = [NSMutableDictionary dictionaryWithDictionary:persistedAttributes];
+            // hasReplay is computed by the caller from on-disk error-mode session replay
+            // frames at crash-processing time -- never part of the persisted manifest.
+            if (attributes[kNRMA_RA_hasReplay]) {
+                mutableAttributes[kNRMA_RA_hasReplay] = attributes[kNRMA_RA_hasReplay];
+            }
+            events = [[NREventPersistenceController shared] claimPersistedEventsForCrashSessionId:crashSessionId];
+        } else {
+            // No manifest found -- drop everything rather than guess.
+            mutableAttributes = nil;
+            events = nil;
+        }
+    } else {
+        // Flag off: no event source exists for this path anymore, so events is always
+        // empty. Attributes: unchanged old behavior -- drop on a sessionId mismatch.
+        mutableAttributes = [NSMutableDictionary dictionaryWithDictionary:attributes];
+        if (![crashSessionId isEqualToString:[mutableAttributes objectForKey:@"sessionId"]]) {
+            mutableAttributes = nil;
+        }
         events = nil;
     }
 

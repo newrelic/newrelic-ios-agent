@@ -24,6 +24,8 @@
 #import "NRMAMeasurements.h"
 #import "NRMATaskQueue.h"
 #import "NRMANamedValueMeasurement.h"
+#import "Constants.h"
+#import <NewRelic/NewRelic-Swift.h>
 
 @interface NRMAAnalyticsTest : XCTestCase
 {
@@ -985,6 +987,209 @@
     [NRMAMeasurements shutdown];
 }
 
+// Regression guard: an event evicted from the live buffer (buffer full) must have its
+// persisted copy discarded too, or it could be resurrected by a future recovery sweep.
+// NewEventSystem is disabled in this class's -setUp, so this exercises the legacy C++
+// EventManager/NRMAEventPersistenceBridge path.
+- (void)testLegacyEventSystemEvictionDiscardsPersistedCopy {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    [analytics setMaxEventBufferSize:1];
+
+    XCTAssertTrue([analytics addCustomEvent:@"LegacyEvictedSentinel" withAttributes:@{}]);
+    // Deterministic eviction (see testLegacyEventSystemOverflowFiresMetrics) -- this evicts
+    // LegacyEvictedSentinel from the live buffer.
+    XCTAssertTrue([analytics addCustomEvent:@"LegacyEvictedSentinelReplacement" withAttributes:@{}]);
+
+    NSPredicate *predicate = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
+        for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+            if ([candidate[@"eventType"] isEqualToString:@"LegacyEvictedSentinelReplacement"]) {
+                return YES;
+            }
+        }
+        return NO;
+    }];
+    [self waitForExpectations:@[[[XCTNSPredicateExpectation alloc] initWithPredicate:predicate object:nil]] timeout:5];
+
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+        XCTAssertNotEqualObjects(candidate[@"eventType"], @"LegacyEvictedSentinel",
+                                 @"an event evicted from the live buffer must not still be in the persisted store");
+    }
+
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [NRMAAnalytics clearDuplicationStores];
+}
+
+// MARK: - Every legacy event type survives persist+recover (NR-631296)
+// NewEventSystem is disabled in this class's -setUp, so these all exercise the legacy
+// C++ AnalyticsController/EventManager/NRMAEventPersistenceBridge path, not NRMAEventManager.
+
+- (NSDictionary *)recoveredLegacyEventMatchingKey:(NSString *)key value:(NSString *)value {
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+        if ([candidate[key] isEqualToString:value]) {
+            return candidate;
+        }
+    }
+    return nil;
+}
+
+- (void)waitForRecoveredLegacyEventMatchingKey:(NSString *)key value:(NSString *)value {
+    NSPredicate *predicate = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
+        return [self recoveredLegacyEventMatchingKey:key value:value] != nil;
+    }];
+    [self waitForExpectations:@[[[XCTNSPredicateExpectation alloc] initWithPredicate:predicate object:nil]] timeout:5];
+}
+
+- (void)testLegacyCustomEventKeepsItsOwnFields {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    NSDictionary *attributes = @{@"stringAttribute": @"XYZ-123", @"numberAttribute": @42};
+    XCTAssertTrue([analytics addCustomEvent:@"LegacyCustomEventFieldsSentinel" withAttributes:attributes]);
+
+    [self waitForRecoveredLegacyEventMatchingKey:@"eventType" value:@"LegacyCustomEventFieldsSentinel"];
+    NSDictionary *found = [self recoveredLegacyEventMatchingKey:@"eventType" value:@"LegacyCustomEventFieldsSentinel"];
+    XCTAssertNotNil(found, @"a custom event added through the legacy C++ path must be recoverable through the controller");
+    XCTAssertEqualObjects(found[@"stringAttribute"], @"XYZ-123");
+    XCTAssertEqualObjects(found[@"numberAttribute"], @42);
+
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [NRMAAnalytics clearDuplicationStores];
+}
+
+- (void)testLegacyBreadcrumbEventKeepsItsOwnFields {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    NSDictionary *attributes = @{@"stringAttribute": @"XYZ-123", @"numberAttribute": @42};
+    XCTAssertTrue([analytics addBreadcrumb:@"LegacyBreadcrumbFieldsSentinel" withAttributes:attributes]);
+
+    [self waitForRecoveredLegacyEventMatchingKey:kNRMA_Attrib_name value:@"LegacyBreadcrumbFieldsSentinel"];
+    NSDictionary *found = [self recoveredLegacyEventMatchingKey:kNRMA_Attrib_name value:@"LegacyBreadcrumbFieldsSentinel"];
+    XCTAssertNotNil(found, @"a breadcrumb added through the legacy C++ path must be recoverable through the controller");
+    XCTAssertEqualObjects(found[kNRMA_RA_eventType], kNRMA_RET_mobileBreadcrumb);
+    XCTAssertEqualObjects(found[@"stringAttribute"], @"XYZ-123");
+    XCTAssertEqualObjects(found[@"numberAttribute"], @42);
+
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [NRMAAnalytics clearDuplicationStores];
+}
+
+- (void)testLegacyInteractionEventKeepsItsOwnFields {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    XCTAssertTrue([analytics addInteractionEvent:@"LegacyInteractionFieldsSentinel" interactionDuration:1.5]);
+
+    [self waitForRecoveredLegacyEventMatchingKey:kNRMA_Attrib_name value:@"LegacyInteractionFieldsSentinel"];
+    NSDictionary *found = [self recoveredLegacyEventMatchingKey:kNRMA_Attrib_name value:@"LegacyInteractionFieldsSentinel"];
+    XCTAssertNotNil(found, @"an interaction event added through the legacy C++ path must be recoverable through the controller");
+    XCTAssertEqualObjects(found[kNRMA_RA_category], @"Interaction");
+    XCTAssertEqualObjects(found[kNRMA_RA_InteractionDuration], @1.5);
+
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [NRMAAnalytics clearDuplicationStores];
+}
+
+- (void)testLegacyUserActionEventKeepsItsOwnFields {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    NRMAUserAction *userAction = [NRMAUserAction new];
+    userAction.associatedMethod = @"LegacyUserActionFieldsMethod";
+    userAction.associatedClass = @"LegacyUserActionFieldsClass";
+    userAction.elementLabel = @"LegacyUserActionFieldsLabel";
+
+    XCTAssertTrue([analytics recordUserAction:userAction]);
+
+    [self waitForRecoveredLegacyEventMatchingKey:kNRMA_RA_methodExecuted value:@"LegacyUserActionFieldsMethod"];
+    NSDictionary *found = [self recoveredLegacyEventMatchingKey:kNRMA_RA_methodExecuted value:@"LegacyUserActionFieldsMethod"];
+    XCTAssertNotNil(found, @"a user action added through the legacy C++ path must be recoverable through the controller");
+    XCTAssertEqualObjects(found[kNRMA_RA_category], kNRMA_RET_userAction);
+    XCTAssertEqualObjects(found[kNRMA_RA_targetObject], @"LegacyUserActionFieldsClass");
+    XCTAssertEqualObjects(found[kNRMA_RA_label], @"LegacyUserActionFieldsLabel");
+
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [NRMAAnalytics clearDuplicationStores];
+}
+
+- (void)testLegacyRequestEventKeepsItsOwnFields {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+    [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
+    NRTimer* timer = [NRTimer new];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NSURL* url = [NSURL URLWithString:@"https://api.newrelic.com/api/v1/legacyRequestEventFields"];
+    [timer stopTimer];
+
+    NRMANetworkRequestData* requestData = [[NRMANetworkRequestData alloc] initWithRequestUrl:url
+                                                                                  httpMethod:@"GET"
+                                                                              connectionType:@"wifi"
+                                                                                 contentType:@"application/json"
+                                                                                   bytesSent:321];
+
+    NRMANetworkResponseData* responseData = [[NRMANetworkResponseData alloc] initWithSuccessfulResponse:200
+                                                                                          bytesReceived:654
+                                                                                           responseTime:[timer timeElapsedInSeconds]];
+
+    XCTAssertTrue([analytics addNetworkRequestEvent:requestData withResponse:responseData withPayload:nullptr]);
+
+    [self waitForRecoveredLegacyEventMatchingKey:@"requestPath" value:@"/api/v1/legacyRequestEventFields"];
+    NSDictionary *found = [self recoveredLegacyEventMatchingKey:@"requestPath" value:@"/api/v1/legacyRequestEventFields"];
+    XCTAssertNotNil(found, @"a request event added through the legacy C++ path must be recoverable through the controller");
+    XCTAssertEqualObjects(found[@"eventType"], @"MobileRequest");
+    XCTAssertEqualObjects(found[@"requestMethod"], @"GET");
+    XCTAssertEqualObjects(found[@"bytesSent"], @321);
+    XCTAssertEqualObjects(found[@"bytesReceived"], @654);
+    XCTAssertEqualObjects(found[@"statusCode"], @200);
+
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [NRMAAnalytics clearDuplicationStores];
+    [NRMAFlags disableFeatures:NRFeatureFlag_NetworkRequestEvents];
+}
+
+- (void)testLegacyNetworkErrorEventKeepsItsOwnFields {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+    [NRMAFlags enableFeatures:NRFeatureFlag_RequestErrorEvents];
+    NRTimer* timer = [NRTimer new];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NSURL* url = [NSURL URLWithString:@"https://api.newrelic.com/api/v1/legacyNetworkErrorEventFields"];
+    [timer stopTimer];
+
+    NSString* responseBody = @"helloWorld";
+    // NRMANetworkResponseData base64-encodes whatever is passed as encodedResponseBody:
+    // before it reaches the event's attributes, so the persisted copy is expected to
+    // carry the encoded form, not the raw string handed to the initializer below.
+    NSString* responseBodyEncoded = @"aGVsbG9Xb3JsZA==";
+    NSString* appDataHeader = @"ToatsBase64EncodedStringSeeThereIsAnEqualSignAtTheEnd=";
+
+    NRMANetworkRequestData* requestData = [[NRMANetworkRequestData alloc] initWithRequestUrl:url
+                                                                                  httpMethod:@"GET"
+                                                                              connectionType:@"wifi"
+                                                                                 contentType:nil
+                                                                                   bytesSent:200];
+
+    NRMANetworkResponseData* responseData = [[NRMANetworkResponseData alloc] initWithHttpError:403
+                                                                                 bytesReceived:100
+                                                                                  responseTime:[timer timeElapsedInSeconds]
+                                                                           networkErrorMessage:@"unauthorized"
+                                                                           encodedResponseBody:responseBody
+                                                                                 appDataHeader:appDataHeader];
+
+    XCTAssertTrue([analytics addHTTPErrorEvent:requestData withResponse:responseData withPayload:nullptr]);
+
+    [self waitForRecoveredLegacyEventMatchingKey:@"requestPath" value:@"/api/v1/legacyNetworkErrorEventFields"];
+    NSDictionary *found = [self recoveredLegacyEventMatchingKey:@"requestPath" value:@"/api/v1/legacyNetworkErrorEventFields"];
+    XCTAssertNotNil(found, @"a network error event added through the legacy C++ path must be recoverable through the controller");
+    XCTAssertEqualObjects(found[@"eventType"], @"MobileRequestError");
+    XCTAssertEqualObjects(found[kNRMA_Attrib_errorType], kNRMA_Val_errorType_HTTP);
+    XCTAssertEqualObjects(found[kNRMA_RA_responseBody], responseBodyEncoded);
+    XCTAssertEqualObjects(found[kNRMA_RA_appDataHeader], appDataHeader);
+
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [NRMAAnalytics clearDuplicationStores];
+}
+
 @end
 
 
@@ -1874,6 +2079,110 @@
 
    XCTAssertTrue([analytics addSessionEvent], @"failed to successfully add session event");
 
+}
+
+// MARK: - EventPersistence wiring, legacy (C++) path (NR-631296)
+
+// Waits for `eventType` to show up in a recovery payload, polling the real
+// NREventPersistenceController.shared store -- the legacy path's bridge call
+// lands asynchronously (on NREventPersistenceController's own queue)
+// relative to -addCustomEvent:.
+- (void)waitForRecoveredLegacyEventType:(NSString *)eventType {
+    NSPredicate *predicate = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
+        for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+            if ([candidate[@"eventType"] isEqualToString:eventType]) {
+                return YES;
+            }
+        }
+        return NO;
+    }];
+    [self waitForExpectations:@[[[XCTNSPredicateExpectation alloc] initWithPredicate:predicate object:nil]] timeout:5];
+}
+
+- (void)testLegacyAddCustomEventIsRecoverable {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    XCTAssertTrue([analytics addCustomEvent:@"LegacyPersistenceWiringSentinel" withAttributes:@{}]);
+
+    [self waitForRecoveredLegacyEventType:@"LegacyPersistenceWiringSentinel"];
+
+    NSDictionary *found = nil;
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+        if ([candidate[@"eventType"] isEqualToString:@"LegacyPersistenceWiringSentinel"]) {
+            found = candidate;
+            break;
+        }
+    }
+    XCTAssertNotNil(found, @"a custom event added through the legacy C++ path must be recoverable through the controller");
+
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [NRMAAnalytics clearDuplicationStores];
+}
+
+- (void)testLegacyAddCustomEventDoesNotPersistWhenFlagDisabled {
+    [NRMAFlags disableFeatures:NRFeatureFlag_EventPersistence];
+
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    XCTAssertTrue([analytics addCustomEvent:@"LegacyFlagOffSentinel" withAttributes:@{}]);
+
+    // Re-enable and add a positive control: once *it* shows up in a recovery
+    // payload, the write pipeline has definitely had enough time to flush, so
+    // LegacyFlagOffSentinel's continued absence is meaningful.
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+    XCTAssertTrue([analytics addCustomEvent:@"LegacyFlushSentinel" withAttributes:@{}]);
+    [self waitForRecoveredLegacyEventType:@"LegacyFlushSentinel"];
+
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+        XCTAssertNotEqualObjects(candidate[@"eventType"], @"LegacyFlagOffSentinel",
+                                 @"an event added through the legacy path while the flag was disabled must never be persisted");
+    }
+
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [NRMAAnalytics clearDuplicationStores];
+}
+
+- (void)testOnHarvestSuccessConfirmsRecoveredEvents {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    XCTAssertTrue([analytics addCustomEvent:@"OnHarvestSuccessSentinel" withAttributes:@{}]);
+    [self waitForRecoveredLegacyEventType:@"OnHarvestSuccessSentinel"];
+
+    [analytics onHarvestSuccess];
+
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+        XCTAssertNotEqualObjects(candidate[@"eventType"], @"OnHarvestSuccessSentinel",
+                                 @"-onHarvestSuccess must confirm (and thus delete) the events it just staged for recovery");
+    }
+
+    [NRMAAnalytics clearDuplicationStores];
+}
+
+// Regression guard for a real bug found via manual testing: a freshly-recorded
+// legacy-path event's persisted copy was never deleted after it was
+// successfully included in an ordinary (non-recovery) harvest, so it would be
+// wrongly recovered and re-sent as a duplicate on every subsequent relaunch.
+- (void)testFreshlyHarvestedLegacyEventIsNotRecoverableAfterConfirmedHarvestSuccess {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    XCTAssertTrue([analytics addCustomEvent:@"FreshLegacyHarvestConfirmSentinel" withAttributes:@{}]);
+    [self waitForRecoveredLegacyEventType:@"FreshLegacyHarvestConfirmSentinel"];
+
+    // Simulate the normal (non-recovery) harvest path: pull events out for
+    // sending (marks them pending, per the fix), then confirm success.
+    NSString *json = [analytics analyticsJSONString];
+    XCTAssertTrue([json containsString:@"FreshLegacyHarvestConfirmSentinel"]);
+    [analytics onHarvestSuccess];
+
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+        XCTAssertNotEqualObjects(candidate[@"eventType"], @"FreshLegacyHarvestConfirmSentinel",
+                                 @"a legacy-path event already confirmed delivered via a normal harvest must never be recovered again");
+    }
+
+    [NRMAAnalytics clearDuplicationStores];
 }
 
 @end

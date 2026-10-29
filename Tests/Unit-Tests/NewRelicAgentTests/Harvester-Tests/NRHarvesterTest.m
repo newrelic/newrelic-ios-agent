@@ -15,6 +15,8 @@
 #import "NewRelicAgent+Development.h"
 #import "NRMAHarvestController.h"
 #import "NRMAAppToken.h"
+#import "NRMAFlags.h"
+#import <NewRelic/NewRelic-Swift.h>
 
 @interface NSBundle (AHHHH)
 + (NSBundle*) NRMA__mainBundle;
@@ -1224,6 +1226,75 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
 
     [mockHarvester stopMocking];
     [mockConnection stopMocking];
+}
+
+#pragma mark - Offline storage / event persistence confirmation
+
+// Regression guard: when a harvest fails with a network-connectivity error and its data gets
+// persisted to NRMAOfflineStorage instead of sent, the events it was carrying are now durable
+// inside that offline payload -- NREventPersistenceController must confirm (delete) them too,
+// or they'd also get resent via a future recovery sweep once the offline payload itself
+// eventually uploads successfully.
+- (void) testOfflinePersistedHarvestConfirmsPendingEvents {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+    [NRMAFlags enableFeatures:NRFeatureFlag_OfflineStorage];
+
+    [[NREventPersistenceController shared] recordEventWithEventUUID:@"offline-persist-confirm-uuid"
+                                                            eventType:@"OfflinePersistConfirmSentinel"
+                                                          timestampMs:1000
+                                                           attributes:@{}
+                                                            sessionId:@"offline-persist-confirm-test-session"
+                                                          realAgentId:7];
+
+    BOOL (^containsSentinel)(void) = ^BOOL{
+        for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+            if ([candidate[@"eventType"] isEqualToString:@"OfflinePersistConfirmSentinel"]) {
+                return YES;
+            }
+        }
+        return NO;
+    };
+
+    // The write lands on NREventPersistenceController's own queue, asynchronously relative to
+    // -recordEvent:. This same call also IS the real staging, mirroring the -onSessionStart
+    // recovery sweep that runs before every harvest attempt -- poll until it lands.
+    NSDate *stagedDeadline = [NSDate dateWithTimeIntervalSinceNow:5];
+    BOOL staged = NO;
+    while ([stagedDeadline timeIntervalSinceNow] > 0) {
+        staged = containsSentinel();
+        if (staged) { break; }
+        [NSThread sleepForTimeInterval:0.05];
+    }
+    XCTAssertTrue(staged, @"the event must be staged (pending confirmation) before the harvest attempt");
+
+    id mockHarvester = [OCMockObject partialMockForObject:harvester];
+    id mockConnection = [OCMockObject partialMockForObject:[mockHarvester connection]];
+    [[[mockHarvester stub] andReturn:[NRMAHarvesterConfiguration new]] harvesterConfiguration];
+
+    [[[mockConnection stub] andDo:^(NSInvocation *invocation) {
+        @throw [NSException exceptionWithName:@"" reason:@"" userInfo:nil];
+    }] sendConnect];
+
+    NRMAHarvestResponse* response = [[NRMAHarvestResponse alloc] init];
+    response.error = [NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorNotConnectedToInternet userInfo:nil];
+    [[[mockConnection stub] andReturn:response] sendData:OCMOCK_ANY];
+
+    [mockHarvester connected];
+
+    NSDate *confirmDeadline = [NSDate dateWithTimeIntervalSinceNow:5];
+    BOOL stillStaged = YES;
+    while ([confirmDeadline timeIntervalSinceNow] > 0) {
+        stillStaged = containsSentinel();
+        if (!stillStaged) { break; }
+        [NSThread sleepForTimeInterval:0.05];
+    }
+    XCTAssertFalse(stillStaged,
+                   @"once the harvest's events are durably stored in offline storage, NREventPersistenceController must confirm (delete) them too, or they'd be double-sent");
+
+    [mockHarvester stopMocking];
+    [mockConnection stopMocking];
+    [NRMAFlags disableFeatures:NRFeatureFlag_OfflineStorage];
+    [NRMAFlags disableFeatures:NRFeatureFlag_EventPersistence];
 }
 
 @end

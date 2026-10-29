@@ -27,7 +27,6 @@ public:
 
 class HexPersistenceManagerTest : public ::testing::Test {
 public:
-    PersistentStore<std::string, AnalyticEvent> eventStore;
     PersistentStore<std::string, BaseValue> attributeStore;
     Hex::HexPublisher* publisher;
     std::shared_ptr<Hex::HexStore> store;
@@ -38,16 +37,13 @@ public:
     Hex::HexController hexController;
     const char* path = "";
     HexPersistenceManagerTest() :
-            eventStore(AnalyticsController::getEventDupStoreName(),
-                       "",
-                       &EventManager::newEvent),
             attributeStore(AnalyticsController::getAttributeDupStoreName(),
                            "",
                            &Value::createValue),
             publisher(new Hex::HexPublisher("./persistenceManager")),
             store(std::make_shared<Hex::HexStore>("./persistenceManager")),
             applicationLicense("AAABBB123"),
-            analyticsController(new AnalyticsController(0, "", eventStore, attributeStore)),
+            analyticsController(new AnalyticsController(0, "", attributeStore)),
             persistenceManager{store,publisher},
             hexController(std::shared_ptr<AnalyticsController>(analyticsController),
                           std::make_shared<Hex::Report::AppInfo>(&applicationLicense,fbs::Platform_iOS),

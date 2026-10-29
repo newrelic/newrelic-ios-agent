@@ -76,7 +76,6 @@ namespace NewRelic {
         AttributeValidator _attributeValidator;
         PersistentStore<std::string, BaseValue> &_attributeDuplicationStore;
         PersistentStore<std::string, BaseValue> _attributeStore;
-        PersistentStore<std::string, AnalyticEvent> &_eventsDuplicationStore;
         EventManager _eventManager;
         SessionAttributeManager _sessionAttributeManager;
 
@@ -104,7 +103,6 @@ namespace NewRelic {
         void newSessionWithStartTime(unsigned long long sessionStartTime_ms);
 
         AnalyticsController(unsigned long long sessionStartTime_ms, const char *sharedPath,
-                            PersistentStore<std::string, AnalyticEvent> &eventDupStore,
                             PersistentStore<std::string, BaseValue> &attributeDupStore);
 
         double getCurrentSessionDuration_sec(unsigned long long current_time_ms) const; //throws std::logic_error
@@ -222,15 +220,9 @@ namespace NewRelic {
          *  these methods used to retrieve duplicated data used for appending to crash reports.
          */
 
-        void clearEventsDuplicationStore();
-
         void clearAttributesDuplicationStore();
 
         void resetEventTimestamp();
-
-        static std::shared_ptr <NRJSON::JsonArray> fetchDuplicatedEvents(
-                PersistentStore<std::string, AnalyticEvent> &eventStore,
-                bool shouldClearStore);
 
         static std::shared_ptr <NRJSON::JsonObject> fetchDuplicatedAttributes(
                 PersistentStore<std::string, BaseValue> &attributeStore,

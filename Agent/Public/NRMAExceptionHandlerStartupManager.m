@@ -11,15 +11,18 @@
 #import "NRMAAnalytics.h"
 #import "NRMACrashDataUploader.h"
 #import "NRMAJSON.h"
+#import "NRMAFlags.h"
 
 @implementation NRMAExceptionHandlerStartupManager
 
 - (void) fetchLastSessionsAnalytics{
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
         @synchronized (self) {
+            // Unused when event persistence is on -- NRMACrashDataWriter sources this instead.
+            if ([NRMAFlags shouldEnableEventPersistence]) {
+                return;
+            }
             self.attributeJson = [NRMAAnalytics getLastSessionsAttributes];
-
-            self.eventJson = [NRMAAnalytics getLastSessionsEvents];
         }
     });
 }
@@ -29,22 +32,7 @@
         @synchronized (self) {
 
             NSError* serializationError;
-            NSArray* events;
             NSDictionary* attributes;
-
-            @try {
-                if (self.eventJson != nil && [self.eventJson length] > 0) {
-
-                    events = [NRMAJSON JSONObjectWithData:[self.eventJson dataUsingEncoding:NSUTF8StringEncoding]
-                                                    options:0
-                                                      error:&serializationError];
-                }
-                if (serializationError != nil) {
-                    NRLOG_AGENT_VERBOSE(@"Failed to load last session's events for crash: %@",serializationError.localizedDescription);
-                }
-            } @catch (NSException* e) {
-                NRLOG_AGENT_VERBOSE(@"failed to serialize event json: %@",e.reason);
-            }
 
             @try {
                 if (self.attributeJson != nil && [self.attributeJson length] > 0) {
@@ -61,7 +49,6 @@
             }
 
             [NRMAExceptionHandlerManager startHandlerWithLastSessionsAttributes:attributes
-                                                             andAnalyticsEvents:events
                                                                   uploadManager:uploader];
         }
     });

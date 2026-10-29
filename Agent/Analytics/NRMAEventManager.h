@@ -12,13 +12,11 @@
 #import "NRMANetworkResponseData.h"
 #import "NRMANetworkRequestData.h"
 #import "NRMAPayload.h"
-#import "PersistentEventStore.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface NRMAEventManager : NSObject
 
-- (instancetype)initWithPersistentStore:(PersistentEventStore *)store;
 - (void)setMaxEventBufferSize:(NSUInteger)size;
 - (NSUInteger)getMaxEventBufferSize;
 - (void)setMaxEventBufferTimeInSeconds:(NSUInteger)seconds;
@@ -32,7 +30,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)resetTimestamp;
 - (nullable NSString *)getEventJSONStringWithError:(NSError *__autoreleasing *)error clearEvents:(BOOL)clearEvents;
 
-+ (nullable NSString *)getLastSessionEventsFromFilename:(NSString *)filename;
 @end
 
 NS_ASSUME_NONNULL_END

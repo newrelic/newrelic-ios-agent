@@ -18,6 +18,7 @@ static NSString* const kTimestampKey = @"Timestamp";
 static NSString* const kSessionElapsedTimeKey = @"SessionElapsedTime";
 static NSString* const kEventTypeKey = @"EventType";
 static NSString* const kAttributesKey = @"Attributes";
+static NSString* const kEventUUIDKey = @"EventUUID";
 
 @implementation NRMAMobileEvent
 
@@ -35,7 +36,8 @@ static NSString* const kAttributesKey = @"Attributes";
         _sessionElapsedTimeSeconds = sessionElapsedTimeSeconds;
         _attributeValidator = attributeValidator;
         _attributes = [[NSMutableDictionary alloc] init];
-        
+        _eventUUID = [[NSUUID UUID] UUIDString];
+
         if([NRMAFlags shouldEnableOfflineStorage]) {
             NRMAReachability* r = [NewRelicInternalUtils reachability];
             @synchronized(r) {
@@ -97,6 +99,7 @@ static NSString* const kAttributesKey = @"Attributes";
     [coder encodeDouble:_sessionElapsedTimeSeconds forKey:kSessionElapsedTimeKey];
     [coder encodeObject:_eventType forKey:kEventTypeKey];
     [coder encodeObject:_attributes forKey:kAttributesKey];
+    [coder encodeObject:_eventUUID forKey:kEventUUIDKey];
 }
 
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
@@ -106,8 +109,11 @@ static NSString* const kAttributesKey = @"Attributes";
         self.sessionElapsedTimeSeconds = [coder decodeDoubleForKey:kSessionElapsedTimeKey];
         self.eventType = [coder decodeObjectOfClass:[NSString class] forKey:kEventTypeKey];
         self.attributes = [coder decodeObjectOfClasses:[NSSet setWithArray:@[[NSDictionary class],[NSMutableDictionary class],[NSString class],[NSNumber class]]] forKey:kAttributesKey];
+        // Archives written before eventUUID existed won't have this key -- mint a
+        // fresh one rather than failing the decode, so old persisted events survive.
+        self.eventUUID = [coder decodeObjectOfClass:[NSString class] forKey:kEventUUIDKey] ?: [[NSUUID UUID] UUIDString];
     }
-    
+
     return self;
 }
 @end

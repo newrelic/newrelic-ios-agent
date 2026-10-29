@@ -49,7 +49,6 @@
 static NSString* __processLock = @"NRMAProcessLock";
 
 - (void) processReportsWithSessionAttributes:(NSDictionary*)attributes
-                             analyticsEvents:(NSArray*)events
 {
     NSError* error = nil;
     if (!_crashReporter) {
@@ -84,12 +83,26 @@ static NSString* __processLock = @"NRMAProcessLock";
         } else {
             [NRMACrashDataWriter writeCrashReport:report
                                      withMetaData:metadict
-                                sessionAttributes:attributes
-                                  analyticsEvents:events];
+                                sessionAttributes:attributes];
         }
     }
 
     [_crashReporter purgePendingCrashReport];
+}
+
++ (nullable NSString *) pendingCrashSessionId {
+#if TARGET_OS_WATCH
+    return nil;
+#else
+    PLCrashReporterConfig *config = [[PLCrashReporterConfig alloc] initWithSignalHandlerType:PLCrashReporterSignalHandlerTypeBSD
+                                                                        symbolicationStrategy:PLCrashReporterSymbolicationStrategyNone];
+    PLCrashReporter *reporter = [[PLCrashReporter alloc] initWithConfiguration:config];
+    if (![reporter hasPendingCrashReport]) {
+        return nil;
+    }
+    NRMACrashReportFileManager *fileManager = [[NRMACrashReportFileManager alloc] initWithCrashReporter:reporter];
+    return [fileManager getMetaData][@kNRMAMetaKey_Session];
+#endif
 }
 
 - (NSDictionary*) getMetaData

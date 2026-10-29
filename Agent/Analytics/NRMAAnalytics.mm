@@ -3,6 +3,8 @@
 #import "NRMAAnalytics.h"
 #import "NRMAAnalytics+cppInterface.h"
 #import "NRMALoggerBridge.hpp"
+#import "NRMAEventPersistenceBridge.hpp"
+#import <NewRelic/NewRelic-Swift.h>
 
 #import "NRLogger.h"
 #import "NRMAJSON.h"
@@ -64,21 +66,6 @@ static PersistentStore<std::string,BaseValue>* __attributeStore;
     return (*__attributeStore);
 }
 
-static PersistentStore<std::string,AnalyticEvent>* __eventStore;
-+ (PersistentStore<std::string, AnalyticEvent> &) eventDupStore
-{
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        __eventStore = new PersistentStore<std::string,AnalyticEvent>{AnalyticsController::getEventDupStoreName(),
-                                                                     [NewRelicInternalUtils getStorePath].UTF8String,
-                                                                     &NewRelic::EventManager::newEvent,
-                                                                     [](std::string const& key, std::shared_ptr<AnalyticEvent> event){
-                                                                        return key == EventManager::createKey(event) ;
-                                                                     }};
-    });
-    return (*__eventStore);
-}   
-
 - (std::shared_ptr<NewRelic::AnalyticsController>&) analyticsController {
     return _analyticsController;
 }
@@ -136,11 +123,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
         // Handle New Event System NRMAnalytics Constructor
         if([NRMAFlags shouldEnableNewEventSystem]){
-            NSString *filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:kNRMA_EventStoreFilename];
-
-            PersistentEventStore *eventStore = [[PersistentEventStore alloc] initWithFilename:filename andMinimumDelay:.025];
-            
-            _eventManager = [[NRMAEventManager alloc] initWithPersistentStore:[eventStore autorelease]];
+            _eventManager = [[NRMAEventManager alloc] init];
             _attributeValidator = [[NRMAAttributeValidator alloc] init];
             _sessionAttributeManager = [[NRMASAM alloc] initWithAttributeValidator:_attributeValidator];
 
@@ -181,7 +164,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             }
 
             NSString* documentDirURL = [NewRelicInternalUtils getStorePath];
-            _analyticsController = std::make_shared<NewRelic::AnalyticsController>(sessionStartTime,documentDirURL.UTF8String, [NRMAAnalytics eventDupStore], [NRMAAnalytics attributeDupStore]);
+            _analyticsController = std::make_shared<NewRelic::AnalyticsController>(sessionStartTime,documentDirURL.UTF8String, [NRMAAnalytics attributeDupStore]);
+            NewRelic::EventManager::setPersistenceBridge(std::make_shared<NewRelic::NRMAEventPersistenceBridge>(NewRelic::NRMAEventPersistenceBridge()));
             //__kNRMA_RA_upgradeFrom and __kNRMA_RA_install are only valid for one session
             //and will be set shortly after the initialization of NRMAAnalytics.
             //They can be removed now and it shouldn't interfere with the generation
@@ -235,8 +219,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (void) dealloc {
     [__eventTypeRegex release];
-    [_eventManager dealloc];
-    [_sessionAttributeManager dealloc];
+    [_eventManager release];
+    [_sessionAttributeManager release];
     [_attributeValidator release];
     [_sessionStartTime release];
 
@@ -1089,6 +1073,28 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         return nil;
     }
 }
+
+- (NSDictionary*) currentSessionAttributesForPersistence {
+    if ([NRMAFlags shouldEnableNewEventSystem]) {
+        return [_sessionAttributeManager currentSessionAttributes] ?: @{};
+    }
+    try {
+        auto attributes = _analyticsController->getSessionAttributeJSON();
+        std::stringstream stream;
+        stream << std::setprecision(13) << *attributes;
+        NSString *jsonString = [NSString stringWithUTF8String:stream.str().c_str()];
+        NSDictionary *parsed = [NRMAJSON JSONObjectWithData:[jsonString dataUsingEncoding:NSUTF8StringEncoding]
+                                                      options:0
+                                                        error:nil];
+        return [parsed isKindOfClass:[NSDictionary class]] ? parsed : @{};
+    } catch (std::exception& e) {
+        NRLOG_AGENT_VERBOSE(@"Failed to generate stable attributes for persistence: %s", e.what());
+    } catch (...) {
+        NRLOG_AGENT_VERBOSE(@"Failed to generate stable attributes for persistence.");
+    }
+    return @{};
+}
+
 + (NSString*) getLastSessionsAttributes {
     if([NRMAFlags shouldEnableNewEventSystem]){
         return [NRMASAM getLastSessionsAttributes];
@@ -1113,39 +1119,10 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     }
 }
 
-+ (NSString*) getLastSessionsEvents{
-    if([NRMAFlags shouldEnableNewEventSystem]) {
-        NSString *filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:kNRMA_EventStoreFilename];
-        return [NRMAEventManager getLastSessionEventsFromFilename:filename];
-    } else {
-        try {
-            auto events = AnalyticsController::fetchDuplicatedEvents([self eventDupStore], true);
-            std::stringstream stream;
-            stream << std::setprecision(13) << *events;
-            
-            NSString* jsonString = [NSString stringWithUTF8String:stream.str().c_str()];
-            
-            if (!jsonString.length) {
-                return nil;
-            }
-            
-            return jsonString;
-        } catch (std::exception& e) {
-            NRLOG_AGENT_VERBOSE(@"Failed to fetch event dup store: %s",e.what());
-            
-        } catch (...) {
-            NRLOG_AGENT_VERBOSE(@"Failed to fetch event dup store.");
-        }
-    }
-    
-    return nil;
-}
-
 + (void) clearDuplicationStores
 {
     try {
         [self attributeDupStore].clear();
-        [self eventDupStore].clear();
     } catch (std::exception& e) {
         NRLOG_AGENT_VERBOSE(@"Failed to clear dup stores: %s",e.what());
     } catch(...) {
@@ -1162,7 +1139,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     } else {
         try {
             _analyticsController->clearAttributesDuplicationStore();
-            _analyticsController->clearEventsDuplicationStore();
             _analyticsController->resetEventTimestamp();
         } catch (std::exception& e) {
             NRLOG_AGENT_VERBOSE(@"Failed to clear last sessions' analytcs, %s",e.what());
@@ -1231,6 +1207,22 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if (_sessionWillEnd || _newSession || queueTimeExceeded) {
         _newSession = NO;
         [self handleHarvest];
+    }
+
+    if ([NRMAFlags shouldEnableEventPersistence]) {
+        [[NREventPersistenceController shared] performRetentionSweepWithNowMs:(int64_t)currentTimeMs];
+        NSString *sessionId = [[NewRelicAgentInternal sharedInstance] currentSessionId];
+        if (sessionId.length > 0) {
+            [[NREventPersistenceController shared] refreshSessionManifestWithSessionId:sessionId
+                                                                                   nowMs:(int64_t)currentTimeMs
+                                                                      sessionAttributes:[self currentSessionAttributesForPersistence]];
+        }
+    }
+}
+
+- (void) onHarvestSuccess {
+    if ([NRMAFlags shouldEnableEventPersistence]) {
+        [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
     }
 }
 

@@ -62,12 +62,10 @@ static const NSString* NRMAManagerAccessorLock = @"managerLock";
 
 
 + (void) startHandlerWithLastSessionsAttributes:(NSDictionary*)attributes
-                             andAnalyticsEvents:(NSArray*)events
                                   uploadManager:(NRMACrashDataUploader*)uploader {
     NRMA_updateDiskUsage();
     NRMA_updateModelNumber();
     [self setManager:[[NRMAExceptionHandlerManager alloc] initWithLastSessionsAttributes:attributes
-                                                                      andAnalyticsEvents:events
                                                                            uploadManager:uploader]];
     //The following line triggers a memory usage notification.
     [NRMAMemoryVitals memoryUseInMegabytes];
@@ -77,7 +75,6 @@ static const NSString* NRMAManagerAccessorLock = @"managerLock";
 }
 
 - (instancetype) initWithLastSessionsAttributes:(NSDictionary*)attributes
-                             andAnalyticsEvents:(NSArray*)events
                                   uploadManager:(NRMACrashDataUploader*)uploader {
     self = [super init];
     if (self) {
@@ -119,8 +116,7 @@ static const NSString* NRMAManagerAccessorLock = @"managerLock";
                 modifiedAttributes[kNRMA_RA_hasReplay] = @YES;
             }
 
-            [_reportManager processReportsWithSessionAttributes:modifiedAttributes
-                                                analyticsEvents:events];
+            [_reportManager processReportsWithSessionAttributes:modifiedAttributes];
 
             NRMAReachability* r = [NewRelicInternalUtils reachability];
             @synchronized(r) {

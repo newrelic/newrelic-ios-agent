@@ -45,11 +45,9 @@ namespace NewRelic {
 
 class EventManagerTest : public ::testing::Test {
 public:
-    const char* storeFilename = "pewpew.txt";
     unsigned long long epoch_time_ms;
     std::string sessionDataPathString;
     const char* sessionDataPath;
-    PersistentStore<std::string, AnalyticEvent> store;
     AttributeValidator validator = AttributeValidator([](const char* name) { return strlen(name) < 10; },
                                                       [](const char* value) { return strlen(value) < 10; },
                                                       [](const char* eventType) { return true; });
@@ -58,9 +56,7 @@ public:
                          epoch_time_ms((unsigned long long) std::chrono::duration_cast<std::chrono::milliseconds>(
                                  std::chrono::system_clock().now().time_since_epoch()).count()),
                          sessionDataPathString(""), // std::to_string(epoch_time_ms)),
-                         sessionDataPath(sessionDataPathString.c_str()),
-                         store(PersistentStore<std::string, AnalyticEvent>(storeFilename, sessionDataPath,
-                                                                           &EventManager::newEvent)) {
+                         sessionDataPath(sessionDataPathString.c_str()) {
     }
 
 protected:
@@ -70,25 +66,24 @@ protected:
     virtual void TearDown() {
         EventBufferConfig::getInstance().setMaxEventBufferTime(EventBufferConfig::kMaxEventBufferTimeSecDefault);
         EventBufferConfig::getInstance().setMaxEventBufferSize(EventBufferConfig::kMaxEventBufferSizeDefault);
-        remove(store.getFullStorePath());
         remove(sessionDataPath);
     }
 };
 
 class MockEventManager : public EventManager {
 public:
-    MockEventManager(PersistentStore<std::string, AnalyticEvent>& store) : EventManager(store) {
+    MockEventManager() {
     }
 
     MOCK_METHOD0(getRemovalIndex, int());
 };
 
 TEST_F(EventManagerTest, testPersistantBuffer) {
-    EventManager manager{store};
+    EventManager manager{};
 
     manager.setMaxBufferSize(1);
 
-    EventManager secondManager{store};
+    EventManager secondManager{};
 
     // add two events -- we should only get 1 because our settings should persist
     auto event1 = manager.newCustomMobileEvent("custom1", epoch_time_ms, 1, validator);
@@ -101,7 +96,7 @@ TEST_F(EventManagerTest, testPersistantBuffer) {
 }
 
 TEST_F(EventManagerTest, testAgedEvents) {
-    EventManager manager{store};
+    EventManager manager{};
     long long epoch_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock().now().time_since_epoch()).count();
     ASSERT_FALSE(manager.didReachMaxQueueTime(epoch_time_ms));
@@ -114,7 +109,7 @@ TEST_F(EventManagerTest, testAgedEvents) {
 }
 
 TEST_F(EventManagerTest, testSetMaxEventBufferTime) {
-    EventManager manager{store};
+    EventManager manager{};
 
     //nothing will age out!
     manager.setMaxBufferTime(UINT32_MAX);
@@ -129,7 +124,7 @@ TEST_F(EventManagerTest, testSetMaxEventBufferTime) {
 }
 
 TEST_F(EventManagerTest, testMaxQueueSize) {
-    EventManager manager{store};
+    EventManager manager{};
 
     manager.setMaxBufferSize(1);
 
@@ -152,7 +147,7 @@ TEST_F(EventManagerTest, testMaxQueueSize) {
 }
 
 TEST_F(EventManagerTest, testGetRemoveIndexFromQueue) {
-    MockEventManager manager{store};
+    MockEventManager manager{};
 
     EXPECT_CALL(manager, getRemovalIndex())
             .WillOnce(Return(0)); //this will remove the 1 item in the event queue
@@ -171,7 +166,7 @@ TEST_F(EventManagerTest, testGetRemoveIndexFromQueue) {
 }
 
 TEST_F(EventManagerTest, testGetRemoveIndexDropNew) {
-    MockEventManager manager{store};
+    MockEventManager manager{};
 
     manager.setMaxBufferSize(1);
 
@@ -190,7 +185,7 @@ TEST_F(EventManagerTest, testGetRemoveIndexDropNew) {
 }
 
 TEST_F(EventManagerTest, testZeroQueueSize) {
-    EventManager manager{store};
+    EventManager manager{};
 
     manager.setMaxBufferSize(0);
 
@@ -201,29 +196,12 @@ TEST_F(EventManagerTest, testZeroQueueSize) {
     ASSERT_EQ(0, json->size());
 }
 
-TEST_F(EventManagerTest, testDuplicationStore) {
-    PersistentStore<std::string, AnalyticEvent> store(storeFilename, sessionDataPath,
-                                                      &EventManager::newEvent);
-
-    EventManager manager{store};
-    auto event = manager.newCustomMobileEvent("blah", epoch_time_ms, epoch_time_ms / 1000, validator);
-    manager.addEvent(event);
-
-    store.synchronize();
-
-    auto duplicatedEvents = store.load();
-    ASSERT_EQ(1, duplicatedEvents.size());
-
-    auto storedEvent = (duplicatedEvents.begin()->second);
-    ASSERT_EQ(*event, *storedEvent);
-}
-
 TEST_F(EventManagerTest, testJSONAsValue) {
     auto validator = AttributeValidator([](const char* name) { return true; },
                                                             [](const char* value) { return true; },
                                                             [](const char* eventType) { return true; });
 
-    EventManager manager{store};
+    EventManager manager{};
     NRJSON::JsonObject object;
     object["hello"] = "\"world\"";
 
@@ -258,7 +236,7 @@ TEST_F(EventManagerTest, testEscapeCharacters) {
                                                             [](const char* value) { return true; },
                                                             [](const char* eventType) { return true; });
 
-    EventManager manager{store};
+    EventManager manager{};
     auto event = manager.newCustomMobileEvent("hello\r\n\b\a\f\v\t", 0, 1, validator);
     event->addAttribute("blah\t\b\a\n\f\v\t", "blah");
     event->addAttribute("blah\\t\\b\\a\\n\\f\\v\\t", "blah\t\b\a\n\f\v\t");
@@ -274,7 +252,7 @@ TEST_F(EventManagerTest, testBadSerializedEvent) {
                                                             [](const char* value) { return true; },
                                                             [](const char* eventType) { return true; });
 
-    EventManager manager{store};
+    EventManager manager{};
 
     std::stringstream strs;
     strs << "ta.com/graphql\tresponseTime\t1\t0\t0.374951904296875\tstatusCode\t1\t2\t200\t";
@@ -295,7 +273,7 @@ TEST_F(EventManagerTest, testBadSerializedEvent) {
 // !is.fail() guard. Without that guard these tests will hang until CI kills
 // the run.
 TEST_F(EventManagerTest, testDeserializeDoesNotSpinOnEmptyAttributeNameUserAction) {
-    EventManager manager{store};
+    EventManager manager{};
 
     // "MobileUserAction" routes to deserializeUserActionEvent. After ts and
     // elapsed are consumed, the remaining "\t" is exactly the trap: zero
@@ -307,7 +285,7 @@ TEST_F(EventManagerTest, testDeserializeDoesNotSpinOnEmptyAttributeNameUserActio
 }
 
 TEST_F(EventManagerTest, testDeserializeDoesNotSpinOnEmptyAttributeNameMobileEvent) {
-    EventManager manager{store};
+    EventManager manager{};
 
     // Same trap as above, routed through deserializeMobileEvent instead of
     // deserializeUserActionEvent. Mobile / Interaction / name / ts / elapsed
@@ -320,7 +298,7 @@ TEST_F(EventManagerTest, testDeserializeDoesNotSpinOnEmptyAttributeNameMobileEve
 }
 
 TEST_F(EventManagerTest, testEmptyDoesNotResetTimestamp) {
-    EventManager manager{store};
+    EventManager manager{};
 
     // Set max buffer time to 1 second
     manager.setMaxBufferTime(1);
@@ -345,7 +323,7 @@ TEST_F(EventManagerTest, testEmptyDoesNotResetTimestamp) {
 }
 
 TEST_F(EventManagerTest, testResetTimestampResetsTimestamp) {
-    EventManager manager{store};
+    EventManager manager{};
 
     // Set max buffer time to 1 second
     manager.setMaxBufferTime(1);
@@ -370,7 +348,7 @@ TEST_F(EventManagerTest, testResetTimestampResetsTimestamp) {
 }
 
 TEST_F(EventManagerTest, testAddEventIncrementsRecordedCount) {
-    EventManager manager{store};
+    EventManager manager{};
     auto event = manager.newCustomMobileEvent("custom", epoch_time_ms, 1, validator);
 
     auto result = manager.addEvent(event);
@@ -384,7 +362,7 @@ TEST_F(EventManagerTest, testAddEventIncrementsRecordedCount) {
 }
 
 TEST_F(EventManagerTest, testOverflowEvictsAndIncrementsEvictedCount) {
-    EventManager manager{store};
+    EventManager manager{};
     manager.setMaxBufferSize(1);
 
     auto first = manager.newCustomMobileEvent("custom", epoch_time_ms - 1000, 1, validator);
@@ -405,7 +383,7 @@ TEST_F(EventManagerTest, testOverflowEvictsAndIncrementsEvictedCount) {
 }
 
 TEST_F(EventManagerTest, testOutOfBoundsRemovalIndexDropsIncomingEvent) {
-    MockEventManager manager{store};
+    MockEventManager manager{};
     manager.setMaxBufferSize(1);
 
     auto first = manager.newCustomMobileEvent("custom", epoch_time_ms - 1000, 1, validator);

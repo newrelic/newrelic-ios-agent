@@ -23,11 +23,9 @@ namespace  NewRelic {
 
     class AnalyticEventTest : public ::testing::Test {
     public:
-        const char *storeFilename = "pewpew.txt";
         unsigned long long epoch_time_ms;
         std::string sessionDataPathString;
         const char *sessionDataPath;
-        PersistentStore<std::string, AnalyticEvent> store;
         AttributeValidator validator = (AttributeValidator([](const char *) { return true; },
                                                            [](const char *) { return true; },
                                                            [](const char *) { return true; }));
@@ -37,9 +35,7 @@ namespace  NewRelic {
                               epoch_time_ms((unsigned long long) std::chrono::duration_cast<std::chrono::milliseconds>(
                                       std::chrono::system_clock().now().time_since_epoch()).count()),
                               sessionDataPathString(""), // std::to_string(epoch_time_ms)),
-                              sessionDataPath(sessionDataPathString.c_str()),
-                              store(PersistentStore<std::string, AnalyticEvent>(storeFilename, sessionDataPath,
-                                                                                &EventManager::newEvent)) {
+                              sessionDataPath(sessionDataPathString.c_str()) {
         }
 
     protected:
@@ -48,7 +44,6 @@ namespace  NewRelic {
         }
 
         virtual void TearDown() {
-            remove(store.getFullStorePath());
         }
     };
 
@@ -107,7 +102,7 @@ namespace  NewRelic {
     }
 
 TEST_F(AnalyticEventTest, testRequestEventCreation) {
-    EventManager manager{store};
+    EventManager manager{};
 
     auto event = manager.newRequestEvent(1, 20, Connectivity::Facade::getInstance().startTrip(), validator);
     auto json = event->generateJSONObject();
@@ -117,7 +112,7 @@ TEST_F(AnalyticEventTest, testRequestEventCreation) {
 }
 
 TEST_F(AnalyticEventTest, testNetworkErrorEventCreation) {
-    EventManager manager{store};
+    EventManager manager{};
     auto payload = Connectivity::Facade::getInstance().newPayload();
     auto event = manager.newNetworkErrorEvent(1, 20, nullptr, nullptr, std::move(payload), validator);
     auto json = event->generateJSONObject();
@@ -128,7 +123,7 @@ TEST_F(AnalyticEventTest, testNetworkErrorEventCreation) {
 
     TEST_F(AnalyticEventTest, testUserActionEventCreation) {
 
-        EventManager manager{store};
+        EventManager manager{};
         auto event = manager.newUserActionEvent(1, 20, validator);
         auto json = event->generateJSONObject();
         ASSERT_EQ(__kNRMA_RET_mobileUserAction,(*json)["eventType"].as_string());
@@ -145,7 +140,7 @@ TEST_F(AnalyticEventTest, testNetworkErrorEventCreation) {
     }
 
     TEST_F(AnalyticEventTest, testSessionAnalyticEventCreation){
-        EventManager manager{store};
+        EventManager manager{};
         auto event = manager.newSessionAnalyticEvent(1,20,validator);
         auto json = event->generateJSONObject();
         ASSERT_EQ("Session",(*json)["category"].as_string());
@@ -155,7 +150,7 @@ TEST_F(AnalyticEventTest, testNetworkErrorEventCreation) {
     }
 
     TEST_F(AnalyticEventTest, testSessionAnalyticEventSerialization) {
-        EventManager manager{store};
+        EventManager manager{};
         auto event = manager.newSessionAnalyticEvent(1,20,validator);
 
         std::stringstream ss;
@@ -172,8 +167,7 @@ TEST_F(AnalyticEventTest, testNetworkErrorEventCreation) {
                                             [](const char *) { return true; },
                                             [](const char *) { return true; });
         std::remove("pewpew.txt");
-        PersistentStore<std::string, AnalyticEvent> store("pewpew.txt", "", &EventManager::newEvent);
-        EventManager eventManager(store);
+        EventManager eventManager;
         auto event = eventManager.newCustomMobileEvent("TestEvent",
                                                        1234567890,
                                                        1234567890,
@@ -185,8 +179,7 @@ TEST_F(AnalyticEventTest, testNetworkErrorEventCreation) {
     TEST_F(AnalyticEventTest, testCustomEvent) {
         auto validator = (AttributeValidator([](const char *) { return true; }, [](const char *) { return true; }, [](const char *) { return true; }));
         std::remove("pewpew.txt");
-        PersistentStore<std::string, AnalyticEvent> store("pewpew.txt", "", &EventManager::newEvent);
-        EventManager eventManager(store);
+        EventManager eventManager;
         auto event = eventManager.newCustomEvent("TestEvent", 1234567890,1234567890,validator);
         event->addAttribute("blah","blah");
         event->addAttribute("asdf", 100.0f);
@@ -216,8 +209,7 @@ TEST_F(AnalyticEventTest, testNetworkErrorEventCreation) {
                                             [](const char *) { return true; },
                                             [](const char *) { return true; });
         std::remove("pewpew.txt");
-        PersistentStore<std::string, AnalyticEvent> store("pewpew.txt", "", &EventManager::newEvent);
-        EventManager eventManager(store);
+        EventManager eventManager;
         auto event = eventManager.newCustomMobileEvent("TestEvent",
                                                        1234567890,
                                                        1234567890,
@@ -243,8 +235,7 @@ TEST_F(AnalyticEventTest, testNetworkErrorEventCreation) {
                                              [](const char *) { return true; },
                                              [](const char *) { return true; }));
         std::remove("pewpew.txt");
-        PersistentStore<std::string, AnalyticEvent> store("pewpew.txt", "", &EventManager::newEvent);
-        EventManager eventManager(store);
+        EventManager eventManager;
         auto event = eventManager.newInteractionAnalyticEvent("TestEvent",
                                                               1234567890,
                                                               1234567890,
@@ -271,9 +262,8 @@ TEST_F(AnalyticEventTest, testNetworkErrorEventCreation) {
                                              [](const char *) { return true; },
                                              [](const char *) { return true; }));
         std::remove("pewpew.txt");
-        PersistentStore<std::string, AnalyticEvent> store("pewpew.txt", "", &EventManager::newEvent);
 
-        EventManager eventManager(store);
+        EventManager eventManager;
         auto event = eventManager.newCustomMobileEvent("custom",
                                                        1234567890,
                                                        1234567890,
@@ -300,8 +290,7 @@ TEST_F(AnalyticEventTest, testNetworkErrorEventCreation) {
                                              [](const char *) { return true; },
                                              [](const char *) { return true; }));
         std::remove("pewpew.txt");
-        PersistentStore<std::string, AnalyticEvent> store("pewpew.txt", "", &EventManager::newEvent);
-        EventManager eventManager(store);
+        EventManager eventManager;
         auto event = eventManager.newCustomMobileEvent("custom",
                                                        1234567890,
                                                        1234567890,
@@ -318,8 +307,7 @@ TEST_F(AnalyticEventTest, testNetworkErrorEventCreation) {
                                              [](const char *) { return true; },
                                              [](const char *) { return true; }));
         std::remove("pewpew.txt");
-        PersistentStore<std::string, AnalyticEvent> store("pewpew.txt", "", &EventManager::newEvent);
-        EventManager eventManager(store);
+        EventManager eventManager;
 
         std::thread th1{[&eventManager, &validator]() {
             for (int i = 0; i < 10; i++) {
@@ -421,8 +409,7 @@ TEST_F(AnalyticEventTest, testNetworkErrorEventCreation) {
                                              [](const char *) { return true; },
                                              [](const char *) { return true; }));
         std::remove("pewpew.txt");
-        PersistentStore<std::string, AnalyticEvent> store("pewpew.txt", "", &EventManager::newEvent);
-        EventManager eventmanager(store);
+        EventManager eventmanager;
         std::stringstream ss;
         auto event = EventManager::newCustomMobileEvent("nam e",
                                                         1234567890,
@@ -439,50 +426,12 @@ TEST_F(AnalyticEventTest, testNetworkErrorEventCreation) {
 
     }
 
-    TEST(AnalyticEvent, testDupStore) {
-
-        auto validator = (AttributeValidator([](const char *) { return true; },
-                                             [](const char *) { return true; },
-                                             [](const char *) { return true; }));
-        std::remove("pewpew.txt");
-        PersistentStore<std::string, AnalyticEvent> store("pewpew.txt", "", &EventManager::newEvent);
-        EventManager eventManager(store);
-        std::stringstream ss;
-        auto event = eventManager.newCustomMobileEvent("nam e",
-                                                       1234567890,
-                                                       1234567890,
-                                                       validator);
-
-        event->addAttribute("bla h", "b lah");
-        event->addAttribute("pe w", "pe w");
-        event->addAttribute("12 345", 12345);
-
-        eventManager.addEvent(event);
-
-        auto event2 = eventManager.newCustomMobileEvent("nam e",
-                                                        123,
-                                                        1234,
-                                                        validator);
-
-        event2->addAttribute("asdf","asdf");
-
-        eventManager.addEvent(event2);
-
-        //to test the persistent store there must be a beat to allow the workQueue to catch up.
-        store.synchronize();
-
-        auto map = store.load();
-
-        ASSERT_EQ(2,map.size());
-    }
-
     TEST(AnalyticEvent, testFullSerialization) {
         auto validator = (AttributeValidator([](const char *) { return true; },
                                              [](const char *) { return true; },
                                              [](const char *) { return true; }));
         std::remove("pewpew.txt");
-        PersistentStore<std::string, AnalyticEvent> store("pewpew.txt", "", &EventManager::newEvent);
-        EventManager eventManager(store);
+        EventManager eventManager;
         std::stringstream ss;
         auto event = eventManager.newCustomMobileEvent("nam e",
                                                        1234567890,
@@ -515,8 +464,7 @@ TEST_F(AnalyticEventTest, testNetworkErrorEventCreation) {
 
 
 
-        PersistentStore<std::string, AnalyticEvent> store("pewpew.txt", "", &EventManager::newEvent);
-        EventManager eventManager(store);
+        EventManager eventManager;
         std::stringstream ss;
         auto event = eventManager.newCustomMobileEvent("nam\te",
                                                        1234567890,
@@ -541,8 +489,7 @@ TEST_F(AnalyticEventTest, testDTIntrinsics) {
 
 
 
-    PersistentStore<std::string, AnalyticEvent> store("pewpew.txt", "", &EventManager::newEvent);
-    EventManager eventManager(store);
+    EventManager eventManager;
     std::stringstream ss;
 
     auto payload_t = Connectivity::Facade::getInstance().startTrip();
@@ -575,8 +522,7 @@ TEST_F(AnalyticEventTest, testRequestErrorIntrinsics) {
 
 
 
-    PersistentStore<std::string, AnalyticEvent> store("pewpew.txt", "", &EventManager::newEvent);
-    EventManager eventManager(store);
+    EventManager eventManager;
     std::stringstream ss;
 
     auto payload_t = Connectivity::Facade::getInstance().startTrip();
@@ -605,8 +551,7 @@ TEST_F(AnalyticEventTest, testRequestsIntrinsics) {
 
 
 
-    PersistentStore<std::string, AnalyticEvent> store("pewpew.txt", "", &EventManager::newEvent);
-    EventManager eventManager(store);
+    EventManager eventManager;
     std::stringstream ss;
 
     auto payload_t = Connectivity::Facade::getInstance().startTrip();

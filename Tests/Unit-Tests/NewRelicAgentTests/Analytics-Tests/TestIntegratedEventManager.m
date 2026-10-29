@@ -11,8 +11,16 @@
 #import "NRMAEventManager.h"
 
 #import "NRMACustomEvent.h"
+#import "NRMAInteractionEvent.h"
+#import "NRMASessionEvent.h"
+#import "NRMAUserActionEvent.h"
+#import "NRMARequestEvent.h"
+#import "NRMANetworkErrorEvent.h"
+#import "NRMAPayload.h"
+#import "Constants.h"
 #import "BlockAttributeValidator.h"
 #import "NRMAFlags.h"
+#import <NewRelic/NewRelic-Swift.h>
 
 @interface TestIntegratedEventManager : XCTestCase {
     NRMAEventManager *sut;
@@ -58,16 +66,13 @@
 
 @implementation TestIntegratedEventManager
 
-    static NSString *testFilename = @"fbstest_tempStore";
-
 - (void)setUp {
-    
+
     [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
 
     // Put setup code here. This method is called before the invocation of each test method in the class.
-    sut = [[NRMAEventManager alloc] initWithPersistentStore:[[PersistentEventStore alloc] initWithFilename:testFilename
-                                                                                           andMinimumDelay:1]];
-    
+    sut = [[NRMAEventManager alloc] init];
+
     if(agreeableAttributeValidator == nil) {
         agreeableAttributeValidator = [[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
             return YES;
@@ -351,8 +356,7 @@
 }
 
 - (void)testOutOfBoundsEvictionIndexDropsIncomingEventInstead {
-    DropAllEventManager *dropSut = [[DropAllEventManager alloc] initWithPersistentStore:[[PersistentEventStore alloc] initWithFilename:@"fbstest_dropall"
-                                                                                                                        andMinimumDelay:1]];
+    DropAllEventManager *dropSut = [[DropAllEventManager alloc] init];
     [dropSut setMaxEventBufferSize:1];
     NRMACustomEvent *first = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 1"
                                                                timestamp:3
@@ -380,8 +384,7 @@
 // An event added while the buffer is being drained was not in the JSON just produced, so it must
 // still be there for the next drain rather than cleared along with the events that were.
 - (void)testEventAddedDuringDrainSurvivesForTheNextDrain {
-    ConcurrentInsertEventManager *drainSut = [[ConcurrentInsertEventManager alloc] initWithPersistentStore:[[PersistentEventStore alloc] initWithFilename:@"fbstest_concurrentinsert"
-                                                                                                                                       andMinimumDelay:1]];
+    ConcurrentInsertEventManager *drainSut = [[ConcurrentInsertEventManager alloc] init];
     [drainSut addEvent:[[NRMACustomEvent alloc] initWithEventType:@"Custom Event 1"
                                                         timestamp:3
                                       sessionElapsedTimeInSeconds:20
@@ -404,6 +407,347 @@
                                                              error:nil];
     XCTAssertEqual(secondDrain.count, 1, @"the event added mid-drain was cleared without being serialized");
     XCTAssertEqualObjects(secondDrain.firstObject[@"eventType"], @"Custom Event 2");
+}
+
+// MARK: - EventPersistence wiring (NR-631296)
+
+// Waits for `eventType` to show up in a recovery payload, polling the real
+// NREventPersistenceController.shared store -- the write lands on that
+// controller's own internal queue, asynchronously relative to -addEvent:.
+- (void)waitForRecoveredEventType:(NSString *)eventType {
+    NSPredicate *predicate = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
+        for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+            if ([candidate[@"eventType"] isEqualToString:eventType]) {
+                return YES;
+            }
+        }
+        return NO;
+    }];
+    [self waitForExpectations:@[[[XCTNSPredicateExpectation alloc] initWithPredicate:predicate object:nil]] timeout:5];
+}
+
+- (void)testAddEventWithPersistenceEnabledIsRecoverable {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+
+    NRMAEventManager *manager = [[NRMAEventManager alloc] init];
+
+    NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:@"PersistenceWiringSentinel"
+                                                                timestamp:12345
+                                              sessionElapsedTimeInSeconds:1
+                                                   withAttributeValidator:agreeableAttributeValidator];
+    XCTAssertTrue([manager addEvent:event]);
+
+    [self waitForRecoveredEventType:@"PersistenceWiringSentinel"];
+
+    NSDictionary *found = nil;
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+        if ([candidate[@"eventType"] isEqualToString:@"PersistenceWiringSentinel"]) {
+            found = candidate;
+            break;
+        }
+    }
+    XCTAssertNotNil(found, @"the event persisted by addEvent: must be recoverable through the controller");
+
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+}
+
+- (void)testAddEventDoesNotPersistWhenFlagDisabled {
+    [NRMAFlags disableFeatures:NRFeatureFlag_EventPersistence];
+
+    NRMAEventManager *manager = [[NRMAEventManager alloc] init];
+
+    NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:@"FlagOffSentinel"
+                                                                timestamp:1
+                                              sessionElapsedTimeInSeconds:1
+                                                   withAttributeValidator:agreeableAttributeValidator];
+    XCTAssertTrue([manager addEvent:event]);
+
+    // Re-enable and add a second event as a positive control: once *it*
+    // shows up in a recovery payload, the write pipeline has definitely had
+    // enough time to flush, so FlagOffSentinel's continued absence is
+    // meaningful rather than just "not written yet".
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+    NRMACustomEvent *sentinel = [[NRMACustomEvent alloc] initWithEventType:@"FlushSentinel"
+                                                                   timestamp:2
+                                                 sessionElapsedTimeInSeconds:1
+                                                      withAttributeValidator:agreeableAttributeValidator];
+    XCTAssertTrue([manager addEvent:sentinel]);
+    [self waitForRecoveredEventType:@"FlushSentinel"];
+
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+        XCTAssertNotEqualObjects(candidate[@"eventType"], @"FlagOffSentinel",
+                                 @"an event added while the flag was disabled must never be persisted");
+    }
+
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+}
+
+// Regression guard for a real bug found via manual testing: a freshly-recorded
+// event's persisted copy was never deleted after it was successfully included
+// in an ordinary (non-recovery) harvest, so it would be wrongly recovered and
+// re-sent as a duplicate on every subsequent relaunch.
+- (void)testFreshlyHarvestedEventIsNotRecoverableAfterConfirmedHarvestSuccess {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+
+    NRMAEventManager *manager = [[NRMAEventManager alloc] init];
+
+    NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:@"FreshHarvestConfirmSentinel"
+                                                                timestamp:1
+                                              sessionElapsedTimeInSeconds:1
+                                                   withAttributeValidator:agreeableAttributeValidator];
+    XCTAssertTrue([manager addEvent:event]);
+    [self waitForRecoveredEventType:@"FreshHarvestConfirmSentinel"];
+
+    // Simulate the normal (non-recovery) harvest path: pull the event out for
+    // sending (marks it pending, per the fix), then confirm the harvest succeeded.
+    NSError *error = nil;
+    NSString *json = [manager getEventJSONStringWithError:&error clearEvents:YES];
+    XCTAssertTrue([json containsString:@"FreshHarvestConfirmSentinel"]);
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+        XCTAssertNotEqualObjects(candidate[@"eventType"], @"FreshHarvestConfirmSentinel",
+                                 @"an event already confirmed delivered via a normal harvest must never be recovered again");
+    }
+}
+
+// Regression guard: an event evicted from the live buffer (buffer full) must have its
+// persisted copy discarded too, or it could be resurrected by a future recovery sweep.
+- (void)testEvictedEventDiscardsPersistedCopy {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+
+    NRMAEventManager *manager = [[NRMAEventManager alloc] init];
+    [manager setMaxEventBufferSize:1];
+
+    NRMACustomEvent *first = [[NRMACustomEvent alloc] initWithEventType:@"EvictedSentinel"
+                                                               timestamp:3
+                                             sessionElapsedTimeInSeconds:20
+                                                  withAttributeValidator:agreeableAttributeValidator];
+    NRMACustomEvent *second = [[NRMACustomEvent alloc] initWithEventType:@"EvictedSentinelReplacement"
+                                                                timestamp:5
+                                              sessionElapsedTimeInSeconds:15
+                                                   withAttributeValidator:agreeableAttributeValidator];
+
+    XCTAssertTrue([manager addEvent:first]);
+    [self waitForRecoveredEventType:@"EvictedSentinel"];
+
+    // Deterministic eviction (see testOverflowEvictsAndIncrementsEvictedCount) -- this
+    // evicts EvictedSentinel from the live buffer.
+    XCTAssertTrue([manager addEvent:second]);
+    [self waitForRecoveredEventType:@"EvictedSentinelReplacement"];
+
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+        XCTAssertNotEqualObjects(candidate[@"eventType"], @"EvictedSentinel",
+                                 @"an event evicted from the live buffer must not still be in the persisted store");
+    }
+
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+}
+
+// MARK: - Every event type survives persist+recover
+
+// Finds the first recovered payload of `eventType`. Callers must already have
+// waited for it via -waitForRecoveredEventType:.
+- (NSDictionary *)recoveredEventOfType:(NSString *)eventType {
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+        if ([candidate[@"eventType"] isEqualToString:eventType]) {
+            return candidate;
+        }
+    }
+    return nil;
+}
+
+// Asserts every base NRMAMobileEvent field (timestamp, sessionElapsedTime, eventType)
+// and both custom attributes added by the caller survive persist+recover, regardless
+// of concrete event type.
+- (void)assertRecoveredEvent:(NSDictionary *)found
+                matchesEventType:(NSString *)eventType
+                       timestamp:(NSTimeInterval)timestamp
+     sessionElapsedTimeInSeconds:(NSTimeInterval)sessionElapsedTimeSeconds
+                  stringAttribute:(NSString *)stringAttributeValue
+                  numberAttribute:(NSNumber *)numberAttributeValue {
+    XCTAssertNotNil(found, @"%@ must be recoverable through the controller", eventType);
+    XCTAssertEqualObjects(found[kNRMA_RA_eventType], eventType);
+    XCTAssertEqualObjects(found[kNRMA_RA_timestamp], @(timestamp));
+    XCTAssertEqualObjects(found[kNRMA_RA_sessionElapsedTime], @(sessionElapsedTimeSeconds));
+    XCTAssertEqualObjects(found[@"stringAttribute"], stringAttributeValue);
+    XCTAssertEqualObjects(found[@"numberAttribute"], numberAttributeValue);
+}
+
+// Regression guard: every concrete event type -- not just NRMACustomEvent, the only
+// one every other persistence test exercises -- must survive persist+recover with
+// *all* of its fields intact: the base NRMAMobileEvent fields, generic custom
+// attributes, and whatever a JSONObject override adds on top for that type.
+- (void)testPersistedCustomEventKeepsItsOwnFields {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+
+    NRMAEventManager *manager = [[NRMAEventManager alloc] init];
+    NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:@"CustomEventFieldsSentinel"
+                                                                timestamp:1000
+                                              sessionElapsedTimeInSeconds:20
+                                                   withAttributeValidator:agreeableAttributeValidator];
+    [event addAttribute:@"stringAttribute" value:@"XYZ-123"];
+    [event addAttribute:@"numberAttribute" value:@42];
+    XCTAssertTrue([manager addEvent:event]);
+
+    [self waitForRecoveredEventType:@"CustomEventFieldsSentinel"];
+    NSDictionary *found = [self recoveredEventOfType:@"CustomEventFieldsSentinel"];
+    [self assertRecoveredEvent:found
+                 matchesEventType:@"CustomEventFieldsSentinel"
+                        timestamp:1000
+      sessionElapsedTimeInSeconds:20
+                   stringAttribute:@"XYZ-123"
+                   numberAttribute:@42];
+
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+}
+
+- (void)testPersistedInteractionEventKeepsItsOwnFields {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+
+    NRMAEventManager *manager = [[NRMAEventManager alloc] init];
+    NRMAInteractionEvent *event = [[NRMAInteractionEvent alloc] initWithTimestamp:1000
+                                                       sessionElapsedTimeInSeconds:20
+                                                                              name:@"InteractionEventFieldsName"
+                                                                          category:@"InteractionEventFieldsCategory"
+                                                            withAttributeValidator:agreeableAttributeValidator];
+    event.eventType = @"InteractionEventFieldsSentinel";
+    [event addAttribute:@"stringAttribute" value:@"XYZ-123"];
+    [event addAttribute:@"numberAttribute" value:@42];
+    XCTAssertTrue([manager addEvent:event]);
+
+    [self waitForRecoveredEventType:@"InteractionEventFieldsSentinel"];
+    NSDictionary *found = [self recoveredEventOfType:@"InteractionEventFieldsSentinel"];
+    [self assertRecoveredEvent:found
+                 matchesEventType:@"InteractionEventFieldsSentinel"
+                        timestamp:1000
+      sessionElapsedTimeInSeconds:20
+                   stringAttribute:@"XYZ-123"
+                   numberAttribute:@42];
+    XCTAssertEqualObjects(found[kNRMA_RA_category], @"InteractionEventFieldsCategory");
+    XCTAssertEqualObjects(found[kNRMA_Attrib_name], @"InteractionEventFieldsName");
+
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+}
+
+- (void)testPersistedSessionEventKeepsItsOwnFields {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+
+    NRMAEventManager *manager = [[NRMAEventManager alloc] init];
+    NRMASessionEvent *event = [[NRMASessionEvent alloc] initWithTimestamp:1000
+                                                sessionElapsedTimeInSeconds:20
+                                                                    category:@"SessionEventFieldsCategory"
+                                                      withAttributeValidator:agreeableAttributeValidator];
+    event.eventType = @"SessionEventFieldsSentinel";
+    [event addAttribute:@"stringAttribute" value:@"XYZ-123"];
+    [event addAttribute:@"numberAttribute" value:@42];
+    XCTAssertTrue([manager addEvent:event]);
+
+    [self waitForRecoveredEventType:@"SessionEventFieldsSentinel"];
+    NSDictionary *found = [self recoveredEventOfType:@"SessionEventFieldsSentinel"];
+    [self assertRecoveredEvent:found
+                 matchesEventType:@"SessionEventFieldsSentinel"
+                        timestamp:1000
+      sessionElapsedTimeInSeconds:20
+                   stringAttribute:@"XYZ-123"
+                   numberAttribute:@42];
+    XCTAssertEqualObjects(found[kNRMA_RA_category], @"SessionEventFieldsCategory");
+
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+}
+
+- (void)testPersistedUserActionEventKeepsItsOwnFields {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+
+    NRMAEventManager *manager = [[NRMAEventManager alloc] init];
+    NRMAUserActionEvent *event = [[NRMAUserActionEvent alloc] initWithTimestamp:1000
+                                                      sessionElapsedTimeInSeconds:20
+                                                                          category:@"UserActionEventFieldsCategory"
+                                                            withAttributeValidator:agreeableAttributeValidator];
+    event.eventType = @"UserActionEventFieldsSentinel";
+    [event addAttribute:@"stringAttribute" value:@"XYZ-123"];
+    [event addAttribute:@"numberAttribute" value:@42];
+    XCTAssertTrue([manager addEvent:event]);
+
+    [self waitForRecoveredEventType:@"UserActionEventFieldsSentinel"];
+    NSDictionary *found = [self recoveredEventOfType:@"UserActionEventFieldsSentinel"];
+    [self assertRecoveredEvent:found
+                 matchesEventType:@"UserActionEventFieldsSentinel"
+                        timestamp:1000
+      sessionElapsedTimeInSeconds:20
+                   stringAttribute:@"XYZ-123"
+                   numberAttribute:@42];
+    XCTAssertEqualObjects(found[kNRMA_RA_category], @"UserActionEventFieldsCategory");
+
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+}
+
+// NRMARequestEvent doesn't override -JSONObject -- its `payload` property never rides
+// along, by design. This guards the base attributes/eventType it does rely on.
+- (void)testPersistedRequestEventKeepsItsOwnFields {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+
+    NRMAPayload *payload = [[NRMAPayload alloc] initWithTimestamp:1
+                                                          accountID:@"1"
+                                                              appID:@"1"
+                                                            traceID:@"trace-id"
+                                                           parentID:@"parent-id"
+                                                  trustedAccountKey:@"1"];
+    NRMAEventManager *manager = [[NRMAEventManager alloc] init];
+    NRMARequestEvent *event = [[NRMARequestEvent alloc] initWithTimestamp:1000
+                                                sessionElapsedTimeInSeconds:20
+                                                                    payload:payload
+                                                      withAttributeValidator:agreeableAttributeValidator];
+    event.eventType = @"RequestEventFieldsSentinel";
+    [event addAttribute:@"stringAttribute" value:@"XYZ-123"];
+    [event addAttribute:@"numberAttribute" value:@42];
+    XCTAssertTrue([manager addEvent:event]);
+
+    [self waitForRecoveredEventType:@"RequestEventFieldsSentinel"];
+    NSDictionary *found = [self recoveredEventOfType:@"RequestEventFieldsSentinel"];
+    [self assertRecoveredEvent:found
+                 matchesEventType:@"RequestEventFieldsSentinel"
+                        timestamp:1000
+      sessionElapsedTimeInSeconds:20
+                   stringAttribute:@"XYZ-123"
+                   numberAttribute:@42];
+
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+}
+
+- (void)testPersistedNetworkErrorEventKeepsItsOwnFields {
+    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
+
+    NRMAPayload *payload = [[NRMAPayload alloc] initWithTimestamp:1
+                                                          accountID:@"1"
+                                                              appID:@"1"
+                                                            traceID:@"trace-id"
+                                                           parentID:@"parent-id"
+                                                  trustedAccountKey:@"1"];
+    NRMAEventManager *manager = [[NRMAEventManager alloc] init];
+    NRMANetworkErrorEvent *event = [[NRMANetworkErrorEvent alloc] initWithTimestamp:1000
+                                                          sessionElapsedTimeInSeconds:20
+                                                                  encodedResponseBody:@"NetworkErrorEventFieldsResponseBody"
+                                                                        appDataHeader:@"NetworkErrorEventFieldsAppDataHeader"
+                                                                              payload:payload
+                                                                withAttributeValidator:agreeableAttributeValidator];
+    event.eventType = @"NetworkErrorEventFieldsSentinel";
+    [event addAttribute:@"stringAttribute" value:@"XYZ-123"];
+    [event addAttribute:@"numberAttribute" value:@42];
+    XCTAssertTrue([manager addEvent:event]);
+
+    [self waitForRecoveredEventType:@"NetworkErrorEventFieldsSentinel"];
+    NSDictionary *found = [self recoveredEventOfType:@"NetworkErrorEventFieldsSentinel"];
+    [self assertRecoveredEvent:found
+                 matchesEventType:@"NetworkErrorEventFieldsSentinel"
+                        timestamp:1000
+      sessionElapsedTimeInSeconds:20
+                   stringAttribute:@"XYZ-123"
+                   numberAttribute:@42];
+    XCTAssertEqualObjects(found[kNRMA_RA_responseBody], @"NetworkErrorEventFieldsResponseBody");
+    XCTAssertEqualObjects(found[kNRMA_RA_appDataHeader], @"NetworkErrorEventFieldsAppDataHeader");
+
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
 }
 
 @end

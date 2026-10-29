@@ -59,6 +59,8 @@
 
 + (BOOL) shouldEnableAutoCollectLogs;
 
++ (BOOL) shouldEnableEventPersistence;
+
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags;
 
 // Private Setting

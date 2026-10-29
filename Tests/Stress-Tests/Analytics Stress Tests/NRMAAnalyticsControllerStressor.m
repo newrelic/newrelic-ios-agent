@@ -136,7 +136,7 @@
 }
 
 - (void) randomlyCleanup {
-    int options = 4;
+    int options = 3;
     switch (rand() % options) {
         case 0:
             [NRMAAnalytics clearDuplicationStores];
@@ -145,9 +145,6 @@
             [NRMAAnalytics getLastSessionsAttributes];
             break;
         case 2:
-            [NRMAAnalytics getLastSessionsEvents];
-            break;
-        case 3:
             [self.analytics clearLastSessionsAnalytics];
             break;
         default:
