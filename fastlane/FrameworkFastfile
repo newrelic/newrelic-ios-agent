@@ -56,6 +56,20 @@ platform :ios do
       sh("codesign --timestamp -v --sign \"Apple Distribution: New Relic Inc (SU7SUNGZJP)\" NewRelic.xcframework")
     end
   end
+
+  desc "Fail if any NewRelic.xcframework binary embeds an absolute build-machine path"
+  lane :checkBinaryPaths do
+    Dir.chdir("..") do
+      sh("./scripts/check_binary_paths.sh NewRelic.xcframework")
+    end
+  end
+
+  desc "Fail if any NewRelic.xcframework .swiftinterface can't be parsed by Xcode 26"
+  lane :checkSwiftInterfaces do
+    Dir.chdir("..") do
+      sh("./scripts/check_swift_interfaces.sh NewRelic.xcframework")
+    end
+  end
   # DEBUG LANES
   
   desc "Ouput Universal NewRelic.xcframework for iOS Only"
