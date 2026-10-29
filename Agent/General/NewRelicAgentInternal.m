@@ -664,11 +664,11 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     // recovered event can be reattributed if the app force-quits before harvesting.
     if ([NRMAFlags shouldEnableEventPersistence] && self->_agentConfiguration.sessionIdentifier.length > 0) {
         int64_t sessionStartMs = (int64_t)([self.appSessionStartDate timeIntervalSince1970] * 1000.0);
-        NSDictionary *stableAttributes = [self.analyticsController currentSessionStableAttributesForPersistence] ?: @{};
+        NSDictionary *sessionAttributes = [self.analyticsController currentSessionAttributesForPersistence] ?: @{};
         [[NREventPersistenceController shared] writeSessionManifestWithSessionId:self->_agentConfiguration.sessionIdentifier
                                                                        realAgentId:NRMA_getAgentId()
                                                                     sessionStartMs:sessionStartMs
-                                                                  stableAttributes:stableAttributes];
+                                                                sessionAttributes:sessionAttributes];
     }
 
     // Recover events persisted by a previous force-quit/crashed session and stage them

@@ -99,26 +99,28 @@ final class NREventPersistenceControllerTests: XCTestCase {
     // MARK: - Session manifest
 
     func testWriteSessionManifestPersists() {
-        sut.writeSessionManifest(sessionId: "session-1", realAgentId: 7, sessionStartMs: 1_000, stableAttributes: ["appVersion": "1.0"])
+        sut.writeSessionManifest(sessionId: "session-1", realAgentId: 7, sessionStartMs: 1_000, sessionAttributes: ["appVersion": "1.0"])
         manifestStore.synchronize()
 
         let manifest = manifestStore.manifest(forSessionId: "session-1")
-        XCTAssertEqual(manifest?.stableAttributes["appVersion"] as? String, "1.0")
+        XCTAssertEqual(manifest?.sessionAttributes["appVersion"] as? String, "1.0")
         XCTAssertEqual(manifest?.lastUpdateMs, 1_000)
     }
 
-    func testRefreshSessionManifestUpdatesLastUpdateMs() {
-        sut.writeSessionManifest(sessionId: "session-1", realAgentId: 7, sessionStartMs: 1_000, stableAttributes: [:])
+    func testRefreshSessionManifestUpdatesLastUpdateMsAndSessionAttributes() {
+        sut.writeSessionManifest(sessionId: "session-1", realAgentId: 7, sessionStartMs: 1_000, sessionAttributes: ["appVersion": "1.0"])
         manifestStore.synchronize()
 
-        sut.refreshSessionManifest(sessionId: "session-1", nowMs: 5_000)
+        sut.refreshSessionManifest(sessionId: "session-1", nowMs: 5_000, sessionAttributes: ["appVersion": "1.0", "userId": "abc"])
         manifestStore.synchronize()
 
-        XCTAssertEqual(manifestStore.manifest(forSessionId: "session-1")?.lastUpdateMs, 5_000)
+        let manifest = manifestStore.manifest(forSessionId: "session-1")
+        XCTAssertEqual(manifest?.lastUpdateMs, 5_000)
+        XCTAssertEqual(manifest?.sessionAttributes["userId"] as? String, "abc")
     }
 
     func testRefreshSessionManifestOfUnknownSessionDoesNothing() {
-        sut.refreshSessionManifest(sessionId: "no-such-session", nowMs: 5_000)
+        sut.refreshSessionManifest(sessionId: "no-such-session", nowMs: 5_000, sessionAttributes: [:])
         manifestStore.synchronize()
         XCTAssertNil(manifestStore.manifest(forSessionId: "no-such-session"))
     }
@@ -137,9 +139,9 @@ final class NREventPersistenceControllerTests: XCTestCase {
         XCTAssertTrue(sut.recoverPersistedEventsStagingForHarvest(currentSessionAttributes: [:]).isEmpty)
     }
 
-    func testRecoverUsesManifestStableAttributesWhenFound() {
+    func testRecoverUsesManifestSessionAttributesWhenFound() {
         manifestStore.store(NRSessionManifest(sessionId: "session-1", realAgentId: 7, sessionStartMs: 0, lastUpdateMs: 0,
-                                               stableAttributes: ["appVersion": "1.0"]))
+                                               sessionAttributes: ["appVersion": "1.0"]))
         manifestStore.synchronize()
         eventStore.store(makeRecord(uuid: "uuid-1", sessionId: "session-1"))
         eventStore.synchronize()
@@ -200,9 +202,9 @@ final class NREventPersistenceControllerTests: XCTestCase {
 
     // MARK: - Crash path
 
-    func testReattributeCrashAttributesReturnsManifestStableAttributesWhenFound() {
+    func testReattributeCrashAttributesReturnsManifestSessionAttributesWhenFound() {
         manifestStore.store(NRSessionManifest(sessionId: "crashed-session", realAgentId: 7, sessionStartMs: 0, lastUpdateMs: 0,
-                                               stableAttributes: ["appVersion": "2.0"]))
+                                               sessionAttributes: ["appVersion": "2.0"]))
         manifestStore.synchronize()
 
         let reattributed = sut.reattributeCrashAttributes(forSessionId: "crashed-session")
@@ -215,7 +217,7 @@ final class NREventPersistenceControllerTests: XCTestCase {
 
     func testReattributeCrashAttributesReturnsNilWhenFlagDisabled() {
         manifestStore.store(NRSessionManifest(sessionId: "crashed-session", realAgentId: 7, sessionStartMs: 0, lastUpdateMs: 0,
-                                               stableAttributes: ["appVersion": "2.0"]))
+                                               sessionAttributes: ["appVersion": "2.0"]))
         manifestStore.synchronize()
 
         NRMAFlags.disableFeatures(NRMAFeatureFlags.NRFeatureFlag_EventPersistence)
@@ -225,7 +227,7 @@ final class NREventPersistenceControllerTests: XCTestCase {
 
     func testClaimPersistedEventsForCrashSessionIdReturnsOnlyThatSessionsEvents() {
         manifestStore.store(NRSessionManifest(sessionId: "crashed-session", realAgentId: 7, sessionStartMs: 0, lastUpdateMs: 0,
-                                               stableAttributes: ["appVersion": "2.0"]))
+                                               sessionAttributes: ["appVersion": "2.0"]))
         eventStore.store(makeRecord(uuid: "crash-uuid", sessionId: "crashed-session",
                                      eventAttributes: ["orderId": "ABC123"]))
         eventStore.store(makeRecord(uuid: "other-uuid", sessionId: "other-session"))
@@ -389,7 +391,7 @@ final class NREventPersistenceControllerTests: XCTestCase {
         let nowMs: Int64 = 100 * 24 * 60 * 60 * 1000
         eventStore.store(makeRecord(uuid: "stale-uuid", sessionId: "stale-session", timestampMs: nowMs - maxAgeMs - 1_000))
         manifestStore.store(NRSessionManifest(sessionId: "stale-session", realAgentId: 7, sessionStartMs: 0,
-                                               lastUpdateMs: nowMs - maxAgeMs - 1_000, stableAttributes: [:]))
+                                               lastUpdateMs: nowMs - maxAgeMs - 1_000, sessionAttributes: [:]))
         eventStore.synchronize()
         manifestStore.synchronize()
 
@@ -405,7 +407,7 @@ final class NREventPersistenceControllerTests: XCTestCase {
         let nowMs: Int64 = 100 * 24 * 60 * 60 * 1000
         eventStore.store(makeRecord(uuid: "fresh-uuid", sessionId: "fresh-session", timestampMs: nowMs - 1_000))
         manifestStore.store(NRSessionManifest(sessionId: "fresh-session", realAgentId: 7, sessionStartMs: 0,
-                                               lastUpdateMs: nowMs - 1_000, stableAttributes: [:]))
+                                               lastUpdateMs: nowMs - 1_000, sessionAttributes: [:]))
         eventStore.synchronize()
         manifestStore.synchronize()
 

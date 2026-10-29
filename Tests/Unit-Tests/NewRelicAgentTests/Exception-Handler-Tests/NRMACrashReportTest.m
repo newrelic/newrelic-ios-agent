@@ -218,7 +218,7 @@
     [[NREventPersistenceController shared] writeSessionManifestWithSessionId:crashSessionId
                                                                    realAgentId:7
                                                                 sessionStartMs:0
-                                                              stableAttributes:@{@"appVersion": @"2.0"}];
+                                                            sessionAttributes:@{@"appVersion": @"2.0"}];
 
     NSDictionary *metaDictionary = @{@kNRMAMetaKey_Session: crashSessionId};
     // Primary source now when the flag is on, so these must be ignored.
@@ -247,7 +247,7 @@
     [[NREventPersistenceController shared] writeSessionManifestWithSessionId:crashSessionId
                                                                    realAgentId:7
                                                                 sessionStartMs:0
-                                                              stableAttributes:@{@"appVersion": @"2.0"}];
+                                                            sessionAttributes:@{@"appVersion": @"2.0"}];
 
     NSDictionary *metaDictionary = @{@kNRMAMetaKey_Session: crashSessionId};
     NSDictionary *passedInAttributes = @{kNRMA_RA_hasReplay: @YES};
@@ -287,7 +287,7 @@
     [[NREventPersistenceController shared] writeSessionManifestWithSessionId:crashSessionId
                                                                    realAgentId:7
                                                                 sessionStartMs:0
-                                                              stableAttributes:@{@"appVersion": @"2.0"}];
+                                                            sessionAttributes:@{@"appVersion": @"2.0"}];
     [[NREventPersistenceController shared] recordEventWithEventUUID:@"primary-event-source-uuid"
                                                             eventType:@"Mobile"
                                                           timestampMs:1000

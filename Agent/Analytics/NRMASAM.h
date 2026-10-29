@@ -30,9 +30,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSString*) sessionAttributeJSONString;
 - (BOOL) setLastInteraction:(NSString*)name;
 
-// Private "NR" attributes only (os/device/app version, carrier, etc.) --
-// used as the "stableAttributes" captured in a session's persisted manifest.
+// Private "NR" attributes only.
 - (NSDictionary*) currentPrivateAttributes;
+
+// Public and private attributes merged.
+- (NSDictionary*) currentSessionAttributes;
 @end
 
 NS_ASSUME_NONNULL_END

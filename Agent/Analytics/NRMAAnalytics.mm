@@ -1074,9 +1074,9 @@ static PersistentStore<std::string,BaseValue>* __attributeStore;
     }
 }
 
-- (NSDictionary*) currentSessionStableAttributesForPersistence {
+- (NSDictionary*) currentSessionAttributesForPersistence {
     if ([NRMAFlags shouldEnableNewEventSystem]) {
-        return [_sessionAttributeManager currentPrivateAttributes] ?: @{};
+        return [_sessionAttributeManager currentSessionAttributes] ?: @{};
     }
     try {
         auto attributes = _analyticsController->getSessionAttributeJSON();
@@ -1213,7 +1213,9 @@ static PersistentStore<std::string,BaseValue>* __attributeStore;
         [[NREventPersistenceController shared] performRetentionSweepWithNowMs:(int64_t)currentTimeMs];
         NSString *sessionId = [[NewRelicAgentInternal sharedInstance] currentSessionId];
         if (sessionId.length > 0) {
-            [[NREventPersistenceController shared] refreshSessionManifestWithSessionId:sessionId nowMs:(int64_t)currentTimeMs];
+            [[NREventPersistenceController shared] refreshSessionManifestWithSessionId:sessionId
+                                                                                   nowMs:(int64_t)currentTimeMs
+                                                                      sessionAttributes:[self currentSessionAttributesForPersistence]];
         }
     }
 }

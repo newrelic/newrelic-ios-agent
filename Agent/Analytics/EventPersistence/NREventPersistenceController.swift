@@ -78,27 +78,27 @@ public class NREventPersistenceController: NSObject {
     // MARK: - Session manifest
 
     /// Writes a fresh manifest at session start.
-    @objc(writeSessionManifestWithSessionId:realAgentId:sessionStartMs:stableAttributes:)
+    @objc(writeSessionManifestWithSessionId:realAgentId:sessionStartMs:sessionAttributes:)
     public func writeSessionManifest(sessionId: String,
                                       realAgentId: UInt64,
                                       sessionStartMs: Int64,
-                                      stableAttributes: [String: Any]) {
+                                      sessionAttributes: [String: Any]) {
         guard NRMAFlags.shouldEnableEventPersistence() else { return }
         let manifest = NRSessionManifest(sessionId: sessionId,
                                           realAgentId: realAgentId,
                                           sessionStartMs: sessionStartMs,
                                           lastUpdateMs: sessionStartMs,
-                                          stableAttributes: stableAttributes)
+                                          sessionAttributes: sessionAttributes)
         manifestStore.store(manifest)
     }
 
-    /// Bumps a manifest's `lastUpdateMs` on each harvest tick, so a long-running
-    /// session's manifest isn't evicted just because it's quiet between harvests.
-    @objc(refreshSessionManifestWithSessionId:nowMs:)
-    public func refreshSessionManifest(sessionId: String, nowMs: Int64) {
+    /// Bumps `lastUpdateMs` and re-syncs `sessionAttributes` on each harvest tick.
+    @objc(refreshSessionManifestWithSessionId:nowMs:sessionAttributes:)
+    public func refreshSessionManifest(sessionId: String, nowMs: Int64, sessionAttributes: [String: Any]) {
         guard NRMAFlags.shouldEnableEventPersistence() else { return }
         guard var manifest = manifestStore.manifest(forSessionId: sessionId) else { return }
         manifest.lastUpdateMs = nowMs
+        manifest.sessionAttributes = sessionAttributes
         manifestStore.store(manifest)
     }
 
@@ -142,12 +142,12 @@ public class NREventPersistenceController: NSObject {
         return payloads
     }
 
-    /// Manifest found -> its stableAttributes. Missing/corrupt -> `currentSessionAttributes`
+    /// Manifest found -> its sessionAttributes. Missing/corrupt -> `currentSessionAttributes`
     /// (graceful degradation; the record is still delivered, never dropped).
     private func resolveAttributes(for record: NREventRecord, currentSessionAttributes: [String: Any]) -> [String: Any] {
         if let manifest = manifestStore.manifest(forSessionId: record.sessionId) {
             NRMASupportMetricHelper.enqueueEventPersistenceReattributedMetric()
-            return manifest.stableAttributes
+            return manifest.sessionAttributes
         }
 
         NRMASupportMetricHelper.enqueueEventPersistenceManifestMissingMetric()
@@ -167,7 +167,7 @@ public class NREventPersistenceController: NSObject {
             return nil
         }
         NRMASupportMetricHelper.enqueueEventPersistenceReattributedMetric()
-        return manifest.stableAttributes
+        return manifest.sessionAttributes
     }
 
     /// Fetches and deletes every persisted event for `sessionId`, for attaching to a crash report.
@@ -178,7 +178,7 @@ public class NREventPersistenceController: NSObject {
         let records = eventStore.fetchAll().filter { $0.sessionId == sessionId }
         guard !records.isEmpty else { return [] }
 
-        let fallbackAttributes = manifestStore.manifest(forSessionId: sessionId)?.stableAttributes ?? [:]
+        let fallbackAttributes = manifestStore.manifest(forSessionId: sessionId)?.sessionAttributes ?? [:]
         var payloads: [[String: Any]] = []
         for record in records {
             var json = resolveAttributes(for: record, currentSessionAttributes: fallbackAttributes)

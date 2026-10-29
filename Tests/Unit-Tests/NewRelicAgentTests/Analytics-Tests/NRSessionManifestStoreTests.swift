@@ -30,7 +30,7 @@ final class NRSessionManifestStoreTests: XCTestCase {
                            realAgentId: 42,
                            sessionStartMs: sessionStartMs,
                            lastUpdateMs: lastUpdateMs,
-                           stableAttributes: ["appVersion": "1.0", "osName": "iOS"])
+                           sessionAttributes: ["appVersion": "1.0", "osName": "iOS"])
     }
 
     func testMissingManifestReturnsNil() {
@@ -45,7 +45,7 @@ final class NRSessionManifestStoreTests: XCTestCase {
         let fetched = sut.manifest(forSessionId: "session-A")
         XCTAssertEqual(fetched?.sessionId, "session-A")
         XCTAssertEqual(fetched?.realAgentId, 42)
-        XCTAssertEqual(fetched?.stableAttributes["appVersion"] as? String, "1.0")
+        XCTAssertEqual(fetched?.sessionAttributes["appVersion"] as? String, "1.0")
     }
 
     func testDeleteRemovesManifest() {
