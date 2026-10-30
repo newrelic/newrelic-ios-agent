@@ -1,0 +1,29 @@
+name: Release notes - check
+
+# Comments on each open PR into develop with the section and bullet it will become. This repo sets
+# labelledOnly, so only PRs with a release-note:* label are in the release notes: an unlabelled PR
+# passes and the comment says it is left out; a PR with more than one label fails.
+# See https://github.com/newrelic/newrelic-android-agent/blob/develop/.github/actions/release-notes/README.md
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize, labeled, unlabeled]
+    branches: [develop]
+
+permissions:
+  contents: read
+  pull-requests: write # the report comment
+
+concurrency:
+  group: release-notes-check-${{ github.event.pull_request.number }}
+  cancel-in-progress: false # a cancelled run could leave its comment half-posted
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - uses: newrelic/newrelic-android-agent/.github/actions/release-notes/check@develop
