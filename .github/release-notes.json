@@ -1,0 +1,11 @@
+{
+  "subject": "iOS agent",
+  "docsFolder": "ios-release-notes",
+  "filePrefix": "ios-agent-",
+  "nextBranch": "ios-next",
+  "tagPrefix": "",
+  "skeleton": "ios-agent-next.mdx",
+  "downloadLink": "https://download.newrelic.com/ios_agent/NewRelic_XCFramework_Agent_{version}.zip",
+  "labelledOnly": true,
+  "prLinks": false
+}
