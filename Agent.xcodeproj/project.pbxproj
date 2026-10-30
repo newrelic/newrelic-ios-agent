@@ -96,6 +96,7 @@
 		0209ACB124E7394500E45C90 /* NRMAUUIDStoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ACAC24E7394500E45C90 /* NRMAUUIDStoreTests.m */; };
 		0209ACB324E7394B00E45C90 /* NRMAInternalTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ACB224E7394B00E45C90 /* NRMAInternalTests.m */; };
 		0209ACC124EB015E00E45C90 /* JdAWN9v.png in Resources */ = {isa = PBXBuildFile; fileRef = 0209ACC024EB015D00E45C90 /* JdAWN9v.png */; };
+		0217727F2B5E3B671F02DD7C /* SessionReplayReporterReferrerAttributesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D93857F7F67018B7ACD040 /* SessionReplayReporterReferrerAttributesTests.swift */; };
 		021A15BF24C9EEE700E8DFD5 /* Agent.h in Headers */ = {isa = PBXBuildFile; fileRef = 021A15BD24C9EEE700E8DFD5 /* Agent.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		025657F524EB19BF00FE3125 /* NRMAExceptionMetaDataTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC7224E7392E00E45C90 /* NRMAExceptionMetaDataTest.m */; };
 		025657F624EB19BF00FE3125 /* NRMACrashReportTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC4824E7078C00E45C90 /* NRMACrashReportTest.m */; };
@@ -2704,6 +2705,7 @@
 		2BFFB1D728CA683F00392E3B /* NRMASupportMetricHelperTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMASupportMetricHelperTests.h; sourceTree = "<group>"; };
 		2BFFB1EA28CA683F00392E3B /* NRMASupportMetricHelperTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMASupportMetricHelperTests.m; sourceTree = "<group>"; };
 		3044C591FF629A6505BEC8CE /* NRMobileViewFeatureFlagGateTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NRMobileViewFeatureFlagGateTests.swift; sourceTree = "<group>"; };
+		31D93857F7F67018B7ACD040 /* SessionReplayReporterReferrerAttributesTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionReplayReporterReferrerAttributesTests.swift; sourceTree = "<group>"; };
 		340A8CE32DAD8EAB00BC2B01 /* IncrementalDiffGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncrementalDiffGenerator.swift; sourceTree = "<group>"; };
 		340D64122AA92FCE00E63CC1 /* PersistentEventStore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PersistentEventStore.h; sourceTree = "<group>"; };
 		340D64132AA92FCE00E63CC1 /* PersistentEventStore.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PersistentEventStore.m; sourceTree = "<group>"; };
@@ -3309,6 +3311,7 @@
 				F8AC3EA72938FDDB002B4AA8 /* NRMAFakeDataHelper.h */,
 				2B4226E529DB99740068BB8A /* NRMAHTTPUtilitiesTests.m */,
 				F83A77AF2B48810900B3D180 /* NRMAOfflineStorageTests.m */,
+				31D93857F7F67018B7ACD040 /* SessionReplayReporterReferrerAttributesTests.swift */,
 			);
 			path = Uncategorized;
 			sourceTree = "<group>";
@@ -5931,6 +5934,7 @@
 				D24CF0D18763D6FD19E9F0DD /* MobileViewEmitterTests.swift in Sources */,
 				8AB68B2F284863F47C53B319 /* SwiftUIScreenResolverTests.swift in Sources */,
 				BC162D229E9F050732557C38 /* NRMAMobileViewTrackerTests.m in Sources */,
+				0217727F2B5E3B671F02DD7C /* SessionReplayReporterReferrerAttributesTests.swift in Sources */,
 				17B9E0B135C6B5FC38738923 /* NRMAWebViewPresenceTests.m in Sources */,
 				B5D2E893CA6539BEEB38DB55 /* MobileViewCompositionTests.swift in Sources */,
 			);
