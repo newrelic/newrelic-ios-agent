@@ -25,6 +25,7 @@
 #import "NRMASupportMetricHelper.h"
 #import "Constants.h"
 #import "NRMAAttributeValidator.h"
+#import "NRMAViewContext.h"
 
 // Session Replay Error Sampling
 // END
@@ -308,15 +309,18 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
         
         NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:_attributeValidator] autorelease];
 
-        if (attributes != nil) {
-            [contextAdapter addAttributesNewValidation:attributes];
+        // §5.5's referrer plumbing, so a handled error can be joined back to the screen it
+        // happened on.
+        NSDictionary *mergedAttributes = [NRMAViewContext mergeReferrerAttributesInto:attributes];
+        if (mergedAttributes != nil) {
+            [contextAdapter addAttributesNewValidation:mergedAttributes];
         }
 
         report->setAttributeNoValidation("timeSinceLoad", [[[NSDate new] autorelease] timeIntervalSinceDate:self.sessionStartDate]);
 
         report->setAttributeNoValidation("isHandledError", true);
         [self checkOffline:report];
-        
+
         _controller->submit(report);
     }
     else {
@@ -325,17 +329,18 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
                                                 error.domain.UTF8String,
                                                 [self createThreadVector:callstack length:frames]
                                                 );
-        
+
         NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:_attributeValidator] autorelease];
 
-        if (attributes != nil) {
-            [contextAdapter addAttributes:attributes];
+        NSDictionary *mergedAttributes = [NRMAViewContext mergeReferrerAttributesInto:attributes];
+        if (mergedAttributes != nil) {
+            [contextAdapter addAttributes:mergedAttributes];
         }
-        
+
         report->setAttribute("timeSinceLoad", [[[NSDate new] autorelease] timeIntervalSinceDate:self.sessionStartDate]);
-        
+
         report->setAttribute("isHandledError", true);
-        
+
         [self checkOffline:report];
 
         _controller->submit(report);
@@ -378,8 +383,11 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 
         NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:_attributeValidator] autorelease];
 
-        if (attributes != nil) {
-            [contextAdapter addAttributesNewValidation:attributes];
+        // §5.5's referrer plumbing, so a handled exception can be joined back to the screen it
+        // happened on.
+        NSDictionary *mergedAttributes = [NRMAViewContext mergeReferrerAttributesInto:attributes];
+        if (mergedAttributes != nil) {
+            [contextAdapter addAttributesNewValidation:mergedAttributes];
         }
 
         _controller->submit(report);
@@ -392,13 +400,14 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 
 
         report->setAttribute("timeSinceLoad", [[[NSDate new] autorelease] timeIntervalSinceDate:self.sessionStartDate]);
-        
+
         [self checkOffline:report];
 
         NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:_attributeValidator] autorelease];
 
-        if (attributes != nil) {
-            [contextAdapter addAttributes:attributes];
+        NSDictionary *mergedAttributes = [NRMAViewContext mergeReferrerAttributesInto:attributes];
+        if (mergedAttributes != nil) {
+            [contextAdapter addAttributes:mergedAttributes];
         }
 
         _controller->submit(report);
@@ -498,8 +507,11 @@ static const int kNRMARecordErrorAgentFrames = 2;
 
         NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:_attributeValidator] autorelease];
 
-        if (exceptionDictionary != nil) {
-            [contextAdapter addAttributesNewValidation:exceptionDictionary];
+        // §5.5's referrer plumbing, so a handled exception can be joined back to the screen it
+        // happened on.
+        NSDictionary *mergedAttributes = [NRMAViewContext mergeReferrerAttributesInto:exceptionDictionary];
+        if (mergedAttributes != nil) {
+            [contextAdapter addAttributesNewValidation:mergedAttributes];
         }
 
         _controller->submit(report);
@@ -515,8 +527,9 @@ static const int kNRMARecordErrorAgentFrames = 2;
 
         NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:_attributeValidator] autorelease];
 
-        if (exceptionDictionary != nil) {
-            [contextAdapter addAttributes:exceptionDictionary];
+        NSDictionary *mergedAttributes = [NRMAViewContext mergeReferrerAttributesInto:exceptionDictionary];
+        if (mergedAttributes != nil) {
+            [contextAdapter addAttributes:mergedAttributes];
         }
 
         _controller->submit(report);
