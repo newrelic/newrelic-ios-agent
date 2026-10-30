@@ -888,6 +888,32 @@ namespace NewRelic {
         }
     }
 
+    std::shared_ptr <ViewEvent> AnalyticsController::newViewEventOfType(const char *eventType) {
+        try {
+            auto currentTime_ms = getCurrentTime_ms(); //throws std::logic_error
+            auto sessionDuration_sec = getCurrentSessionDuration_sec(currentTime_ms);
+            return EventManager::newViewEvent(eventType,
+                                              currentTime_ms,
+                                              sessionDuration_sec,
+                                              _attributeValidator);
+        } catch (std::exception &e) {
+            LLOG_VERBOSE("Unable to create new View event of type \"%s\". %s", eventType, e.what());
+            return nullptr;
+        } catch (...) {
+            //adding log under verbose as this is an internal agent method, and wont be called by customers.
+            LLOG_VERBOSE("Unable to create new View event of type \"%s\".", eventType);
+            return nullptr;
+        }
+    }
+
+    std::shared_ptr <ViewEvent> AnalyticsController::newMobileViewEvent() {
+        return newViewEventOfType(__kNRMA_RET_mobileView);
+    }
+
+    std::shared_ptr <ViewEvent> AnalyticsController::newViewTimingEvent() {
+        return newViewEventOfType(__kNRMA_RET_mobileViewTiming);
+    }
+
     std::shared_ptr <CustomEvent> AnalyticsController::newCustomEvent(const char *name) {
         try {
             if (strlens(name) == 0) {
