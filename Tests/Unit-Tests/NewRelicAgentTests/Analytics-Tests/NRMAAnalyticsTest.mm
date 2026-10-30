@@ -1876,4 +1876,33 @@
 
 }
 
+#pragma mark - Reserved event types
+
+- (void) testReservedEventTypesAreRejectedUnderBothEventSystems {
+    for (NSNumber* useNewSystem in @[@NO, @YES]) {
+        if (useNewSystem.boolValue) {
+            [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
+        } else {
+            [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
+        }
+
+        NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+        for (NSString* reserved in [NRMAAnalytics reservedEventTypes]) {
+            XCTAssertFalse([analytics addCustomEvent:reserved withAttributes:@{@"a": @"b"}],
+                           @"reserved event type \"%@\" must be rejected with NewEventSystem %@",
+                           reserved, useNewSystem.boolValue ? @"enabled" : @"disabled");
+        }
+
+        XCTAssertTrue([analytics addCustomEvent:@"MyCustomEvent" withAttributes:@{@"a": @"b"}],
+                      @"a non-reserved event type must still be accepted");
+    }
+}
+
+- (void) testReservedEventTypesMatchTheLegacyControllerList {
+    // A name in only one list succeeds under one event system and fails under the other.
+    XCTAssertEqualObjects([NRMAAnalytics reservedEventTypes],
+                          (@[@"Mobile", @"MobileCrash", @"MobileRequest", @"MobileRequestError",
+                             @"MobileSession", @"MobileBreadcrumb"]));
+}
+
 @end
