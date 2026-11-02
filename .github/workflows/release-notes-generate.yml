@@ -1,8 +1,8 @@
 name: Release notes - generate
 
-# When an iOS agent release is published, build its docs-website release note and open it as a
-# draft PR for a person to edit. See
-# https://github.com/newrelic/newrelic-android-agent/blob/develop/.github/actions/release-notes/README.md
+# When an iOS agent release is published, build its docs-website release note and open it as a PR,
+# ready for review (readyForReview), for a person to check and edit. See
+# .github/actions/release-notes/README.md
 # A person publishes the release, so the release event fires. The event runs this file as it is at
 # the tagged commit, so it must be on main before the first release that should use it (7.7.11).
 # If this run shows as cancelled (GitHub cancels a pending run when another joins the
@@ -40,9 +40,10 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          ref: develop # the release-notes code as reviewed now, not as it was at the tag
           fetch-depth: 0 # tags and history
           persist-credentials: false
-      - uses: newrelic/newrelic-android-agent/.github/actions/release-notes/generate@develop
+      - uses: ./.github/actions/release-notes/generate
         with:
           version: ${{ inputs.version || github.event.release.tag_name }}
           release-date: published # the date the release was published, also on a dispatch

@@ -2,7 +2,7 @@ name: Release notes - append
 
 # On every PR merged to develop with a release-note:* label, add its bullet to the ios-next branch
 # (and draft PR) on newrelic/docs-website.
-# See https://github.com/newrelic/newrelic-android-agent/blob/develop/.github/actions/release-notes/README.md
+# See .github/actions/release-notes/README.md
 
 on:
   pull_request:
@@ -32,7 +32,7 @@ jobs:
           ref: ${{ github.event.pull_request.base.ref }}
           fetch-depth: 0 # tags, for the already-released check
           persist-credentials: false
-      - uses: newrelic/newrelic-android-agent/.github/actions/release-notes/append@develop
+      - uses: ./.github/actions/release-notes/append
         with:
           bot-pat: ${{ secrets.BOT_PAT }}
           bot-email: ${{ secrets.BOT_EMAIL }}

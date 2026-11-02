@@ -7,5 +7,6 @@
   "skeleton": "ios-agent-next.mdx",
   "downloadLink": "https://download.newrelic.com/ios_agent/NewRelic_XCFramework_Agent_{version}.zip",
   "labelledOnly": true,
-  "prLinks": false
+  "prLinks": false,
+  "readyForReview": true
 }
