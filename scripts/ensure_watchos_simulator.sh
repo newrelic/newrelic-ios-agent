@@ -81,7 +81,7 @@ start=$SECONDS
 last_restart=$((SECONDS - RESTART_INTERVAL))
 while true; do
   elapsed=$((SECONDS - start))
-  if sim_visible; then
+  if runtime_registered && device_exists && sim_visible; then
     echo "xcodebuild can see the $SIM_NAME simulator after ${elapsed}s."
     xcrun simctl list devices watchOS
     exit 0
