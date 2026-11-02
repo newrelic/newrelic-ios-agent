@@ -1,7 +1,7 @@
 name: Release notes - dry run (delete before merging)
 
-# Temporary: tries the shared actions on this PR, at newrelic-android-agent#664's branch until it
-# merges (the real callers use @develop). Nothing on docs-website changes.
+# Temporary: tries the shared actions on this PR, at @develop now that newrelic-android-agent#664 has merged
+# Nothing on docs-website changes.
 
 on:
   pull_request:
@@ -19,16 +19,16 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: newrelic/newrelic-android-agent/.github/actions/release-notes/generate@release-notes-template
+      - uses: newrelic/newrelic-android-agent/.github/actions/release-notes/generate@develop
         with:
           version: 7.7.10
           release-date: published
           dry-run: true
           fork-pat: ${{ secrets.BOT_FORK_PAT }}
-      - uses: newrelic/newrelic-android-agent/.github/actions/release-notes/append@release-notes-template
+      - uses: newrelic/newrelic-android-agent/.github/actions/release-notes/append@develop
         with:
           pr-number: 957
           dry-run: true
-      - uses: newrelic/newrelic-android-agent/.github/actions/release-notes/check@release-notes-template
+      - uses: newrelic/newrelic-android-agent/.github/actions/release-notes/check@develop
         with:
           dry-run: true
