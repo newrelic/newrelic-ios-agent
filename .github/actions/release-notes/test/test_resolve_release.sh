@@ -11,7 +11,8 @@ g init -q
 commit 2026-09-01 one; g tag v1.9.1; g tag 1.9.0; g tag nightly-2026-09-02
 printf '## 1.9.2\n- Two.\n' > "$repo/CHANGELOG.md"; printf '{"name":"pkg"}' > "$repo/package.json"
 g add .; commit 2026-09-14 two; g tag v1.9.2; g tag 1.9.5
-cp "$AGENTS/android/android-agent-next.mdx" "$repo/next.mdx"; g add .; commit 2026-10-01 skeleton; g tag v1.9.3
+{ cat "$SKELETON"; printf '\n## Support statement\n\nUpdate the agent regularly.\n'; } > "$repo/next.mdx"
+g add .; commit 2026-10-01 skeleton; g tag v1.9.3
 commit 2026-10-02 later
 
 rr() { (cd "$repo" && "$SCRIPTS/resolve-release.sh" "$@" 2>"$tmp/err"); }
@@ -22,7 +23,10 @@ prev_tag=v1.9.2
 date=2026-10-01
 slug=193
 dashed=1-9-3" "$res"
-assert_eq "tail is what follows the end marker, from the tag" "$(sed -n '/release-note:end/,$p' "$AGENTS/android/android-agent-next.mdx" | sed 1d)" "$(cat "$out/tail.mdx")"
+assert_eq "tail is what follows the end marker, from the tag" "
+## Support statement
+
+Update the agent regularly." "$(cat "$out/tail.mdx")"
 assert_eq "CHANGELOG is taken from the tag" "## 1.9.2
 - Two." "$(cat "$out/CHANGELOG.md")"
 assert_eq "package.json is taken from the tag" '{"name":"pkg"}' "$(cat "$out/package.json")"

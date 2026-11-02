@@ -6,9 +6,9 @@ TEST_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 SCRIPTS="$(cd "$TEST_DIR/../scripts" && pwd)"
 FIXTURES="$TEST_DIR/fixtures"
 AGENTS="$TEST_DIR/agents"
-# The skeleton most tests start from. It has nothing after the end marker; tests of the tail
-# (Android's Support statement) use $AGENTS/android instead.
-SKELETON="$AGENTS/react-native/react-native-agent-next.mdx"
+# The skeleton most tests start from: the iOS agent's. It has nothing after the end marker; tests
+# of a tail build their own skeleton.
+SKELETON="$AGENTS/ios/ios-agent-next.mdx"
 PASS=0
 FAILN=0
 

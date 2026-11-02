@@ -2,31 +2,28 @@
 . "$(dirname "$0")/helpers.sh"
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 
-# Every agent's sample config is valid, and yields what the actions expect.
-for a in android react-native cordova capacitor flutter unity net-maui; do
-  out=$(cd "$AGENTS/$a" && "$SCRIPTS/config.sh" release-notes.json 2>&1); rc=$?
-  assert_eq "$a: sample config is valid" 0 "$rc"
-  assert_contains "$a: docs_dir is under the mobile release notes" "$out" "docs_dir=src/content/docs/release-notes/mobile-release-notes/"
-done
-rn=$(cd "$AGENTS/react-native" && "$SCRIPTS/config.sh" release-notes.json)
-assert_contains "release branch prefix drops -next" "$rn" "release_branch_prefix=react-native_release_notes_"
-assert_contains "skeleton_name is the file name" "$rn" "skeleton_name=react-native-agent-next.mdx"
-assert_contains "docs base is develop" "$rn" "docs_base=develop"
-assert_contains "fallback text defaults to Updated version." "$rn" "fallback_text=Updated version."
-android=$(cd "$AGENTS/android" && "$SCRIPTS/config.sh" release-notes.json)
-assert_contains "an empty tagPrefix is allowed" "$android" "
+# The iOS sample config is valid, and yields what the actions expect.
+ios=$(cd "$AGENTS/ios" && "$SCRIPTS/config.sh" release-notes.json 2>&1); rc=$?
+assert_eq "ios: sample config is valid" 0 "$rc"
+assert_contains "ios: docs_dir is under the mobile release notes" "$ios" "docs_dir=src/content/docs/release-notes/mobile-release-notes/ios-release-notes"
+assert_contains "release branch prefix drops -next" "$ios" "release_branch_prefix=ios_release_notes_"
+assert_contains "skeleton_name is the file name" "$ios" "skeleton_name=ios-agent-next.mdx"
+assert_contains "docs base is develop" "$ios" "docs_base=develop"
+assert_contains "fallback text defaults to Updated version." "$ios" "fallback_text=Updated version."
+assert_contains "an empty tagPrefix is allowed" "$ios" "
 tag_prefix=
 "
-assert_contains "no changelog field means changelog is empty" "$android" "
+assert_contains "no changelog field means changelog is empty" "$ios" "
 changelog=
 "
-unity=$(cd "$AGENTS/unity" && "$SCRIPTS/config.sh" release-notes.json)
-assert_contains "fallbackText overrides the default" "$unity" "fallback_text=Updated native agent dependencies."
-assert_eq "every output line is name=value" 0 "$(printf '%s\n' "$rn" | grep -cvE '^[a-z_]+=' || true)"
+assert_contains "ios: prLinks false" "$ios" "pr_links=false"
+assert_contains "ios: labelledOnly true" "$ios" "labelled_only=true"
+assert_contains "ios: readyForReview true" "$ios" "ready_for_review=true"
+assert_eq "every output line is name=value" 0 "$(printf '%s\n' "$ios" | grep -cvE '^[a-z_]+=' || true)"
 
 # ---- each rule fails with a message naming the field ----
-cp "$SKELETON" "$tmp/react-native-agent-next.mdx"
-base=$(cat "$AGENTS/react-native/release-notes.json")
+cp "$SKELETON" "$tmp/ios-agent-next.mdx"
+base=$(cat "$AGENTS/ios/release-notes.json")
 try() { # name jq-edit expected-message
   printf '%s' "$base" | jq "$2" > "$tmp/c.json"
   out=$(cd "$tmp" && "$SCRIPTS/config.sh" c.json 2>&1); rc=$?
@@ -59,7 +56,7 @@ try "changelog escaping the repo" '.changelog = "docs/../../CHANGELOG.md"' '"cha
 try "empty changelog" '.changelog = ""' '"changelog" must not be empty'
 try "blank fallbackText" '.fallbackText = "  "' '"fallbackText" must not be blank'
 try "missing skeleton file" '.skeleton = "nope.mdx"' 'skeleton nope.mdx does not exist'
-try "skeleton subject differs" '.subject = "Flutter agent"' 'has "subject: React Native agent"; the config says "Flutter agent"'
+try "skeleton subject differs" '.subject = "tvOS agent"' 'has "subject: iOS agent"; the config says "tvOS agent"'
 
 printf '%s' "$base" | jq '.subject = 1 | .filePrefix = 2' > "$tmp/c.json"
 out=$(cd "$tmp" && "$SCRIPTS/config.sh" c.json 2>&1)
@@ -68,12 +65,12 @@ assert_contains "every problem is reported, not just the first (2)" "$out" '"fil
 
 printf '%s' "$base" > "$tmp/c.json"
 for m in '{/* release-note:feature */}' '{/* release-note:security */}' '{/* release-note:end */}'; do
-  grep -vxF "$m" "$SKELETON" > "$tmp/react-native-agent-next.mdx"
+  grep -vxF "$m" "$SKELETON" > "$tmp/ios-agent-next.mdx"
   out=$(cd "$tmp" && "$SCRIPTS/config.sh" c.json 2>&1); rc=$?
   assert_eq "skeleton without $m exits 2" 2 "$rc"
   assert_contains "skeleton without $m is named" "$out" "is missing $m"
 done
-sed 's/$/\r/' "$SKELETON" > "$tmp/react-native-agent-next.mdx"
+sed 's/$/\r/' "$SKELETON" > "$tmp/ios-agent-next.mdx"
 (cd "$tmp" && "$SCRIPTS/config.sh" c.json > /dev/null 2>&1); assert_eq "a CRLF skeleton is accepted" 0 "$?"
 
 printf '[1]' > "$tmp/c.json"; (cd "$tmp" && "$SCRIPTS/config.sh" c.json > /dev/null 2>&1); assert_eq "a JSON array exits 2" 2 "$?"
@@ -83,10 +80,13 @@ printf '{' > "$tmp/c.json"; (cd "$tmp" && "$SCRIPTS/config.sh" c.json > /dev/nul
 
 
 # ---- the optional booleans: prLinks, labelledOnly, readyForReview ----
-assert_contains "prLinks defaults to true" "$rn" "pr_links=true"
-assert_contains "labelledOnly defaults to false" "$rn" "labelled_only=false"
-assert_contains "readyForReview defaults to false" "$rn" "ready_for_review=false"
-printf '%s' "$base" | jq '.prLinks = false | .labelledOnly = true | .readyForReview = true' > "$tmp/b.json"
+printf '%s' "$base" | jq 'del(.prLinks, .labelledOnly, .readyForReview) | .fallbackText = "Updated native agent dependencies."' > "$tmp/d.json"
+out=$(cd "$tmp" && "$SCRIPTS/config.sh" d.json 2>&1)
+assert_contains "prLinks defaults to true" "$out" "pr_links=true"
+assert_contains "labelledOnly defaults to false" "$out" "labelled_only=false"
+assert_contains "readyForReview defaults to false" "$out" "ready_for_review=false"
+assert_contains "fallbackText overrides the default" "$out" "fallback_text=Updated native agent dependencies."
+printf '%s' "$base" | jq 'del(.prLinks, .labelledOnly, .readyForReview) | .prLinks = false | .labelledOnly = true | .readyForReview = true' > "$tmp/b.json"
 out=$(cd "$tmp" && "$SCRIPTS/config.sh" b.json 2>&1); rc=$?
 assert_eq "the three booleans set: exits 0" 0 "$rc"
 assert_contains "prLinks false is printed" "$out" "pr_links=false"
