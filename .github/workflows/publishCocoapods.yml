@@ -1,0 +1,30 @@
+name: publishCocoapods
+on:
+  workflow_dispatch:
+    # Re-sends the pod trunk push for a version, ex: when the push in productionDeploy failed.
+    inputs:
+      version:
+        description: Version to publish (ex 7.4.0)
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  publishCocoapods:
+    name: publishCocoapods
+    runs-on: xcode-27
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: false
+
+      - name: Publish podspec
+        uses: ./.github/actions/publish-cocoapods
+        with:
+          version: ${{ github.event.inputs.version }}
+          trunk-token: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
