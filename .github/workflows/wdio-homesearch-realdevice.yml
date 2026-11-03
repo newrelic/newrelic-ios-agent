@@ -1,0 +1,144 @@
+# Runs the HomeSearch LambdaTest suite on a REAL PHYSICAL DEVICE.
+#
+# Real-device sibling of wdio-homesearch.yml, and the HomeSearch counterpart of
+# wdio-mobile-views-2-realdevice.yml. Differences from the virtual run:
+#   - the app is the signed .ipa from uploadApp-homesearch-realdevice.yml, identified by `lt://APP...`
+#   - specs run one at a time (maxInstances: 1); each is still its own session
+#
+# The app id arrives as a workflow_call input from the upload workflow rather than as artifacts, for the reason
+# wdio-mobile-views-2.yml gives (artifact poisoning). Runs appear in the LambdaTest dashboard as
+# "[mobile-views-2-realdevice] Build_HomeSearch_RealDevice - iOS:<timestamp>".
+
+name: "WDIO: automate HomeSearch iOS tests on real device (mobile-views-2)"
+
+permissions:
+  contents: read
+
+on:
+  workflow_call:
+    inputs:
+      app_id:
+        description: "LambdaTest app URL (lt://APP...) of the signed HomeSearch IPA."
+        required: true
+        type: string
+
+  workflow_dispatch:
+    inputs:
+      app_id:
+        description: "LambdaTest app URL (lt://APP...) of a signed HomeSearch IPA, from the upload run's summary."
+        required: true
+        type: string
+      device_name:
+        description: "Real device to target (default iPhone 17)."
+        required: false
+        type: string
+        default: ""
+      platform_version:
+        description: "iOS version to target (default 26.0)."
+        required: false
+        type: string
+        default: ""
+
+jobs:
+  ios-data-realdevice:
+    name: Run HomeSearch suite on real device
+    runs-on: ubuntu-latest
+    env:
+      LT_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
+      LT_ACCESSKEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
+      LT_RUN_LABEL: mobile-views-2-realdevice
+    steps:
+      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # pin@v4
+        with:
+          ref: mobile-views-2
+      - name: Setup environment
+        uses: ./.github/actions/env-setup
+
+      # Everything below reaches $GITHUB_ENV, so each value is allowlisted first. A bad app id fails the run
+      # rather than testing some other app.
+      - name: Set LT_APP_ID environment variable
+        env:
+          APP_ID_INPUT: ${{ inputs.app_id }}
+        run: |
+          if ! printf '%s' "$APP_ID_INPUT" | grep -Eq '^(lt://[A-Za-z0-9]{1,190}|com\.newrelic\.HomeSearch\.realdevice\.[A-Za-z0-9._:-]{1,160})$'; then
+            echo "::error::app_id must be an lt://APP... URL or a HomeSearch real-device custom_id"
+            exit 1
+          fi
+          echo "LT_APP_ID=$APP_ID_INPUT" >> "$GITHUB_ENV"
+          echo "Using app ID: $APP_ID_INPUT"
+
+      - name: Set device overrides
+        env:
+          DEVICE_NAME_INPUT: ${{ inputs.device_name }}
+          PLATFORM_VERSION_INPUT: ${{ inputs.platform_version }}
+        run: |
+          if [ -n "$DEVICE_NAME_INPUT" ]; then
+            if printf '%s' "$DEVICE_NAME_INPUT" | grep -Eq '^[A-Za-z0-9 ._-]{1,40}$'; then
+              echo "LT_DEVICE_NAME=$DEVICE_NAME_INPUT" >> "$GITHUB_ENV"
+              echo "Targeting device: $DEVICE_NAME_INPUT"
+            else
+              echo "::warning::Ignoring invalid device_name; using the config default"
+            fi
+          fi
+          if [ -n "$PLATFORM_VERSION_INPUT" ]; then
+            if printf '%s' "$PLATFORM_VERSION_INPUT" | grep -Eq '^[0-9.]{1,10}$'; then
+              echo "LT_PLATFORM_VERSION=$PLATFORM_VERSION_INPUT" >> "$GITHUB_ENV"
+              echo "Targeting iOS: $PLATFORM_VERSION_INPUT"
+            else
+              echo "::warning::Ignoring invalid platform_version; using the config default"
+            fi
+          fi
+
+      - name: Execute HomeSearch tests on real device
+        run: npm run test:wdio-homesearch-realdevice
+
+      - name: Read test results
+        if: ${{ always() }}
+        run: |
+          RESULTS_FILE="LambdaTest/test-results-homesearch-realdevice.json"
+          if [ -f "$RESULTS_FILE" ]; then
+            PASSED="$(node -pe "JSON.parse(require('fs').readFileSync('$RESULTS_FILE')).passed")"
+            FAILED="$(node -pe "JSON.parse(require('fs').readFileSync('$RESULTS_FILE')).failed")"
+          else
+            PASSED="unknown"
+            FAILED="unknown"
+          fi
+          echo "TESTS_PASSED=$PASSED" >> $GITHUB_ENV
+          echo "TESTS_FAILED=$FAILED" >> $GITHUB_ENV
+
+      - name: Log success
+        if: ${{ success() }}
+        run: echo "[ RUNNER ] - successfully executed HomeSearch iOS tests on real device (passed=$TESTS_PASSED, failed=$TESTS_FAILED)"
+
+      - name: Log failure
+        if: ${{ failure() || cancelled() }}
+        run: echo "[ RUNNER ] - failed to execute HomeSearch iOS tests on real device (passed=$TESTS_PASSED, failed=$TESTS_FAILED)"
+
+      - name: Notify failure
+        if: ${{ failure() || cancelled() }}
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # pin@v2
+        with:
+          webhook-type: incoming-webhook
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            blocks:
+              - type: "header"
+                text:
+                  type: "plain_text"
+                  text: ":rotating_light: HomeSearch LambdaTest Real Device Run Failed (mobile-views-2)"
+              - type: "divider"
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "*Branch:* mobile-views-2\n*Target:* real device\n*Passed:* ${{ env.TESTS_PASSED }}\n*Failed:* ${{ env.TESTS_FAILED }}"
+                accessory:
+                  type: "button"
+                  text:
+                    type: "plain_text"
+                    text: "View logs"
+                    emoji: true
+                  value: "view_logs"
+                  url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  action_id: "button-action"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
