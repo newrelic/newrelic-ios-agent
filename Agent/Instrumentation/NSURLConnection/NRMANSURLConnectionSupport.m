@@ -16,6 +16,7 @@
 #import "NRMANetworkFacade.h"
 #import "NRMAPayloadContainer.h"
 #import "NRMAHarvestController.h"
+#import "NRMAInFlightTraces.h"
 // adapted from
 // https://bitbucket.org/martijnthe/nsurlconnectionvcr/src/09f7a286eec76a4fa456ed5b92060c48c7d11def/NSURLConnectionVCR/NSURLConnectionVCR.m?at=master
 //
@@ -203,6 +204,7 @@ static SEL swizzleSelectors[swizzleCount] = {NULL, NULL};
             NRTimer *timer = [[[NRTimer alloc] init] autorelease];
             NSData *theResponseBody = ((NSData*(*)(id,SEL,NSURLRequest*, NSURLResponse**, NSError**))(origImps[0]))(_self, sel, mutableRequest, &theResponse, &theError);
             [timer stopTimer];
+            [NRMAInFlightTraces traceFinished:[NRMAHTTPUtilities inFlightTraceForRequest:mutableRequest]];
 
             if (theError) {
                 if (error) {
@@ -245,6 +247,7 @@ static SEL swizzleSelectors[swizzleCount] = {NULL, NULL};
             NRTimer *timer = [[[NRTimer alloc] init] autorelease];
             ((void(*)(id,SEL,NSURLRequest*,NSOperationQueue*,void(^)(NSURLResponse*,NSData*,NSError*)))origImps[1])(_self, sel, mutableRequest, queue, ^(NSURLResponse *response, NSData *responseBody, NSError *error){
                 [timer stopTimer];
+                id inFlightTrace = [[NRMAHTTPUtilities inFlightTraceForRequest:mutableRequest] retain];
                 if (error) {
                     [NRMANSURLConnectionSupport noticeError:error
                                                forRequest:mutableRequest
@@ -273,6 +276,9 @@ static SEL swizzleSelectors[swizzleCount] = {NULL, NULL};
                 if (handler != nil) {
                     handler(response, responseBody, error);
                 }
+                // After the app's handler, so the logs it writes carry the trace.
+                [NRMAInFlightTraces traceFinished:inFlightTrace];
+                [inFlightTrace release];
             });
         }copy] autorelease];
     } else {
@@ -294,8 +300,6 @@ static SEL swizzleSelectors[swizzleCount] = {NULL, NULL};
 
 + (void)noticeError:(NSError*)error forRequest:(NSURLRequest *)request withTimer:(NRTimer *)timer
 {
-    [NRMAHTTPUtilities finishTraceForRequest:request];
-
     // ignore self-instrumentation here, the agent records this stuff into Supportability metrics elsewhere
     if ([NRMANSURLConnectionSupport isNewRelicServiceRequest:request]) {
         return;
@@ -325,8 +329,6 @@ static SEL swizzleSelectors[swizzleCount] = {NULL, NULL};
              bytesSent:(NSUInteger)sent
          bytesReceived:(NSUInteger)received
 {
-    [NRMAHTTPUtilities finishTraceForRequest:request];
-
     // ignore self-instrumentation here, the agent records this stuff into Supportability metrics elsewhere
     if ([NRMANSURLConnectionSupport isNewRelicServiceRequest:request]) {
         return;

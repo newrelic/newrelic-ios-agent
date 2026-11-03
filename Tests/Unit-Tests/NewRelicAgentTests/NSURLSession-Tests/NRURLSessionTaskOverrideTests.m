@@ -16,9 +16,25 @@
 #import "NRConstants.h"
 #import <OCMock/OCMock.h>
 #import <objc/runtime.h>
+#import "NRMAInFlightTraces.h"
+#import "NRMAURLSessionTaskDelegateBase_Private.h"
+#import "NRMAAppToken.h"
+#import "NRMAHarvestController.h"
+#import "NRTestConstants.h"
 @interface NRMAURLSessionTaskOverrideTests : XCTestCase
 @property(strong) NSURLSession* session;
 - (BOOL) verifyTaskSwizzled:(NSURLSessionTask*)task;
+@end
+
+// An app delegate that records the in-flight trace while the agent's delegate forwards to it.
+@interface NRMAInFlightTraceRecordingDelegate : NSObject <NSURLSessionDataDelegate>
+@property (nonatomic, strong) NSDictionary* traceAttributes;
+@end
+
+@implementation NRMAInFlightTraceRecordingDelegate
+- (void) URLSession:(NSURLSession*)session task:(NSURLSessionTask*)task didCompleteWithError:(NSError*)error {
+    self.traceAttributes = [NRMAInFlightTraces currentTraceAttributes];
+}
 @end
 
 @implementation NRMAURLSessionTaskOverrideTests
@@ -33,6 +49,7 @@
 - (void)tearDown
 {
     [NRMAURLSessionOverride deinstrument];
+    [NRMAInFlightTraces reset];
     [super tearDown];
 }
 
@@ -360,6 +377,102 @@
     [taskMock stopMocking];
     [mockHTTPUtils stopMocking];
     [mockURLConnectionSupport stopMocking];
+}
+
+#pragma mark - In-flight traces
+
+// An account to generate trace payloads against, and nothing in flight.
+- (void) prepareInFlightTraces
+{
+    NRMAAgentConfiguration *config = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:kNRMA_ENABLED_STAGING_APP_TOKEN]
+                                                                     collectorAddress:KNRMA_TEST_COLLECTOR_HOST
+                                                                         crashAddress:nil];
+    [NRMAHarvestController initialize:config];
+
+    NRMAHarvesterConfiguration* harvesterConfig = [NRMAHarvesterConfiguration defaultHarvesterConfiguration];
+    harvesterConfig.account_id = 1234567;
+    harvesterConfig.application_id = 1234567;
+    [[[NRMAHarvestController harvestController] harvester] configureHarvester:harvesterConfig];
+
+    [NRMAInFlightTraces reset];
+}
+
+// A local file, so instrumented tasks complete without the network.
+- (NSURL*) localFileURL
+{
+    NSURL* url = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:@"NRMAURLSessionTaskOverrideTests.txt"]];
+    [[@"body" dataUsingEncoding:NSUTF8StringEncoding] writeToURL:url atomically:YES];
+    return url;
+}
+
+- (void) testTraceIsInFlightWhileCompletionHandlerRuns
+{
+    [self prepareInFlightTraces];
+
+    __block NSDictionary* duringHandler = nil;
+    __block NSDictionary* afterHandler = @{};
+    XCTestExpectation* handled = [self expectationWithDescription:@"completion handler returned"];
+    NSURLSession* session = self.session;
+    NSURLSessionDataTask* task = [session dataTaskWithURL:[self localFileURL]
+                                        completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
+        duringHandler = [NRMAInFlightTraces currentTraceAttributes];
+        // The delegate queue is serial, so this runs once the handler has returned.
+        [session.delegateQueue addOperationWithBlock:^{
+            afterHandler = [NRMAInFlightTraces currentTraceAttributes];
+            [handled fulfill];
+        }];
+    }];
+    [task resume];
+    [self waitForExpectations:@[handled] timeout:10];
+
+    XCTAssertNotNil(duringHandler[@"trace.id"]);
+    XCTAssertNotNil(duringHandler[@"span.id"]);
+    XCTAssertNil(afterHandler);
+}
+
+- (void) testDelegateEndsTraceOfUntimedTaskAfterAppDelegate
+{
+    [self prepareInFlightTraces];
+    [NRMAURLSessionOverride deinstrument];
+    NSURLSessionDataTask* task = [self.session dataTaskWithURL:[self localFileURL]];
+    NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:[NSMutableURLRequest requestWithURL:[self localFileURL]]];
+    XCTAssertNotNil(payload);
+    [NRMAHTTPUtilities attachNRMAPayload:payload to:task.originalRequest];
+    XCTAssertNil(NRMA__getTimerForSessionTask(task));
+
+    NRMAInFlightTraceRecordingDelegate* appDelegate = [NRMAInFlightTraceRecordingDelegate new];
+    NRURLSessionTaskDelegateBase* agentDelegate = [[NRURLSessionTaskDelegateBase alloc] initWithOriginalDelegate:appDelegate];
+    [agentDelegate URLSession:self.session task:task didCompleteWithError:nil];
+
+    XCTAssertEqualObjects(appDelegate.traceAttributes[@"span.id"], payload.id);
+    XCTAssertNil([NRMAInFlightTraces currentTraceAttributes]);
+}
+
+- (void) testHandledTaskTraceEndsAfterCompletionWhenNoHookRecordsIt
+{
+    [self prepareInFlightTraces];
+    // Created by the instrumented session, so it is marked handled and carries its payload.
+    NSURLSessionDataTask* task = [self.session dataTaskWithRequest:[NSURLRequest requestWithURL:[self localFileURL]]];
+    XCTAssertNotNil([NRMAHTTPUtilities inFlightTraceForRequest:task.originalRequest]);
+
+    NRMAOverride__urlSessionTask_SetState(task, @selector(setState:), NSURLSessionTaskStateCompleted);
+    XCTAssertNotNil([NRMAInFlightTraces currentTraceAttributes], @"the app's handlers get the grace period first");
+
+    XCTestExpectation* ended = [self expectationForPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary* bindings) {
+        return [NRMAInFlightTraces currentTraceAttributes] == nil;
+    }] evaluatedWithObject:self handler:nil];
+    [self waitForExpectations:@[ended] timeout:10];
+}
+
+- (void) testUploadTaskWithoutCompletionHandlerSendsItsTrace
+{
+    [self prepareInFlightTraces];
+    NSURLRequest* request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"https://example.com/upload"]];
+    NSURLSessionUploadTask* task = [self.session uploadTaskWithRequest:request fromData:[NSData data]];
+
+    NSString* spanId = [NRMAInFlightTraces currentTraceAttributes][@"span.id"];
+    XCTAssertNotNil(spanId);
+    XCTAssertTrue([[task.originalRequest valueForHTTPHeaderField:@"traceparent"] containsString:spanId]);
 }
 
 @end

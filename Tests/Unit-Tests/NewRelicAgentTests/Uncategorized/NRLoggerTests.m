@@ -34,11 +34,13 @@
 @end
 
 static NewRelicAgentInternal* _sharedInstance;
+static BOOL _distributedTracingWasEnabled;
 
 @implementation NRLoggerTests
 - (void) setUp
 {
     [super setUp];
+    _distributedTracingWasEnabled = [NRMAFlags shouldEnableDistributedTracing];
     [NRMAFlags enableFeatures: NRFeatureFlag_LogReporting];
     [NRLogger setLogTargets:NRLogTargetFile | NRLogTargetConsole];
 
@@ -109,7 +111,11 @@ static NewRelicAgentInternal* _sharedInstance;
     _sharedInstance = nil;
     [NRMAMeasurements shutdown];
     [NRMAFlags disableFeatures: NRFeatureFlag_LogReporting];
-    [NRMAFlags enableFeatures: NRFeatureFlag_DistributedTracing];
+    if (_distributedTracingWasEnabled) {
+        [NRMAFlags enableFeatures: NRFeatureFlag_DistributedTracing];
+    } else {
+        [NRMAFlags disableFeatures: NRFeatureFlag_DistributedTracing];
+    }
     [NRMAInFlightTraces reset];
     [NRLogger setLogTargets:NRLogTargetConsole];
 

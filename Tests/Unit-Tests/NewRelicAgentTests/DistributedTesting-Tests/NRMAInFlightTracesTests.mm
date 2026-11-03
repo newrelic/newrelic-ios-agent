@@ -146,7 +146,8 @@
     // The span.id is the parent-id the request carried on the wire.
     XCTAssertTrue([[request valueForHTTPHeaderField:@"traceparent"] containsString:payload.id]);
 
-    [NRMAHTTPUtilities finishTraceForRequest:request];
+    XCTAssertEqual([NRMAHTTPUtilities inFlightTraceForRequest:request], payload);
+    [NRMAInFlightTraces traceFinished:[NRMAHTTPUtilities inFlightTraceForRequest:request]];
     XCTAssertNil([NRMAInFlightTraces currentTraceAttributes]);
 
     // The network event still needs the payload.
@@ -165,7 +166,8 @@
                                @"span.id": @([payload getReference]->getId().c_str())};
     XCTAssertEqualObjects([NRMAInFlightTraces currentTraceAttributes], expected);
 
-    [NRMAHTTPUtilities finishTraceForRequest:request];
+    XCTAssertEqual([NRMAHTTPUtilities inFlightTraceForRequest:request], payload);
+    [NRMAInFlightTraces traceFinished:[NRMAHTTPUtilities inFlightTraceForRequest:request]];
     XCTAssertNil([NRMAInFlightTraces currentTraceAttributes]);
 }
 
@@ -173,7 +175,8 @@
     NSObject* payload = [NSObject new];
     [NRMAInFlightTraces traceStarted:payload traceId:@"trace-1" spanId:@"span-1"];
 
-    [NRMAHTTPUtilities finishTraceForRequest:[self request]];
+    XCTAssertNil([NRMAHTTPUtilities inFlightTraceForRequest:[self request]]);
+    [NRMAInFlightTraces traceFinished:[NRMAHTTPUtilities inFlightTraceForRequest:[self request]]];
 
     XCTAssertEqualObjects([NRMAInFlightTraces currentTraceAttributes][@"trace.id"], @"trace-1");
 }
@@ -189,13 +192,16 @@
 
 - (void) testNoTraceWhenDistributedTracingIsDisabled {
     [self configureAccount];
+    BOOL distributedTracingWasEnabled = [NRMAFlags shouldEnableDistributedTracing];
     [NRMAFlags disableFeatures:NRFeatureFlag_DistributedTracing];
 
     XCTAssertNil([NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:[self request]]);
     XCTAssertNil([NRMAHTTPUtilities addConnectivityHeader:[self request]]);
     XCTAssertNil([NRMAInFlightTraces currentTraceAttributes]);
 
-    [NRMAFlags enableFeatures:NRFeatureFlag_DistributedTracing];
+    if (distributedTracingWasEnabled) {
+        [NRMAFlags enableFeatures:NRFeatureFlag_DistributedTracing];
+    }
 }
 
 @end

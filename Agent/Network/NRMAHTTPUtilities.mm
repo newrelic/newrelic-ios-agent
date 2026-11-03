@@ -296,9 +296,8 @@ NSString* currentParentId = @"";
     return nil;
 }
 
-+ (void) finishTraceForRequest:(NSURLRequest*)request {
-    [NRMAInFlightTraces traceFinished:[NRMAAssociate retrieveFrom:request
-                                                             with:kNRMA_ASSOCIATED_PAYLOAD_KEY]];
++ (id) inFlightTraceForRequest:(NSURLRequest*)request {
+    return [NRMAAssociate retrieveFrom:request with:kNRMA_ASSOCIATED_PAYLOAD_KEY];
 }
 
 + (NSDictionary<NSString*, NSString*> *) generateConnectivityHeadersWithPayload:(NRMAPayloadContainer*)payloadContainer {

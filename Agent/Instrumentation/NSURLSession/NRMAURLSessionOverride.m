@@ -20,6 +20,7 @@
 #import "NRMAAssociate.h"
 #import "NRMAURLSessionTaskSearch.h"
 #import "NRMAFlags.h"
+#import "NRMAInFlightTraces.h"
 
 #define NRMASwizzledMethodPrefix @"_NRMAOverride__"
 
@@ -41,9 +42,14 @@ void NRMA__instanceSwizzleIfNotSwizzled(Class clazz, SEL selector, IMP newImplem
 @interface PayloadHolder : NSObject
 @property (nonatomic, retain) NRMAPayload *objcPayload;
 @property (nonatomic, retain) NRMAPayloadContainer *cppPayload;
+// Whichever of the two the event system produced; keys the request's in-flight trace.
+@property (nonatomic, readonly) id payload;
 @end
 
 @implementation PayloadHolder
+- (id) payload {
+    return self.objcPayload ?: (id)self.cppPayload;
+}
 @end
 
 @interface NRMAIMPContainer : NSObject
@@ -281,6 +287,9 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest_completionHandler(id self, S
         NRMA__recordTask(task,data,response,error);
 
         completionHandler(data,response,error);
+
+        // After the app's handler, so the logs it writes carry the trace.
+        [NRMAInFlightTraces traceFinished:payloadHolder.payload];
     });
     objc_setAssociatedObject(task, NRMAHandledRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
@@ -317,16 +326,21 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromFile(id self, SEL _cmd
     }
 
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
+
+    PayloadHolder *payloadHolder = [[PayloadHolder alloc] init];
+    if([NRMAFlags shouldEnableNewEventSystem]) {
+        payloadHolder.objcPayload = ([NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest]);
+    } else {
+        payloadHolder.cppPayload = ([NRMAHTTPUtilities addConnectivityHeader:mutableRequest]);
+    }
+
     NSURLSessionTask* task = ((NSURLSessionTask*(*)(id,SEL,NSURLRequest*,NSURL*))originalImp)(self,_cmd,mutableRequest,fileURL);
     objc_setAssociatedObject(task, NRMAHandledRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+
     if([NRMAFlags shouldEnableNewEventSystem]){
-        NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
-        [NRMAHTTPUtilities attachNRMAPayload:payload
-                                      to:task.originalRequest];
+        [NRMAHTTPUtilities attachNRMAPayload:payloadHolder.objcPayload to:task.originalRequest];
     } else {
-        NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-        [NRMAHTTPUtilities attachPayload:payload
-                                      to:task.originalRequest];
+        [NRMAHTTPUtilities attachPayload:payloadHolder.cppPayload to:task.originalRequest];
     }
 
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
@@ -343,14 +357,21 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromData(id self, SEL _cmd
     }
 
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
+
+    PayloadHolder *payloadHolder = [[PayloadHolder alloc] init];
+    if([NRMAFlags shouldEnableNewEventSystem]) {
+        payloadHolder.objcPayload = ([NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest]);
+    } else {
+        payloadHolder.cppPayload = ([NRMAHTTPUtilities addConnectivityHeader:mutableRequest]);
+    }
+
     NSURLSessionTask* task = ((NSURLSessionTask*(*)(id,SEL,NSURLRequest*,NSData*))originalImp)(self, _cmd, mutableRequest, data);
     objc_setAssociatedObject(task, NRMAHandledRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+
     if([NRMAFlags shouldEnableNewEventSystem]){
-        NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
-        [NRMAHTTPUtilities attachNRMAPayload:payload to:task.originalRequest];
+        [NRMAHTTPUtilities attachNRMAPayload:payloadHolder.objcPayload to:task.originalRequest];
     } else {
-        NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-        [NRMAHTTPUtilities attachPayload:payload to:task.originalRequest];
+        [NRMAHTTPUtilities attachPayload:payloadHolder.cppPayload to:task.originalRequest];
     }
 
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
@@ -421,6 +442,9 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromFile_completionH
         NRMA__recordTask(task,data,response,error);
 
         completionHandler(data,response,error);
+
+        // After the app's handler, so the logs it writes carry the trace.
+        [NRMAInFlightTraces traceFinished:payloadHolder.payload];
     });
     objc_setAssociatedObject(task, NRMAHandledRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
@@ -474,6 +498,9 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromData_completionH
         NRMA__recordTask(task,data,response,error);
 
         completionHandler(data,response,error);
+
+        // After the app's handler, so the logs it writes carry the trace.
+        [NRMAInFlightTraces traceFinished:payloadHolder.payload];
     });
     objc_setAssociatedObject(task, NRMAHandledRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
