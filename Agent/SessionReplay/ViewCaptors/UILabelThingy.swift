@@ -11,6 +11,7 @@ import UIKit
 @_implementationOnly import NewRelicPrivate
 
 let RCTParagraphComponentView = "RCTParagraphComponentView"
+let RCTTextViewLegacy = "RCTTextView"
 
 class UILabelThingy: SessionReplayViewThingy {
     var isMasked: Bool
@@ -180,6 +181,17 @@ class UILabelThingy: SessionReplayViewThingy {
                     lineBreakMode = extracted.lineBreakMode
                     kern = extracted.kern
                 }
+            }
+        } else if let rctTextViewClass = NSClassFromString(RCTTextViewLegacy),
+                  view.isKind(of: rctTextViewClass) {
+            if let textStorage = view.value(forKey: "textStorage") as? NSAttributedString {
+                let extracted = TextHelper.extractLabelAttributes(from: textStorage)
+                text = extracted.text
+                font = extracted.font
+                textColor = extracted.textColor
+                textAlignment = extracted.textAlignment
+                lineBreakMode = extracted.lineBreakMode
+                kern = extracted.kern
             }
         }
 
