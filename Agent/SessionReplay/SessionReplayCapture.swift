@@ -216,6 +216,9 @@ class SessionReplayCapture {
             if let rctParagraphClass = NSClassFromString(RCTParagraphComponentView),
                originalView.isKind(of: rctParagraphClass) {
                 return UILabelThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
+            } else if let rctTextViewClass = NSClassFromString(RCTTextViewLegacy),
+                      originalView.isKind(of: rctTextViewClass) {
+                return UILabelThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
             } else {
                 return UIViewThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
             }
