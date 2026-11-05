@@ -42,7 +42,8 @@ class UIImageViewThingy: SessionReplayViewThingy {
 
         self.isBlocked = viewDetails.blockView ?? false
 
-        if !self.isMasked {
+        // A blocked view is recorded as an empty black box, so never capture its image.
+        if !self.isMasked && !self.isBlocked {
             self.image = view.image
             // Detect if image is tinted
             if let image = self.image {
@@ -72,7 +73,8 @@ class UIImageViewThingy: SessionReplayViewThingy {
 
         self.isBlocked = viewDetails.blockView ?? false
 
-        if !self.isMasked {
+        // A blocked view is recorded as an empty black box, so never capture its image.
+        if !self.isMasked && !self.isBlocked {
             if let cgImage = cgImage {
                 let uiImage = UIImage(cgImage: cgImage, scale: swiftUIImage.scale, orientation: swiftUIImage.orientation.toUIImageOrientation())
                     self.image = uiImage
