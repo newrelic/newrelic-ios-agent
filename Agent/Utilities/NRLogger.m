@@ -16,6 +16,7 @@
 #import "NRMAFlags.h"
 #import "NRAutoLogCollector.h"
 #import "NRMAHarvesterConnection+GZip.h"
+#import "NRMAInFlightTraces.h"
 
 NRLogger *_nr_logger = nil;
 
@@ -244,6 +245,18 @@ withTimestamp:(NSNumber *) timestamp {
 }
 
 - (void)addLogMessage:(NSDictionary *)message : (BOOL) agentLogsOn {
+    // Read on the calling thread: by the time logQueue gets to the message, the request it was
+    // written during may have finished.
+    if ([NRMAFlags shouldEnableLogReporting] && [NRMAFlags shouldEnableDistributedTracing]) {
+        NSDictionary* traceAttributes = [NRMAInFlightTraces currentTraceAttributes];
+        if (traceAttributes) {
+            NSMutableDictionary* tracedMessage = [message mutableCopy];
+            // Added last so a trace.id or span.id the caller passed as an attribute can't override them.
+            [tracedMessage addEntriesFromDictionary:traceAttributes];
+            message = tracedMessage;
+        }
+    }
+
     // The static method checks the log level before we get here.
     dispatch_async(logQueue, ^{
         // Only enter this first block if local log level includes this level enabled.

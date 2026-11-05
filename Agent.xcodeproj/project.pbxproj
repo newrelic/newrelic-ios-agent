@@ -1067,6 +1067,7 @@
 		342C4B5B2A3BD15A00116992 /* BlockAttributeValidator.m in Sources */ = {isa = PBXBuildFile; fileRef = 342C4B572A3BD15A00116992 /* BlockAttributeValidator.m */; };
 		3431DD1B2BED375E00FF145F /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 348232222BC5EEE60070FAC3 /* NewRelic.framework */; };
 		3431DD342BED381100FF145F /* TestNRMATraceContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D0225A75E6E006277FB /* TestNRMATraceContext.mm */; };
+		FA862718C7288BD353253DBD /* NRMAInFlightTracesTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = DF4D16038E64803D8BC9BC58 /* NRMAInFlightTracesTests.mm */; };
 		3431DD352BED381400FF145F /* TestW3CTraceParent.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D1A25A78689006277FB /* TestW3CTraceParent.mm */; };
 		3431DD362BED381600FF145F /* TestW3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */; };
 		3431DD372BED383C00FF145F /* NRMAInternalTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ACB224E7394B00E45C90 /* NRMAInternalTests.m */; };
@@ -1194,7 +1195,9 @@
 		348232462BC5F0F60070FAC3 /* NRMAPayloadContainer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF4ABE24DC656800115469 /* NRMAPayloadContainer.mm */; };
 		348232472BC5F0F80070FAC3 /* NRMAPayloadContainer+cppInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF4ABF24DC656800115469 /* NRMAPayloadContainer+cppInterface.h */; };
 		348232482BC5F0FD0070FAC3 /* NRMATraceContext.h in Headers */ = {isa = PBXBuildFile; fileRef = F6E79CED25A66887006277FB /* NRMATraceContext.h */; };
+		A15330BF08BB60C9CDA47790 /* NRMAInFlightTraces.h in Headers */ = {isa = PBXBuildFile; fileRef = E8B55D0CA14636F693749183 /* NRMAInFlightTraces.h */; };
 		348232492BC5F1000070FAC3 /* NRMATraceContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79CEE25A66887006277FB /* NRMATraceContext.mm */; };
+		0573DCBE224E87E9E1AB03D2 /* NRMAInFlightTraces.m in Sources */ = {isa = PBXBuildFile; fileRef = 5104A20F126C33F484FB3076 /* NRMAInFlightTraces.m */; };
 		3482324A2BC5F1040070FAC3 /* W3CTraceParent.h in Headers */ = {isa = PBXBuildFile; fileRef = F6E79C7225A65346006277FB /* W3CTraceParent.h */; };
 		3482324B2BC5F1070070FAC3 /* W3CTraceParent.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C7025A65346006277FB /* W3CTraceParent.mm */; };
 		3482324C2BC5F12F0070FAC3 /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
@@ -1615,11 +1618,17 @@
 		F6E79C7D25A65347006277FB /* W3CTraceParent.h in Headers */ = {isa = PBXBuildFile; fileRef = F6E79C7225A65346006277FB /* W3CTraceParent.h */; };
 		F6E79C7E25A65347006277FB /* W3CTraceParent.h in Headers */ = {isa = PBXBuildFile; fileRef = F6E79C7225A65346006277FB /* W3CTraceParent.h */; };
 		F6E79CEF25A66887006277FB /* NRMATraceContext.h in Headers */ = {isa = PBXBuildFile; fileRef = F6E79CED25A66887006277FB /* NRMATraceContext.h */; };
+		D23E8BD033A6FE35C449A525 /* NRMAInFlightTraces.h in Headers */ = {isa = PBXBuildFile; fileRef = E8B55D0CA14636F693749183 /* NRMAInFlightTraces.h */; };
 		F6E79CF025A66887006277FB /* NRMATraceContext.h in Headers */ = {isa = PBXBuildFile; fileRef = F6E79CED25A66887006277FB /* NRMATraceContext.h */; };
+		7B2B9F4FA1E9F8D99234CE1D /* NRMAInFlightTraces.h in Headers */ = {isa = PBXBuildFile; fileRef = E8B55D0CA14636F693749183 /* NRMAInFlightTraces.h */; };
 		F6E79CF125A66887006277FB /* NRMATraceContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79CEE25A66887006277FB /* NRMATraceContext.mm */; };
+		F353113FCC82241AB0D3CCE2 /* NRMAInFlightTraces.m in Sources */ = {isa = PBXBuildFile; fileRef = 5104A20F126C33F484FB3076 /* NRMAInFlightTraces.m */; };
 		F6E79CF225A66887006277FB /* NRMATraceContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79CEE25A66887006277FB /* NRMATraceContext.mm */; };
+		CCBC858AFE3667061E30F958 /* NRMAInFlightTraces.m in Sources */ = {isa = PBXBuildFile; fileRef = 5104A20F126C33F484FB3076 /* NRMAInFlightTraces.m */; };
 		F6E79D0325A75E6F006277FB /* TestNRMATraceContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D0225A75E6E006277FB /* TestNRMATraceContext.mm */; };
+		868E2AD8D09284728F4A88D5 /* NRMAInFlightTracesTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = DF4D16038E64803D8BC9BC58 /* NRMAInFlightTracesTests.mm */; };
 		F6E79D1225A7639D006277FB /* TestNRMATraceContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D0225A75E6E006277FB /* TestNRMATraceContext.mm */; };
+		C0A59F191352D87F26987741 /* NRMAInFlightTracesTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = DF4D16038E64803D8BC9BC58 /* NRMAInFlightTracesTests.mm */; };
 		F6E79D1B25A78689006277FB /* TestW3CTraceParent.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D1A25A78689006277FB /* TestW3CTraceParent.mm */; };
 		F6E79D2B25A788AB006277FB /* TestW3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */; };
 		F6E79D3A25A78B42006277FB /* TestW3CTraceParent.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D1A25A78689006277FB /* TestW3CTraceParent.mm */; };
@@ -2734,8 +2743,11 @@
 		F6E79C7025A65346006277FB /* W3CTraceParent.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = W3CTraceParent.mm; sourceTree = "<group>"; };
 		F6E79C7225A65346006277FB /* W3CTraceParent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = W3CTraceParent.h; sourceTree = "<group>"; };
 		F6E79CED25A66887006277FB /* NRMATraceContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMATraceContext.h; sourceTree = "<group>"; };
+		E8B55D0CA14636F693749183 /* NRMAInFlightTraces.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMAInFlightTraces.h; sourceTree = "<group>"; };
 		F6E79CEE25A66887006277FB /* NRMATraceContext.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NRMATraceContext.mm; sourceTree = "<group>"; };
+		5104A20F126C33F484FB3076 /* NRMAInFlightTraces.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAInFlightTraces.m; sourceTree = "<group>"; };
 		F6E79D0225A75E6E006277FB /* TestNRMATraceContext.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; path = TestNRMATraceContext.mm; sourceTree = "<group>"; };
+		DF4D16038E64803D8BC9BC58 /* NRMAInFlightTracesTests.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; path = NRMAInFlightTracesTests.mm; sourceTree = "<group>"; };
 		F6E79D1A25A78689006277FB /* TestW3CTraceParent.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = TestW3CTraceParent.mm; sourceTree = "<group>"; };
 		F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = TestW3CTraceState.mm; sourceTree = "<group>"; };
 		F7B230ED67A6A98DA7DB0F8E /* NRMAEventDuplicationStoreTests.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = NRMAEventDuplicationStoreTests.mm; sourceTree = "<group>"; };
@@ -4323,7 +4335,9 @@
 			isa = PBXGroup;
 			children = (
 				F6E79CED25A66887006277FB /* NRMATraceContext.h */,
+				E8B55D0CA14636F693749183 /* NRMAInFlightTraces.h */,
 				F6E79CEE25A66887006277FB /* NRMATraceContext.mm */,
+				5104A20F126C33F484FB3076 /* NRMAInFlightTraces.m */,
 				F6E79C7225A65346006277FB /* W3CTraceParent.h */,
 				F6E79C7025A65346006277FB /* W3CTraceParent.mm */,
 				F6E79C6E25A65346006277FB /* W3CTraceState.h */,
@@ -4338,6 +4352,7 @@
 			children = (
 				D4C36C952FC902B7001DD597 /* TestGuidUniqueness.mm */,
 				F6E79D0225A75E6E006277FB /* TestNRMATraceContext.mm */,
+				DF4D16038E64803D8BC9BC58 /* NRMAInFlightTracesTests.mm */,
 				F6E79D1A25A78689006277FB /* TestW3CTraceParent.mm */,
 				F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */,
 			);
@@ -4413,6 +4428,7 @@
 				02FF481D24DB5B8100115469 /* NRMACollectionViewInstrumentation.h in Headers */,
 				02FF486224DC615A00115469 /* NRMANetworkResponseData+CppInterface.h in Headers */,
 				F6E79CEF25A66887006277FB /* NRMATraceContext.h in Headers */,
+				D23E8BD033A6FE35C449A525 /* NRMAInFlightTraces.h in Headers */,
 				02FF49DD24DC636100115469 /* NRMAHarvestableProtocol.h in Headers */,
 				342C4B412A3BCE9300116992 /* AttributeValidatorProtocol.h in Headers */,
 				2BDCA8A42A8C40D50005740D /* NRMASAM.h in Headers */,
@@ -4620,6 +4636,7 @@
 				02FF4B2824E3201400115469 /* NRMACollectionViewInstrumentation.h in Headers */,
 				02FF4B2924E3201400115469 /* NRMANetworkResponseData+CppInterface.h in Headers */,
 				F6E79CF025A66887006277FB /* NRMATraceContext.h in Headers */,
+				7B2B9F4FA1E9F8D99234CE1D /* NRMAInFlightTraces.h in Headers */,
 				02FF4B2A24E3201400115469 /* NRMAHarvestableProtocol.h in Headers */,
 				342C4B422A3BCE9300116992 /* AttributeValidatorProtocol.h in Headers */,
 				2BDCA8A52A8C40D50005740D /* NRMASAM.h in Headers */,
@@ -4838,6 +4855,7 @@
 				3482335B2BC5F2780070FAC3 /* NRMAThread.h in Headers */,
 				348232712BC5F1A80070FAC3 /* NRMAThreadInfo.h in Headers */,
 				348232482BC5F0FD0070FAC3 /* NRMATraceContext.h in Headers */,
+				A15330BF08BB60C9CDA47790 /* NRMAInFlightTraces.h in Headers */,
 				348232AD2BC5F1EB0070FAC3 /* NRMAAppUpgradeMetricGenerator.h in Headers */,
 				3482336B2BC5F3040070FAC3 /* NRMASAM.h in Headers */,
 				348233A22BC5F32B0070FAC3 /* Agent.h in Headers */,
@@ -5621,6 +5639,7 @@
 				2BFFB1EB28CA683F00392E3B /* NRMASupportMetricHelperTests.m in Sources */,
 				2BBBE70E28BD528F003CADF3 /* NRMAStartTimerTests.m in Sources */,
 				F6E79D0325A75E6F006277FB /* TestNRMATraceContext.mm in Sources */,
+				868E2AD8D09284728F4A88D5 /* NRMAInFlightTracesTests.mm in Sources */,
 				F8BF15522F3A38D100EF5628 /* XrayDecoder.swift in Sources */,
 				0209AC4B24E7078C00E45C90 /* NRMACrashReportTest.m in Sources */,
 				0209ACB324E7394B00E45C90 /* NRMAInternalTests.m in Sources */,
@@ -5783,6 +5802,7 @@
 				02FF48E324DC622700115469 /* NRMAExceptionhandlerConstants.m in Sources */,
 				02FF49DB24DC636100115469 /* NRMATimedTraceSegment.m in Sources */,
 				F6E79CF125A66887006277FB /* NRMATraceContext.mm in Sources */,
+				F353113FCC82241AB0D3CCE2 /* NRMAInFlightTraces.m in Sources */,
 				02FF49CD24DC62B800115469 /* NRMAHarvestableEvent.m in Sources */,
 				02FF49BC24DC62B800115469 /* NRMAScopedHTTPTransactionMeasurement.m in Sources */,
 				02FF48C024DC61F600115469 /* NRMAMethodSwizzling.m in Sources */,
@@ -6045,6 +6065,7 @@
 			files = (
 				025657F524EB19BF00FE3125 /* NRMAExceptionMetaDataTest.m in Sources */,
 				F6E79D1225A7639D006277FB /* TestNRMATraceContext.mm in Sources */,
+				C0A59F191352D87F26987741 /* NRMAInFlightTracesTests.mm in Sources */,
 				2B4226FA29DB9A170068BB8A /* NRMAHTTPUtilitiesTests.m in Sources */,
 				025657F624EB19BF00FE3125 /* NRMACrashReportTest.m in Sources */,
 				025657F724EB19BF00FE3125 /* NRMAInternalTests.m in Sources */,
@@ -6189,6 +6210,7 @@
 				2BDCA8AB2A8C41160005740D /* NRMASAM.mm in Sources */,
 				02FF4BF224E3201400115469 /* NRMATimedTraceSegment.m in Sources */,
 				F6E79CF225A66887006277FB /* NRMATraceContext.mm in Sources */,
+				CCBC858AFE3667061E30F958 /* NRMAInFlightTraces.m in Sources */,
 				02FF4BF324E3201400115469 /* NRMAHarvestableEvent.m in Sources */,
 				02FF4BF424E3201400115469 /* NRMAScopedHTTPTransactionMeasurement.m in Sources */,
 				2B570A562EF0C20B007D9E39 /* SessionReplayReporter.swift in Sources */,
@@ -6470,6 +6492,7 @@
 				3431DD6D2BED44E400FF145F /* NSObject+NRAssociatedObjectTest.m in Sources */,
 				3431DD6E2BED44E400FF145F /* NRMAInteractionDataStampTests.m in Sources */,
 				3431DD342BED381100FF145F /* TestNRMATraceContext.mm in Sources */,
+				FA862718C7288BD353253DBD /* NRMAInFlightTracesTests.mm in Sources */,
 				3431DD672BED44C400FF145F /* NRActivityTracesTest.m in Sources */,
 				3431DD502BED38CC00FF145F /* NRTimerTests.m in Sources */,
 				3431DD8E2BED4C9200FF145F /* TestRequestEvents.m in Sources */,
@@ -6653,6 +6676,7 @@
 				348233302BC5F2270070FAC3 /* NRMACrashReport_Symbol.m in Sources */,
 				348232A82BC5F1E30070FAC3 /* NRCustomMetrics.m in Sources */,
 				348232492BC5F1000070FAC3 /* NRMATraceContext.mm in Sources */,
+				0573DCBE224E87E9E1AB03D2 /* NRMAInFlightTraces.m in Sources */,
 				348233462BC5F2710070FAC3 /* NRMAURLSessionTaskOverride.m in Sources */,
 				348232582BC5F16E0070FAC3 /* NRMAJSON.m in Sources */,
 				348233372BC5F2270070FAC3 /* NRMACrashReport_Stack.m in Sources */,

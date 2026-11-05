@@ -14,6 +14,8 @@
 #import "NewRelicAgentInternal.h"
 #import "NRMANSURLConnectionSupport+private.h"
 #import "NRMAHarvestController.h"
+#import "NRMAHTTPUtilities.h"
+#import "NRMAInFlightTraces.h"
 
 @implementation NRMANSURLConnectionDelegateBase {
     /*
@@ -102,11 +104,17 @@
 
     [_timer stopTimer];
 
+    id inFlightTrace = [[NRMAHTTPUtilities inFlightTraceForRequest:_request] retain];
+
     [NRMANSURLConnectionSupport noticeError:error forRequest:_request withTimer:_timer];
 
     if ([_realDelegate respondsToSelector:@selector(connection:didFailWithError:)]) {
         [_realDelegate connection:connection didFailWithError:error];
     }
+
+    // After the app's delegate, so the logs it writes carry the trace.
+    [NRMAInFlightTraces traceFinished:inFlightTrace];
+    [inFlightTrace release];
 }
 
 
@@ -118,6 +126,8 @@
     //NRLOG_AGENT_VERBOSE(@"connectionDidFinishLoading: for %@", connection.currentRequest.URL.absoluteString);
     [_timer stopTimer];
 
+    id inFlightTrace = [[NRMAHTTPUtilities inFlightTraceForRequest:_request] retain];
+
     [NRMANSURLConnectionSupport noticeResponse:_response
                                   forRequest:_request
                                    withTimer:_timer
@@ -128,6 +138,9 @@
     if ([_realDelegate respondsToSelector:@selector(connectionDidFinishLoading:)]) {
         [_realDelegate connectionDidFinishLoading:connection];
     }
+
+    [NRMAInFlightTraces traceFinished:inFlightTrace];
+    [inFlightTrace release];
 }
 
 

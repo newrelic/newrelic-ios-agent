@@ -15,4 +15,6 @@
 + (BOOL) instrumentNSURLConnection;
 + (BOOL) deinstrumentNSURLConnection;
 
++ (BOOL) isNewRelicServiceRequest:(NSURLRequest *)request;
+
 @end
