@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		129751B27279694D997795C6 /* CustomTextThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E277C02E3908E500D6F04C /* CustomTextThingy.swift */; };
-		DBD40E9AAC4FD644E8698F65 /* UITextViewThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0B6BAC2DEA349D0080C3D6 /* UITextViewThingy.swift */; };
+		72F78B8151FDF7CBB89F35E8 /* IncrementalDiffGeneratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 871C12BAE9249E1084E7A385 /* IncrementalDiffGeneratorTests.swift */; };
+		5DCF5CE8135909A7EC546192 /* IncrementalDiffGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 340A8CE32DAD8EAB00BC2B01 /* IncrementalDiffGenerator.swift */; };
 		0209ABBD24E7054900E45C90 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 021A15BA24C9EEE700E8DFD5 /* NewRelic.framework */; };
 		0209ABC324E7057900E45C90 /* NRAgentTestBase.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ABAC24E7042C00E45C90 /* NRAgentTestBase.m */; };
 		0209ABC424E7058500E45C90 /* NRMeasurementConsumerHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ABAD24E7042C00E45C90 /* NRMeasurementConsumerHelper.m */; };
@@ -2086,6 +2086,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		871C12BAE9249E1084E7A385 /* IncrementalDiffGeneratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncrementalDiffGeneratorTests.swift; sourceTree = "<group>"; };
 		0209ABA924E7042B00E45C90 /* NRMeasurementConsumerHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMeasurementConsumerHelper.h; sourceTree = "<group>"; };
 		0209ABAA24E7042B00E45C90 /* libOCMock.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libOCMock.a; sourceTree = "<group>"; };
 		0209ABAB24E7042B00E45C90 /* NRAgentTestBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRAgentTestBase.h; sourceTree = "<group>"; };
@@ -3174,6 +3175,7 @@
 				2BBC1A532DEDF61A00F5C584 /* SessionReplayTest.m */,
 				0209ACB524E747FA00E45C90 /* NewRelicAgentTests.h */,
 				F85ABB482F1557150098A2CF /* UILabelThingyTests.swift */,
+				871C12BAE9249E1084E7A385 /* IncrementalDiffGeneratorTests.swift */,
 				F88801D12FC5FB780051DC67 /* SessionReplayReporterOfflineStorageTests.swift */,
 				F88801E62FC734C90051DC67 /* SessionReplayReporterNetworkTests.swift */,
 				C15109B42FC49AA5B0AE1D31 /* SessionReplayHarvestEndToEndTests.swift */,
@@ -5618,8 +5620,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				129751B27279694D997795C6 /* CustomTextThingy.swift in Sources */,
-				DBD40E9AAC4FD644E8698F65 /* UITextViewThingy.swift in Sources */,
+				72F78B8151FDF7CBB89F35E8 /* IncrementalDiffGeneratorTests.swift in Sources */,
+				5DCF5CE8135909A7EC546192 /* IncrementalDiffGenerator.swift in Sources */,
 				0209AC9224E7393300E45C90 /* NRMAExceptionMetaDataTest.m in Sources */,
 				F8FBFA592A77FA3000CDC8C5 /* TestRequestEvents.m in Sources */,
 				2BFFB1EB28CA683F00392E3B /* NRMASupportMetricHelperTests.m in Sources */,

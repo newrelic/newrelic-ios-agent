@@ -34,12 +34,6 @@ class UITextViewThingy: SessionReplayViewThingy {
     let letterSpacing: CGFloat?
     let textColor: UIColor
 
-    /// The text written to the replay. A blocked view is recorded as an empty black box, so its
-    /// text must not be serialized (see UILabelThingy.serializedText).
-    var serializedText: String {
-        isBlocked ? "" : labelText
-    }
-
     init(view: UITextView, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
 
@@ -150,7 +144,7 @@ class UITextViewThingy: SessionReplayViewThingy {
     func generateRRWebNode() -> ElementNodeData  {
         let textNode = SerializedNode.text(TextNodeData(id: IDGenerator.shared.getId(),
                                                         isStyle: false,
-                                                        textContent: serializedText,
+                                                        textContent: labelText,
                                                         childNodes: []))
         
         return ElementNodeData(id: viewDetails.viewId,
@@ -165,10 +159,10 @@ class UITextViewThingy: SessionReplayViewThingy {
                                    attributes: ["id":viewDetails.cssSelector],
                                    childNodes: [])
         elementNode.attributes["style"] = inlineCSSDescription()
-
+        
         let textNode = SerializedNode.text(TextNodeData(id: IDGenerator.shared.getId(),
                                                         isStyle: false,
-                                                        textContent: serializedText,
+                                                        textContent: labelText,
                                                         childNodes: []))
         
         let addElementNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: viewDetails.nextId, node: .element(elementNode))
@@ -191,8 +185,8 @@ class UITextViewThingy: SessionReplayViewThingy {
             mutations.append(attributeRecord)
         }
         
-        if(self.serializedText != typedOther.serializedText) {
-            let textRecord = RRWebMutationData.TextRecord(id: viewDetails.viewId, value: typedOther.serializedText)
+        if(self.labelText != typedOther.self.labelText) {
+            let textRecord = RRWebMutationData.TextRecord(id: viewDetails.viewId, value: typedOther.labelText)
             mutations.append(textRecord)
         }
         

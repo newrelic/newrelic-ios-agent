@@ -368,6 +368,22 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         ])
         fieldsStack.addArrangedSubview(container)
 
+        // Blocked at runtime: the button adds or removes nr-block on a label that's already on
+        // screen, so the replay has to switch it between plain text and a black box.
+        let toggleLabel = UILabel()
+        toggleLabel.text = "blocked-toggle-label"
+        toggleLabel.textColor = .systemRed
+        fieldsStack.addArrangedSubview(toggleLabel)
+
+        let toggleButton = UIButton(type: .system)
+        toggleButton.setTitle("Toggle block on label above", for: .normal)
+        toggleButton.addAction(UIAction { _ in
+            let isBlocked = toggleLabel.accessibilityIdentifier != "nr-block"
+            toggleLabel.accessibilityIdentifier = isBlocked ? "nr-block" : nil
+            NewRelic.logVerbose("Blocked Fields: toggle label blocked=\(isBlocked) at \(Int(Date().timeIntervalSince1970 * 1000))")
+        }, for: .touchUpInside)
+        fieldsStack.addArrangedSubview(toggleButton)
+
         let sectionStack = UIStackView(arrangedSubviews: [sectionLabel, fieldsStack])
         sectionStack.axis = .vertical
         sectionStack.spacing = 8
