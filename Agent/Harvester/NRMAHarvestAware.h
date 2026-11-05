@@ -16,4 +16,7 @@
 - (void) onHarvest;
 - (void) onHarvestError;
 - (void) onHarvestComplete;
+// Fires only on a confirmed-successful harvest -- unlike onHarvestComplete,
+// which fires on both success and failure.
+- (void) onHarvestSuccess;
 @end

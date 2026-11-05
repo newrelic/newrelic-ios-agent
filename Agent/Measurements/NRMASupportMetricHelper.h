@@ -56,4 +56,8 @@ static NSMutableArray *deferredMetrics;
 + (void) enqueueEventRecordedMetric:(NSUInteger)recorded evicted:(NSUInteger)evicted;
 + (void) enqueueEventSizeUncompressedMetric:(long)size;
 
+// Event persistence replay (NR-631296) -- Android parity
++ (void) enqueueEventPersistenceReattributedMetric;
++ (void) enqueueEventPersistenceManifestMissingMetric;
+
 @end

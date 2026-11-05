@@ -507,4 +507,14 @@
     XCTAssertFalse([manager incrementSessionAttribute:attribute value:[NSNumber numberWithBool:YES]]);
 }
 
+- (void)testCurrentSessionAttributesIncludesBothPublicAndPrivateAttributes {
+    XCTAssertTrue([manager setSessionAttribute:@"userId" value:@"abc-123"], @"Failed to successfully set public session attribute");
+    XCTAssertTrue([manager setNRSessionAttribute:@"osVersion" value:@"18.0"], @"Failed to successfully set private session attribute");
+
+    NSDictionary *sessionAttributes = [manager currentSessionAttributes];
+
+    XCTAssertEqualObjects(sessionAttributes[@"userId"], @"abc-123");
+    XCTAssertEqualObjects(sessionAttributes[@"osVersion"], @"18.0");
+}
+
 @end

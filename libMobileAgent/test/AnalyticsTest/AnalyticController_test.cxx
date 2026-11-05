@@ -17,7 +17,6 @@ namespace NewRelic {
         unsigned long long epoch_time_ms;
         std::string sessionDataPathString;
         const char *sessionDataPath;
-        PersistentStore<std::string, AnalyticEvent> eventStore;
         PersistentStore<std::string, BaseValue> attributeStore;
 
     public:
@@ -27,9 +26,6 @@ namespace NewRelic {
                                                     std::chrono::system_clock().now().time_since_epoch()).count()),
                                     sessionDataPathString(""), // std::to_string(epoch_time_ms)),
                                     sessionDataPath(sessionDataPathString.c_str()),
-                                    eventStore(AnalyticsController::getEventDupStoreName(),
-                                               sessionDataPath,
-                                               &EventManager::newEvent),
                                     attributeStore(AnalyticsController::getAttributeDupStoreName(),
                                                    sessionDataPath,
                                                    &Value::createValue) {
@@ -40,11 +36,9 @@ namespace NewRelic {
         }
 
         virtual void TearDown() {
-            AnalyticsController controller(epoch_time_ms, sessionDataPath, eventStore, attributeStore);
+            AnalyticsController controller(epoch_time_ms, sessionDataPath, attributeStore);
             remove(controller.getPersistentAttributeStoreName());
             remove(controller.getAttributeDupStoreName());
-            remove(controller.getEventDupStoreName());
-            remove(eventStore.getFullStorePath());
             remove(attributeStore.getFullStorePath());
             remove(sessionDataPath);
 
@@ -53,7 +47,7 @@ namespace NewRelic {
     };
 
     TEST_F(AnalyticsControllerTest, testInteractionEvent) {
-        AnalyticsController controller(epoch_time_ms, sessionDataPath, eventStore, attributeStore);
+        AnalyticsController controller(epoch_time_ms, sessionDataPath, attributeStore);
 
         ASSERT_TRUE(controller.addInteractionEvent("display viewcontroller", 1.43));
         ASSERT_TRUE(controller.addSessionEndAttribute());
@@ -84,7 +78,7 @@ namespace NewRelic {
 
         NetworkResponseData someBadNetworkResponse = NetworkResponseData(-1001, 0, 1.0, nullptr);
         NetworkResponseData someBadHttpResponse = NetworkResponseData(404, 20, 100.1, nullptr, nullptr, nullptr);
-        AnalyticsController controller(epoch_time_ms, sessionDataPath, eventStore, attributeStore);
+        AnalyticsController controller(epoch_time_ms, sessionDataPath, attributeStore);
 
         auto payload = Connectivity::Facade::getInstance().newPayload();
 
@@ -106,7 +100,7 @@ namespace NewRelic {
 
     auto payload = Connectivity::Facade::getInstance().newPayload();
 
-        AnalyticsController controller(epoch_time_ms, sessionDataPath, eventStore, attributeStore);
+        AnalyticsController controller(epoch_time_ms, sessionDataPath, attributeStore);
 
         auto result = controller.addNetworkErrorEvent(failedRequest, failedResponse, std::move(payload));
         ASSERT_TRUE(result);
@@ -114,7 +108,7 @@ namespace NewRelic {
 
 
 TEST_F(AnalyticsControllerTest, testRequestEvent) {
-    AnalyticsController controller(epoch_time_ms, sessionDataPath, eventStore, attributeStore);
+    AnalyticsController controller(epoch_time_ms, sessionDataPath, attributeStore);
     NetworkRequestData someRequestData = NetworkRequestData("http://newrelic.com/v1/mobile/",
                                                             "newrelic.com",
                                                             "/v1/mobile/",
@@ -143,7 +137,7 @@ TEST_F(AnalyticsControllerTest, testRequestEvent) {
 // MobileRequest and MobileRequestError events carry distributed tracing as the guid/traceId
 // attributes. The payload itself must never be reported as a `payload` attribute.
 TEST_F(AnalyticsControllerTest, testRequestEventsDoNotIncludePayloadAttribute) {
-    AnalyticsController controller(epoch_time_ms, sessionDataPath, eventStore, attributeStore);
+    AnalyticsController controller(epoch_time_ms, sessionDataPath, attributeStore);
     NetworkRequestData someRequestData = NetworkRequestData("http://newrelic.com/v1/mobile/",
                                                             "newrelic.com",
                                                             "/v1/mobile/",
@@ -187,7 +181,7 @@ TEST_F(AnalyticsControllerTest, testRequestEventsDoNotIncludePayloadAttribute) {
 
 
     TEST_F(AnalyticsControllerTest, testRetreiveJSON) {
-        AnalyticsController controller(epoch_time_ms, sessionDataPath, eventStore, attributeStore);
+        AnalyticsController controller(epoch_time_ms, sessionDataPath, attributeStore);
 
         auto event = controller.newEvent("hello!");
         event->addAttribute("blah", "blah");
@@ -201,7 +195,7 @@ TEST_F(AnalyticsControllerTest, testRequestEventsDoNotIncludePayloadAttribute) {
 
 
     TEST_F(AnalyticsControllerTest, testReservedWords) {
-        AnalyticsController controller(epoch_time_ms, sessionDataPath, eventStore, attributeStore);
+        AnalyticsController controller(epoch_time_ms, sessionDataPath, attributeStore);
 
         ASSERT_FALSE(controller.addSessionAttribute("newRelic12345", 5.0f)); //NewRelic is reserved
         ASSERT_FALSE(controller.addSessionAttribute("nr.NewRelic12345", 5.0f)); //NewRelic is reserved
@@ -221,7 +215,6 @@ TEST_F(AnalyticsControllerTest, testRequestEventsDoNotIncludePayloadAttribute) {
     TEST_F(AnalyticsControllerTest, testPersistence) {
         AnalyticsController *controller = new AnalyticsController(epoch_time_ms,
                                                                   sessionDataPath,
-                                                                  eventStore,
                                                                   attributeStore);
         ASSERT_TRUE(controller->addSessionAttribute("hello", "world", true));
         controller->attributeStore().synchronize();
@@ -229,7 +222,7 @@ TEST_F(AnalyticsControllerTest, testRequestEventsDoNotIncludePayloadAttribute) {
 
         delete controller;
 
-        AnalyticsController second(epoch_time_ms, sessionDataPath, eventStore, attributeStore);
+        AnalyticsController second(epoch_time_ms, sessionDataPath, attributeStore);
 
         second.attributeStore().synchronize();
 
@@ -238,24 +231,23 @@ TEST_F(AnalyticsControllerTest, testRequestEventsDoNotIncludePayloadAttribute) {
         ASSERT_EQ("world", (*json)["hello"].as_string());
     }
 
+    // The event half of this test (an added event showing up via fetchDuplicatedEvents)
+    // was removed along with the event duplication store -- EventManager::addEvent no
+    // longer writes to one at all, so there is nothing left for that mechanism to prove.
     TEST_F(AnalyticsControllerTest, testDuplicateStores) {
-        AnalyticsController controller(epoch_time_ms, sessionDataPath, eventStore, attributeStore);
+        AnalyticsController controller(epoch_time_ms, sessionDataPath, attributeStore);
 
         controller.addSessionAttribute("hello", "world");
-        controller.addEvent(controller.newEvent("pewpew"));
 
-        eventStore.synchronize();
         attributeStore.synchronize();
 
-        auto eventJSON = controller.fetchDuplicatedEvents(eventStore, false);
         auto attributeJSON = controller.fetchDuplicatedAttributes(attributeStore, false);
 
-        ASSERT_EQ("pewpew", (*eventJSON)[0]["name"].as_string());
         ASSERT_EQ("world", (*attributeJSON)["hello"].as_string());
     }
 
     TEST_F(AnalyticsControllerTest, testBoolInput) {
-        AnalyticsController controller(epoch_time_ms, sessionDataPath, eventStore, attributeStore);
+        AnalyticsController controller(epoch_time_ms, sessionDataPath, attributeStore);
         bool value = true;
         ASSERT_TRUE(controller.addSessionAttribute("thisIsTrue", value));
         ASSERT_TRUE(controller.addSessionAttribute("thisIsFalse",false));
@@ -270,7 +262,7 @@ TEST_F(AnalyticsControllerTest, testRequestEventsDoNotIncludePayloadAttribute) {
     }
 
     TEST_F(AnalyticsControllerTest, testInvalidInputs) {
-        AnalyticsController controller(epoch_time_ms, sessionDataPath, eventStore, attributeStore);
+        AnalyticsController controller(epoch_time_ms, sessionDataPath, attributeStore);
         bool result = false;
 //        bool addSessionAttribute(const char* name, const char* value);
         {
@@ -394,14 +386,14 @@ TEST_F(AnalyticsControllerTest, testRequestEventsDoNotIncludePayloadAttribute) {
     }
 
     TEST_F(AnalyticsControllerTest, testBreadcrumbEvent) {
-        AnalyticsController controller(epoch_time_ms, sessionDataPath, eventStore, attributeStore);
+        AnalyticsController controller(epoch_time_ms, sessionDataPath, attributeStore);
         auto event = controller.newBreadcrumbEvent();
 
         ASSERT_TRUE(event != nullptr);
     }
 
     TEST_F(AnalyticsControllerTest, testCustomAttributesBadInput) {
-        AnalyticsController controller(epoch_time_ms, sessionDataPath, eventStore, attributeStore);
+        AnalyticsController controller(epoch_time_ms, sessionDataPath, attributeStore);
         ASSERT_EQ(nullptr, controller.newCustomEvent(""));
         ASSERT_EQ(nullptr, controller.newCustomEvent(" "));
         ASSERT_EQ(nullptr, controller.newCustomEvent(" Hello!"));
@@ -413,7 +405,7 @@ TEST_F(AnalyticsControllerTest, testRequestEventsDoNotIncludePayloadAttribute) {
     }
 
     TEST_F(AnalyticsControllerTest, testInvalidSpaces) {
-        AnalyticsController controller(epoch_time_ms, sessionDataPath, eventStore, attributeStore);
+        AnalyticsController controller(epoch_time_ms, sessionDataPath, attributeStore);
         ASSERT_FALSE(controller.addSessionAttribute(" Hello!","blahblahblah"));
         ASSERT_FALSE(controller.addSessionAttribute("       Hello!","blahblahblah"));
         ASSERT_TRUE(controller.addSessionAttribute("Hello!"," blahblahblah"));
@@ -427,7 +419,7 @@ TEST_F(AnalyticsControllerTest, testRequestEventsDoNotIncludePayloadAttribute) {
 
     TEST_F(AnalyticsControllerTest, testInvalidAttributeInputs) {
         bool result = false;
-        AnalyticsController controller(epoch_time_ms, sessionDataPath, eventStore, attributeStore);
+        AnalyticsController controller(epoch_time_ms, sessionDataPath, attributeStore);
 
 //        bool addSessionAttribute(const char* name, const char* value);
         {
@@ -554,7 +546,7 @@ TEST_F(AnalyticsControllerTest, testRequestEventsDoNotIncludePayloadAttribute) {
     }
 
     TEST_F(AnalyticsControllerTest, testBadEventInputs) {
-        AnalyticsController controller(epoch_time_ms, sessionDataPath, eventStore, attributeStore);
+        AnalyticsController controller(epoch_time_ms, sessionDataPath, attributeStore);
 
         std::shared_ptr<AnalyticEvent> event;
         ASSERT_NO_THROW(event = controller.newEvent(""));
@@ -570,7 +562,7 @@ TEST_F(AnalyticsControllerTest, testRequestEventsDoNotIncludePayloadAttribute) {
     }
 
     TEST_F(AnalyticsControllerTest, testClearSessionAttributes) {
-        AnalyticsController *controller = new AnalyticsController(epoch_time_ms, sessionDataPath, eventStore,
+        AnalyticsController *controller = new AnalyticsController(epoch_time_ms, sessionDataPath,
                                                                   attributeStore);
         ASSERT_TRUE(controller->addSessionAttribute("hello", "world", true));
         ASSERT_TRUE(controller->addSessionAttribute("hello1", "world", true));
@@ -590,12 +582,11 @@ TEST_F(AnalyticsControllerTest, testRequestEventsDoNotIncludePayloadAttribute) {
     }
 
     TEST_F(AnalyticsControllerTest, testBackupDuplicates) {
-        AnalyticsController controller(epoch_time_ms, sessionDataPath, eventStore, attributeStore);
+        AnalyticsController controller(epoch_time_ms, sessionDataPath, attributeStore);
 
         controller.addSessionAttribute("hello", "world");
         controller.addEvent(controller.newEvent("pewpew"));
 
-        eventStore.synchronize();
         attributeStore.synchronize();
 
         auto map = attributeStore.load();
@@ -617,7 +608,7 @@ TEST_F(AnalyticsControllerTest, testRequestEventsDoNotIncludePayloadAttribute) {
         remove(backupStorePath.c_str());
     }
     TEST_F(AnalyticsControllerTest, testEventJSONOutput) {
-        AnalyticsController controller(epoch_time_ms, sessionDataPath, eventStore, attributeStore);
+        AnalyticsController controller(epoch_time_ms, sessionDataPath, attributeStore);
         const char* json = "{\"hello\":\"world\"}";
 
         std::string expectedOutput{ "[\n{\n\"category\": \"Custom\",\n\"eventType\": \"Mobile\",\n\"name\": \"{\\\"hello\\\":\\\"world\\\"}\",\n\"timeSinceLoad\": 0,\n\"timestamp\": 1438986983763\n}\n]"};

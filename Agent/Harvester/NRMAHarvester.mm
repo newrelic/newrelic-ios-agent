@@ -25,6 +25,7 @@
 #import "NewRelicAgentInternal.h"
 #import "NewRelicInternalUtils.h"
 #import "NRAutoLogCollector.h"
+#import <NewRelic/NewRelic-Swift.h>
 
 #define kNRSupportabilityResponseCode kNRSupportabilityPrefix @"/Collector/ResponseStatusCodes"
 
@@ -432,6 +433,10 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
     if (response.isError) {
         // failure
         if([self checkOfflineAndPersist:response]) {
+            if ([NRMAFlags shouldEnableEventPersistence]) {
+                // These events are now durably in offline storage -- confirm so they aren't recovered again.
+                [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+            }
             // If the harvest was persisted for offline storage clear the harvest.
             [self.harvestData clear];
         } else {
@@ -451,6 +456,7 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
         [self.harvestData clear];
         // If there was a successful harvest upload send the persisted offline payloads.
         [connection sendOfflineStorage];
+        [self fireOnHarvestSuccess];
     }
     //Supportability/MobileAgent/Collector/Harvest
 
@@ -844,6 +850,31 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
                 [NRMAExceptionHandler logException:excep
                                              class:NSStringFromClass([hao class])
                                           selector:@"onHarvestComplete"];
+            }
+#endif
+        }
+    }
+}
+
+- (void) fireOnHarvestSuccess
+{
+    // See -fireOnHarvestBefore: iterate a snapshot to stay safe against reentrant
+    // listener mutation and to avoid calling out while holding the lock.
+    NSArray* harvestAwareObjectsSnapshot;
+    @synchronized(self.harvestAwareObjects) {
+        harvestAwareObjectsSnapshot = [self.harvestAwareObjects copy];
+    }
+    for (id<NRMAHarvestAware> hao in harvestAwareObjectsSnapshot) {
+        if ([hao respondsToSelector:@selector(onHarvestSuccess)]) {
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+            @try {
+#endif
+                [hao onHarvestSuccess];
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+            } @catch (NSException* excep) {
+                [NRMAExceptionHandler logException:excep
+                                             class:NSStringFromClass([hao class])
+                                          selector:@"onHarvestSuccess"];
             }
 #endif
         }
