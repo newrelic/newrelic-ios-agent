@@ -546,6 +546,8 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
         [NRMASupportMetricHelper processDeferredMetrics];
         [self handleSessionReplayConfigurationUpdate];
 
+        [self saveHarvesterConfiguration:configuration];
+
         [self transitionToConnected:configuration];
         return;
     } else {
