@@ -99,19 +99,19 @@ final class NREventPersistenceControllerTests: XCTestCase {
     // MARK: - Session manifest
 
     func testWriteSessionManifestPersists() {
-        sut.writeSessionManifest(sessionId: "session-1", realAgentId: 7, sessionStartMs: 1_000, sessionAttributes: ["appVersion": "1.0"])
+        sut.writeSessionManifest(sessionId: "session-1", realAgentId: 7, sessionStartMs: 1_000, sessionAttributes: ["userId": "abc"])
         manifestStore.synchronize()
 
         let manifest = manifestStore.manifest(forSessionId: "session-1")
-        XCTAssertEqual(manifest?.sessionAttributes["appVersion"] as? String, "1.0")
+        XCTAssertEqual(manifest?.sessionAttributes["userId"] as? String, "abc")
         XCTAssertEqual(manifest?.lastUpdateMs, 1_000)
     }
 
     func testRefreshSessionManifestUpdatesLastUpdateMsAndSessionAttributes() {
-        sut.writeSessionManifest(sessionId: "session-1", realAgentId: 7, sessionStartMs: 1_000, sessionAttributes: ["appVersion": "1.0"])
+        sut.writeSessionManifest(sessionId: "session-1", realAgentId: 7, sessionStartMs: 1_000, sessionAttributes: [:])
         manifestStore.synchronize()
 
-        sut.refreshSessionManifest(sessionId: "session-1", nowMs: 5_000, sessionAttributes: ["appVersion": "1.0", "userId": "abc"])
+        sut.refreshSessionManifest(sessionId: "session-1", nowMs: 5_000, sessionAttributes: ["userId": "abc"])
         manifestStore.synchronize()
 
         let manifest = manifestStore.manifest(forSessionId: "session-1")
@@ -128,7 +128,7 @@ final class NREventPersistenceControllerTests: XCTestCase {
     // MARK: - Replay / fallback ladder
 
     func testRecoverWithNothingPersistedReturnsEmpty() {
-        XCTAssertTrue(sut.recoverPersistedEventsStagingForHarvest(currentSessionAttributes: [:]).isEmpty)
+        XCTAssertTrue(sut.recoverPersistedEventsStagingForHarvest().isEmpty)
     }
 
     func testRecoverIsNoopWhenFlagDisabled() {
@@ -136,35 +136,43 @@ final class NREventPersistenceControllerTests: XCTestCase {
         eventStore.synchronize()
 
         NRMAFlags.disableFeatures(NRMAFeatureFlags.NRFeatureFlag_EventPersistence)
-        XCTAssertTrue(sut.recoverPersistedEventsStagingForHarvest(currentSessionAttributes: [:]).isEmpty)
+        XCTAssertTrue(sut.recoverPersistedEventsStagingForHarvest().isEmpty)
     }
 
     func testRecoverUsesManifestSessionAttributesWhenFound() {
         manifestStore.store(NRSessionManifest(sessionId: "session-1", realAgentId: 7, sessionStartMs: 0, lastUpdateMs: 0,
-                                               sessionAttributes: ["appVersion": "1.0"]))
+                                               sessionAttributes: ["userId": "abc"]))
         manifestStore.synchronize()
         eventStore.store(makeRecord(uuid: "uuid-1", sessionId: "session-1"))
         eventStore.synchronize()
 
-        let payloads = sut.recoverPersistedEventsStagingForHarvest(currentSessionAttributes: [:])
+        let payloads = sut.recoverPersistedEventsStagingForHarvest()
         XCTAssertEqual(payloads.count, 1)
-        XCTAssertEqual(payloads[0]["appVersion"] as? String, "1.0")
+        XCTAssertEqual(payloads[0]["userId"] as? String, "abc")
     }
 
-    func testRecoverFallsBackToCurrentSessionAttributesWhenManifestMissing() {
-        eventStore.store(makeRecord(uuid: "uuid-1", sessionId: "no-manifest-session"))
+    // When the manifest is missing/corrupt, we never fabricate session-level attribution
+    // (osVersion, userId, etc. from whatever session happens to be running right now) --
+    // a "current" fallback could be wrong in exactly the ways that matter (different
+    // logged-in user, different OS). The record still ships -- just with only its own
+    // fields, never dropped.
+    func testRecoverShipsOnlyTheEventsOwnFieldsWhenManifestMissing() {
+        eventStore.store(makeRecord(uuid: "uuid-1", sessionId: "no-manifest-session",
+                                     eventAttributes: ["orderId": "ABC123"]))
         eventStore.synchronize()
 
-        let payloads = sut.recoverPersistedEventsStagingForHarvest(currentSessionAttributes: ["currentUserId": "fallback-user"])
-        XCTAssertEqual(payloads.count, 1)
-        XCTAssertEqual(payloads[0]["currentUserId"] as? String, "fallback-user", "a record with no manifest must never be dropped -- it falls back to current-session attributes")
+        let payloads = sut.recoverPersistedEventsStagingForHarvest()
+        XCTAssertEqual(payloads.count, 1, "a record with no manifest must never be dropped")
+        XCTAssertEqual(payloads[0]["orderId"] as? String, "ABC123")
+        XCTAssertNil(payloads[0]["userId"], "must never fabricate attribution it can't vouch for")
+        XCTAssertEqual(payloads[0][kNRMA_RA_sessionId] as? String, "no-manifest-session")
     }
 
     func testRecoverPreservesOriginalTimestampAndSessionId() {
         eventStore.store(makeRecord(uuid: "uuid-1", sessionId: "original-session", timestampMs: 42_000))
         eventStore.synchronize()
 
-        let payloads = sut.recoverPersistedEventsStagingForHarvest(currentSessionAttributes: [:])
+        let payloads = sut.recoverPersistedEventsStagingForHarvest()
         XCTAssertEqual(payloads[0][kNRMA_RA_timestamp] as? Int64, 42_000)
         XCTAssertEqual(payloads[0][kNRMA_RA_sessionId] as? String, "original-session")
     }
@@ -179,7 +187,7 @@ final class NREventPersistenceControllerTests: XCTestCase {
                                      eventAttributes: ["orderId": "ABC123", "revenue": 42.5, "eventType": "CustomOrder"]))
         eventStore.synchronize()
 
-        let payloads = sut.recoverPersistedEventsStagingForHarvest(currentSessionAttributes: [:])
+        let payloads = sut.recoverPersistedEventsStagingForHarvest()
         XCTAssertEqual(payloads.count, 1)
         XCTAssertEqual(payloads[0]["orderId"] as? String, "ABC123",
                        "the event's own custom attributes must survive into the recovered payload, not just session-level attributes")
@@ -194,7 +202,7 @@ final class NREventPersistenceControllerTests: XCTestCase {
                                      eventAttributes: [kNRMA_RA_timestamp: 999, kNRMA_RA_eventType: "WrongType"]))
         eventStore.synchronize()
 
-        let payloads = sut.recoverPersistedEventsStagingForHarvest(currentSessionAttributes: [:])
+        let payloads = sut.recoverPersistedEventsStagingForHarvest()
         XCTAssertEqual(payloads[0][kNRMA_RA_timestamp] as? Int64, 42_000)
         XCTAssertEqual(payloads[0][kNRMA_RA_sessionId] as? String, "original-session")
         XCTAssertEqual(payloads[0][kNRMA_RA_eventType] as? String, "Mobile")
@@ -204,11 +212,11 @@ final class NREventPersistenceControllerTests: XCTestCase {
 
     func testReattributeCrashAttributesReturnsManifestSessionAttributesWhenFound() {
         manifestStore.store(NRSessionManifest(sessionId: "crashed-session", realAgentId: 7, sessionStartMs: 0, lastUpdateMs: 0,
-                                               sessionAttributes: ["appVersion": "2.0"]))
+                                               sessionAttributes: ["userId": "abc"]))
         manifestStore.synchronize()
 
         let reattributed = sut.reattributeCrashAttributes(forSessionId: "crashed-session")
-        XCTAssertEqual(reattributed?["appVersion"] as? String, "2.0")
+        XCTAssertEqual(reattributed?["userId"] as? String, "abc")
     }
 
     func testReattributeCrashAttributesReturnsNilWhenManifestMissing() {
@@ -217,7 +225,7 @@ final class NREventPersistenceControllerTests: XCTestCase {
 
     func testReattributeCrashAttributesReturnsNilWhenFlagDisabled() {
         manifestStore.store(NRSessionManifest(sessionId: "crashed-session", realAgentId: 7, sessionStartMs: 0, lastUpdateMs: 0,
-                                               sessionAttributes: ["appVersion": "2.0"]))
+                                               sessionAttributes: [:]))
         manifestStore.synchronize()
 
         NRMAFlags.disableFeatures(NRMAFeatureFlags.NRFeatureFlag_EventPersistence)
@@ -227,7 +235,7 @@ final class NREventPersistenceControllerTests: XCTestCase {
 
     func testClaimPersistedEventsForCrashSessionIdReturnsOnlyThatSessionsEvents() {
         manifestStore.store(NRSessionManifest(sessionId: "crashed-session", realAgentId: 7, sessionStartMs: 0, lastUpdateMs: 0,
-                                               sessionAttributes: ["appVersion": "2.0"]))
+                                               sessionAttributes: ["userId": "abc"]))
         eventStore.store(makeRecord(uuid: "crash-uuid", sessionId: "crashed-session",
                                      eventAttributes: ["orderId": "ABC123"]))
         eventStore.store(makeRecord(uuid: "other-uuid", sessionId: "other-session"))
@@ -236,7 +244,7 @@ final class NREventPersistenceControllerTests: XCTestCase {
 
         let payloads = sut.claimPersistedEvents(forCrashSessionId: "crashed-session")
         XCTAssertEqual(payloads.count, 1)
-        XCTAssertEqual(payloads[0]["appVersion"] as? String, "2.0")
+        XCTAssertEqual(payloads[0]["userId"] as? String, "abc")
         XCTAssertEqual(payloads[0]["orderId"] as? String, "ABC123")
         XCTAssertEqual(payloads[0][kNRMA_RA_sessionId] as? String, "crashed-session")
 
@@ -244,6 +252,15 @@ final class NREventPersistenceControllerTests: XCTestCase {
         let remaining = eventStore.fetchAll()
         XCTAssertEqual(remaining.count, 1, "claiming must delete only the claimed session's events")
         XCTAssertEqual(remaining.first?.sessionId, "other-session")
+    }
+
+    func testClaimPersistedEventsForCrashSessionIdShipsOnlyTheEventsOwnFieldsWhenManifestMissing() {
+        eventStore.store(makeRecord(uuid: "crash-uuid", sessionId: "crashed-session"))
+        eventStore.synchronize()
+
+        let payloads = sut.claimPersistedEvents(forCrashSessionId: "crashed-session")
+        XCTAssertEqual(payloads.count, 1, "a record with no manifest must never be dropped")
+        XCTAssertNil(payloads[0]["userId"], "must never fabricate attribution it can't vouch for")
     }
 
     func testClaimPersistedEventsForCrashSessionIdDeletesClaimedEvents() {
@@ -276,7 +293,7 @@ final class NREventPersistenceControllerTests: XCTestCase {
         eventStore.store(makeRecord(uuid: "uuid-b", sessionId: "session-B"))
         eventStore.synchronize()
 
-        let payloads = sut.recoverPersistedEventsStagingForHarvest(currentSessionAttributes: [:], excludingSessionId: "session-A")
+        let payloads = sut.recoverPersistedEventsStagingForHarvest(excludingSessionId: "session-A")
         XCTAssertEqual(payloads.count, 1)
         XCTAssertEqual(payloads[0][kNRMA_RA_sessionId] as? String, "session-B")
     }
@@ -285,7 +302,7 @@ final class NREventPersistenceControllerTests: XCTestCase {
         eventStore.store(makeRecord(uuid: "uuid-a", sessionId: "session-A"))
         eventStore.synchronize()
 
-        _ = sut.recoverPersistedEventsStagingForHarvest(currentSessionAttributes: [:], excludingSessionId: "session-A")
+        _ = sut.recoverPersistedEventsStagingForHarvest(excludingSessionId: "session-A")
         sut.confirmLastRecoveryHarvestSucceeded()
         eventStore.synchronize()
 
@@ -300,7 +317,7 @@ final class NREventPersistenceControllerTests: XCTestCase {
         eventStore.store(makeRecord(uuid: "uuid-a", sessionId: "session-A"))
         eventStore.synchronize()
 
-        let payloads = sut.recoverPersistedEventsStagingForHarvest(currentSessionAttributes: [:], excludingSessionId: nil)
+        let payloads = sut.recoverPersistedEventsStagingForHarvest(excludingSessionId: nil)
         XCTAssertEqual(payloads.count, 1)
     }
 
@@ -309,7 +326,7 @@ final class NREventPersistenceControllerTests: XCTestCase {
         eventStore.store(makeRecord(uuid: "uuid-b", sessionId: "session-B"))
         eventStore.synchronize()
 
-        let recovered = sut.recoverPersistedEventsStagingForHarvest(currentSessionAttributes: [:], excludingSessionId: "session-A")
+        let recovered = sut.recoverPersistedEventsStagingForHarvest(excludingSessionId: "session-A")
         let claimed = sut.claimPersistedEvents(forCrashSessionId: "session-A")
 
         let recoveredSessionIds = Set(recovered.map { $0[kNRMA_RA_sessionId] as? String })
@@ -363,7 +380,7 @@ final class NREventPersistenceControllerTests: XCTestCase {
         eventStore.store(makeRecord(uuid: "uuid-1", sessionId: "session-1"))
         eventStore.synchronize()
 
-        _ = sut.recoverPersistedEventsStagingForHarvest(currentSessionAttributes: [:])
+        _ = sut.recoverPersistedEventsStagingForHarvest()
         sut.confirmLastRecoveryHarvestSucceeded()
         eventStore.synchronize()
 
@@ -374,13 +391,13 @@ final class NREventPersistenceControllerTests: XCTestCase {
         eventStore.store(makeRecord(uuid: "uuid-1", sessionId: "session-1"))
         eventStore.synchronize()
 
-        let firstAttempt = sut.recoverPersistedEventsStagingForHarvest(currentSessionAttributes: [:])
+        let firstAttempt = sut.recoverPersistedEventsStagingForHarvest()
         XCTAssertEqual(firstAttempt.count, 1)
         // Simulate a failed harvest: never call confirmLastRecoveryHarvestSucceeded().
 
         XCTAssertEqual(eventStore.fetchAll().count, 1, "a failed/unconfirmed harvest must not drop the persisted record")
 
-        let secondAttempt = sut.recoverPersistedEventsStagingForHarvest(currentSessionAttributes: [:])
+        let secondAttempt = sut.recoverPersistedEventsStagingForHarvest()
         XCTAssertEqual(secondAttempt.count, 1, "the event must still be recoverable on a later retry")
     }
 

@@ -9,15 +9,13 @@ import Foundation
 @_implementationOnly import NewRelicPrivate
 
 /// Coordinates the two event-persistence stores (`NRFileEventStore`,
-/// `NRSessionManifestStore`): write, replay/recovery, confirmation, and
-/// retention. Owns no reference to `NRMAEventManager`/`AnalyticsController`/
-/// `NRMASAM` -- callers pass in whatever it needs (sessionId, realAgentId).
+/// `NRSessionManifestStore`): write, recovery, confirmation, and retention.
 @objcMembers
 public class NREventPersistenceController: NSObject {
 
     @objc public static let shared = NREventPersistenceController()
 
-    /// Hard retention cap, in milliseconds -- 7 days, per the CDD.
+    /// Hard retention cap, in milliseconds -- 7 days.
     static let defaultRetentionMs: Int64 = 7 * 24 * 60 * 60 * 1000
 
     /// Hard count caps, oldest-evicted first.
@@ -46,9 +44,7 @@ public class NREventPersistenceController: NSObject {
 
     // MARK: - Write path
 
-    /// Persists a freshly-recorded event. `attributes` is the event's already-flattened
-    /// JSON representation (`-[NRMAAnalyticEventProtocol JSONObject]`), not just custom
-    /// attributes. No-ops when the feature flag is disabled.
+    /// Persists a freshly-recorded event. No-ops when the feature flag is disabled.
     @objc(recordEventWithEventUUID:eventType:timestampMs:attributes:sessionId:realAgentId:)
     public func recordEvent(eventUUID: String,
                              eventType: String,
@@ -108,9 +104,8 @@ public class NREventPersistenceController: NSObject {
     /// returns per-event JSON ready for `NRMAHarvestController +addRecoveredAnalyticsEvents:`.
     /// `excludingSessionId` skips that session's events, left for the crash path to claim instead.
     @discardableResult
-    @objc(recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:excludingSessionId:)
-    public func recoverPersistedEventsStagingForHarvest(currentSessionAttributes: [String: Any],
-                                                          excludingSessionId: String? = nil) -> [[String: Any]] {
+    @objc(recoverPersistedEventsStagingForHarvestExcludingSessionId:)
+    public func recoverPersistedEventsStagingForHarvest(excludingSessionId: String? = nil) -> [[String: Any]] {
         guard NRMAFlags.shouldEnableEventPersistence() else { return [] }
         guard eventStore.hasPersistedRecords() else { return [] }
         let records = eventStore.fetchAll().filter { $0.sessionId != excludingSessionId }
@@ -123,7 +118,7 @@ public class NREventPersistenceController: NSObject {
             // Session-level attributes first, then the event's own JSONObject output on top
             // (custom attributes + its own timestamp/eventType) -- otherwise a recovered
             // custom event would ship as an empty shell.
-            var json = resolveAttributes(for: record, currentSessionAttributes: currentSessionAttributes)
+            var json = resolveAttributes(for: record)
             for (key, value) in record.attributes {
                 json[key] = value
             }
@@ -142,16 +137,15 @@ public class NREventPersistenceController: NSObject {
         return payloads
     }
 
-    /// Manifest found -> its sessionAttributes. Missing/corrupt -> `currentSessionAttributes`
-    /// (graceful degradation; the record is still delivered, never dropped).
-    private func resolveAttributes(for record: NREventRecord, currentSessionAttributes: [String: Any]) -> [String: Any] {
-        if let manifest = manifestStore.manifest(forSessionId: record.sessionId) {
-            NRMASupportMetricHelper.enqueueEventPersistenceReattributedMetric()
-            return manifest.sessionAttributes
+    /// Manifest found -> its sessionAttributes. Missing/corrupt -> empty (graceful
+    /// degradation; the record's own fields still ship, never dropped).
+    private func resolveAttributes(for record: NREventRecord) -> [String: Any] {
+        guard let manifest = manifestStore.manifest(forSessionId: record.sessionId) else {
+            NRMASupportMetricHelper.enqueueEventPersistenceManifestMissingMetric()
+            return [:]
         }
-
-        NRMASupportMetricHelper.enqueueEventPersistenceManifestMissingMetric()
-        return currentSessionAttributes
+        NRMASupportMetricHelper.enqueueEventPersistenceReattributedMetric()
+        return manifest.sessionAttributes
     }
 
     // MARK: - Crash path
@@ -178,10 +172,9 @@ public class NREventPersistenceController: NSObject {
         let records = eventStore.fetchAll().filter { $0.sessionId == sessionId }
         guard !records.isEmpty else { return [] }
 
-        let fallbackAttributes = manifestStore.manifest(forSessionId: sessionId)?.sessionAttributes ?? [:]
         var payloads: [[String: Any]] = []
         for record in records {
-            var json = resolveAttributes(for: record, currentSessionAttributes: fallbackAttributes)
+            var json = resolveAttributes(for: record)
             for (key, value) in record.attributes {
                 json[key] = value
             }

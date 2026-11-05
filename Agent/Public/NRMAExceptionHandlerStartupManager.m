@@ -45,7 +45,7 @@
                     NRLOG_AGENT_VERBOSE(@"Failed to load last session's attribute for crash: %@",serializationError.localizedDescription);
                 }
             } @catch (NSException* e) {
-                NRLOG_AGENT_VERBOSE(@"failed to serialize event json: %@",e.reason);
+                NRLOG_AGENT_VERBOSE(@"failed to serialize attribute json: %@",e.reason);
             }
 
             [NRMAExceptionHandlerManager startHandlerWithLastSessionsAttributes:attributes

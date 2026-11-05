@@ -14,7 +14,6 @@
 #import "NRMAReachability.h"
 #import "NRTimer.h"
 #import "NRMAURLSessionOverride.h"
-#import "NRMAJSON.h"
 #import "NRCustomMetrics+private.h"
 #import "NRMANSURLConnectionSupport.h"
 #import "NRMAHarvestController.h"
@@ -612,6 +611,22 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
     // Initializing analytics take a while. Take care executing time sensitive code after this point the since initializeAnalytics method will delay its execution.
     [self initializeAnalytics];
+
+    [self.analyticsController setNRSessionAttribute:@"sessionId"
+                                              value:self->_agentConfiguration.sessionIdentifier];
+
+    // Write this session's manifest as early as possible -- right after analyticsController
+    // exists and sessionId/session attributes are set, and before anything below gets a chance
+    // to record an event under this session.
+    if ([NRMAFlags shouldEnableEventPersistence] && self->_agentConfiguration.sessionIdentifier.length > 0) {
+        int64_t sessionStartMs = (int64_t)([self.appSessionStartDate timeIntervalSince1970] * 1000.0);
+        NSDictionary *sessionAttributes = [self.analyticsController currentSessionAttributesForPersistence] ?: @{};
+        [[NREventPersistenceController shared] writeSessionManifestWithSessionId:self->_agentConfiguration.sessionIdentifier
+                                                                        realAgentId:NRMA_getAgentId()
+                                                                     sessionStartMs:sessionStartMs
+                                                                  sessionAttributes:sessionAttributes];
+    }
+
     NRMAReachability* r = [NewRelicInternalUtils reachability];
     NRMANetworkStatus status;
     @synchronized(r) {
@@ -657,37 +672,12 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     }
 #endif
 
-    [self.analyticsController setNRSessionAttribute:@"sessionId"
-                                              value:self->_agentConfiguration.sessionIdentifier];
-
-    // Write this session's manifest now that sessionId/stable attributes are set, so a
-    // recovered event can be reattributed if the app force-quits before harvesting.
-    if ([NRMAFlags shouldEnableEventPersistence] && self->_agentConfiguration.sessionIdentifier.length > 0) {
-        int64_t sessionStartMs = (int64_t)([self.appSessionStartDate timeIntervalSince1970] * 1000.0);
-        NSDictionary *sessionAttributes = [self.analyticsController currentSessionAttributesForPersistence] ?: @{};
-        [[NREventPersistenceController shared] writeSessionManifestWithSessionId:self->_agentConfiguration.sessionIdentifier
-                                                                       realAgentId:NRMA_getAgentId()
-                                                                    sessionStartMs:sessionStartMs
-                                                                sessionAttributes:sessionAttributes];
-    }
-
     // Recover events persisted by a previous force-quit/crashed session and stage them
     // for the next harvest. Runs here, not in -initialize, since every caller starts the
     // harvester only *after* this method, guaranteeing staging lands before its first execute.
     if ([NRMAFlags shouldEnableEventPersistence]) {
         int64_t nowMs = (int64_t)([[NSDate date] timeIntervalSince1970] * 1000.0);
         [[NREventPersistenceController shared] performRetentionSweepWithNowMs:nowMs];
-
-        NSDictionary *currentAttributes = @{};
-        NSString *currentAttributesJSON = [self.analyticsController sessionAttributeJSONString];
-        if (currentAttributesJSON.length > 0) {
-            NSDictionary *parsed = [NRMAJSON JSONObjectWithData:[currentAttributesJSON dataUsingEncoding:NSUTF8StringEncoding]
-                                                          options:0
-                                                            error:nil];
-            if ([parsed isKindOfClass:[NSDictionary class]]) {
-                currentAttributes = parsed;
-            }
-        }
 
         // Leave a pending crash's session untouched -- NRMACrashDataWriter claims it instead.
         // NRMACrashReportFileManager isn't built for watchOS (no PLCrashReporter pipeline there).
@@ -698,8 +688,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         }
 #endif
 
-        NSArray *recoveredEvents = [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:currentAttributes
-                                                                                                                             excludingSessionId:pendingCrashSessionId];
+        NSArray *recoveredEvents = [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:pendingCrashSessionId];
         if (recoveredEvents.count > 0) {
             NRLOG_AGENT_VERBOSE(@"NREventPersistence: adding %lu recovered event(s) to harvest data: %@",
                                 (unsigned long)recoveredEvents.count, recoveredEvents);

@@ -416,7 +416,7 @@
 // controller's own internal queue, asynchronously relative to -addEvent:.
 - (void)waitForRecoveredEventType:(NSString *)eventType {
     NSPredicate *predicate = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
-        for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+        for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
             if ([candidate[@"eventType"] isEqualToString:eventType]) {
                 return YES;
             }
@@ -440,7 +440,7 @@
     [self waitForRecoveredEventType:@"PersistenceWiringSentinel"];
 
     NSDictionary *found = nil;
-    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
         if ([candidate[@"eventType"] isEqualToString:@"PersistenceWiringSentinel"]) {
             found = candidate;
             break;
@@ -474,7 +474,7 @@
     XCTAssertTrue([manager addEvent:sentinel]);
     [self waitForRecoveredEventType:@"FlushSentinel"];
 
-    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
         XCTAssertNotEqualObjects(candidate[@"eventType"], @"FlagOffSentinel",
                                  @"an event added while the flag was disabled must never be persisted");
     }
@@ -505,7 +505,7 @@
     XCTAssertTrue([json containsString:@"FreshHarvestConfirmSentinel"]);
     [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
 
-    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
         XCTAssertNotEqualObjects(candidate[@"eventType"], @"FreshHarvestConfirmSentinel",
                                  @"an event already confirmed delivered via a normal harvest must never be recovered again");
     }
@@ -536,7 +536,7 @@
     XCTAssertTrue([manager addEvent:second]);
     [self waitForRecoveredEventType:@"EvictedSentinelReplacement"];
 
-    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
         XCTAssertNotEqualObjects(candidate[@"eventType"], @"EvictedSentinel",
                                  @"an event evicted from the live buffer must not still be in the persisted store");
     }
@@ -549,7 +549,7 @@
 // Finds the first recovered payload of `eventType`. Callers must already have
 // waited for it via -waitForRecoveredEventType:.
 - (NSDictionary *)recoveredEventOfType:(NSString *)eventType {
-    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
         if ([candidate[@"eventType"] isEqualToString:eventType]) {
             return candidate;
         }

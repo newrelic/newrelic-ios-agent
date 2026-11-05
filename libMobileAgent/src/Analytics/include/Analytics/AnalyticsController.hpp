@@ -217,7 +217,7 @@ namespace NewRelic {
 
 
         /*
-         *  these methods used to retrieve duplicated data used for appending to crash reports.
+         *  fetchDuplicatedAttributes retrieves duplicated attribute data for appending to crash reports.
          */
 
         void clearAttributesDuplicationStore();

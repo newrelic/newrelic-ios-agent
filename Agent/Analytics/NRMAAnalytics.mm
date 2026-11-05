@@ -1097,9 +1097,9 @@ static PersistentStore<std::string,BaseValue>* __attributeStore;
                                                         error:nil];
         return [parsed isKindOfClass:[NSDictionary class]] ? parsed : @{};
     } catch (std::exception& e) {
-        NRLOG_AGENT_VERBOSE(@"Failed to generate stable attributes for persistence: %s", e.what());
+        NRLOG_AGENT_VERBOSE(@"Failed to generate session attributes for persistence: %s", e.what());
     } catch (...) {
-        NRLOG_AGENT_VERBOSE(@"Failed to generate stable attributes for persistence.");
+        NRLOG_AGENT_VERBOSE(@"Failed to generate session attributes for persistence.");
     }
     return @{};
 }

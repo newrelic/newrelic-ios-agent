@@ -1003,7 +1003,7 @@
     XCTAssertTrue([analytics addCustomEvent:@"LegacyEvictedSentinelReplacement" withAttributes:@{}]);
 
     NSPredicate *predicate = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
-        for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+        for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
             if ([candidate[@"eventType"] isEqualToString:@"LegacyEvictedSentinelReplacement"]) {
                 return YES;
             }
@@ -1012,7 +1012,7 @@
     }];
     [self waitForExpectations:@[[[XCTNSPredicateExpectation alloc] initWithPredicate:predicate object:nil]] timeout:5];
 
-    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
         XCTAssertNotEqualObjects(candidate[@"eventType"], @"LegacyEvictedSentinel",
                                  @"an event evicted from the live buffer must not still be in the persisted store");
     }
@@ -1026,7 +1026,7 @@
 // C++ AnalyticsController/EventManager/NRMAEventPersistenceBridge path, not NRMAEventManager.
 
 - (NSDictionary *)recoveredLegacyEventMatchingKey:(NSString *)key value:(NSString *)value {
-    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
         if ([candidate[key] isEqualToString:value]) {
             return candidate;
         }
@@ -2089,7 +2089,7 @@
 // relative to -addCustomEvent:.
 - (void)waitForRecoveredLegacyEventType:(NSString *)eventType {
     NSPredicate *predicate = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
-        for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+        for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
             if ([candidate[@"eventType"] isEqualToString:eventType]) {
                 return YES;
             }
@@ -2109,7 +2109,7 @@
     [self waitForRecoveredLegacyEventType:@"LegacyPersistenceWiringSentinel"];
 
     NSDictionary *found = nil;
-    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
         if ([candidate[@"eventType"] isEqualToString:@"LegacyPersistenceWiringSentinel"]) {
             found = candidate;
             break;
@@ -2134,7 +2134,7 @@
     XCTAssertTrue([analytics addCustomEvent:@"LegacyFlushSentinel" withAttributes:@{}]);
     [self waitForRecoveredLegacyEventType:@"LegacyFlushSentinel"];
 
-    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
         XCTAssertNotEqualObjects(candidate[@"eventType"], @"LegacyFlagOffSentinel",
                                  @"an event added through the legacy path while the flag was disabled must never be persisted");
     }
@@ -2152,7 +2152,7 @@
 
     [analytics onHarvestSuccess];
 
-    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
         XCTAssertNotEqualObjects(candidate[@"eventType"], @"OnHarvestSuccessSentinel",
                                  @"-onHarvestSuccess must confirm (and thus delete) the events it just staged for recovery");
     }
@@ -2177,7 +2177,7 @@
     XCTAssertTrue([json containsString:@"FreshLegacyHarvestConfirmSentinel"]);
     [analytics onHarvestSuccess];
 
-    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
         XCTAssertNotEqualObjects(candidate[@"eventType"], @"FreshLegacyHarvestConfirmSentinel",
                                  @"a legacy-path event already confirmed delivered via a normal harvest must never be recovered again");
     }

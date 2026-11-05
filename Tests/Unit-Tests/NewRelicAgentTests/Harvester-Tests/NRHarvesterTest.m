@@ -1247,7 +1247,7 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
                                                           realAgentId:7];
 
     BOOL (^containsSentinel)(void) = ^BOOL{
-        for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestWithCurrentSessionAttributes:@{} excludingSessionId:nil]) {
+        for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
             if ([candidate[@"eventType"] isEqualToString:@"OfflinePersistConfirmSentinel"]) {
                 return YES;
             }
