@@ -189,38 +189,46 @@ class SessionReplayCapture {
     }
     
     private func findRecorderForView(view originalView: UIView) -> any SessionReplayViewThingy {
+        let viewDetails = ViewDetails(view: originalView)
+
+        // A blocked view is recorded as an empty black box (with no subviews), so none of its
+        // content (text, images) is ever read. This matches the Android agent.
+        if viewDetails.blockView == true {
+            return UIViewThingy(view: originalView, viewDetails: viewDetails)
+        }
+
         switch originalView {
         case let view as UILabel:
-            return UILabelThingy(view: view, viewDetails: ViewDetails(view: view))
+            return UILabelThingy(view: view, viewDetails: viewDetails)
         case let imageView as UIImageView:
-            return UIImageViewThingy(view: imageView, viewDetails: ViewDetails(view: imageView))
-            
+            return UIImageViewThingy(view: imageView, viewDetails: viewDetails)
+
         case let textField as UITextField:
-            return UITextFieldThingy(view: textField, viewDetails: ViewDetails(view: textField))
-            
+            return UITextFieldThingy(view: textField, viewDetails: viewDetails)
+
         case let textView as UITextView:
-            return UITextViewThingy(view: textView, viewDetails: ViewDetails(view: textView))
-            
+            return UITextViewThingy(view: textView, viewDetails: viewDetails)
+
         case let visualEffectView as UIVisualEffectView:
-            return UIVisualEffectViewThingy(view: visualEffectView, viewDetails: ViewDetails(view: visualEffectView))
+            return UIVisualEffectViewThingy(view: visualEffectView, viewDetails: viewDetails)
 
         #if os(iOS)
         case let datePicker as UIDatePicker:
-            return UIDatePickerThingy(view: datePicker, viewDetails: ViewDetails(view: datePicker))
+            return UIDatePickerThingy(view: datePicker, viewDetails: viewDetails)
 
         case let switchControl as UISwitch:
-            return UISwitchThingy(view: switchControl, viewDetails: ViewDetails(view: switchControl))
+            return UISwitchThingy(view: switchControl, viewDetails: viewDetails)
         #endif
 
         default:
             if let rctParagraphClass = NSClassFromString(RCTParagraphComponentView),
                originalView.isKind(of: rctParagraphClass) {
-                return UILabelThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
+                return UILabelThingy(view: originalView, viewDetails: viewDetails)
             } else if let rctTextViewClass = NSClassFromString(RCTTextViewLegacy),
                       originalView.isKind(of: rctTextViewClass) {
-                return UILabelThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
+                return UILabelThingy(view: originalView, viewDetails: viewDetails)
             } else {
-                return UIViewThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
+                return UIViewThingy(view: originalView, viewDetails: viewDetails)
             }
         }
     }
