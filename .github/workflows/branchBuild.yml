@@ -19,6 +19,11 @@ jobs:
     # runs-on: will be set to macos-latest when running on actual GHA.
     # *** runs-on: ubuntu-latest is used when running via act on mac os. ***
     runs-on: xcode-27
+    # OIDC trust on the AWS role is pinned to this environment.
+    environment: s3-publish
+    permissions:
+      contents: read
+      id-token: write
     outputs:
       version: ${{ steps.setOutput.outputs.version }}
     steps:
@@ -83,12 +88,14 @@ jobs:
         name: Print name
         run: echo "version=${{ env.version }}"  >> $GITHUB_OUTPUT
 
+      - name: Configure AWS credentials via GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
       - name: Deploy to staging S3
         run: "aws s3 cp NewRelic_XCFramework_Agent_${{ env.version }}.zip s3://nr-downloads-main/ios-v5/"
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
 
       - name: Upload build reports
         if: failure() && steps.build-step.outcome != 'success'
