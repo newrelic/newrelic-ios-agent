@@ -24,6 +24,17 @@
 #import "NRMAMeasurements.h"
 #import "NRMATaskQueue.h"
 #import "NRMANamedValueMeasurement.h"
+#import "NewRelicAgentInternal.h"
+#import "NRMAAgentConfiguration.h"
+#import "NRMAConnectInformation.h"
+#import "NRMAApplicationInformation.h"
+#import "Constants.h"
+
+// Exposes the private method under test without going through a full
+// network-dependent agent enable/connect cycle.
+@interface NewRelicAgentInternal (UnitTests)
+- (void) initializeAnalytics;
+@end
 
 @interface NRMAAnalyticsTest : XCTestCase
 {
@@ -983,6 +994,36 @@
 
     [NRMAMeasurements removeMeasurementConsumer:helper];
     [NRMAMeasurements shutdown];
+}
+
+#pragma mark - appVersion session attribute (NR-646041)
+
+// Regression coverage for -initializeAnalytics capturing appVersion as a session
+// attribute alongside appBuild, instead of leaving appVersion to be derived
+// solely from the X-NewRelic-App-Version header. Session attributes are baked
+// into a report at record time, while the header reflects whatever version is
+// running at upload time; if a report is persisted and uploaded by a later
+// session (e.g. after an app-store update), only a session attribute stays
+// consistent with appBuild.
+- (void) testInitializeAnalyticsSetsAppVersionSessionAttribute {
+    NewRelicAgentInternal* agent = [[NewRelicAgentInternal alloc] init];
+    [agent initializeAnalytics];
+
+    NSString* json = [agent.analyticsController sessionAttributeJSONString];
+    XCTAssertNotNil(json, @"initializeAnalytics should produce session attributes");
+
+    NSDictionary* attributes = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                                 options:0
+                                                                   error:nil];
+
+    NRMAConnectInformation* info = [NRMAAgentConfiguration connectionInformation];
+
+    XCTAssertEqualObjects(attributes[kNRMA_RA_appBuild], info.applicationInformation.appBuild,
+                          @"appBuild should be captured as a session attribute at session start");
+    XCTAssertEqualObjects(attributes[kNRMA_RA_appVersion], info.applicationInformation.appVersion,
+                          @"appVersion should be captured as a session attribute at session start, not left to be derived solely from the X-NewRelic-App-Version header");
+
+    [NRMAHarvestController removeHarvestListener:agent.analyticsController];
 }
 
 @end
