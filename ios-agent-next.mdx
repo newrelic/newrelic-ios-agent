@@ -1,14 +1,24 @@
 ---
 subject: iOS agent
-releaseDate: '{RELEASE-DATE}'
-version: {VERSION-STRING}
-downloadLink: 'https://download.newrelic.com/ios_agent/NewRelic_XCFramework_Agent_{VERSION-STRING}.zip'
+releaseDate: 'YYYY-MM-DD'
+version: next
+features: []
+enhancements: []
+bugs: []
+security: []
+downloadLink: 'https://download.newrelic.com/ios_agent/NewRelic_XCFramework_Agent_X.Y.Z.zip'
 ---
 
-### New in this release
+{/* release-note:feature */}
+## New features
 
-### Fixed in this release
+{/* release-note:enhancement */}
+## Improvements and enhancements
 
-* Fixed the main thread blocking, and apps being terminated by the iOS watchdog (`0x8BADF00D`), once the event buffer was full and the app kept making network requests. The agent held a lock while it rewrote its on-disk copy of buffered events, and threads recording events, including the main thread, waited on that lock. Events dropped from a full buffer were also never removed from that copy, so it grew and was rewritten in full for every new event. Writes now happen without holding the lock, are batched, and dropped events are removed. This issue was present in 7.7.8 and earlier.
-* Fixed events occasionally going unreported when they were recorded, for example by a network request finishing, at the same moment the agent collected buffered events for a harvest. The agent cleared the buffer a second time after releasing its lock, which discarded any event added in between before it was sent. This issue was present in 7.7.8 and earlier.
-* Fixed the agent binary containing absolute file paths from the machine that built it (for example, `/Users/runner/work/newrelic-ios-agent/...`), which app security scanners report as file path disclosure. The agent's logging macros compiled each source file's full path into the binary, though only the file name was logged; they now compile in only the file name. The public `NRLOG_*` macros in `NRLogger.h` have the same fix, so apps that call them no longer embed their own build paths. This issue was present in 7.7.9 and earlier.
+{/* release-note:bug */}
+## Bug fixes
+
+{/* release-note:security */}
+## Security updates
+
+{/* release-note:end */}

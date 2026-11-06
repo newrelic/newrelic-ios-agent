@@ -1,0 +1,31 @@
+name: Release notes - ready
+
+# Generate opens docs PRs ready for review (readyForReview), so this is only for one still open as
+# a draft. Run it with the release's version once you've checked the note: it marks the docs PR
+# ready for review, as the bot that opened it, and comments with your name.
+# See .github/actions/release-notes/README.md
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release whose docs-website note you've checked, e.g. 7.7.11"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  ready:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: develop # the release-notes code as reviewed now
+          persist-credentials: false
+      - uses: ./.github/actions/release-notes/ready
+        with:
+          version: ${{ inputs.version }}
+          bot-pat: ${{ secrets.BOT_PAT }}
+          docs-repo: ${{ vars.DOCS_REPO || 'newrelic/docs-website' }}
