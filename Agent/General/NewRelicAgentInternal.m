@@ -623,12 +623,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
                                                                                             sessionId:[self currentSessionId]
                                                                                    attributeValidator:[[NRMAAttributeValidator alloc] init]];
 
-        if (status != NotReachable) { // Because we support offline mode check if we're online before sending the handled exceptions
-            [self.handledExceptionsController processAndPublishPersistedReports];
-        }
-
         [NRMAHarvestController addHarvestListener:self.handledExceptionsController];
-
     }
 
 #if TARGET_OS_IOS
