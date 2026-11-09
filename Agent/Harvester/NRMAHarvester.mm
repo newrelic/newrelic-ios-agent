@@ -52,9 +52,7 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
 
 @implementation NRMAHarvester
 {
-    // Guards the `configuration` pointer, which -harvesterConfiguration hands to other threads
-    // (every instrumented NSURLSession task reads it) while -disconnected replaces it. It can't
-    // be @synchronized(self): -execute holds that across the connect and harvest network calls.
+    // Guards `configuration`. Not @synchronized(self): -execute holds that across network calls.
     NSObject* _configurationLock;
 }
 @synthesize currentState;
@@ -129,7 +127,6 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
 }
 - (NRMAHarvesterConfiguration*) harvesterConfiguration
 {
-    // Retained under the lock, so a replacement on the harvest thread can't free it under us.
     NRMAHarvesterConfiguration* current;
     @synchronized(_configurationLock) {
         current = configuration;

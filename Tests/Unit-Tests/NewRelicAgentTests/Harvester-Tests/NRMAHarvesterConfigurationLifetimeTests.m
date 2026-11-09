@@ -190,16 +190,8 @@
 
 #pragma mark - Concurrent replacement
 
-//  Regression coverage for NR-647662 (newrelic-react-native-agent#348).
-//
-//  +[NRMAHTTPUtilities addCrossProcessIdentifier:] runs for every instrumented NSURLSession
-//  task, on the thread that creates the task, and reads the harvester's configuration and
-//  its cross_process_id. The harvest thread replaces that configuration at the start of every
-//  session (-[NRMAHarvester disconnected]) and clears cross_process_id in place before it
-//  reconnects (-[NRMAHarvester clearStoredHarvesterConfiguration]). Each of those stores
-//  releases the previous object, so a reader that isn't synchronized with them can message a
-//  freed object. These tests run that reader on several threads against the real writer, and
-//  crash with SIGSEGV in objc_retain / objc_release if either store is unsynchronized.
+//  Regression coverage for NR-647662: addCrossProcessIdentifier: reads the configuration on
+//  request threads while the harvest thread replaces it or clears its cross_process_id.
 
 static NSString* const kNRMARaceTestAppToken = @"APP_TOKEN";
 static const NSTimeInterval kNRMARaceTestDuration = 5;
@@ -217,9 +209,7 @@ static atomic_ulong sNRMARaceTestBadHeaders;
 - (void) setHarvester:(NRMAHarvester*)harvester;
 @end
 
-// Hands back a fresh configuration on every fetch, as the NSUserDefaults round trip does, so
-// each -disconnected frees the configuration it replaces. The persistence and harvest steps
-// that follow are skipped so the loop touches neither disk nor the network.
+// Returns a fresh configuration on every fetch and skips persistence and the network.
 @interface NRMAConfigurationReplacingHarvester : NRMAHarvester
 @end
 
@@ -234,7 +224,7 @@ static atomic_ulong sNRMARaceTestBadHeaders;
     configuration.data_token = [[NRMADataToken alloc] init];
     configuration.data_token.clusterAgentId = 36920;
     configuration.data_token.realAgentId = 36921;
-    // Long enough that it can't be a tagged pointer, so clearing it really frees it.
+    // Too long for a tagged pointer, so clearing it frees it.
     configuration.cross_process_id = [NSString stringWithFormat:@"190#%u-cross-process-id-%u", arc4random(), arc4random()];
     return configuration;
 }
@@ -278,16 +268,12 @@ static atomic_ulong sNRMARaceTestBadHeaders;
     [super tearDown];
 }
 
-// Runs +addCrossProcessIdentifier: on one thread per core while `writer` runs over and over on
-// this thread, then checks that every header the readers saw came from a live configuration.
 - (void) assertCrossProcessIdentifierSurvivesRepeated:(void (^)(void))writer
 {
     atomic_store(&sNRMARaceTestFinished, false);
     atomic_store(&sNRMARaceTestReads, 0);
     atomic_store(&sNRMARaceTestBadHeaders, 0);
 
-    // An immutable request, so every call goes through -mutableCopy the way a plain
-    // NSURLSession task does.
     NSURLRequest* request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"https://example.com/"]];
 
     NSUInteger readerCount = MAX([[NSProcessInfo processInfo] activeProcessorCount], (NSUInteger)4);
@@ -329,7 +315,6 @@ static atomic_ulong sNRMARaceTestBadHeaders;
     XCTAssertEqual(atomic_load(&sNRMARaceTestBadHeaders), 0UL);
 }
 
-// Each -disconnected is one start-of-session replacement of the configuration.
 - (void) testCrossProcessIdentifierWhileDisconnectedReplacesConfiguration
 {
     NRMAConfigurationReplacingHarvester* writer = harvester;
@@ -338,8 +323,6 @@ static atomic_ulong sNRMARaceTestBadHeaders;
     }];
 }
 
-// Publishes a configuration, then clears its cross_process_id in place, as the reconnect paths
-// in -uninitialized, -disconnected and -connected do.
 - (void) testCrossProcessIdentifierWhileStoredConfigurationIsCleared
 {
     NRMAConfigurationReplacingHarvester* writer = harvester;
