@@ -604,8 +604,6 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
         collectorConfiguration.application_token = connection.applicationToken;
         [self storeConfiguration:collectorConfiguration];
         // Configuration saved here.
-        // Configuration saved here.
-        configuration.application_token = connection.applicationToken;
         [self saveHarvesterConfiguration:configuration];
 
         [self handleLoggingConfigurationUpdate];
