@@ -29,6 +29,7 @@
 #import "NRMAConnectInformation.h"
 #import "NRMAApplicationInformation.h"
 #import "Constants.h"
+#import "NRMAViewContext.h"
 
 // Exposes the private method under test without going through a full
 // network-dependent agent enable/connect cycle.
@@ -2015,7 +2016,8 @@
     // A name in only one list succeeds under one event system and fails under the other.
     XCTAssertEqualObjects([NRMAAnalytics reservedEventTypes],
                           (@[@"Mobile", @"MobileCrash", @"MobileRequest", @"MobileRequestError",
-                             @"MobileSession", @"MobileBreadcrumb"]));
+                             @"MobileSession", @"MobileBreadcrumb", @"MobileView",
+                             @"MobileViewTiming"]));
 }
 
 #pragma mark - Built-in view events
@@ -2084,43 +2086,6 @@
 - (void) testViewEventWithNoEventTypeIsRejected {
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     XCTAssertFalse([analytics addViewEventOfType:@"" withAttributes:@{@"viewName": @"X"}]);
-}
-
-#pragma mark - Reserved event types
-
-/*
- * The old event system has always rejected reserved event types; the new one did not, so the
- * same -recordCustomEvent: call was dropped or accepted depending on a feature flag. Both now
- * reject.
- */
-- (void) testReservedEventTypesAreRejectedUnderBothEventSystems {
-    for (NSNumber* useNewSystem in @[@NO, @YES]) {
-        if (useNewSystem.boolValue) {
-            [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
-        } else {
-            [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
-        }
-
-        NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
-        for (NSString* reserved in [NRMAAnalytics reservedEventTypes]) {
-            XCTAssertFalse([analytics addCustomEvent:reserved withAttributes:@{@"a": @"b"}],
-                           @"reserved event type \"%@\" must be rejected with NewEventSystem %@",
-                           reserved, useNewSystem.boolValue ? @"enabled" : @"disabled");
-        }
-
-        XCTAssertTrue([analytics addCustomEvent:@"MyCustomEvent" withAttributes:@{@"a": @"b"}],
-                      @"a non-reserved event type must still be accepted");
-    }
-    [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
-}
-
-- (void) testReservedEventTypesMatchTheLegacyControllerList {
-    // Kept identical on purpose: if the two lists diverge, a customer's call succeeds under one
-    // event system and fails under the other -- the bug this change removed.
-    XCTAssertEqualObjects([NRMAAnalytics reservedEventTypes],
-                          (@[@"Mobile", @"MobileCrash", @"MobileRequest", @"MobileRequestError",
-                             @"MobileSession", @"MobileBreadcrumb", @"MobileView",
-                             @"MobileViewTiming"]));
 }
 
 @end
