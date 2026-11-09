@@ -729,7 +729,7 @@ extern "C" {
  *
  * Marks `name` as the current view using a browser route-change model: the previously set current
  * view is closed out first -- that visit has ended, so its "MobileView" event is recorded now, with
- * its timeVisible -- and then `name` becomes current with the prior view recorded as its referrer
+ * its timeVisibleMs -- and then `name` becomes current with the prior view recorded as its referrer
  * (previousView). Breadcrumbs and MobileView events recorded while `name` is current carry it as
  * currentView.
  *
@@ -753,7 +753,7 @@ extern "C" {
  * @param attributes Optional custom attributes merged into this view's MobileView event -- which is
  *        recorded when the view is closed out, so they are held until then. Reserved keys
  *        (viewClass, viewName, viewInstanceId, previousView, previousViewInstanceId, uiFramework,
- *        loadTime, loadTimeUnavailable, timeVisible) are dropped.
+ *        loadTimeMs, loadTimeUnavailableReason, timeVisibleMs) are dropped.
  */
 + (void) setCurrentView:(NSString* _Nonnull)name
               viewClass:(NSString* _Nonnull)viewClass
@@ -813,8 +813,8 @@ extern "C" {
  * beginViewLoad was never called — the duration is measured from the appear instant instead, and is
  * therefore short by however long that screen took to build. Such a view also has no
  * "timeToInitialDisplay" row, so the two cannot be wrongly subtracted; to tell the cases apart, check
- * the "MobileView" appear event for the same viewInstanceId, which carries loadTime exactly when a
- * construction start was available and loadTimeUnavailable when it was not.
+ * the "MobileView" appear event for the same viewInstanceId, which carries loadTimeMs exactly when a
+ * construction start was available and loadTimeUnavailableReason when it was not.
  *
  * The event carries the current view's viewName and viewInstanceId, so it joins back to that
  * specific visit, and previousView, so timings can be compared by the route taken into the screen.

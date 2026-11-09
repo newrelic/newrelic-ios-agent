@@ -40,7 +40,7 @@ static const char kNRSwiftUIScreenKey;
 // NRMA_IsTopLevelController.
 static const char kNRTopLevelKey;
 
-// Attribute names, the event type, and the loadTime-vs-loadTimeUnavailable rule all live in
+// Attribute names, the event type, and the loadTimeMs-vs-loadTimeUnavailableReason rule all live in
 // MobileViewEmitter.swift now. This file reports facts; it does not build events.
 
 // The reason string handed to the recorder when no construction start was observed.
@@ -447,7 +447,7 @@ static void NRMA_ViewDidLoad(UIViewController *self, SEL _cmd) {
     if (orig_viewDidLoad) orig_viewDidLoad(self, _cmd);
 
     // SwiftUI hosts are excluded by class prefix for the UIKit path, but under automatic SwiftUI
-    // collection their construction start is exactly what makes loadTime measurable, so they are
+    // collection their construction start is exactly what makes loadTimeMs measurable, so they are
     // let through here. Their class-derived viewName is a generic modifier stack and is not
     // consulted: whether this host is a screen, and what it is called, is decided at appear time
     // once it has a parent.
@@ -533,10 +533,10 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
                                               platform:platform];
 
     // No event is emitted here. One MobileView event is recorded per visit, at
-    // viewDidDisappear:, because a visit cannot be described until it has ended -- timeVisible is
+    // viewDidDisappear:, because a visit cannot be described until it has ended -- timeVisibleMs is
     // only knowable then. What an appearance *does* know is captured instead: the referrer below,
     // and the construction start read above (kNRLoadTimestampKey survives until the disappear
-    // handler recomputes loadTime from it).
+    // handler recomputes loadTimeMs from it).
     //
     // Stashed now rather than read at emit time: the transition above just made this view current,
     // so the context's previous view is this appearance's referrer only until the next screen
@@ -603,7 +603,7 @@ static void NRMA_CloseVisit(UIViewController *vc, NRMASwiftUIScreen *swiftUIScre
         fields.loadTimeMs = @([NRMAViewContext millisecondsBetween:loadTimestamp.doubleValue
                                                               and:appearTimestamp.doubleValue]);
     } else {
-        fields.loadTimeUnavailable = kNRLoadUnavailableNoConstructionObserved;
+        fields.loadTimeUnavailableReason = kNRLoadUnavailableNoConstructionObserved;
     }
 
     BOOL topLevel = NRMA_VisitIsTopLevel(vc);
@@ -647,7 +647,7 @@ static void NRMA_CloseVisit(UIViewController *vc, NRMASwiftUIScreen *swiftUIScre
  * left underneath as its referrer.
  *
  * No construction start: nothing was built or laid out, the app was merely resumed. That is the
- * same shape as any other visit with no observed load, so `loadTime` is omitted and the reason
+ * same shape as any other visit with no observed load, so `loadTimeMs` is omitted and the reason
  * recorded rather than a zero being invented.
  */
 static void NRMA_ReopenVisit(UIViewController *vc, NRMASwiftUIScreen *swiftUIScreen, CFAbsoluteTime startTime) {

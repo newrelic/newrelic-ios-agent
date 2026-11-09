@@ -21,8 +21,8 @@ NS_ASSUME_NONNULL_BEGIN
  *   viewClass       (NSString) — Fully-qualified demangled class name, e.g. "MyApp.ProductViewController"
  *   viewName        (NSString) — Simple display name, e.g. "ProductViewController"; customisable (see below)
  *   viewInstanceId  (NSString) — UUID unique to this single visible lifetime of the view
- *   loadTime        (NSNumber/double, milliseconds) — viewDidLoad → viewDidAppear
- *   timeVisible     (NSNumber/double, milliseconds) — viewDidAppear → viewDidDisappear
+ *   loadTimeMs      (NSNumber/double, milliseconds) — viewDidLoad → viewDidAppear
+ *   timeVisibleMs   (NSNumber/double, milliseconds) — viewDidAppear → viewDidDisappear
  *   containsWebView     (BOOL) — a visible WKWebView was in the view tree at some point in the visit
  *   isFullScreenWebView (BOOL) — one such web view covered ≥ 80% of the content area (see
  *                                NRMAWebViewPresence.h); implies containsWebView
@@ -57,8 +57,8 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * Optionally implement nrMobileViewAttributes to attach extra attributes to every
  * MobileView event emitted for the view. Reserved keys (viewClass, viewName,
- * viewInstanceId, previousView, previousViewInstanceId, uiFramework, loadTime,
- * loadTimeUnavailable, timeVisible, containsWebView, isFullScreenWebView, isTopLevelView) are dropped.
+ * viewInstanceId, previousView, previousViewInstanceId, uiFramework, loadTimeMs,
+ * loadTimeUnavailableReason, timeVisibleMs, containsWebView, isFullScreenWebView, isTopLevelView) are dropped.
  *
  * Objective-C:
  *   - (nullable NSDictionary<NSString *, id> *)nrMobileViewAttributes {
@@ -103,7 +103,7 @@ FOUNDATION_EXPORT BOOL NRMA_IsTopLevelController(UIViewController *vc);
  * backgrounded, so without this the screen the user was on when they left the app -- the last
  * screen of most sessions -- reports nothing at all.
  *
- * `timeVisible` on these events therefore ends at backgrounding rather than at a navigation. The
+ * `timeVisibleMs` on these events therefore ends at backgrounding rather than at a navigation. The
  * event is otherwise ordinary and carries no marker saying so.
  *
  * Pair with -reopenOpenVisitsOnForeground, or those screens stay closed for the rest of the session.
@@ -119,7 +119,7 @@ FOUNDATION_EXPORT BOOL NRMA_IsTopLevelController(UIViewController *vc);
  * re-open: the user's time on that screen after returning would belong to no visit, and the shared
  * view context's visible stack would keep a hole where the screen still on the display used to be.
  *
- * Each re-opened visit gets a fresh `viewInstanceId` and no `loadTime`: nothing was rebuilt, the app
+ * Each re-opened visit gets a fresh `viewInstanceId` and no `loadTimeMs`: nothing was rebuilt, the app
  * was resumed. One screen either side of a background therefore reports two visits, which is the
  * cost of both halves being measured.
  */

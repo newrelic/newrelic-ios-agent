@@ -16,26 +16,26 @@ import Foundation
 /// NRMAViewContext.m, NRMAViewTiming.m and NRMAMobileViewTracker.m, with the SwiftUI
 /// producers using bare literals instead.
 internal enum NRViewAttribute {
-    static let viewClass              = "viewClass"
-    static let viewName               = "viewName"
-    static let viewInstanceId         = "viewInstanceId"
-    static let previousView           = "previousView"
-    static let previousViewInstanceId = "previousViewInstanceId"
-    static let uiFramework            = "uiFramework"
-    static let loadTime               = "loadTime"
-    static let loadTimeUnavailable    = "loadTimeUnavailable"
-    static let timeVisible            = "timeVisible"
-    static let containsWebView        = "containsWebView"
-    static let isFullScreenWebView    = "isFullScreenWebView"
-    static let isTopLevelView         = "isTopLevelView"
-    static let timingName             = "timingName"
-    static let timingValue            = "timingValue"
+    static let viewClass                 = "viewClass"
+    static let viewName                  = "viewName"
+    static let viewInstanceId            = "viewInstanceId"
+    static let previousView              = "previousView"
+    static let previousViewInstanceId    = "previousViewInstanceId"
+    static let uiFramework               = "uiFramework"
+    static let loadTimeMs                = "loadTimeMs"
+    static let loadTimeUnavailableReason = "loadTimeUnavailableReason"
+    static let timeVisibleMs             = "timeVisibleMs"
+    static let containsWebView           = "containsWebView"
+    static let isFullScreenWebView       = "isFullScreenWebView"
+    static let isTopLevelView            = "isTopLevelView"
+    static let timingName                = "timingName"
+    static let durationMs                = "durationMs"
 
     /// The MobileView schema (IDD §5.3). Customer-supplied attributes can never set these, whether
     /// or not a given event writes the key itself.
     static let reservedForMobileView: Set<String> = [
         viewClass, viewName, viewInstanceId, previousView, previousViewInstanceId,
-        uiFramework, loadTime, loadTimeUnavailable, timeVisible,
+        uiFramework, loadTimeMs, loadTimeUnavailableReason, timeVisibleMs,
         containsWebView, isFullScreenWebView, isTopLevelView,
     ]
 }
@@ -53,7 +53,7 @@ internal enum NRViewFramework: String {
 
 /// Whether a view's construction-to-visible interval could be trusted.
 ///
-/// The point of modelling this as a sum type is that `loadTime` and `loadTimeUnavailable`
+/// The point of modelling this as a sum type is that `loadTimeMs` and `loadTimeUnavailableReason`
 /// are mutually exclusive and exactly one must be written. Every producer used to enforce
 /// that with its own if/else chain, and they did not agree.
 internal enum NRViewLoadOutcome {
@@ -104,8 +104,8 @@ internal struct NRViewComposition {
 /// One MobileView event, as facts rather than as a dictionary.
 ///
 /// One event per visit, emitted when the view goes away: a visit is only fully describable
-/// once it has ended, since `timeVisible` is not knowable before then. Producers used to emit
-/// a second event on appear as well, which doubled the MobileView volume to carry `loadTime`
+/// once it has ended, since `timeVisibleMs` is not knowable before then. Producers used to emit
+/// a second event on appear as well, which doubled the MobileView volume to carry `loadTimeMs`
 /// and the referrer -- both of which are captured at appear time and held by the producer
 /// until this event is built.
 ///
@@ -121,8 +121,8 @@ internal struct MobileViewRecord {
     /// `.manual`.
     var declaredFramework: String?
     var referrer: NRViewReferrer = .none
-    /// Measured at appear time and carried until the visit ends. `nil` omits both loadTime
-    /// and loadTimeUnavailable.
+    /// Measured at appear time and carried until the visit ends. `nil` omits both loadTimeMs
+    /// and loadTimeUnavailableReason.
     var load: NRViewLoadOutcome?
     /// Milliseconds the view was on screen.
     var timeVisibleMs: Double?
@@ -169,7 +169,7 @@ internal struct MobileViewRecord {
             }
         }
 
-        // loadTime and loadTimeUnavailable are mutually exclusive by construction. loadTime
+        // loadTimeMs and loadTimeUnavailableReason are mutually exclusive by construction. loadTimeMs
         // is omitted rather than zeroed when it cannot be trusted, so a placeholder does not
         // drag load-time percentiles toward zero; the reason is recorded so the omission is
         // diagnosable in NRDB rather than looking unimplemented.
@@ -177,22 +177,22 @@ internal struct MobileViewRecord {
         case .none:
             break
         case .some(.measured(let ms)) where ms <= kNRMAViewTimingMaxMilliseconds:
-            attrs[NRViewAttribute.loadTime] = NSNumber(value: ms)
+            attrs[NRViewAttribute.loadTimeMs] = NSNumber(value: ms)
         case .some(.measured):
             // The construction start was not vouched for (NRMAViewContext), so this visit has no
-            // baseline timing; loadTime must not report the interval the baseline refused.
-            attrs[NRViewAttribute.loadTimeUnavailable] =
+            // baseline timing; loadTimeMs must not report the interval the baseline refused.
+            attrs[NRViewAttribute.loadTimeUnavailableReason] =
                 NRViewLoadOutcome.Reason.noConstructionObserved.rawValue
         case .some(.unavailable(let reason)):
-            attrs[NRViewAttribute.loadTimeUnavailable] = reason.rawValue
+            attrs[NRViewAttribute.loadTimeUnavailableReason] = reason.rawValue
         }
 
         // Reported verbatim however short it is. A minimum-dwell threshold used to label
         // brief visits `churn` so screen-view counts could exclude them; that classification
-        // is gone, and consumers that want to filter brief visits do it from `timeVisible`
+        // is gone, and consumers that want to filter brief visits do it from `timeVisibleMs`
         // itself rather than from a decision the agent baked in.
         if let timeVisibleMs = timeVisibleMs {
-            attrs[NRViewAttribute.timeVisible] = NSNumber(value: timeVisibleMs)
+            attrs[NRViewAttribute.timeVisibleMs] = NSNumber(value: timeVisibleMs)
         }
 
         if let composition = composition {
@@ -215,11 +215,11 @@ internal struct MobileViewRecord {
 }
 
 /// One MobileViewTiming event. A different event type, so a separate record: `viewName`
-/// and `viewInstanceId` mean the same thing, but `timingName` / `timingValue` are this
+/// and `viewInstanceId` mean the same thing, but `timingName` / `durationMs` are this
 /// schema's own and the two are free to diverge.
 internal struct ViewTimingRecord {
     var timingName: String
-    var timingValueMs: Double
+    var durationMs: Double
     var viewName: String?
     var viewInstanceId: String?
     var previousView: String?
@@ -227,7 +227,7 @@ internal struct ViewTimingRecord {
     internal func attributes() -> [String: Any] {
         var attrs: [String: Any] = [
             NRViewAttribute.timingName:  timingName,
-            NRViewAttribute.timingValue: NSNumber(value: timingValueMs),
+            NRViewAttribute.durationMs: NSNumber(value: durationMs),
         ]
         // Only keys with values are set; an absent view must read as absent, not as an
         // empty string.
@@ -302,11 +302,11 @@ public class NRMAMobileViewFields: NSObject {
     /// Set by the manual setCurrentView: producer. The event is gated by the manual flag and
     /// `uiFramework` is whatever its caller declared, not a toolkit the agent observed.
     public var manual: Bool = false
-    /// Milliseconds. Setting this writes `loadTime`; it wins over `loadTimeUnavailable`.
+    /// Milliseconds. Setting this writes `loadTimeMs`; it wins over `loadTimeUnavailableReason`.
     public var loadTimeMs: NSNumber?
     /// One of "noLoadStartDeclared", "noConstructionObserved", "notRebuilt".
-    public var loadTimeUnavailable: String?
-    /// Milliseconds. Setting this writes `timeVisible`.
+    public var loadTimeUnavailableReason: String?
+    /// Milliseconds. Setting this writes `timeVisibleMs`.
     public var timeVisibleMs: NSNumber?
     /// Merge `previousView` / `previousViewInstanceId` out of the shared view context.
     /// Ignored when `previousView` is set explicitly.
@@ -340,10 +340,10 @@ public class NRMAMobileViewFields: NSObject {
         let load: NRViewLoadOutcome?
         if let loadTimeMs = loadTimeMs {
             load = .measured(loadTimeMs.doubleValue)
-        } else if let reason = loadTimeUnavailable,
+        } else if let reason = loadTimeUnavailableReason,
                   let parsed = NRViewLoadOutcome.Reason(rawValue: reason) {
             load = .unavailable(parsed)
-        } else if loadTimeUnavailable != nil {
+        } else if loadTimeUnavailableReason != nil {
             load = .unavailable(.noConstructionObserved)
         } else {
             load = nil
@@ -388,7 +388,7 @@ public class NRMAMobileViewRecorder: NSObject {
                                         previousView: String?) -> [String: Any] {
         ViewTimingRecord(
             timingName: timingName,
-            timingValueMs: milliseconds,
+            durationMs: milliseconds,
             viewName: viewName,
             viewInstanceId: viewInstanceId,
             previousView: previousView).attributes()

@@ -386,7 +386,7 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     [self persistCurrentReferrerState];
 
     // The only event this call emits: the one for the view being *left*, now that its visit is over
-    // and its timeVisible is knowable. The view being set records nothing yet -- it is closed out by
+    // and its timeVisibleMs is knowable. The view being set records nothing yet -- it is closed out by
     // the next setCurrentView: or by -flushCurrentManualViewOnBackground.
     //
     // Only if the manual API opened it; auto views close via viewDidDisappear.

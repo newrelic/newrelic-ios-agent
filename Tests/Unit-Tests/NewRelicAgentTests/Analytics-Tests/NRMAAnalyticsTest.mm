@@ -2006,7 +2006,7 @@
     [self assertViewEventLandsUnderBothEventSystems:@"MobileViewTiming"
                                               block:^BOOL(NRMAAnalytics* analytics) {
         return [analytics addViewTimingEventWithAttributes:@{@"timingName": @"timeToInitialDisplay",
-                                                             @"timingValue": @(250.5),
+                                                             @"durationMs": @(250.5),
                                                              @"viewName": @"CheckoutView"}];
     }
                                  expectedSubstrings:@[@"MobileViewTiming", @"timeToInitialDisplay"]];

@@ -127,7 +127,7 @@ static const NSUInteger kNRMaxTrackedBuckets = 64;
     // Otherwise the appear time, which is the only origin available for that view.
     //
     // Which one was used is not stamped here. It is recoverable from the MobileView appear event for
-    // this viewInstanceId: loadTime is present exactly when a construction start was vouched for.
+    // this viewInstanceId: loadTimeMs is present exactly when a construction start was vouched for.
     CFAbsoluteTime origin = snapshot.hasLoadStart ? snapshot.loadStartTime : snapshot.appearTime;
     return [NRMAViewContext millisecondsBetween:origin and:now];
 }

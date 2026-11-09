@@ -51,11 +51,11 @@
 - (void)testAttributesAndTimestampsAreCarried {
     NRMAViewEvent *event = [self eventOfType:kNRMA_RET_mobileView];
     [event addAttribute:@"viewName" value:@"CheckoutView"];
-    [event addAttribute:@"loadTime" value:@(123.5)];
+    [event addAttribute:@"loadTimeMs" value:@(123.5)];
 
     NSDictionary *json = [event JSONObject];
     XCTAssertEqualObjects(json[@"viewName"], @"CheckoutView");
-    XCTAssertEqualObjects(json[@"loadTime"], @(123.5));
+    XCTAssertEqualObjects(json[@"loadTimeMs"], @(123.5));
     XCTAssertEqualObjects(json[kNRMA_RA_timestamp], @(1788909568307));
 }
 
