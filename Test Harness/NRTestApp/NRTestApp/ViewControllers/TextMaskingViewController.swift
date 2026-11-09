@@ -23,6 +23,7 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         self.title = "Text Masking"
         self.view.backgroundColor = .systemBackground
 
+        let blockedStack = createBlockedSection()
         let searchAndCredentialsStack = createSearchAndCredentialsSection()
         let maskedStack = createSectionStack(title: "Masked Fields", isMasked: true, isCustom: false)
         let unmaskedStack = createSectionStack(title: "Unmasked Fields", isMasked: false, isCustom: false)
@@ -35,7 +36,7 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         let tableViewStack = createTableViewSection()
 
         let scrollView = UIScrollView()
-        let mainStack = UIStackView(arrangedSubviews: [searchAndCredentialsStack, maskedStack, unmaskedStack, customMaskedStack, customUnmaskedStack, parentChildStack, tableViewStack])
+        let mainStack = UIStackView(arrangedSubviews: [blockedStack, searchAndCredentialsStack, maskedStack, unmaskedStack, customMaskedStack, customUnmaskedStack, parentChildStack, tableViewStack])
 //        let mainStack = UIStackView(arrangedSubviews: [maskedStack, parentChildStack])
 //        let mainStack = UIStackView(arrangedSubviews: [maskedStack])//, parentChildStack])
 
@@ -308,6 +309,88 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         NewRelic.logVerbose("Selected row at \(indexPath.row)")
     }
 
+
+    // nr-block views whose text should never reach the replay, in colors that do or don't
+    // contrast with the agent's black block box.
+    private func createBlockedSection() -> UIStackView {
+        let sectionLabel = UILabel()
+        sectionLabel.text = "Blocked Fields"
+        sectionLabel.font = .boldSystemFont(ofSize: 18)
+
+        let fieldsStack = UIStackView()
+        fieldsStack.axis = .vertical
+        fieldsStack.spacing = 12
+
+        let defaultLabel = UILabel()
+        defaultLabel.text = "blocked-default-label"
+        defaultLabel.accessibilityIdentifier = "nr-block"
+        fieldsStack.addArrangedSubview(defaultLabel)
+
+        let whiteLabel = UILabel()
+        whiteLabel.text = "blocked-white-label"
+        whiteLabel.textColor = .white
+        whiteLabel.backgroundColor = .darkGray
+        whiteLabel.accessibilityIdentifier = "nr-block"
+        fieldsStack.addArrangedSubview(whiteLabel)
+
+        let redLabel = UILabel()
+        redLabel.text = "blocked-red-label"
+        redLabel.textColor = .systemRed
+        redLabel.accessibilityIdentifier = "nr-block"
+        fieldsStack.addArrangedSubview(redLabel)
+
+        let textField = UITextField()
+        textField.borderStyle = .roundedRect
+        textField.text = "blocked-textfield-text"
+        textField.accessibilityIdentifier = "nr-block"
+        fieldsStack.addArrangedSubview(textField)
+
+        let textView = UITextView()
+        textView.text = "blocked-textview-text"
+        textView.textColor = .systemBlue
+        textView.layer.borderWidth = 1
+        textView.layer.borderColor = UIColor.systemGray4.cgColor
+        textView.accessibilityIdentifier = "nr-block"
+        textView.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        fieldsStack.addArrangedSubview(textView)
+
+        // Block on a container; the child label has no tag and should be blocked through it.
+        let container = UIView()
+        container.backgroundColor = .systemYellow.withAlphaComponent(0.3)
+        container.accessibilityIdentifier = "nr-block"
+        let childLabel = UILabel()
+        childLabel.text = "blocked-container-child"
+        childLabel.textColor = .systemGreen
+        childLabel.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(childLabel)
+        NSLayoutConstraint.activate([
+            container.heightAnchor.constraint(equalToConstant: 36),
+            childLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 8),
+            childLabel.centerYAnchor.constraint(equalTo: container.centerYAnchor)
+        ])
+        fieldsStack.addArrangedSubview(container)
+
+        // Blocked at runtime: the button adds or removes nr-block on a label that's already on
+        // screen, so the replay has to switch it between plain text and a black box.
+        let toggleLabel = UILabel()
+        toggleLabel.text = "blocked-toggle-label"
+        toggleLabel.textColor = .systemRed
+        fieldsStack.addArrangedSubview(toggleLabel)
+
+        let toggleButton = UIButton(type: .system)
+        toggleButton.setTitle("Toggle block on label above", for: .normal)
+        toggleButton.addAction(UIAction { _ in
+            let isBlocked = toggleLabel.accessibilityIdentifier != "nr-block"
+            toggleLabel.accessibilityIdentifier = isBlocked ? "nr-block" : nil
+            NewRelic.logVerbose("Blocked Fields: toggle label blocked=\(isBlocked) at \(Int(Date().timeIntervalSince1970 * 1000))")
+        }, for: .touchUpInside)
+        fieldsStack.addArrangedSubview(toggleButton)
+
+        let sectionStack = UIStackView(arrangedSubviews: [sectionLabel, fieldsStack])
+        sectionStack.axis = .vertical
+        sectionStack.spacing = 8
+        return sectionStack
+    }
 
     private func createSearchAndCredentialsSection() -> UIStackView {
         let sectionLabel = UILabel()

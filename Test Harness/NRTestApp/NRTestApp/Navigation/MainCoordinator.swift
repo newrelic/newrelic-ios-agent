@@ -116,6 +116,15 @@ class MainCoordinator: Coordinator {
 #endif
     }
     
+    // Pushes the SwiftUI masking page directly (skipping the SwiftUI list) for unattended runs.
+    func showSwiftUIMaskingView() {
+#if os(iOS)
+        if #available(iOS 15.0, *) {
+            navigationController.pushViewController(UIHostingController(rootView: MaskingView()), animated: true)
+        }
+#endif
+    }
+
     func showSwiftUICustomerView() {
 #if os(iOS)
         if #available(iOS 15.0, *) {

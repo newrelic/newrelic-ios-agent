@@ -44,7 +44,6 @@ class ViewController: UIViewController {
         
         setupTimeLabel()
         startTimer()
-        
         viewModel.error.onUpdate = { [weak self] _ in
             if let error = self?.viewModel.error.value {
                 NewRelic.recordError(error)
