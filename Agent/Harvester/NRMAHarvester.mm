@@ -347,7 +347,7 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
 - (void) clearStoredHarvesterConfiguration
 {
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-    configuration.cross_process_id  = @"";
+    [self harvesterConfiguration].cross_process_id = @"";
     [defaults removeObjectForKey:kNRMAHarvesterConfigurationStoreKey];
     [defaults synchronize];
 }
@@ -596,11 +596,12 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
     }
     
     if ([response isOK]) {
-        [self storeConfiguration:[self configureFromCollector:response]];
-        if (configuration == nil) {
+        NRMAHarvesterConfiguration* collectorConfiguration = [self configureFromCollector:response];
+        if (collectorConfiguration == nil) {
             NRLOG_AGENT_ERROR(@"Unable to configure Harvester using Collector Configuration");
             return;
         }
+        [self storeConfiguration:collectorConfiguration];
         // Configuration saved here.
         configuration.application_token = connection.applicationToken;
         [self saveHarvesterConfiguration:configuration];

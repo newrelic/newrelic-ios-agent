@@ -268,32 +268,23 @@ static atomic_ulong sNRMARaceTestBadHeaders;
     [super tearDown];
 }
 
-- (void) assertCrossProcessIdentifierSurvivesRepeated:(void (^)(void))writer
+- (void) runOnEveryCore:(void (^)(void))reader whileRepeating:(void (^)(void))writer
 {
     atomic_store(&sNRMARaceTestFinished, false);
     atomic_store(&sNRMARaceTestReads, 0);
-    atomic_store(&sNRMARaceTestBadHeaders, 0);
-
-    NSURLRequest* request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"https://example.com/"]];
 
     NSUInteger readerCount = MAX([[NSProcessInfo processInfo] activeProcessorCount], (NSUInteger)4);
     dispatch_group_t readers = dispatch_group_create();
     for (NSUInteger i = 0; i < readerCount; i++) {
         dispatch_group_async(readers, dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
             unsigned long reads = 0;
-            unsigned long badHeaders = 0;
             while (!atomic_load(&sNRMARaceTestFinished)) {
                 @autoreleasepool {
-                    NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
-                    NSString* header = [mutableRequest valueForHTTPHeaderField:NEW_RELIC_CROSS_PROCESS_ID_HEADER_KEY];
-                    if (header != nil && ![header hasPrefix:@"190#"]) {
-                        badHeaders++;
-                    }
-                    reads++;
+                    reader();
                 }
+                reads++;
             }
             atomic_fetch_add(&sNRMARaceTestReads, reads);
-            atomic_fetch_add(&sNRMARaceTestBadHeaders, badHeaders);
         });
     }
 
@@ -312,6 +303,21 @@ static atomic_ulong sNRMARaceTestBadHeaders;
 
     XCTAssertGreaterThan(writes, 0UL);
     XCTAssertGreaterThan(atomic_load(&sNRMARaceTestReads), 0UL);
+}
+
+- (void) assertCrossProcessIdentifierSurvivesRepeated:(void (^)(void))writer
+{
+    atomic_store(&sNRMARaceTestBadHeaders, 0);
+    NSURLRequest* request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"https://example.com/"]];
+
+    [self runOnEveryCore:^{
+        NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
+        NSString* header = [mutableRequest valueForHTTPHeaderField:NEW_RELIC_CROSS_PROCESS_ID_HEADER_KEY];
+        if (header != nil && ![header hasPrefix:@"190#"]) {
+            atomic_fetch_add(&sNRMARaceTestBadHeaders, 1);
+        }
+    } whileRepeating:writer];
+
     XCTAssertEqual(atomic_load(&sNRMARaceTestBadHeaders), 0UL);
 }
 
@@ -329,6 +335,17 @@ static atomic_ulong sNRMARaceTestBadHeaders;
     [self assertCrossProcessIdentifierSurvivesRepeated:^{
         [writer disconnected];
         [writer clearStoredHarvesterConfiguration];
+    }];
+}
+
+// +[NewRelicAgentInternal shutdown] calls it on the caller's thread, not the harvest thread.
+- (void) testClearStoredHarvesterConfigurationWhileDisconnectedReplacesConfiguration
+{
+    NRMAConfigurationReplacingHarvester* writer = harvester;
+    [self runOnEveryCore:^{
+        [writer clearStoredHarvesterConfiguration];
+    } whileRepeating:^{
+        [writer disconnected];
     }];
 }
 
