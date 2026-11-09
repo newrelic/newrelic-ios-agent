@@ -17,7 +17,7 @@
 //  emitted from -completeActivityTrace..., which the cap does not gate.
 //
 //  This is what settles the open schema questions in the MobileView DACI — whether an appearance
-//  produces one event or two, and whether loadTime/timeVisible ship as seconds or milliseconds —
+//  produces one event or two, and whether loadTimeMs/timeVisibleMs ship as seconds or milliseconds —
 //  because it shows what actually goes on the wire rather than what the headers claim.
 //
 //  Port 8080, and it has to be exactly that. NRMAAgentConfiguration only turns TLS off when the
@@ -195,8 +195,8 @@ final class NRCollectorStub {
         var line = "\(phase) \(value(event, "viewName").padded(to: 28))"
         line += " prev=\(value(event, "previousView").padded(to: 22))"
         line += " inst=\(String(value(event, "viewInstanceId").prefix(8)))"
-        if event["loadTime"] != nil    { line += " load=\(value(event, "loadTime"))" }
-        if event["timeVisible"] != nil { line += " visible=\(value(event, "timeVisible"))" }
+        if event["loadTimeMs"] != nil    { line += " load=\(value(event, "loadTimeMs"))" }
+        if event["timeVisibleMs"] != nil { line += " visible=\(value(event, "timeVisibleMs"))" }
         // Present only when an interaction was still running as this view disappeared — i.e. the
         // user navigated away mid-load.
         if event["interactionId"] != nil {

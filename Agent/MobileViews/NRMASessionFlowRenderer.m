@@ -199,7 +199,7 @@ static NSNumber *NRMAMedian(NSArray<NSNumber *> *values) {
 }
 
 /// headline_ms(): what the slow threshold is judged against. Full display over initial display,
-/// because a screen that paints a spinner fast is not a fast screen; loadTime when it has neither.
+/// because a screen that paints a spinner fast is not a fast screen; loadTimeMs when it has neither.
 - (NSNumber *)headline:(NSString *)view {
     NSDictionary<NSString *, NSMutableArray<NSNumber *> *> *per = self.timings[view];
     if (per.count > 0) {
@@ -276,7 +276,7 @@ static NSNumber *NRMAMedian(NSArray<NSNumber *> *values) {
         }];
     };
     addLoads(graph.loadTimeTotals, graph.loadTimeCounts);
-    // A folded segment's loadTime measures part of a screen, not the screen becoming visible.
+    // A folded segment's loadTimeMs measures part of a screen, not the screen becoming visible.
     if (collapse.count == 0) addLoads(graph.componentLoadTimeTotals, graph.componentLoadTimeCounts);
 
     // add_breadcrumbs()
@@ -707,7 +707,7 @@ static BOOL NRMAPresent(double value) {
             long long loadMs = hasLoad ? (long long)visit.loadMilliseconds : 0;
             long long appear = rel(visit.appear);
 
-            // The construction window the agent measured as loadTime, drawn before the appearance.
+            // The construction window the agent measured as loadTimeMs, drawn before the appearance.
             if (hasLoad) {
                 [lines addObject:[NSString stringWithFormat:@"    load %lldms :done, %@%lu, %lld, %lld",
                                   loadMs, kNRMALoadTaskId, (unsigned long)task, appear - loadMs, appear]];

@@ -117,7 +117,7 @@ final class NRCollectorStub {
         """)
 
         // Ordered by timestamp so a screen's life reads as a timeline: the view appears, the requests
-        // and breadcrumbs it caused follow, then it disappears with its timeVisible.
+        // and breadcrumbs it caused follow, then it disappears with its timeVisibleMs.
         let timeline = events.sorted {
             (($0["timestamp"] as? NSNumber)?.doubleValue ?? 0) <
             (($1["timestamp"] as? NSNumber)?.doubleValue ?? 0)
@@ -139,8 +139,8 @@ final class NRCollectorStub {
             var line = "\(phase) \(pad(string(event, "viewName"), 28))"
             line += " prev=\(pad(string(event, "previousView"), 22))"
             line += " platform=\(string(event, "uiFramework"))"
-            if event["loadTime"] != nil    { line += " load=\(string(event, "loadTime"))" }
-            if event["timeVisible"] != nil { line += " visible=\(string(event, "timeVisible"))" }
+            if event["loadTimeMs"] != nil    { line += " load=\(string(event, "loadTimeMs"))" }
+            if event["timeVisibleMs"] != nil { line += " visible=\(string(event, "timeVisibleMs"))" }
             return line
 
         case "MobileBreadcrumb":

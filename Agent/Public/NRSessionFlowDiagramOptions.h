@@ -34,7 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
  * A component is a MobileView event carrying `component: YES` and `componentOf: <screen name>` —
  * a part of a screen rather than a destination the user navigated to. Default NO, which folds each
  * component onto its owning screen so a screen's internal segments do not masquerade as navigation
- * steps. Folded components also drop their own `loadTime` rather than skewing the screen's average.
+ * steps. Folded components also drop their own `loadTimeMs` rather than skewing the screen's average.
  * `--include-components` in the script.
  */
 @property (nonatomic) BOOL includeComponents;
@@ -50,7 +50,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * Label screens with their MobileViewTiming medians (TTID, TTFD, ...) and lie window. Default YES.
- * NO labels screens with average loadTime only, as `--no-timings` does.
+ * NO labels screens with average loadTimeMs only, as `--no-timings` does.
  */
 @property (nonatomic) BOOL includeTimings;
 
@@ -70,7 +70,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * Highlight a screen red when its median full-display time (or initial display, or average
- * loadTime, whichever it has) is at least this many milliseconds. Default 500. `--slow-ms`.
+ * loadTimeMs, whichever it has) is at least this many milliseconds. Default 500. `--slow-ms`.
  */
 @property (nonatomic) double slowLoadThresholdMilliseconds;
 

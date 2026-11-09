@@ -20,11 +20,11 @@ static NSString * const kNRAttr_previousView = @"previousView";
 static NSString * const kNRAttr_currentView  = @"currentView";
 static NSString * const kNRAttr_appeared     = @"appeared";
 static NSString * const kNRAttr_reappeared   = @"reappeared";
-static NSString * const kNRAttr_loadTime     = @"loadTime";
+static NSString * const kNRAttr_loadTimeMs   = @"loadTimeMs";
 static NSString * const kNRAttr_component    = @"component";
 static NSString * const kNRAttr_componentOf  = @"componentOf";
 static NSString * const kNRAttr_timingName   = @"timingName";
-static NSString * const kNRAttr_timingValue  = @"timingValue";
+static NSString * const kNRAttr_durationMs   = @"durationMs";
 
 /// A non-empty string, or nil. The script's `if row.get(key):` for a string field.
 static NSString *NRMANonEmptyString(id value) {
@@ -126,7 +126,7 @@ static BOOL NRMATruthy(id value) {
         _componentOwners[viewName] = owner;
     }
 
-    // appear_events(): a disappear event carries timeVisible, not a transition.
+    // appear_events(): a disappear event carries timeVisibleMs, not a transition.
     id appeared = attributes[kNRAttr_appeared];
     if ([appeared isKindOfClass:[NSNumber class]] && ![appeared boolValue]) return;
     if (viewName == nil) return;
@@ -134,7 +134,7 @@ static BOOL NRMATruthy(id value) {
     NSString *previousView = NRMANonEmptyString(attributes[kNRAttr_previousView]);
     [self addTransitionFrom:previousView to:viewName isBack:NRMATruthy(attributes[kNRAttr_reappeared])];
 
-    id loadTime = attributes[kNRAttr_loadTime];
+    id loadTime = attributes[kNRAttr_loadTimeMs];
     if ([loadTime isKindOfClass:[NSNumber class]]) {
         [self addLoadTime:[loadTime doubleValue] forView:viewName component:isComponent];
     }
@@ -187,7 +187,7 @@ static BOOL NRMATruthy(id value) {
 - (void)recordViewTimingAttributes:(NSDictionary<NSString *, id> *)attributes {
     NSString *viewName = NRMANonEmptyString(attributes[kNRAttr_viewName]);
     NSString *timingName = NRMANonEmptyString(attributes[kNRAttr_timingName]);
-    id value = attributes[kNRAttr_timingValue];
+    id value = attributes[kNRAttr_durationMs];
     // A timing recorded with no view current has nothing on the diagram to attach to.
     if (viewName == nil || timingName == nil || ![value isKindOfClass:[NSNumber class]]) return;
     if (_timingSamples.count >= NRMASessionFlowMaxTimingSamples) {

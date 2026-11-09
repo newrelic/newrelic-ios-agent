@@ -14,10 +14,10 @@ static NSString * const kNRAttr_viewName       = @"viewName";
 static NSString * const kNRAttr_viewInstanceId = @"viewInstanceId";
 static NSString * const kNRAttr_appeared       = @"appeared";
 static NSString * const kNRAttr_reappeared     = @"reappeared";
-static NSString * const kNRAttr_timeVisible    = @"timeVisible";
-static NSString * const kNRAttr_loadTime       = @"loadTime";
+static NSString * const kNRAttr_timeVisibleMs  = @"timeVisibleMs";
+static NSString * const kNRAttr_loadTimeMs     = @"loadTimeMs";
 static NSString * const kNRAttr_timingName     = @"timingName";
-static NSString * const kNRAttr_timingValue    = @"timingValue";
+static NSString * const kNRAttr_durationMs     = @"durationMs";
 
 typedef NS_ENUM(NSInteger, NRMATimelineAppeared) {
     NRMATimelineAppearedAbsent = -1,   // the current contract: one event per visit, no `appeared`
@@ -35,7 +35,7 @@ typedef NS_ENUM(NSInteger, NRMATimelineAppeared) {
 @property (nonatomic) double timeVisible;                   // NaN when absent
 @property (nonatomic) double loadTime;                      // NaN when absent
 @property (nonatomic) BOOL reappeared;
-@property (nonatomic, strong, nullable) NSNumber *value;    // timingValue
+@property (nonatomic, strong, nullable) NSNumber *value;    // durationMs
 @end
 
 @implementation NRMATimelineRow
@@ -123,8 +123,8 @@ static double NRMATimelineNumber(id value) {
     row.appeared = [appeared isKindOfClass:[NSNumber class]]
         ? ([appeared boolValue] ? NRMATimelineAppearedYes : NRMATimelineAppearedNo)
         : NRMATimelineAppearedAbsent;
-    row.timeVisible = NRMATimelineNumber(attributes[kNRAttr_timeVisible]);
-    row.loadTime = NRMATimelineNumber(attributes[kNRAttr_loadTime]);
+    row.timeVisible = NRMATimelineNumber(attributes[kNRAttr_timeVisibleMs]);
+    row.loadTime = NRMATimelineNumber(attributes[kNRAttr_loadTimeMs]);
     row.reappeared = [attributes[kNRAttr_reappeared] isKindOfClass:[NSNumber class]]
         && [attributes[kNRAttr_reappeared] boolValue];
     [_rows addObject:row];
@@ -141,7 +141,7 @@ static double NRMATimelineNumber(id value) {
     row.timestamp = timestamp;
     row.instance = NRMATimelineString(attributes[kNRAttr_viewInstanceId]);
     row.name = NRMATimelineString(attributes[kNRAttr_timingName]);
-    id value = attributes[kNRAttr_timingValue];
+    id value = attributes[kNRAttr_durationMs];
     row.value = [value isKindOfClass:[NSNumber class]] ? value : nil;
     [_rows addObject:row];
 }
@@ -187,7 +187,7 @@ static double NRMATimelineNumber(id value) {
         if (row.appeared == NRMATimelineAppearedAbsent && row.name != nil && row.instance != nil
                 && !isnan(row.timeVisible)) {
             // One event per visit, emitted when it ends: the timestamp is the bar's right edge and
-            // timeVisible reaches back to its left.
+            // timeVisibleMs reaches back to its left.
             NRMASessionTimelineVisit *visit = [[NRMASessionTimelineVisit alloc] init];
             visit.name = row.name;
             visit.appear = row.timestamp - row.timeVisible;

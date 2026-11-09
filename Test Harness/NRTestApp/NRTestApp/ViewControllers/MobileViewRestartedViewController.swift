@@ -16,9 +16,9 @@
 //
 //  What to expect from the child's events, per push (one event per visit, at viewDidDisappear:):
 //
-//    push #1  loadTime = the real viewDidLoad → viewDidAppear span, plus timeVisible
+//    push #1  loadTimeMs = the real viewDidLoad → viewDidAppear span, plus timeVisibleMs
 //
-//    push #2+ `loadTime` is OMITTED, not zero, and `loadTimeUnavailable` says why. viewDidLoad does
+//    push #2+ `loadTimeMs` is OMITTED, not zero, and `loadTimeUnavailableReason` says why. viewDidLoad does
 //             not run again and the load timestamp was cleared on the previous disappear, so there
 //             is no span to report — "never observed" rather than "took no time". For the same
 //             reason no MobileView/<viewName> segment is added to the covering interaction's
@@ -73,8 +73,8 @@ class MobileViewRestartedViewController: UIViewController {
     @objc private func pushRetainedTapped() {
         pushCount += 1
         let expectation = pushCount == 1
-            ? "expect: one event on pop, carrying a real loadTime"
-            : "expect: one event on pop, loadTime omitted (no reload) with loadTimeUnavailable set"
+            ? "expect: one event on pop, carrying a real loadTimeMs"
+            : "expect: one event on pop, loadTimeMs omitted (no reload) with loadTimeUnavailableReason set"
         append("push #\(pushCount) of the same instance — \(expectation)")
         navigationController?.pushViewController(retainedChild, animated: true)
     }
@@ -126,9 +126,9 @@ class MobileViewRestartedViewController: UIViewController {
         intro.font = .preferredFont(forTextStyle: .callout)
         intro.text = """
             A screen's load span is tracked per view-controller instance, so a freshly allocated \
-            screen always reports a real loadTime. Push the retained child below more than once to \
-            see loadTime drop out of its event — viewDidLoad does not run a second time, so there \
-            is nothing to measure and `loadTimeUnavailable` says so.
+            screen always reports a real loadTimeMs. Push the retained child below more than once to \
+            see loadTimeMs drop out of its event — viewDidLoad does not run a second time, so there \
+            is nothing to measure and `loadTimeUnavailableReason` says so.
             """
         stack.addArrangedSubview(intro)
 
@@ -136,7 +136,7 @@ class MobileViewRestartedViewController: UIViewController {
         stack.addArrangedSubview(readoutLabel)
 
         stack.addArrangedSubview(sectionHeader("Push the same instance again"))
-        stack.addArrangedSubview(button("Push retained child (re-visit / loadTime)", #selector(pushRetainedTapped)))
+        stack.addArrangedSubview(button("Push retained child (re-visit / loadTimeMs)", #selector(pushRetainedTapped)))
 
         stack.addArrangedSubview(sectionHeader("Empty nrMobileViewName() → class-name fallback"))
         stack.addArrangedSubview(button("Push legacy-named child (returns \"\")", #selector(pushLegacyNamedTapped)))
@@ -165,7 +165,7 @@ class MobileViewRestartedViewController: UIViewController {
         readoutLabel.text = """
             viewDidLoad     = \(retainedChild.loadCount)   (only ever 1 — the instance is reused)
             viewDidAppear   = \(retainedChild.appearCount)
-            expect loadTime on next event        = \(retainedChild.appearCount <= 1)
+            expect loadTimeMs on next event        = \(retainedChild.appearCount <= 1)
             """
     }
 
@@ -220,7 +220,7 @@ class MobileViewRestartedChildViewController: UIViewController {
         intro.text = """
             This is the same object each time. Go back and push again: viewDidLoad stays at 1, so on \
             the second and later visits the agent has no load span to report — the event omits \
-            loadTime entirely and carries `loadTimeUnavailable` instead.
+            loadTimeMs entirely and carries `loadTimeUnavailableReason` instead.
             """
         view.addSubview(intro)
         view.addSubview(label)

@@ -147,11 +147,11 @@ private func analyticsEventChecks(events: [[String: Any]], httpCount: Int) -> [V
 // Three producers write this event type and they do not emit an identical set of keys, so the checks
 // below assert only what all of them are required to carry, plus the type of everything optional:
 //
-//   UIKit    NRMAMobileViewTracker — one event per visit, at viewDidDisappear:, carrying timeVisible
-//            and loadTime (or loadTimeUnavailable when the load was never observed).
+//   UIKit    NRMAMobileViewTracker — one event per visit, at viewDidDisappear:, carrying timeVisibleMs
+//            and loadTimeMs (or loadTimeUnavailableReason when the load was never observed).
 //   SwiftUI  NRMobileViewModifier — one event per visit, at onDisappear, same shape.
 //   SwiftUI  NRMobileTabTrackingModifier — a tab switch is not a view lifecycle event, so it carries
-//            neither timeVisible nor loadTime, and is marked navigationKind = tab.
+//            neither timeVisibleMs nor loadTimeMs, and is marked navigationKind = tab.
 //
 // There is no `appeared` attribute: MobileView is one event per completed visit, so the flag that
 // used to tell the appear half from the disappear half carries no information. `restarted` is gone
@@ -192,12 +192,12 @@ private func mobileViewChecks(events: [[String: Any]]) -> [VerificationCheck] {
               detail: Set(events.compactMap { $0["uiFramework"] as? String }).sorted().joined(separator: ",")),
         
         // Timings are milliseconds and non-negative. Both are optional per producer, so type-check
-        // them only where present — an absent loadTime means the load was never observed (a view
+        // them only where present — an absent loadTimeMs means the load was never observed (a view
         // reappearing without reloading), which is distinct from a load of zero.
-        check("MobileView: loadTime is non-negative NSNumber when present",
-              optional("loadTime", in: events, is: isNonNegativeNumber)),
-        check("MobileView: timeVisible is non-negative NSNumber when present",
-              optional("timeVisible", in: events, is: isNonNegativeNumber)),
+        check("MobileView: loadTimeMs is non-negative NSNumber when present",
+              optional("loadTimeMs", in: events, is: isNonNegativeNumber)),
+        check("MobileView: timeVisibleMs is non-negative NSNumber when present",
+              optional("timeVisibleMs", in: events, is: isNonNegativeNumber)),
 
         // Referrer / correlation attributes, all optional (absent on the first view of a session and
         // when no interaction is running).
@@ -205,12 +205,12 @@ private func mobileViewChecks(events: [[String: Any]]) -> [VerificationCheck] {
         check("MobileView: interactionId is String when present",  optional("interactionId", in: events, is: isString)),
     ]
 
-    // A lifecycle event *is* a closed-out visit, so timeVisible is required on all of them. Only a
+    // A lifecycle event *is* a closed-out visit, so timeVisibleMs is required on all of them. Only a
     // tab switch is exempt, and those are filtered out above.
     if !lifecycleEvts.isEmpty {
         checks.append(check(
-            "MobileView: lifecycle events carry timeVisible",
-            lifecycleEvts.allSatisfy { $0["timeVisible"] is NSNumber },
+            "MobileView: lifecycle events carry timeVisibleMs",
+            lifecycleEvts.allSatisfy { $0["timeVisibleMs"] is NSNumber },
             detail: "lifecycleEvents=\(lifecycleEvts.count)"
         ))
     }

@@ -49,7 +49,7 @@ MOBILE_VIEW_TIMING = "MobileViewTiming"
 MOBILE_BREADCRUMB = "MobileBreadcrumb"
 START = "__start__"
 
-# The agent's own baseline timing, projected from loadTime. Named here because the lie window is
+# The agent's own baseline timing, projected from loadTimeMs. Named here because the lie window is
 # defined against it and because it must sort first in a screen's timing block.
 TIMING_INITIAL_DISPLAY = "timeToInitialDisplay"
 TIMING_FULL_DISPLAY = "timeToFullDisplay"
@@ -147,7 +147,7 @@ def appear_events(rows, session=None, include_components=False):
             continue
         if row.get("eventType", MOBILE_VIEW) != MOBILE_VIEW:
             continue
-        # Only appear events carry previousView and loadTime; disappear events carry timeVisible.
+        # Only appear events carry previousView and loadTimeMs; disappear events carry timeVisibleMs.
         if row.get("appeared") is False:
             continue
         if not row.get("viewName"):
@@ -159,7 +159,7 @@ def appear_events(rows, session=None, include_components=False):
 
 
 def timing_events(rows, session=None):
-    """Keep only MobileViewTiming events, which carry timingName / timingValue.
+    """Keep only MobileViewTiming events, which carry timingName / durationMs.
 
     Unlike appear events these are not navigation steps; they attach to a visit that a MobileView
     row already established. Rows with no view identity (recordViewTiming: called with no view
@@ -173,7 +173,7 @@ def timing_events(rows, session=None):
             continue
         if not row.get("viewName") or not row.get("timingName"):
             continue
-        if not isinstance(row.get("timingValue"), (int, float)):
+        if not isinstance(row.get("durationMs"), (int, float)):
             continue
         if session and str(row.get("sessionId", "")) != session:
             continue
@@ -291,7 +291,7 @@ class Graph:
         """The number --slow-ms is judged against.
 
         Prefers full display over initial display, because a screen that paints a spinner fast is
-        not a fast screen. Falls back to loadTime so dumps with no timing events behave as before.
+        not a fast screen. Falls back to loadTimeMs so dumps with no timing events behave as before.
         """
         per = self.timings.get(view)
         if per:
@@ -367,7 +367,7 @@ def build_graph(rows, aggregated, ordered_walk=False, collapse=None):
             g.add_edge(src, dst, count)
             if back_count:
                 g.back[(src, dst)] += back_count
-            for key in ("average.loadTime", "Avg load (ms)", "loadTime"):
+            for key in ("average.loadTimeMs", "Avg load (ms)", "loadTimeMs"):
                 if isinstance(row.get(key), (int, float)):
                     g.load_totals[dst] += row[key] * max(count, 1)
                     g.load_counts[dst] += max(count, 1)
@@ -387,8 +387,8 @@ def build_graph(rows, aggregated, ordered_walk=False, collapse=None):
         else:
             g.nodes.add(dst)
         folded = bool(collapse) and bool(row.get("component"))
-        if isinstance(row.get("loadTime"), (int, float)) and not folded:
-            g.add_load(dst, row["loadTime"])
+        if isinstance(row.get("loadTimeMs"), (int, float)) and not folded:
+            g.add_load(dst, row["loadTimeMs"])
         # Only meaningful when segments are drawn; a folded segment IS its owner by now.
         owner = row.get("componentOf")
         if row.get("component") and owner and not folded:
@@ -415,7 +415,7 @@ def add_timings(g, timing_rows, collapse=None):
             # Only attribute to a route the diagram actually draws.
             if (previous, view) not in g.edges:
                 previous = None
-        g.add_timing(view, row["timingName"], float(row["timingValue"]), previous=previous)
+        g.add_timing(view, row["timingName"], float(row["durationMs"]), previous=previous)
     return skipped
 
 
@@ -563,7 +563,7 @@ def render(g, slow_ms, lie_ms=None, edge_timings=True, title=None, fold_min=0, b
                 # Signed: TTFD can land before TTID, and "+-26" reads as a typo.
                 label += f"<br/>lie {lie:+.0f} ms"
         else:
-            # No timing events in this dump: fall back to the loadTime line, as before.
+            # No timing events in this dump: fall back to the loadTimeMs line, as before.
             avg = g.avg_load(node)
             if avg is not None:
                 label += f"<br/>{avg:.0f} ms"
@@ -776,7 +776,7 @@ def build_timeline(rows, max_visits=25):
     timeline, which is the whole point of putting it on a time axis.
 
     Two event shapes are accepted. The current iOS contract emits one MobileView per visit, when the
-    visit *ends*: its timestamp is the end of the bar and `timeVisible` reaches back to the start.
+    visit *ends*: its timestamp is the end of the bar and `timeVisibleMs` reaches back to the start.
     The older contract emitted an `appeared: true` event at the start and an `appeared: false` one
     at the end. Reading the one-event shape as if it were an appear event put every bar's start at
     its end and ran every bar to the end of the session.
@@ -792,14 +792,14 @@ def build_timeline(rows, max_visits=25):
         instance = row.get("viewInstanceId")
         etype = row.get("eventType", MOBILE_VIEW)
         appeared = row.get("appeared")
-        visible_ms = row.get("timeVisible")
+        visible_ms = row.get("timeVisibleMs")
 
         if etype == MOBILE_VIEW and appeared is None and row.get("viewName") and instance \
                 and isinstance(visible_ms, (int, float)):
             visits[instance] = {
                 "name": row["viewName"],
                 "appear": ts - visible_ms,
-                "load_ms": row["loadTime"] if isinstance(row.get("loadTime"), (int, float)) else None,
+                "load_ms": row["loadTimeMs"] if isinstance(row.get("loadTimeMs"), (int, float)) else None,
                 "reappeared": bool(row.get("reappeared")),
                 "end": ts,
                 "marks": [],
@@ -810,20 +810,20 @@ def build_timeline(rows, max_visits=25):
             visits[instance] = {
                 "name": row["viewName"],
                 "appear": ts,
-                "load_ms": row["loadTime"] if isinstance(row.get("loadTime"), (int, float)) else None,
+                "load_ms": row["loadTimeMs"] if isinstance(row.get("loadTimeMs"), (int, float)) else None,
                 "reappeared": bool(row.get("reappeared")),
                 "end": None,
                 "marks": [],
             }
         elif etype == MOBILE_VIEW and appeared is False and instance in visits:
-            # The disappear event's own timestamp ends the bar; timeVisible would say the same.
+            # The disappear event's own timestamp ends the bar; timeVisibleMs would say the same.
             visits[instance]["end"] = ts
         elif etype == MOBILE_VIEW_TIMING and instance:
-            if not row.get("timingName") or not isinstance(row.get("timingValue"), (int, float)):
+            if not row.get("timingName") or not isinstance(row.get("durationMs"), (int, float)):
                 continue
             # Attached after the loop: a timing is recorded during its visit, so under the
             # one-event-per-visit contract it arrives *before* the event that names the visit.
-            marks.append((instance, (ts, row["timingName"], float(row["timingValue"]))))
+            marks.append((instance, (ts, row["timingName"], float(row["durationMs"]))))
 
     for instance, mark in marks:
         if instance in visits:
@@ -906,7 +906,7 @@ def render_timeline(visits, origin, exact_origin, title=None, axis_format="%M:%S
 
 
 # How far a timeToInitialDisplay mark may sit from the end of the load bar and still be the same
-# instant. The agent derives TTID from loadTime and records it as the view appears.
+# instant. The agent derives TTID from loadTimeMs and records it as the view appears.
 TTID_AT_APPEAR_MS = 5
 
 # Task-id prefix for load bars, which the gantt's themeCSS keys on to hide their labels.
@@ -921,7 +921,7 @@ def timeline_visit_tasks(visit, nth, rel, session_end, load_id):
     """
     lines = []
     appear = rel(visit["appear"])
-    # The construction window the agent measured as loadTime, drawn before the appearance.
+    # The construction window the agent measured as loadTimeMs, drawn before the appearance.
     if visit["load_ms"]:
         start = appear - int(visit["load_ms"])
         lines.append(f"    load {int(visit['load_ms'])}ms :done, {load_id}, {start}, {appear}")
@@ -1047,13 +1047,13 @@ def main():
                          "raw event-list input only, ignored for aggregated input")
     ap.add_argument("--slow-ms", type=float, default=500.0, metavar="MS",
                     help="highlight screens in red whose median full-display time is at least MS, "
-                         "falling back to average loadTime when no timings are present "
+                         "falling back to average loadTimeMs when no timings are present "
                          "(default: 500)")
     ap.add_argument("--lie-ms", type=float, default=250.0, metavar="MS",
                     help="highlight screens in amber whose lie window (full display minus initial "
                          "display) is at least MS (default: 250)")
     ap.add_argument("--no-timings", action="store_true",
-                    help="ignore MobileViewTiming events and label screens with loadTime only")
+                    help="ignore MobileViewTiming events and label screens with loadTimeMs only")
     ap.add_argument("--no-edge-timings", action="store_true",
                     help="do not label arrows with the cost of landing on that route")
     ap.add_argument("--fold-leaves", type=int, default=6, metavar="N",

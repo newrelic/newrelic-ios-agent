@@ -51,7 +51,7 @@ FOUNDATION_EXPORT const NSUInteger NRMASessionFlowMaxTimingSamples;
  */
 - (void)recordMobileViewAttributes:(nullable NSDictionary<NSString *, id> *)attributes;
 
-/// Stores one MobileViewTiming event's `timingName` / `timingValue` against its `viewName` and the
+/// Stores one MobileViewTiming event's `timingName` / `durationMs` against its `viewName` and the
 /// `previousView` of the visit it was recorded in. Rows missing any of those three are dropped.
 - (void)recordViewTimingAttributes:(nullable NSDictionary<NSString *, id> *)attributes;
 
@@ -68,12 +68,12 @@ FOUNDATION_EXPORT const NSUInteger NRMASessionFlowMaxTimingSamples;
 @property (nonatomic, readonly) NSDictionary<NRMASessionFlowEdgeKey, NSNumber *> *backEdgeCounts;
 /// Every view name that is an endpoint of some transition, component segments included.
 @property (nonatomic, readonly) NSSet<NSString *> *nodes;
-/// view name → summed loadTime, ms, from rows *not* flagged `component`.
+/// view name → summed loadTimeMs from rows *not* flagged `component`.
 @property (nonatomic, readonly) NSDictionary<NSString *, NSNumber *> *loadTimeTotals;
 /// view name → number of those samples.
 @property (nonatomic, readonly) NSDictionary<NSString *, NSNumber *> *loadTimeCounts;
 /// As loadTimeTotals, for rows flagged `component`. Kept apart because folding drops them: a
-/// segment's loadTime measures a part of a screen, not the screen becoming visible.
+/// segment's loadTimeMs measures a part of a screen, not the screen becoming visible.
 @property (nonatomic, readonly) NSDictionary<NSString *, NSNumber *> *componentLoadTimeTotals;
 @property (nonatomic, readonly) NSDictionary<NSString *, NSNumber *> *componentLoadTimeCounts;
 /// component view name → owning screen, from every MobileView row. What folding collapses along.

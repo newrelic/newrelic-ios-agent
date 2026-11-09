@@ -27,7 +27,7 @@ FOUNDATION_EXPORT const NSUInteger NRMASessionTimelineMaxRows;
 @property (nonatomic) double appear;
 /// NaN when the visit had not ended when the session's rows stopped.
 @property (nonatomic) double end;
-/// NaN when the row carried no loadTime.
+/// NaN when the row carried no loadTimeMs.
 @property (nonatomic) double loadMilliseconds;
 @property (nonatomic) BOOL reappeared;
 /// Timing marks, each @[timestamp, timingName, value], in arrival order.
