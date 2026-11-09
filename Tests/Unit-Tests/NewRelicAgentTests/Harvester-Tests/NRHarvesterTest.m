@@ -17,6 +17,8 @@
 #import "NRMAAppToken.h"
 #import "NRMAExceptionMetaDataStore.h"
 #import "Constants.h"
+#import "NewRelicAgentInternal.h"
+#import "NRMAHandledExceptions.h"
 
 @interface NSBundle (AHHHH)
 + (NSBundle*) NRMA__mainBundle;
@@ -850,6 +852,42 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
                    @"the cached-config shortcut must prime the crash handler's account id mirror");
     XCTAssertEqual(NRMA_getAgentId(), (uint64_t)config.data_token.realAgentId,
                    @"the cached-config shortcut must prime the crash handler's agent id mirror");
+}
+
+- (void) testDisconnectedCachedConfigShortcutFlushesPersistedHandledExceptions
+{
+    [[NSUserDefaults standardUserDefaults] removeObjectForKey:kNRMAConnectionInformationKey];
+
+    NRMAHarvesterConfiguration* config = [self makeHarvestConfig];
+    [[NSUserDefaults standardUserDefaults] setValue:[config asDictionary] forKey:kNRMAHarvesterConfigurationStoreKey];
+    [[NSUserDefaults standardUserDefaults] setValue:[[NRMAAgentConfiguration connectionInformation] toApplicationIdentifier]
+                                              forKey:kNRMAApplicationIdentifierKey];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+
+    harvester.connection.harvestSession = [self makeMockURLSession];
+
+    // -flushPersistedHandledExceptions reaches through the shared agent instance
+    // to find the handled-exceptions controller, mirroring how the existing
+    // -handleSessionReplayConfigurationUpdate reaches -sessionReplayStart. Swap in
+    // a bare instance holding a mock controller so we can verify -onHarvest fires.
+    id mockNewRelicInternals = [OCMockObject mockForClass:[NewRelicAgentInternal class]];
+    NewRelicAgentInternal* bareAgent = [[NewRelicAgentInternal alloc] init];
+    id mockHandledExceptions = [OCMockObject mockForClass:[NRMAHandledExceptions class]];
+    bareAgent.handledExceptionsController = mockHandledExceptions;
+    [[[[mockNewRelicInternals stub] classMethod] andReturn:bareAgent] sharedInstance];
+
+    [[mockHandledExceptions expect] onHarvest];
+
+    [harvester execute]; // uninitialized -> disconnected
+    NRMAWaitForHarvesterToLeaveState(harvester, NRMA_HARVEST_UNINITIALIZED);
+
+    [harvester execute]; // disconnected -> connected, via the cached-config shortcut
+    NRMAWaitForHarvesterToLeaveState(harvester, NRMA_HARVEST_DISCONNECTED);
+    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_CONNECTED, @"a valid cached configuration should take the shortcut straight to connected");
+
+    [mockHandledExceptions verify];
+
+    [mockNewRelicInternals stopMocking];
 }
 
 - (void) testUninitializedToDisabled
