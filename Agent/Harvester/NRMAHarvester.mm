@@ -601,7 +601,9 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
             NRLOG_AGENT_ERROR(@"Unable to configure Harvester using Collector Configuration");
             return;
         }
+        collectorConfiguration.application_token = connection.applicationToken;
         [self storeConfiguration:collectorConfiguration];
+        // Configuration saved here.
         // Configuration saved here.
         configuration.application_token = connection.applicationToken;
         [self saveHarvesterConfiguration:configuration];
