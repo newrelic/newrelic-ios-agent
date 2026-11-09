@@ -17,6 +17,10 @@
 #import "NRMAAppToken.h"
 #import "NRMAFlags.h"
 #import <NewRelic/NewRelic-Swift.h>
+#import "NRMAExceptionMetaDataStore.h"
+#import "Constants.h"
+#import "NewRelicAgentInternal.h"
+#import "NRMAHandledExceptions.h"
 
 @interface NSBundle (AHHHH)
 + (NSBundle*) NRMA__mainBundle;
@@ -778,6 +782,114 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
 
     NRMAWaitForHarvesterToLeaveState(harvester, NRMA_HARVEST_DISCONNECTED);
     XCTAssertEqual(harvester.currentState, NRMA_HARVEST_CONNECTED, @"expected connected");
+}
+
+// Regression coverage for the cached-config shortcut in -disconnected priming the
+// crash handler's account/agent id mirror (NR-646041). That mirror is a
+// process-global C static that resets to 0 on every launch and is normally only
+// set by -saveHarvesterConfiguration:, which used to run only after a real
+// /connect round trip. A session that skips /connect entirely (because it already
+// has a valid, matching cached configuration) would otherwise run with the mirror
+// unset for its whole lifetime, so any crash recorded during that session would be
+// persisted with an invalid [0,0] data token.
+- (void) testDisconnectedCachedConfigShortcutPrimesAccountAndAgentIdMirror
+{
+    // Zero the mirror to simulate a fresh launch that hasn't connected yet.
+    NRMA_setAccountId(0);
+    NRMA_setAgentId(0);
+
+    // No prior connection info on record, so -uninitialized won't treat this as an
+    // app-version/device change and clear the cached configuration seeded below.
+    [[NSUserDefaults standardUserDefaults] removeObjectForKey:kNRMAConnectionInformationKey];
+
+    // Seed a valid, already-connected configuration plus the matching application
+    // identifier in NSUserDefaults -- exactly what a prior session's successful
+    // -saveHarvesterConfiguration: call would have left behind.
+    NRMAHarvesterConfiguration* config = [self makeHarvestConfig];
+    [[NSUserDefaults standardUserDefaults] setValue:[config asDictionary] forKey:kNRMAHarvesterConfigurationStoreKey];
+    [[NSUserDefaults standardUserDefaults] setValue:[[NRMAAgentConfiguration connectionInformation] toApplicationIdentifier]
+                                              forKey:kNRMAApplicationIdentifierKey];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+
+    // Record every request's URL instead of outright rejecting network calls:
+    // once CONNECTED, -execute immediately fires a real (legitimate) data harvest,
+    // so the only thing that would prove the shortcut actually fired is that
+    // /connect specifically was never hit, not that no network activity occurred.
+    NSMutableArray<NSURL*>* requestedURLs = [NSMutableArray array];
+    NSHTTPURLResponse* response = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://staging-mobile-collector.newrelic.com"]
+                                                                statusCode:200
+                                                               HTTPVersion:@"1.1"
+                                                              headerFields:nil];
+    NSData* responseData = [NSJSONSerialization dataWithJSONObject:[config asDictionary] options:0 error:nil];
+
+    id mockNSURLSession = [OCMockObject mockForClass:NSURLSession.class];
+    [[[mockNSURLSession stub] classMethod] andReturn:mockNSURLSession];
+    id mockUploadTask = [OCMockObject mockForClass:NSURLSessionUploadTask.class];
+    __block void (^completionHandler)(NSData*, NSURLResponse*, NSError*);
+    [[[[mockNSURLSession stub] andReturn:mockUploadTask] andDo:^(NSInvocation* invoke) {
+        __unsafe_unretained NSURLRequest* request;
+        [invoke getArgument:&request atIndex:2];
+        [requestedURLs addObject:request.URL];
+        [invoke getArgument:&completionHandler atIndex:4];
+    }] uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY completionHandler:OCMOCK_ANY];
+    [[[mockUploadTask stub] andDo:^(NSInvocation *invoke) {
+        completionHandler(responseData, response, nil);
+    }] resume];
+    harvester.connection.harvestSession = mockNSURLSession;
+
+    [harvester execute]; // uninitialized -> disconnected
+    NRMAWaitForHarvesterToLeaveState(harvester, NRMA_HARVEST_UNINITIALIZED);
+    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_DISCONNECTED, @"expected disconnected");
+
+    [harvester execute]; // disconnected -> connected, via the cached-config shortcut
+    NRMAWaitForHarvesterToLeaveState(harvester, NRMA_HARVEST_DISCONNECTED);
+    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_CONNECTED, @"a valid cached configuration should take the shortcut straight to connected");
+
+    for (NSURL* url in requestedURLs) {
+        XCTAssertFalse([url.path containsString:kNRMA_Collector_connect_url],
+                       @"the cached-config shortcut must not hit /connect: %@", url);
+    }
+
+    XCTAssertEqual(NRMA_getAccountId(), (uint64_t)config.data_token.clusterAgentId,
+                   @"the cached-config shortcut must prime the crash handler's account id mirror");
+    XCTAssertEqual(NRMA_getAgentId(), (uint64_t)config.data_token.realAgentId,
+                   @"the cached-config shortcut must prime the crash handler's agent id mirror");
+}
+
+- (void) testDisconnectedCachedConfigShortcutFlushesPersistedHandledExceptions
+{
+    [[NSUserDefaults standardUserDefaults] removeObjectForKey:kNRMAConnectionInformationKey];
+
+    NRMAHarvesterConfiguration* config = [self makeHarvestConfig];
+    [[NSUserDefaults standardUserDefaults] setValue:[config asDictionary] forKey:kNRMAHarvesterConfigurationStoreKey];
+    [[NSUserDefaults standardUserDefaults] setValue:[[NRMAAgentConfiguration connectionInformation] toApplicationIdentifier]
+                                              forKey:kNRMAApplicationIdentifierKey];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+
+    harvester.connection.harvestSession = [self makeMockURLSession];
+
+    // -flushPersistedHandledExceptions reaches through the shared agent instance
+    // to find the handled-exceptions controller, mirroring how the existing
+    // -handleSessionReplayConfigurationUpdate reaches -sessionReplayStart. Swap in
+    // a bare instance holding a mock controller so we can verify -onHarvest fires.
+    id mockNewRelicInternals = [OCMockObject mockForClass:[NewRelicAgentInternal class]];
+    NewRelicAgentInternal* bareAgent = [[NewRelicAgentInternal alloc] init];
+    id mockHandledExceptions = [OCMockObject mockForClass:[NRMAHandledExceptions class]];
+    bareAgent.handledExceptionsController = mockHandledExceptions;
+    [[[[mockNewRelicInternals stub] classMethod] andReturn:bareAgent] sharedInstance];
+
+    [[mockHandledExceptions expect] onHarvest];
+
+    [harvester execute]; // uninitialized -> disconnected
+    NRMAWaitForHarvesterToLeaveState(harvester, NRMA_HARVEST_UNINITIALIZED);
+
+    [harvester execute]; // disconnected -> connected, via the cached-config shortcut
+    NRMAWaitForHarvesterToLeaveState(harvester, NRMA_HARVEST_DISCONNECTED);
+    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_CONNECTED, @"a valid cached configuration should take the shortcut straight to connected");
+
+    [mockHandledExceptions verify];
+
+    [mockNewRelicInternals stopMocking];
 }
 
 - (void) testUninitializedToDisabled
