@@ -542,9 +542,13 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
 
     // If we have a data token (config is valid), then skip the connect call.
     if (configuration.isValid && [configuration.application_token isEqualToString:_agentConfiguration.applicationToken.value]) {
+        [self saveHarvesterConfiguration:configuration];
+        
         [NRMAMeasurements recordSessionStartMetric];
         [NRMASupportMetricHelper processDeferredMetrics];
+        
         [self handleSessionReplayConfigurationUpdate];
+        [self flushPersistedHandledExceptions];
 
         [self transitionToConnected:configuration];
         return;
@@ -583,11 +587,11 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
         }
         // Configuration saved here.
         configuration.application_token = connection.applicationToken;
+        [self saveHarvesterConfiguration:configuration];
 
         [self handleLoggingConfigurationUpdate];
         [self handleSessionReplayConfigurationUpdate];
-
-        [self saveHarvesterConfiguration:configuration];
+        [self flushPersistedHandledExceptions];
 
         [NRMASupportMetricHelper processDeferredMetrics];
         
@@ -990,6 +994,12 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
         [[NewRelicAgentInternal sharedInstance] sessionReplayDisabled];
     }
 
+}
+
+// Called from both connect-success paths below so persisted Hex reports aren't
+// uploaded with info this session's /connect hasn't acknowledged yet.
+- (void) flushPersistedHandledExceptions {
+    [[NewRelicAgentInternal sharedInstance].handledExceptionsController onHarvest];
 }
 
 @end
