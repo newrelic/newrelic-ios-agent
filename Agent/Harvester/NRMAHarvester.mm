@@ -51,13 +51,19 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
 @end
 
 @implementation NRMAHarvester
+{
+    // Guards the `configuration` pointer, which -harvesterConfiguration hands to other threads
+    // (every instrumented NSURLSession task reads it) while -disconnected replaces it. It can't
+    // be @synchronized(self): -execute holds that across the connect and harvest network calls.
+    NSObject* _configurationLock;
+}
 @synthesize currentState;
 
 - (id) init
 {
     self = [super init];
     if (self) {
-        
+        _configurationLock = [[NSObject alloc] init];
         currentState = NRMA_HARVEST_UNINITIALIZED;
         connection = [[NRMAHarvesterConnection alloc] init];
         _harvestData = [[NRMAHarvestData alloc] init];
@@ -123,7 +129,19 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
 }
 - (NRMAHarvesterConfiguration*) harvesterConfiguration
 {
-    return configuration;
+    // Retained under the lock, so a replacement on the harvest thread can't free it under us.
+    NRMAHarvesterConfiguration* current;
+    @synchronized(_configurationLock) {
+        current = configuration;
+    }
+    return current;
+}
+
+- (void) storeConfiguration:(NRMAHarvesterConfiguration*)newConfiguration
+{
+    @synchronized(_configurationLock) {
+        configuration = newConfiguration;
+    }
 }
 
 - (void) transition:(NRMAHarvesterState)state
@@ -531,12 +549,13 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
 - (void) disconnected
 {
     // Handle stored config.
-    configuration = [self fetchHarvestConfiguration];
+    NRMAHarvesterConfiguration* storedConfiguration = [self fetchHarvestConfiguration];
 
     // There was no stored config! set a reasonable default.
-    if (configuration == nil) {
-        configuration = [NRMAHarvesterConfiguration defaultHarvesterConfiguration];
+    if (storedConfiguration == nil) {
+        storedConfiguration = [NRMAHarvesterConfiguration defaultHarvesterConfiguration];
     }
+    [self storeConfiguration:storedConfiguration];
 
     [self handleLoggingConfigurationUpdate];
 
@@ -580,7 +599,7 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
     }
     
     if ([response isOK]) {
-        configuration = [self configureFromCollector:response];
+        [self storeConfiguration:[self configureFromCollector:response]];
         if (configuration == nil) {
             NRLOG_AGENT_ERROR(@"Unable to configure Harvester using Collector Configuration");
             return;

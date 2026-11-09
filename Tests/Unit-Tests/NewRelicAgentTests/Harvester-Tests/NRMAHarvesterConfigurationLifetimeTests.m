@@ -19,8 +19,16 @@
 //
 
 #import <XCTest/XCTest.h>
+#import <stdatomic.h>
 #import "NRMAHarvesterConfiguration.h"
 #import "NRAgentTestBase.h"
+#import "NRMAHarvester.h"
+#import "NRMAHarvestController.h"
+#import "NRMAHTTPUtilities.h"
+#import "NRMANetworkFacade.h"
+#import "NRMAAgentConfiguration.h"
+#import "NRMAAppToken.h"
+#import "NRMADataToken.h"
 
 @interface NRMAHarvesterConfigurationLifetimeTests : NRMAAgentTestBase
 @end
@@ -177,5 +185,168 @@
 // the override forces session_replay_maskAllUserTouches to NO, so correcting the comparison
 // would *reduce* masking and unmask user touches that are masked today. That needs product
 // review on its own, not a ride-along with a crash fix.
+
+@end
+
+#pragma mark - Concurrent replacement
+
+//  Regression coverage for NR-647662 (newrelic-react-native-agent#348).
+//
+//  +[NRMAHTTPUtilities addCrossProcessIdentifier:] runs for every instrumented NSURLSession
+//  task, on the thread that creates the task, and reads the harvester's configuration and
+//  its cross_process_id. The harvest thread replaces that configuration at the start of every
+//  session (-[NRMAHarvester disconnected]) and clears cross_process_id in place before it
+//  reconnects (-[NRMAHarvester clearStoredHarvesterConfiguration]). Each of those stores
+//  releases the previous object, so a reader that isn't synchronized with them can message a
+//  freed object. These tests run that reader on several threads against the real writer, and
+//  crash with SIGSEGV in objc_retain / objc_release if either store is unsynchronized.
+
+static NSString* const kNRMARaceTestAppToken = @"APP_TOKEN";
+static const NSTimeInterval kNRMARaceTestDuration = 5;
+
+static atomic_bool sNRMARaceTestFinished;
+static atomic_ulong sNRMARaceTestReads;
+static atomic_ulong sNRMARaceTestBadHeaders;
+
+@interface NRMAHarvester (ConfigurationRaceTests)
+- (void) disconnected;
+- (void) transitionToConnected:(NRMAHarvesterConfiguration*)configuration;
+@end
+
+@interface NRMAHarvestController (ConfigurationRaceTests)
+- (void) setHarvester:(NRMAHarvester*)harvester;
+@end
+
+// Hands back a fresh configuration on every fetch, as the NSUserDefaults round trip does, so
+// each -disconnected frees the configuration it replaces. The persistence and harvest steps
+// that follow are skipped so the loop touches neither disk nor the network.
+@interface NRMAConfigurationReplacingHarvester : NRMAHarvester
+@end
+
+@implementation NRMAConfigurationReplacingHarvester
+
+- (NRMAHarvesterConfiguration*) fetchHarvestConfiguration
+{
+    NRMAHarvesterConfiguration* configuration = [[NRMAHarvesterConfiguration alloc] init];
+    configuration.application_token = kNRMARaceTestAppToken;
+    configuration.account_id = 190;
+    configuration.application_id = 36920;
+    configuration.data_token = [[NRMADataToken alloc] init];
+    configuration.data_token.clusterAgentId = 36920;
+    configuration.data_token.realAgentId = 36921;
+    // Long enough that it can't be a tagged pointer, so clearing it really frees it.
+    configuration.cross_process_id = [NSString stringWithFormat:@"190#%u-cross-process-id-%u", arc4random(), arc4random()];
+    return configuration;
+}
+
+- (void) saveHarvesterConfiguration:(NRMAHarvesterConfiguration*)harvestConfiguration
+{
+}
+
+- (void) transitionToConnected:(NRMAHarvesterConfiguration*)configuration
+{
+}
+
+@end
+
+@interface NRMAHarvesterConfigurationRaceTests : NRMAAgentTestBase
+{
+    NRMAConfigurationReplacingHarvester* harvester;
+}
+@end
+
+@implementation NRMAHarvesterConfigurationRaceTests
+
+- (void) setUp
+{
+    [super setUp];
+
+    NRMAAgentConfiguration* agentConfiguration = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:kNRMARaceTestAppToken]
+                                                                                  collectorAddress:@"staging-mobile-collector.newrelic.com"
+                                                                                      crashAddress:nil];
+    [NRMAHarvestController initialize:agentConfiguration];
+
+    harvester = [[NRMAConfigurationReplacingHarvester alloc] init];
+    [harvester setAgentConfiguration:agentConfiguration];
+    [[NRMAHarvestController harvestController] setHarvester:harvester];
+}
+
+- (void) tearDown
+{
+    [NRMAHarvestController stop];
+    harvester = nil;
+    [super tearDown];
+}
+
+// Runs +addCrossProcessIdentifier: on one thread per core while `writer` runs over and over on
+// this thread, then checks that every header the readers saw came from a live configuration.
+- (void) assertCrossProcessIdentifierSurvivesRepeated:(void (^)(void))writer
+{
+    atomic_store(&sNRMARaceTestFinished, false);
+    atomic_store(&sNRMARaceTestReads, 0);
+    atomic_store(&sNRMARaceTestBadHeaders, 0);
+
+    // An immutable request, so every call goes through -mutableCopy the way a plain
+    // NSURLSession task does.
+    NSURLRequest* request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"https://example.com/"]];
+
+    NSUInteger readerCount = MAX([[NSProcessInfo processInfo] activeProcessorCount], (NSUInteger)4);
+    dispatch_group_t readers = dispatch_group_create();
+    for (NSUInteger i = 0; i < readerCount; i++) {
+        dispatch_group_async(readers, dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+            unsigned long reads = 0;
+            unsigned long badHeaders = 0;
+            while (!atomic_load(&sNRMARaceTestFinished)) {
+                @autoreleasepool {
+                    NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
+                    NSString* header = [mutableRequest valueForHTTPHeaderField:NEW_RELIC_CROSS_PROCESS_ID_HEADER_KEY];
+                    if (header != nil && ![header hasPrefix:@"190#"]) {
+                        badHeaders++;
+                    }
+                    reads++;
+                }
+            }
+            atomic_fetch_add(&sNRMARaceTestReads, reads);
+            atomic_fetch_add(&sNRMARaceTestBadHeaders, badHeaders);
+        });
+    }
+
+    NSDate* deadline = [NSDate dateWithTimeIntervalSinceNow:kNRMARaceTestDuration];
+    unsigned long writes = 0;
+    while ([deadline timeIntervalSinceNow] > 0) {
+        @autoreleasepool {
+            writer();
+        }
+        writes++;
+    }
+
+    atomic_store(&sNRMARaceTestFinished, true);
+    XCTAssertEqual(dispatch_group_wait(readers, dispatch_time(DISPATCH_TIME_NOW, 30 * NSEC_PER_SEC)), 0L,
+                   @"reader threads did not finish");
+
+    XCTAssertGreaterThan(writes, 0UL);
+    XCTAssertGreaterThan(atomic_load(&sNRMARaceTestReads), 0UL);
+    XCTAssertEqual(atomic_load(&sNRMARaceTestBadHeaders), 0UL);
+}
+
+// Each -disconnected is one start-of-session replacement of the configuration.
+- (void) testCrossProcessIdentifierWhileDisconnectedReplacesConfiguration
+{
+    NRMAConfigurationReplacingHarvester* writer = harvester;
+    [self assertCrossProcessIdentifierSurvivesRepeated:^{
+        [writer disconnected];
+    }];
+}
+
+// Publishes a configuration, then clears its cross_process_id in place, as the reconnect paths
+// in -uninitialized, -disconnected and -connected do.
+- (void) testCrossProcessIdentifierWhileStoredConfigurationIsCleared
+{
+    NRMAConfigurationReplacingHarvester* writer = harvester;
+    [self assertCrossProcessIdentifierSurvivesRepeated:^{
+        [writer disconnected];
+        [writer clearStoredHarvesterConfiguration];
+    }];
+}
 
 @end

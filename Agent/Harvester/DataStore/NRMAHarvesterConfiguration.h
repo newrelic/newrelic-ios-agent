@@ -80,7 +80,9 @@
 @interface NRMAHarvesterConfiguration : NSObject
 @property(nonatomic,strong) NSString* application_token;
 @property(nonatomic,assign) BOOL      collect_network_errors;
-@property(nonatomic,strong) NSString* cross_process_id;
+// atomic: the harvester clears it in place on a configuration that NSURLSession task threads
+// are reading through +[NRMAHTTPUtilities addCrossProcessIdentifier:].
+@property(atomic,strong) NSString* cross_process_id;
 @property(nonatomic,assign) int       data_report_period;
 @property(nonatomic,strong) NRMADataToken*  data_token;
 @property(nonatomic,assign) int       error_limit;
