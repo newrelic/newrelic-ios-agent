@@ -5,7 +5,7 @@
 //  MobileViews: whether a screen shows web content, for the containsWebView / isFullScreenWebView
 //  attributes on its MobileView event.
 //
-//  A screen's loadTime and timeVisible mean something different when its content is a web page: the
+//  A screen's loadTimeMs and timeVisibleMs mean something different when its content is a web page: the
 //  page loads after viewDidAppear:, so a "fast" native load can be a blank frame. These attributes let
 //  a query separate native screens, native screens that embed some web content, and web pages in a
 //  native frame.

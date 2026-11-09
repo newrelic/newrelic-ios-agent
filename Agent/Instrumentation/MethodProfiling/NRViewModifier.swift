@@ -84,13 +84,13 @@ internal enum NRMobileViewGate {
 }
 
 /// NRMobileViewModifier emits one MobileView custom event per visit, on disappear.
-/// Tracks loadTime (onAppear - modifier init), timeVisible (disappear - appear), and
+/// Tracks loadTimeMs (onAppear - modifier init), timeVisibleMs (disappear - appear), and
 /// viewInstanceId per appearance, matching the UIKit NRMAMobileViewTracker schema.
 ///
 /// onAppear does the bookkeeping -- it makes the view current in the shared context, measures the
 /// construction interval and captures the referrer -- and holds those facts in @State until
 /// onDisappear, which is the only site that emits. A visit is not describable before it ends:
-/// timeVisible is only knowable then.
+/// timeVisibleMs is only knowable then.
 @available(iOS 13, tvOS 13, *)
 internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
 
@@ -244,8 +244,8 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
             platform: "SwiftUI")
 
         // The load outcome is a single value rather than two independent attributes, so
-        // loadTime and loadTimeUnavailable cannot both be written or both be missed. An
-        // absent loadTime is recorded with its reason, so it is diagnosable in NRDB rather
+        // loadTimeMs and loadTimeUnavailableReason cannot both be written or both be missed. An
+        // absent loadTimeMs is recorded with its reason, so it is diagnosable in NRDB rather
         // than looking like the attribute was never implemented.
         //
         // Held rather than emitted: it rides on the single event this visit produces when
@@ -266,7 +266,7 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
         // origin. Derived from the load start and appear time the transition above recorded,
         // not from a number passed in here, so the baseline and those marks cannot end up
         // measured from different instants. No-ops on its own when no construction start was
-        // vouched for, which is the same condition that withheld loadTime.
+        // vouched for, which is the same condition that withheld loadTimeMs.
         NRMAViewTiming.sharedInstance().recordInitialDisplayForCurrentView()
 
         beginWebViewTracking()
@@ -289,11 +289,11 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
 
         guard let appeared = appearTime, let id = instanceId else { return }
 
-        // timeVisible (ms): the appearance that opened this visit → whatever ended it.
+        // timeVisibleMs: the appearance that opened this visit → whatever ended it.
         let timeVisibleMs = NRMAViewContext.millisecondsBetween(appeared, and: endTime)
 
-        // The whole visit, in one event: identity and referrer from the appearance, loadTime
-        // measured then, timeVisible measured now.
+        // The whole visit, in one event: identity and referrer from the appearance, loadTimeMs
+        // measured then, timeVisibleMs measured now.
         //
         // Emitted however brief the visible lifetime was. SwiftUI delivers an
         // appear/disappear pair milliseconds apart on every TabView switch; those pairs are
@@ -489,7 +489,7 @@ private struct NRMobileViewBackgroundBridge: SwiftUI.ViewModifier {
 ///     controller holds, the name automatic SwiftUI collection would give it.
 ///   - attributes: Optional custom attributes merged into the MobileView event emitted
 ///     for this view. Reserved keys (viewClass, viewName, viewInstanceId, previousView,
-///     previousViewInstanceId, uiFramework, loadTime, loadTimeUnavailable, timeVisible) are
+///     previousViewInstanceId, uiFramework, loadTimeMs, loadTimeUnavailableReason, timeVisibleMs) are
 ///     dropped.
 ///
 /// To not track a screen, do not attach this modifier to it. There is no `ignored` parameter: an
@@ -666,7 +666,7 @@ public extension SwiftUI.View {
 //                openTabReferrer = outgoingTab
 //            }
 //            // The whole TabView going away must still close the tab that was open, or the last tab of
-//            // every session silently loses its timeVisible.
+//            // every session silently loses its timeVisibleMs.
 //            .onDisappear {
 //                guard NRMobileViewGate.isFeatureEnabled else { return }
 //                closeOpenTab(at: NRMAViewContext.monotonicNow())
@@ -685,7 +685,7 @@ public extension SwiftUI.View {
 //
 //        let timeVisibleMs = NRMAViewContext.millisecondsBetween(priorSince, and: when)
 //
-//        // No loadTime: selecting a tab constructs nothing measurable, so the pair is omitted
+//        // No loadTimeMs: selecting a tab constructs nothing measurable, so the pair is omitted
 //        // rather than zeroed and the reason is recorded instead.
 //        MobileViewRecord(viewName: priorName,
 //                         viewClass: String(describing: Tag.self),

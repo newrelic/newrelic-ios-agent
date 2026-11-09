@@ -112,7 +112,7 @@ static void NRMARestoreClock(void) {
 
     XCTAssertNotNil(attrs, @"a valid mark against a current view must produce attributes");
     XCTAssertEqualObjects(attrs[@"timingName"], @"timeToFullDisplay");
-    XCTAssertEqualObjects(attrs[@"timingValue"], @842);
+    XCTAssertEqualObjects(attrs[@"durationMs"], @842);
     XCTAssertEqualObjects(attrs[@"viewName"], @"ProductDetail");
     XCTAssertEqualObjects(attrs[@"viewInstanceId"], @"INSTANCE-1",
                           @"viewInstanceId is what joins MobileViewTiming back to its MobileView visit");
@@ -128,7 +128,7 @@ static void NRMARestoreClock(void) {
                                                 agentOwned:NO];
 
     XCTAssertNotNil(attrs, @"a caller-supplied duration is valid even with no current view");
-    XCTAssertEqualObjects(attrs[@"timingValue"], @214);
+    XCTAssertEqualObjects(attrs[@"durationMs"], @214);
     XCTAssertNil(attrs[@"viewName"], @"no view is current, so viewName must be absent rather than empty");
     XCTAssertNil(attrs[@"viewInstanceId"]);
 }
@@ -413,7 +413,7 @@ static void NRMARestoreClock(void) {
 // silently mixes the two origins understates every appear-anchored row by the build time.
 // With no construction start there is no baseline row for this visit either, so the fallback cannot
 // be silently subtracted from one. Which origin a row used is recoverable from the MobileView appear
-// event for the same viewInstanceId: loadTime is present exactly when a start was vouched for.
+// event for the same viewInstanceId: loadTimeMs is present exactly when a start was vouched for.
 - (void)testMarkWithoutConstructionStartFallsBackToAppear {
     NRMAViewTimingSnapshot *snapshot = [self snapshotWithViewLackingLoadStart];
     CFAbsoluteTime markedAt = snapshot.appearTime + 0.500;

@@ -5,10 +5,10 @@
 //  Covers the schema MobileViewEmitter.swift owns. Before it existed, each of the nine
 //  emission sites assembled its own attribute dictionary, and they disagreed:
 //  `navigationKind` reached only the tab producers, `agentName` only some, and the
-//  loadTime-vs-loadTimeUnavailable rule was reimplemented four times.
+//  loadTimeMs-vs-loadTimeUnavailableReason rule was reimplemented four times.
 //
 //  A record describes one whole visit, emitted when the view goes away. There is no appear/disappear
-//  pair and no `appeared` flag: `loadTime` and the referrer are captured at appear time by the
+//  pair and no `appeared` flag: `loadTimeMs` and the referrer are captured at appear time by the
 //  producer and handed to the record it builds at the end.
 //
 //  Copyright © 2026 New Relic. All rights reserved.
@@ -109,45 +109,45 @@ final class MobileViewEmitterTests: XCTestCase {
         XCTAssertEqual(record.attributes()["uiFramework"] as? String, "SwiftUI")
     }
 
-    // MARK: - The loadTime rule
+    // MARK: - The loadTimeMs rule
 
     func testMeasuredLoadWritesLoadTimeAndNotTheReason() {
         let attrs = visitRecord(load: .measured(123.5)).attributes()
 
-        XCTAssertEqual(attrs["loadTime"] as? NSNumber, NSNumber(value: 123.5))
-        XCTAssertNil(attrs["loadTimeUnavailable"],
-                     "loadTime and loadTimeUnavailable are mutually exclusive")
+        XCTAssertEqual(attrs["loadTimeMs"] as? NSNumber, NSNumber(value: 123.5))
+        XCTAssertNil(attrs["loadTimeUnavailableReason"],
+                     "loadTimeMs and loadTimeUnavailableReason are mutually exclusive")
     }
 
     func testUnavailableLoadWritesTheReasonAndNotLoadTime() {
         let attrs = visitRecord(load: .unavailable(.notRebuilt)).attributes()
 
-        XCTAssertEqual(attrs["loadTimeUnavailable"] as? String, "notRebuilt")
-        XCTAssertNil(attrs["loadTime"],
-                     "loadTime is omitted rather than zeroed, so it cannot drag percentiles to 0")
+        XCTAssertEqual(attrs["loadTimeUnavailableReason"] as? String, "notRebuilt")
+        XCTAssertNil(attrs["loadTimeMs"],
+                     "loadTimeMs is omitted rather than zeroed, so it cannot drag percentiles to 0")
     }
 
     // Above the timing ceiling the producer's construction start is not vouched for, so no baseline
-    // timing is emitted either. loadTime must not claim what the baseline refused.
+    // timing is emitted either. loadTimeMs must not claim what the baseline refused.
     func testMeasuredLoadAboveTenMinutesIsReportedAsNoConstructionObserved() {
         let attrs = visitRecord(load: .measured(600_001)).attributes()
 
-        XCTAssertNil(attrs["loadTime"])
-        XCTAssertEqual(attrs["loadTimeUnavailable"] as? String, "noConstructionObserved")
+        XCTAssertNil(attrs["loadTimeMs"])
+        XCTAssertEqual(attrs["loadTimeUnavailableReason"] as? String, "noConstructionObserved")
     }
 
     func testMeasuredLoadOfExactlyTenMinutesIsWritten() {
         let attrs = visitRecord(load: .measured(600_000)).attributes()
 
-        XCTAssertEqual(attrs["loadTime"] as? NSNumber, NSNumber(value: 600_000))
-        XCTAssertNil(attrs["loadTimeUnavailable"])
+        XCTAssertEqual(attrs["loadTimeMs"] as? NSNumber, NSNumber(value: 600_000))
+        XCTAssertNil(attrs["loadTimeUnavailableReason"])
     }
 
     func testNoLoadOutcomeOmitsBothKeys() {
         let attrs = visitRecord(load: nil).attributes()
 
-        XCTAssertNil(attrs["loadTime"])
-        XCTAssertNil(attrs["loadTimeUnavailable"])
+        XCTAssertNil(attrs["loadTimeMs"])
+        XCTAssertNil(attrs["loadTimeUnavailableReason"])
     }
 
     func testEveryUnavailableReasonKeepsItsWireString() {
@@ -157,7 +157,7 @@ final class MobileViewEmitterTests: XCTestCase {
         XCTAssertEqual(NRViewLoadOutcome.Reason.notRebuilt.rawValue, "notRebuilt")
     }
 
-    // MARK: - timeVisible
+    // MARK: - timeVisibleMs
 
     // The emitter used to classify a visit shorter than a 100ms minimum dwell as `churn`, so
     // consumers could exclude it with `WHERE churn IS NULL`. That threshold is gone: a brief
@@ -170,7 +170,7 @@ final class MobileViewEmitterTests: XCTestCase {
             record.timeVisibleMs = 1
 
             let attrs = record.attributes()
-            XCTAssertEqual(attrs["timeVisible"] as? NSNumber, NSNumber(value: 1.0),
+            XCTAssertEqual(attrs["timeVisibleMs"] as? NSNumber, NSNumber(value: 1.0),
                            "\(framework.rawValue) must report the lifetime it observed")
             XCTAssertNil(attrs["churn"],
                          "\(framework.rawValue) must not reintroduce a churn classification")
@@ -184,14 +184,14 @@ final class MobileViewEmitterTests: XCTestCase {
         record.timeVisibleMs = 0
 
         let attrs = record.attributes()
-        XCTAssertEqual(attrs["timeVisible"] as? NSNumber, NSNumber(value: 0.0))
+        XCTAssertEqual(attrs["timeVisibleMs"] as? NSNumber, NSNumber(value: 0.0))
         XCTAssertNil(attrs["churn"])
     }
 
     func testNoTimeVisibleOmitsTimeVisible() {
         let attrs = visitRecord().attributes()
 
-        XCTAssertNil(attrs["timeVisible"])
+        XCTAssertNil(attrs["timeVisibleMs"])
         XCTAssertNil(attrs["churn"])
     }
 
@@ -244,7 +244,7 @@ final class MobileViewEmitterTests: XCTestCase {
             "viewClass":      "spoofed",
             "viewInstanceId": "spoofed",
             "uiFramework":     "spoofed",
-            "loadTime":       NSNumber(value: 999),
+            "loadTimeMs":       NSNumber(value: 999),
         ]
         let attrs = visitRecord(load: .measured(10), custom: hostile).attributes()
 
@@ -252,14 +252,14 @@ final class MobileViewEmitterTests: XCTestCase {
         XCTAssertEqual(attrs["viewClass"] as? String, "MyApp.CheckoutView")
         XCTAssertEqual(attrs["viewInstanceId"] as? String, "instance-1")
         XCTAssertEqual(attrs["uiFramework"] as? String, "SwiftUI")
-        XCTAssertEqual(attrs["loadTime"] as? NSNumber, NSNumber(value: 10))
+        XCTAssertEqual(attrs["loadTimeMs"] as? NSNumber, NSNumber(value: 10))
     }
 
-    // A reserved key this event leaves unset stays unset: a manual view has no loadTime of its own,
+    // A reserved key this event leaves unset stays unset: a manual view has no loadTimeMs of its own,
     // and a customer-supplied one must not stand in for it.
     func testCustomerAttributesCannotSupplyAReservedKeyTheEventLeavesUnset() {
-        let reservedButUnset = ["viewClass", "uiFramework", "loadTime", "loadTimeUnavailable",
-                                "timeVisible", "previousView", "previousViewInstanceId"]
+        let reservedButUnset = ["viewClass", "uiFramework", "loadTimeMs", "loadTimeUnavailableReason",
+                                "timeVisibleMs", "previousView", "previousViewInstanceId"]
         var hostile: [String: Any] = ["tier": "gold"]
         for key in reservedButUnset { hostile[key] = "spoofed" }
         let record = MobileViewRecord(viewName: "CheckoutView",
@@ -315,13 +315,13 @@ final class MobileViewEmitterTests: XCTestCase {
 
     func testTimingRecordWritesNameAndValue() {
         let attrs = ViewTimingRecord(timingName: "timeToInitialDisplay",
-                                     timingValueMs: 250.5,
+                                     durationMs: 250.5,
                                      viewName: "CheckoutView",
                                      viewInstanceId: "instance-1",
                                      previousView: "CartView").attributes()
 
         XCTAssertEqual(attrs["timingName"] as? String, "timeToInitialDisplay")
-        XCTAssertEqual(attrs["timingValue"] as? NSNumber, NSNumber(value: 250.5))
+        XCTAssertEqual(attrs["durationMs"] as? NSNumber, NSNumber(value: 250.5))
         XCTAssertEqual(attrs["viewName"] as? String, "CheckoutView")
         XCTAssertEqual(attrs["viewInstanceId"] as? String, "instance-1")
         XCTAssertEqual(attrs["previousView"] as? String, "CartView")
@@ -330,7 +330,7 @@ final class MobileViewEmitterTests: XCTestCase {
     func testNeitherRecordCarriesAgentName() {
         XCTAssertNil(visitRecord().attributes()["agentName"])
         XCTAssertNil(ViewTimingRecord(timingName: "custom",
-                                      timingValueMs: 1,
+                                      durationMs: 1,
                                       viewName: "CheckoutView",
                                       viewInstanceId: "instance-1",
                                       previousView: nil).attributes()["agentName"])
@@ -339,7 +339,7 @@ final class MobileViewEmitterTests: XCTestCase {
     // An absent view must read as absent, not as an empty string.
     func testTimingRecordOmitsEmptyOptionalFields() {
         let attrs = ViewTimingRecord(timingName: "custom",
-                                     timingValueMs: 1,
+                                     durationMs: 1,
                                      viewName: "",
                                      viewInstanceId: nil,
                                      previousView: "").attributes()
@@ -371,7 +371,7 @@ final class MobileViewEmitterTests: XCTestCase {
         XCTAssertEqual(attrs["viewName"] as? String, "CheckoutView")
         XCTAssertEqual(attrs["viewClass"] as? String, "MyApp.CheckoutViewController")
         XCTAssertEqual(attrs["uiFramework"] as? String, "UIKit")
-        XCTAssertEqual(attrs["loadTime"] as? NSNumber, NSNumber(value: 88))
+        XCTAssertEqual(attrs["loadTimeMs"] as? NSNumber, NSNumber(value: 88))
         XCTAssertEqual(attrs["tier"] as? String, "gold")
     }
 
@@ -430,11 +430,11 @@ final class MobileViewEmitterTests: XCTestCase {
         let fields = NRMAMobileViewFields()
         fields.viewName = "CheckoutView"
         fields.loadTimeMs = NSNumber(value: 5)
-        fields.loadTimeUnavailable = "notRebuilt"
+        fields.loadTimeUnavailableReason = "notRebuilt"
 
         let attrs = fields.record()!.attributes()
-        XCTAssertEqual(attrs["loadTime"] as? NSNumber, NSNumber(value: 5))
-        XCTAssertNil(attrs["loadTimeUnavailable"])
+        XCTAssertEqual(attrs["loadTimeMs"] as? NSNumber, NSNumber(value: 5))
+        XCTAssertNil(attrs["loadTimeUnavailableReason"])
     }
 
     func testObjCFacadePrefersAnExplicitReferrerOverTheContextOne() {

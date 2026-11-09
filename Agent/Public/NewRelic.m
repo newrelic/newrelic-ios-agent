@@ -820,7 +820,7 @@
         return;
     }
 
-    // SPA / route-change model: close out the previous manual view (emitting its timeVisible),
+    // SPA / route-change model: close out the previous manual view (emitting its timeVisibleMs),
     // make `name` current, and emit its appearance stamped with the prior view as referrer.
     [[NRMAViewContext sharedInstance] setCurrentManualView:name
                                                  viewClass:viewClass

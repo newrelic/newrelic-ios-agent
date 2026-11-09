@@ -151,9 +151,9 @@ Event namespace `Mobile General`; event name `MobileView`.
 | `viewClass` | string | ✅<br>In Manual case the viewClass is passed in | Automatically inferred Platform-native class or type name (Always available.) |
 | `viewName` | string | ✅<br>In Manual case the viewName is passed in | Customer override (capability 4), else the inferred route pattern, class or struct name. |
 | `viewInstanceId` | string (UUID) | ✅ | Unique per visible lifetime; the join key |
-| `loadTime` | double (milliseconds) (ms) | or if not available: loadTimeUnavailable | Best-effort; semantics and accuracy tier per §5.4 |
-| `loadTimeUnavailable` | string | only if loadTime unavailable. | - noConstructionObserved: no construction start was seen for this visit, or it was more than 600000 ms before the screen appeared.<br>- notRebuilt: the view's identity was preserved, so nothing was rebuilt.<br>- noLoadStartDeclared: a manual view without capability 9.<br>Closed set; new values only by amending this IDD. |
-| `timeVisible` | double (milliseconds) (ms) | ✅ | Appear → disappear, clamped ≥ 0 |
+| `loadTimeMs` | double (milliseconds) (ms) | or if not available: loadTimeUnavailableReason | Best-effort; semantics and accuracy tier per §5.4 |
+| `loadTimeUnavailableReason` | string | only if loadTimeMs unavailable. | - noConstructionObserved: no construction start was seen for this visit, or it was more than 600000 ms before the screen appeared.<br>- notRebuilt: the view's identity was preserved, so nothing was rebuilt.<br>- noLoadStartDeclared: a manual view without capability 9.<br>Closed set; new values only by amending this IDD. |
+| `timeVisibleMs` | double (milliseconds) (ms) | ✅ | Appear → disappear, clamped ≥ 0 |
 | uiFramework | string | ✅ | Enum: `UIKit`, `SwiftUI`, `AndroidActivity`, `AndroidFragment`, `Compose`, `ReactNative`, `Flutter`, `Capacitor`, `Cordova`, `MAUI`, `Manual`<br>Manual: a manual view whose caller passed Manual or no uiFramework. Values are added by IDD amendment and never renamed or removed; queries treat unknown values as other.<br>`WebView` will be added when supported post GA. |
 | `previousView` | string | when known | Referrer: the screen navigated from |
 | `previousViewInstanceId` | string | when known | Referrer identity, for exact-visit joins |
@@ -166,7 +166,7 @@ Event namespace `Mobile General`; event name `MobileView`.
 - restarted, reappeared: out of scope for GA.
 - **App Hang Detection, Slow/Frozen/Janky Frame Detection**:
   - totalFrameCount — display refreshes the agent observed while this view was the current view. Could be
-    used with timeVisible calculation.
+    used with timeVisibleMs calculation.
   - droppedFrameCount — frames lost. Summed across the visit: for each observed interval,
     round(actual / expected) - 1.
   - jankyFrameCount — stall occurrences. Number of frames that missed their deadline at all, regardless of by
@@ -189,10 +189,10 @@ screen visits into a **navigation graph ([demo](https://newrelic.atlassian.net/w
 which is what makes the data explanatory rather than descriptive: the same screen can be shown to be fast when
 reached from search and slow when reached from a deeplink.
 
-#### 5.3.4 loadTime and loadTimeUnavailable
+#### 5.3.4 loadTimeMs and loadTimeUnavailableReason
 
 exactly one of the two attributes is always present. A manual view declared without a load start will get
-**loadTimeUnavailable**. A manual view with capability 9 carries a loadTime.
+**loadTimeUnavailableReason**. A manual view with capability 9 carries a loadTimeMs.
 
 #### 5.3.5 viewName Privacy
 
@@ -206,13 +206,13 @@ Independently of anything the customer calls, **every agent emits one baseline t
 automatically.**
 
 - **Name:** `timeToInitialDisplay` — the same string on every agent.
-- **Value:** projected from the `loadTime` the agent already measures for that appearance. This is a second
+- **Value:** projected from the `loadTimeMs` the agent already measures for that appearance. This is a second
   projection of an existing number, not a new measurement: no new hook, no new swizzle, no added cost.
-- **When:** on every `MobileView` visit that carries `loadTime`. A screen that resurfaced without being
-  rebuilt emits no baseline MobileViewTiming event, mirroring the `loadTime` rule in §5.4 — nothing was
+- **When:** on every `MobileView` visit that carries `loadTimeMs`. A screen that resurfaced without being
+  rebuilt emits no baseline MobileViewTiming event, mirroring the `loadTimeMs` rule in §5.4 — nothing was
   constructed, so there is nothing to time. One MobileView per visit, sent when the visit closes: the screen
   disappears, a new manual view is set, or the app backgrounds. Foregrounding starts a new visit with a new
-  viewInstanceId and no loadTime. A visit still open at a crash or kill isn't sent; its timeToInitialDisplay
+  viewInstanceId and no loadTimeMs. A visit still open at a crash or kill isn't sent; its timeToInitialDisplay
   timing, sent at appear, is.
 
 This matters for three reasons that are all cross-platform:
@@ -231,7 +231,7 @@ Consequently the `timeToInitialDisplay` baseline is exempt from the per-view cap
 
 #### 5.3.7 Screen composition: containsWebView, isFullScreenWebView, isTopLevelView
 
-Why: web content loads after the screen appears, so a web screen's `loadTime` / `timeVisible` read
+Why: web content loads after the screen appears, so a web screen's `loadTimeMs` / `timeVisibleMs` read
 differently from a native one's; and embedded child views are visits of their own that do not belong in
 flow and funnel queries.
 
@@ -267,21 +267,21 @@ flow and funnel queries.
   report `false` / `false`. Routes the wrapper names through `setCurrentView:` are manual events and omit
   the attributes.
 
-### 5.4 `loadTime` semantics and accuracy tiers
+### 5.4 `loadTimeMs` semantics and accuracy tiers
 
-`loadTime` is **best-effort and not equally meaningful across runtimes**. Some runtimes expose an exact
+`loadTimeMs` is **best-effort and not equally meaningful across runtimes**. Some runtimes expose an exact
 construction-to-visible boundary; others only permit an approximation. Comparing an exact value against an
 approximate one without knowing which is which produces confidently wrong conclusions, so the tier is declared
 per platform in the table below.
 
 **Contract:**
 
-1. Each agent's CDD **declares its own mapping** from runtime lifecycle signals to `loadTime`, and states the
+1. Each agent's CDD **declares its own mapping** from runtime lifecycle signals to `loadTimeMs`, and states the
    resulting tier.
-2. `loadTime` is **only for a genuine first construction**. A screen that resurfaced without being rebuilt has
-   nothing to time: it omits loadTime and sets loadTimeUnavailable: notRebuilt. A measured 0 ms is sent as 0.
-    1. attribute **loadTimeUnavailable**: with value **noLoadStartDeclared**, **noConstructionObserved**, or
-       **notRebuilt** will be added to specify loadTime omission reason.
+2. `loadTimeMs` is **only for a genuine first construction**. A screen that resurfaced without being rebuilt has
+   nothing to time: it omits loadTimeMs and sets loadTimeUnavailableReason: notRebuilt. A measured 0 ms is sent as 0.
+    1. attribute **loadTimeUnavailableReason**: with value **noLoadStartDeclared**, **noConstructionObserved**, or
+       **notRebuilt** will be added to specify loadTimeMs omission reason.
 3. Values are non-negative and monotonic-clock derived. Wall-clock deltas are not acceptable, clock adjustment
    mid-load would otherwise produce negative or absurd durations.
 4. All agents emit the **same unit**. Unit drift between agents is the single most likely way to corrupt a
@@ -302,7 +302,7 @@ per platform in the table below.
 | Capacitor / Cordova | Approximate |
 | MAUI | Approximate |
 
-Because approximate is the common case, `loadTime` alone is insufficient for the product goal. §5.7 is the
+Because approximate is the common case, `loadTimeMs` alone is insufficient for the product goal. §5.7 is the
 answer.
 
 ### 5.5 Feature-flag model
@@ -355,7 +355,7 @@ We will follow the remote configuration mechanism that is used for Mobile Logs.
 
 #### 5.7 Companion event: `MobileViewTiming`
 
-`loadTime` is fixed at the moment a screen becomes visible. For most runtimes that is *also* the moment the
+`loadTimeMs` is fixed at the moment a screen becomes visible. For most runtimes that is *also* the moment the
 screen is still showing a spinner: a screen that renders a skeleton in 80 ms and real content in 900 ms
 reports 80 ms.
 
@@ -373,7 +373,7 @@ Initiative-level requirements:
 | Customer timings are capped per view instance | An unguarded mark inside a list-row callback would evict the customer's own real events from a bounded buffer |
 | Non-finite, negative, and implausibly large durations are rejected | A single `NaN` silently poisons every average and percentile downstream |
 | Reserved timing names are rejected from the public API | Keeps the out-of-the-box series comparable across apps |
-| `loadTime` remains on `MobileView` | Additive by design; removing it breaks already-shipped panels |
+| `loadTimeMs` remains on `MobileView` | Additive by design; removing it breaks already-shipped panels |
 
 ### 5.8 `MobileViewTiming` schema
 
@@ -382,7 +382,7 @@ Event namespace `Mobile General`; event name `MobileViewTiming`.
 | Attribute | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `timingName` | string | ✅ | timeToInitialDisplay (agent-owned, §5.3.6) or a customer-supplied name (§6.2). Customer names are validated per §6.3. |
-| `timingValue` | double (ms) | ✅ | Duration in **milliseconds**. Finite, ≥ 0, ≤ 600000 (§6.3) |
+| `durationMs` | double (ms) | ✅ | Duration in **milliseconds**. Finite, ≥ 0, ≤ 600000 (§6.3) |
 | `viewName` | string | when a view is current | The screen the timing is about |
 | `viewInstanceId` | string (UUID) | when a view is current | Join key back to the exact `MobileView` **visit** that produced it |
 | `previousView` | string | when known | Referrer, so timings are queryable by route rather than only by destination |
@@ -411,8 +411,8 @@ example JSON:
     "viewClass": "NRTestApp.UtilitiesViewController",
     "viewInstanceId": "274F53A9-772B-4990-B96C-624B4B04E9A0",
     "uiFramework": "UIKit",
-    "loadTime": 538.1820000475273,
-    "timeVisible": 12747.192208946217,
+    "loadTimeMs": 538.1820000475273,
+    "timeVisibleMs": 12747.192208946217,
     "previousView": "ViewController",
     "previousViewInstanceId": "C9E001DB-17D5-4436-817E-2861DE041BEF",
     "timeSinceLoad": 45.348809003829956
@@ -421,7 +421,7 @@ example JSON:
     "eventType": "MobileViewTiming",
     "timestamp": 1792532140602,
     "timingName": "timeToInitialDisplay",
-    "timingValue": 538.1820000475273,
+    "durationMs": 538.1820000475273,
     "viewName": "UtilitiesViewController",
     "viewInstanceId": "274F53A9-772B-4990-B96C-624B4B04E9A0",
     "previousView": "ViewController",
@@ -430,8 +430,8 @@ example JSON:
 ]
 ```
 
-for the loadTimeUnavailable rule in §5.3/§5.4. Second example: the return to the home screen from the same run. It has
-no loadTime, so no baseline timing is sent.
+for the loadTimeUnavailableReason rule in §5.3/§5.4. Second example: the return to the home screen from the same run. It has
+no loadTimeMs, so no baseline timing is sent.
 
 ```json
 {
@@ -441,8 +441,8 @@ no loadTime, so no baseline timing is sent.
 "viewClass": "NRTestApp.ViewController",
 "viewInstanceId": "ED94CF61-D2EF-4D61-B9DE-A487CD398543",
 "uiFramework": "UIKit",
-"loadTimeUnavailable": "noConstructionObserved",
-"timeVisible": 4937.412417028099,
+"loadTimeUnavailableReason": "noConstructionObserved",
+"timeVisibleMs": 4937.412417028099,
 "previousView": "UtilitiesViewController",
 "previousViewInstanceId": "274F53A9-772B-4990-B96C-624B4B04E9A0",
 "timeSinceLoad": 50.28683805465698
@@ -483,7 +483,7 @@ Rules:
 
 ### 6.2 Timing capabilities
 
-`loadTime` is approximate on most runtimes (§5.4), so the timings customers actually need, Time to Full
+`loadTimeMs` is approximate on most runtimes (§5.4), so the timings customers actually need, Time to Full
 Display, Time to Interactive: must come from customer code that knows when the screen genuinely reached that
 state. These two capabilities are how they supply it. Both emit `MobileViewTiming` (§5.7).
 
@@ -526,7 +526,7 @@ are off.
 | Standard timing names | timeToFullDisplay, timeToInteractive | Capabilities 7, 8 | Same string on every agent so dashboards line up across apps; not reserved; agents ship them as constants |
 | Max customer timings per view instance | **16** | Capabilities 7, 8 | The event buffer is bounded (1000 by default). An unguarded mark inside a list-row callback would evict the customer's own real events. Warn once when exceeded, then drop silently |
 | Max timing name length | **128** characters | Capabilities 7, 8 | Bounds attribute cardinality |
-| Max accepted duration | **600000** ms (10 minutes) | All timings and loadTime | Catches the seconds-passed-where-milliseconds-expected mistake instead of recording it as a ten-hour screen load |
+| Max accepted duration | **600000** ms (10 minutes) | All timings and loadTimeMs | Catches the seconds-passed-where-milliseconds-expected mistake instead of recording it as a ten-hour screen load |
 | Timing unit | milliseconds | Capabilities 7, 8; §5.7 | Unit drift between agents corrupts cross-platform percentiles invisibly |
 
 **Rejection rules, applied by every agent in this order.** A timing is rejected — and the failure reported per
@@ -677,7 +677,7 @@ result = currentView UtilitiesViewController, previousView Main ViewController.
   anymore.
 - **TTI: Time to Interactive** is an additional one that could be used to say the view is now interactive and
   responds to touches.
-- **Dwell time / “timeVisible”**: “timeVisible”: The amount of time a user spent on a visit to a screen.
+- **Dwell time / “timeVisibleMs”**: “timeVisibleMs”: The amount of time a user spent on a visit to a screen.
 
 ---
 

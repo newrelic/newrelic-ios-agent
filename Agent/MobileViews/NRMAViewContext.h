@@ -85,7 +85,7 @@ typedef NS_ENUM(NSInteger, NRMAViewDeparture) {
 /// emitted and marks fall back to `appearTime` --
 /// which also means such a view has no baseline for a mark to be wrongly subtracted from. Whether a
 /// given visit had a construction start is recoverable from its `MobileView` event, which carries
-/// `loadTime` exactly when one was vouched for.
+/// `loadTimeMs` exactly when one was vouched for.
 - (void)transitionToView:(NSString *)name
               instanceId:(NSString *)instanceId
               appearTime:(CFAbsoluteTime)appearTime
@@ -145,7 +145,7 @@ typedef NS_ENUM(NSInteger, NRMAViewDeparture) {
 - (void)beginManualViewLoad;
 
 /// Sets the current view by name (browser route-change / SPA model). If a manual view is already
-/// current, its MobileView event is emitted now -- that visit has just ended, so its `timeVisible`
+/// current, its MobileView event is emitted now -- that visit has just ended, so its `timeVisibleMs`
 /// is finally knowable. `name` then becomes current and emits nothing yet; `viewClass`,
 /// `uiFramework` and `attributes` are held and ride on its event when the *next* setCurrentView:
 /// (or a background flush, or an automatic screen appearing) closes it out. Auto-tracked views that
@@ -158,7 +158,7 @@ typedef NS_ENUM(NSInteger, NRMAViewDeparture) {
                  uiFramework:(nullable NSString *)uiFramework
                   attributes:(nullable NSDictionary<NSString *, id> *)attributes;
 
-/// If the current view was set manually, emits its MobileView event (with timeVisible) and clears
+/// If the current view was set manually, emits its MobileView event (with timeVisibleMs) and clears
 /// it. Called on app background so the last manual view produces an event at all -- it is otherwise
 /// closed out only by the next setCurrentView:, which may never come.
 ///
@@ -213,7 +213,7 @@ typedef NS_ENUM(NSInteger, NRMAViewDeparture) {
 /// take a snapshot, the lock is released here, and only then is an event recorded.
 - (NRMAViewTimingSnapshot *)snapshotForTiming;
 
-/// Single seconds → milliseconds conversion, floored at 0. All view timing (loadTime, timeVisible)
+/// Single seconds → milliseconds conversion, floored at 0. All view timing (loadTimeMs, timeVisibleMs)
 /// runs through here so the unit cannot drift between producers. Both arguments must come from
 /// `+monotonicNow`; mixing a wall-clock value in is what the flooring would hide.
 + (double)millisecondsBetween:(CFAbsoluteTime)start and:(CFAbsoluteTime)end;

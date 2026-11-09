@@ -84,8 +84,8 @@
     Disabled by default. Enables automatic capture of MobileView events for UIViewController lifecycle
     (viewDidLoad → viewDidAppear → viewDidDisappear) and SwiftUI onAppear/onDisappear.
     Each visible appearance of a view emits one MobileView event, when the view ceases to be visible,
-    with viewClass, viewName, viewInstanceId, previousView (referrer), loadTime (ms), and
-    timeVisible (ms) attributes.
+    with viewClass, viewName, viewInstanceId, previousView (referrer), loadTimeMs, and
+    timeVisibleMs attributes (milliseconds).
 
  - NRFeatureFlag_ManualViews
     Disabled by default. Enables the manual [NewRelic setCurrentView:viewClass:uiFramework:attributes:]

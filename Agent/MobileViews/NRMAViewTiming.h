@@ -4,7 +4,7 @@
 //
 //  MobileViewTiming: timings that are only knowable *after* a view has appeared.
 //
-//  The MobileView appear event carries loadTime, but loadTime is fixed at viewDidAppear — so a
+//  The MobileView appear event carries loadTimeMs, but loadTimeMs is fixed at viewDidAppear — so a
 //  screen that renders a spinner in 80ms and real content in 900ms reports 80ms. Time to Full
 //  Display and Time to Interactive cannot ride that event at all, because they are not known when
 //  it is emitted. This type streams them as separate "MobileViewTiming" events instead, modelled on
@@ -99,8 +99,8 @@ FOUNDATION_EXPORT const double kNRMAViewTimingMaxMilliseconds;
 ///
 /// Falls back to the appear time when the producer could not vouch for a construction start. Which
 /// of the two a row used is not stamped on the timing event; it is recoverable from the `MobileView`
-/// appear event for the same `viewInstanceId`, which carries `loadTime` exactly when a construction
-/// start was vouched for and `loadTimeUnavailable` when it was not.
+/// appear event for the same `viewInstanceId`, which carries `loadTimeMs` exactly when a construction
+/// start was vouched for and `loadTimeUnavailableReason` when it was not.
 ///
 /// Returns NO when view tracking is disabled, when no view is current (no zero point exists at all),
 /// or when the timing fails validation or the per-view cap.
@@ -115,7 +115,7 @@ FOUNDATION_EXPORT const double kNRMAViewTimingMaxMilliseconds;
 /// Emits the out-of-the-box `timeToInitialDisplay` row for the view that just became current:
 /// construction start → appear, both read from the shared view context.
 ///
-/// Deliberately takes no duration. An earlier form accepted the `loadTime` the producer had already
+/// Deliberately takes no duration. An earlier form accepted the `loadTimeMs` the producer had already
 /// computed, which meant the baseline and customer marks derived from two separate code paths that
 /// agreed only by convention — and they drifted, onto origins that made the headline
 /// `timeToFullDisplay - timeToInitialDisplay` subtraction change sign. Reading both origins from the
