@@ -14,6 +14,10 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  # Install exactly what Gemfile.lock pins; fail if the lockfile is out of date.
+  BUNDLE_FROZEN: "true"
+
 jobs:
   testIOS:
     name: TestIOS
@@ -21,11 +25,11 @@ jobs:
     # *** runs-on: ubuntu-latest is used when running via act on mac os. ***
     runs-on: xcode-27
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
         with:
           submodules: true
 
-      - uses: maxim-lobanov/setup-xcode@v1
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
           xcode-version: "27.0"
 
@@ -33,15 +37,12 @@ jobs:
       #   run: |
       #     curl https://raw.githubusercontent.com/Homebrew/homebrew-core/e92d2ae54954ebf485b484d8522104700b144fee/Formula/lcov.rb > lcov.rb
       #     brew install ./lcov.rb
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199 # v1.338.0
         with:
           ruby-version: '3.2'
           bundler-cache: false
       - name: Install Bundler 2.7.2
         run: gem install bundler:2.7.2
-
-      - name: Update gem
-        run: bundle update
 
       - name: Install gems
         run: bundle install
@@ -55,14 +56,14 @@ jobs:
     # *** runs-on: ubuntu-latest is used when running via act on mac os. ***
     runs-on: xcode-27
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
         with:
           submodules: true
 
-      - uses: maxim-lobanov/setup-xcode@v1
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
           xcode-version: "27.0"
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199 # v1.338.0
         with:
           ruby-version: '3.2'
           bundler-cache: false
@@ -71,9 +72,6 @@ jobs:
 
       - name: Install Bundler 2.7.2
         run: gem install bundler:2.7.2
-
-      - name: Update gem
-        run: bundle update
 
       - name: Install gems
         run: bundle install
@@ -90,11 +88,11 @@ jobs:
       # Pin every xcrun/xcodebuild/fastlane call in this job to Xcode 27.0.
       DEVELOPER_DIR: /Applications/Xcode_27.app/Contents/Developer
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
         with:
           submodules: true
 
-      - uses: maxim-lobanov/setup-xcode@v1
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
           xcode-version: "27.0"
 
@@ -116,7 +114,7 @@ jobs:
             exit 1
           fi
 
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199 # v1.338.0
         with:
           ruby-version: '3.2'
           bundler-cache: false
@@ -125,9 +123,6 @@ jobs:
 
       - name: Install Bundler 2.7.2
         run: gem install bundler:2.7.2
-
-      - name: Update gem
-        run: bundle update
 
       - name: Install gems
         run: bundle install
@@ -151,14 +146,14 @@ jobs:
     outputs:
       version: ${{ steps.setOutput.outputs.version }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
         with:
           submodules: true
 
-      - uses: maxim-lobanov/setup-xcode@v1
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
           xcode-version: "27.0"
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199 # v1.338.0
         with:
           ruby-version: '3.2'
           bundler-cache: false
@@ -195,9 +190,6 @@ jobs:
       - name: Install Bundler 2.7.2
         run: gem install bundler:2.7.2
 
-      - name: Update gem
-        run: bundle update
-
       - name: Install gems
         run: bundle install
 
@@ -220,7 +212,7 @@ jobs:
 
       - name: Upload build reports
         if: failure() && steps.build-step.outcome != 'success'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: build-reports
           path: /Users/runner/Library/Logs/fastlane/xcbuild/
@@ -244,20 +236,17 @@ jobs:
     needs: [deployS3, archiveNRTestApp]
     if: github.ref == 'refs/heads/staging'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
         with:
           submodules: true
       
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199 # v1.338.0
         with:
           ruby-version: '3.2'
           bundler-cache: false
 
       - name: Install Bundler 2.7.2
         run: gem install bundler:2.7.2
-
-      - name: Update gem
-        run: bundle update
 
       - name: Install gems
         run: bundle install
@@ -299,7 +288,7 @@ jobs:
 
       # Use git-auto-commit-action to push NewRelicAgent.podspec & Package.swift up to root of newrelic-ios-agent branch: staging.
       # This should also tag the staging release branch w/ version number tag.
-      - uses: stefanzweifel/git-auto-commit-action@v4
+      - uses: stefanzweifel/git-auto-commit-action@3ea6ae190baf489ba007f7c92608f33ce20ef04a # v4.16.0
         with:
           commit_message: "[${{ env.version }}] Staging Release"
           branch: staging
