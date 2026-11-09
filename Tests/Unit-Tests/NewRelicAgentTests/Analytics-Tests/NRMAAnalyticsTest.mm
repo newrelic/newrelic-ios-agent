@@ -1199,6 +1199,7 @@
 
     [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
     [NRMAAnalytics clearDuplicationStores];
+}
 
   #pragma mark - appVersion session attribute (NR-646041)
 
