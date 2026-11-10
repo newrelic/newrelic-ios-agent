@@ -19,6 +19,9 @@
 #import "Constants.h"
 #import "NewRelicAgentInternal.h"
 #import "NRMAHandledExceptions.h"
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+#import <NewRelic/NewRelic-Swift.h>
+#endif
 
 @interface NSBundle (AHHHH)
 + (NSBundle*) NRMA__mainBundle;
@@ -157,9 +160,12 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
 }
 
 - (id) makeMockURLSession {
+    return [self makeMockURLSessionWithConfig:[self makeHarvestConfig]];
+}
+
+- (id) makeMockURLSessionWithConfig:(NRMAHarvesterConfiguration*)config {
     __block NSURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://staging-mobile-collector.newrelic.com"] statusCode:200 HTTPVersion:@"1.1" headerFields:nil];
-    NRMAHarvesterConfiguration* config = [self makeHarvestConfig];
-        
+
     NSData *data = [NSJSONSerialization dataWithJSONObject:[config asDictionary] options:NSJSONWritingPrettyPrinted error:nil];
     
     id mockNSURLSession = [OCMockObject mockForClass:NSURLSession.class];
@@ -906,6 +912,99 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
 
     [mockNewRelicInternals stopMocking];
 }
+
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+// Runs the harvester from uninitialized to connected with a bare agent (holding a real replay
+// manager, sampled into full) as the shared instance, and returns the userInfo of the first
+// session replay configuration post.
+- (NSDictionary*) sessionReplayConfigurationPostedWhileConnecting
+{
+    NewRelicAgentInternal* bareAgent = [[NewRelicAgentInternal alloc] init];
+    bareAgent.sessionReplaySampleSeed = 1.0;
+    SessionReplayReporter* reporter = [[SessionReplayReporter alloc] initWithApplicationToken:@"test-token"
+                                                                                          url:@"mobile-collector.newrelic.com"];
+    SessionReplayManager* manager = [[SessionReplayManager alloc] initWithReporter:reporter url:@"mobile-collector.newrelic.com"];
+    [bareAgent setValue:manager forKey:@"sessionReplay"];
+
+    id mockNewRelicInternals = [OCMockObject mockForClass:[NewRelicAgentInternal class]];
+    [[[[mockNewRelicInternals stub] classMethod] andReturn:bareAgent] sharedInstance];
+
+    // The agent reads the session replay config through the harvest controller's harvester;
+    // point it at this test's harvester instead.
+    NRMAHarvester* testHarvester = harvester;
+    id mockHarvestController = [OCMockObject mockForClass:[NRMAHarvestController class]];
+    [[[[mockHarvestController stub] classMethod] andDo:^(NSInvocation* invocation) {
+        NRMAHarvesterConfiguration* config = [testHarvester harvesterConfiguration];
+        [invocation setReturnValue:&config];
+    }] configuration];
+
+    __block NSDictionary* userInfo = nil;
+    XCTestExpectation* posted = [self expectationForNotification:kNRSessionReplayConfigurationDidChangeNotification
+                                                          object:nil
+                                                         handler:^BOOL(NSNotification* note) {
+        XCTAssertEqualObjects(note.userInfo, [bareAgent sessionReplayConfiguration]);
+        userInfo = note.userInfo;
+        return YES;
+    }];
+
+    [harvester execute]; // uninitialized -> disconnected
+    NRMAWaitForHarvesterToLeaveState(harvester, NRMA_HARVEST_UNINITIALIZED);
+    [harvester execute]; // disconnected -> connected
+    NRMAWaitForHarvesterToLeaveState(harvester, NRMA_HARVEST_DISCONNECTED);
+    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_CONNECTED, @"expected connected");
+
+    [self waitForExpectations:@[posted] timeout:5.0];
+
+    [manager stop];
+    [mockHarvestController stopMocking];
+    [mockNewRelicInternals stopMocking];
+    return userInfo;
+}
+
+- (void) testCachedConfigShortcutPostsSessionReplayConfiguration
+{
+    [[NSUserDefaults standardUserDefaults] removeObjectForKey:kNRMAConnectionInformationKey];
+    NRMAHarvesterConfiguration* config = [self makeHarvestConfig];
+    config.session_replay_enabled = YES;
+    [[NSUserDefaults standardUserDefaults] setValue:[config asDictionary] forKey:kNRMAHarvesterConfigurationStoreKey];
+    [[NSUserDefaults standardUserDefaults] setValue:[[NRMAAgentConfiguration connectionInformation] toApplicationIdentifier]
+                                              forKey:kNRMAApplicationIdentifierKey];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+
+    NSDictionary* userInfo = [self sessionReplayConfigurationPostedWhileConnecting];
+
+    XCTAssertEqualObjects(userInfo[@"recordingMode"], @"full");
+}
+
+- (void) testConnectPostsSessionReplayConfiguration
+{
+    NRMAHarvesterConfiguration* config = [self makeHarvestConfig];
+    config.session_replay_enabled = YES;
+    harvester.connection.harvestSession = [self makeMockURLSessionWithConfig:config];
+
+    NSDictionary* userInfo = [self sessionReplayConfigurationPostedWhileConnecting];
+
+    XCTAssertEqualObjects(userInfo[@"recordingMode"], @"full");
+}
+
+- (void) testConnectWithSessionReplayDisabledPostsOffShape
+{
+    NSDictionary* userInfo = [self sessionReplayConfigurationPostedWhileConnecting];
+
+    XCTAssertEqualObjects(userInfo, (@{@"enabled": @NO, @"recordingMode": @"off"}));
+}
+
+- (void) testConnectWithoutSessionReplayConfigPostsOffShape
+{
+    NRMAHarvesterConfiguration* config = [self makeHarvestConfig];
+    config.has_session_replay_config = NO;
+    harvester.connection.harvestSession = [self makeMockURLSessionWithConfig:config];
+
+    NSDictionary* userInfo = [self sessionReplayConfigurationPostedWhileConnecting];
+
+    XCTAssertEqualObjects(userInfo, (@{@"enabled": @NO, @"recordingMode": @"off"}));
+}
+#endif
 
 - (void) testUninitializedToDisabled
 {

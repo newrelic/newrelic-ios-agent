@@ -752,6 +752,12 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 #endif
 }
 
+- (void) publishSessionReplayConfiguration {
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+    [_sessionReplay publishConfiguration];
+#endif
+}
+
 - (BOOL) recordReplay {
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     if(![self isSessionReplayEnabled]){

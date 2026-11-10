@@ -94,6 +94,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void) sessionReplayDisabled;
 
+// Posts kNRSessionReplayConfigurationDidChangeNotification with the current configuration
+- (void) publishSessionReplayConfiguration;
+
 - (void) sessionReplayEndSession;
 
 // Logging Collection - handles sampling check and log upload

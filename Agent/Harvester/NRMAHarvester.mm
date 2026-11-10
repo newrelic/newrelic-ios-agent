@@ -1011,6 +1011,9 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
         [[NewRelicAgentInternal sharedInstance] sessionReplayDisabled];
     }
 
+    // Tell external replay sources (e.g. the Flutter agent) what resolved. This is queued after
+    // the start or disable above, so the posted configuration carries the mode they set.
+    [[NewRelicAgentInternal sharedInstance] publishSessionReplayConfiguration];
 }
 
 // Called from both connect-success paths below so persisted Hex reports aren't
