@@ -24,6 +24,7 @@
 #import "NRMAMeasurements.h"
 #import "NRMATaskQueue.h"
 #import "NRMANamedValueMeasurement.h"
+#import "NRMAViewContext.h"
 #import "NewRelicAgentInternal.h"
 #import "NRMAAgentConfiguration.h"
 #import "NRMAConnectInformation.h"
