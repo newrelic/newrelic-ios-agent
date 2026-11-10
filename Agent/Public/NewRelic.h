@@ -991,8 +991,10 @@ extern "C" {
  * The result is an immutable snapshot and is safe to call from any thread.
  *
  * kNRSessionReplayConfigurationDidChangeNotification is posted on the main thread, with
- * this dictionary as its userInfo, whenever the configuration resolves or changes and
- * whenever the recording mode changes.
+ * this dictionary as its userInfo, whenever the configuration resolves or a masking rule
+ * is added, and whenever pauseReplay(), recordReplay() or an error changes the recording
+ * mode. When a session ends, recordingMode becomes "off" without a post; the next
+ * session's configuration post reports its mode.
  *
  * @return The current session replay configuration.
  */

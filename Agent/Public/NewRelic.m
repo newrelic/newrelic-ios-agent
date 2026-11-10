@@ -850,6 +850,15 @@
 
 #pragma mark - Session Replay Masking
 
+// Native masking applies a rule as soon as it's added, so tell external replay sources
+// (e.g. the Flutter agent) too. A no-op until the agent has started.
+static BOOL NRMASessionReplayRuleAdded(BOOL added) {
+    if (added) {
+        [[NewRelicAgentInternal sharedInstance] publishSessionReplayConfiguration];
+    }
+    return added;
+}
+
 /*
  * Adds a view class to be masked during session replay.
  * All instances of the specified class and its subclasses will have their text content masked.
@@ -861,7 +870,7 @@
         return false;
     }
 
-    return [NRMAAgentConfiguration addLocalMaskedClassName: viewClassName];
+    return NRMASessionReplayRuleAdded([NRMAAgentConfiguration addLocalMaskedClassName: viewClassName]);
 
 }
 
@@ -876,7 +885,7 @@
         return false;
     }
 
-    return [NRMAAgentConfiguration addLocalUnmaskedClassName: viewClassName];
+    return NRMASessionReplayRuleAdded([NRMAAgentConfiguration addLocalUnmaskedClassName: viewClassName]);
 }
 
 /*
@@ -890,7 +899,7 @@
         return false;
     }
 
-    return [NRMAAgentConfiguration addLocalMaskedAccessibilityIdentifier: identifier];
+    return NRMASessionReplayRuleAdded([NRMAAgentConfiguration addLocalMaskedAccessibilityIdentifier: identifier]);
 }
 
 /*
@@ -904,7 +913,7 @@
         return false;
     }
 
-    return [NRMAAgentConfiguration addLocalUnmaskedAccessibilityIdentifier: identifier];
+    return NRMASessionReplayRuleAdded([NRMAAgentConfiguration addLocalUnmaskedAccessibilityIdentifier: identifier]);
 }
 
 #pragma mark - Session Replay Manual

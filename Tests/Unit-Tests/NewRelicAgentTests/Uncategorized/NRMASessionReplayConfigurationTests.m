@@ -557,6 +557,35 @@ static NSString *errorModeMarkerPath(void)
     [self waitForExpectations:@[noPost] timeout:0.5];
 }
 
+// Native masking applies a rule added mid-session right away, so an external replay source
+// has to hear about it too, not just at the next session.
+- (void) testAddingMaskingRulesPostsUpdatedLists
+{
+    [self useFullSampling];
+    [self startSession];
+    [self settle];
+
+    NSDictionary *afterMaskedClass = [self waitForConfigurationPostAfter:^{
+        XCTAssertTrue([NewRelic addSessionReplayMaskViewClass:@"AddedLater"]);
+    }];
+    XCTAssertTrue([afterMaskedClass[@"maskedClasses"] containsObject:@"AddedLater"]);
+
+    NSDictionary *afterUnmaskedClass = [self waitForConfigurationPostAfter:^{
+        XCTAssertTrue([NewRelic addSessionReplayUnmaskViewClass:@"RemotePublicView"]);
+    }];
+    XCTAssertTrue([afterUnmaskedClass[@"unmaskedClasses"] containsObject:@"RemotePublicView"]);
+
+    NSDictionary *afterMaskedKey = [self waitForConfigurationPostAfter:^{
+        XCTAssertTrue([NewRelic addSessionReplayMaskedAccessibilityIdentifier:@"remote-private"]);
+    }];
+    XCTAssertTrue([afterMaskedKey[@"maskedKeys"] containsObject:@"remote-private"]);
+
+    NSDictionary *afterUnmaskedKey = [self waitForConfigurationPostAfter:^{
+        XCTAssertTrue([NewRelic addSessionReplayUnmaskedAccessibilityIdentifier:@"remote-public"]);
+    }];
+    XCTAssertTrue([afterUnmaskedKey[@"unmaskedKeys"] containsObject:@"remote-public"]);
+}
+
 - (void) testHandlerCanRecordFromInsideNotification
 {
     [self useFullSampling];
