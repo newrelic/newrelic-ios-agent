@@ -32,9 +32,21 @@ public class SessionReplayManager: NSObject {
     
     
     // TWO SESSION REPLAY MODEs
-    public var sessionReplayMode: SessionReplayRecordingMode = .off {
-        didSet {
-            sessionReplay.recordingMode = sessionReplayMode
+    // Written on sessionReplayQueue, but readable from any thread: the public session
+    // replay configuration getter reads it without touching the queue.
+    private let modeLock = NSLock()
+    private var lockedSessionReplayMode: SessionReplayRecordingMode = .off
+    public var sessionReplayMode: SessionReplayRecordingMode {
+        get {
+            modeLock.lock()
+            defer { modeLock.unlock() }
+            return lockedSessionReplayMode
+        }
+        set {
+            modeLock.lock()
+            lockedSessionReplayMode = newValue
+            modeLock.unlock()
+            sessionReplay.recordingMode = newValue
         }
     }
     
@@ -62,8 +74,23 @@ public class SessionReplayManager: NSObject {
     /// - Parameter mode: The recording mode to use
     @objc public func setRecordingMode(_ mode: SessionReplayRecordingMode) {
         sessionReplayQueue.async { [self] in
-            self.sessionReplayMode = mode
-            sessionReplay.transistionToRecordingMode(mode)
+            applyRecordingMode(mode)
+        }
+    }
+
+    // Must run on sessionReplayQueue.
+    private func applyRecordingMode(_ mode: SessionReplayRecordingMode) {
+        sessionReplayMode = mode
+        sessionReplay.transistionToRecordingMode(mode)
+    }
+
+    /// Reports the mode as off once native capture has stopped (session end, replay disabled,
+    /// or a session sampled off). A capture that is still running keeps its mode.
+    @objc public func resetRecordingModeIfStopped() {
+        sessionReplayQueue.async { [self] in
+            if !isRunning() {
+                sessionReplayMode = .off
+            }
         }
     }
     
@@ -102,8 +129,10 @@ public class SessionReplayManager: NSObject {
             
             
             // SESSION REPLAY ERRORED SESSION SAMPLING HANDLING
-            
-            self.setRecordingMode(newMode)
+
+            // Applied here rather than through setRecordingMode's second async hop, so work
+            // queued after start (like publishing the configuration) sees the new mode.
+            self.applyRecordingMode(newMode)
             
             // END SESSION REPLAY ERRORED SESSION SAMPLING HANDLING
             
@@ -160,6 +189,9 @@ public class SessionReplayManager: NSObject {
         if harvest {
             self.harvest()
         }
+        // The ended session's mode no longer applies. Reset after the harvest, which skips in off mode.
+        resetRecordingModeIfStopped()
+
         // Reset isManuallyRecording for new session
         isManuallyRecording = false
         

@@ -17,6 +17,7 @@
 #import "NRMAAgentConfiguration.h"
 #import "NRMASupportMetricHelper.h"
 #import "NRMATaskQueue.h"
+#import "Constants.h"
 #import <NewRelic/NewRelic-Swift.h>
 
 @interface NRMATaskQueue (tests)
@@ -45,6 +46,20 @@ static NSDictionary *offShape(void)
     return @{@"enabled": @NO, @"recordingMode": @"off"};
 }
 
+// isManuallyActive runs a sessionReplayQueue.sync, so returning from it means every block
+// queued before it has run. Used as a barrier for the manager's async mode changes.
+static void NRMADrainReplayQueue(SessionReplayManager *manager)
+{
+    (void)[manager isManuallyActive];
+}
+
+static NSString *errorModeMarkerPath(void)
+{
+    NSString *documents = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
+    return [[documents stringByAppendingPathComponent:kNRMA_SessionReplayFrames_folder]
+            stringByAppendingPathComponent:kNRMA_SessionReplayErrorMode_marker];
+}
+
 - (void) setUp
 {
     [super setUp];
@@ -70,6 +85,7 @@ static NSDictionary *offShape(void)
 - (void) tearDown
 {
     [self.manager stop];
+    [[NSFileManager defaultManager] removeItemAtPath:errorModeMarkerPath() error:nil];
     [self.mockAgentInternal stopMocking];
     [self.mockHarvestController stopMocking];
 
@@ -101,6 +117,44 @@ static NSDictionary *offShape(void)
                                                             error:&error];
     XCTAssertNil(error, @"test payload must be valid JSON");
     return [[NRMAHarvesterConfiguration alloc] initWithDictionary:parsed];
+}
+
+- (void) useFullSampling
+{
+    self.config = [self configWithSessionReplayJSON:@"{\"enabled\":true}"];
+    self.config.session_replay_sampling_rate = 100.0;
+    self.config.session_replay_error_sampling_rate = 0.0;
+    self.agent.sessionReplaySampleSeed = 1.0;
+}
+
+- (void) useErrorSampling
+{
+    self.config = [self configWithSessionReplayJSON:@"{\"enabled\":true}"];
+    self.config.session_replay_sampling_rate = 0.0;
+    self.config.session_replay_error_sampling_rate = 100.0;
+    self.agent.sessionReplaySampleSeed = 50.0;
+    self.agent.sessionReplayErrorSampleSeed = 1.0;
+}
+
+- (void) useOffSampling
+{
+    self.config = [self configWithSessionReplayJSON:@"{\"enabled\":true}"];
+    self.config.session_replay_sampling_rate = 0.0;
+    self.config.session_replay_error_sampling_rate = 0.0;
+    self.agent.sessionReplaySampleSeed = 50.0;
+    self.agent.sessionReplayErrorSampleSeed = 50.0;
+}
+
+// Starts a session the way the config path does, then drains exactly once.
+- (void) startSession
+{
+    [self.agent sessionReplayStart];
+    NRMADrainReplayQueue(self.manager);
+}
+
+- (NSString *) recordingMode
+{
+    return [self.agent sessionReplayConfiguration][@"recordingMode"];
 }
 
 #pragma mark - Off shape
@@ -208,6 +262,171 @@ static NSDictionary *offShape(void)
     [self.config addMaskedClassNames:@[@"AddedLater"]];
 
     XCTAssertFalse([result[@"maskedClasses"] containsObject:@"AddedLater"]);
+}
+
+#pragma mark - Recording mode
+
+- (void) testErrorSampledSessionReportsError
+{
+    [self useErrorSampling];
+    [self startSession];
+
+    XCTAssertEqualObjects([self recordingMode], @"error");
+}
+
+- (void) testFullSampledSessionReportsFull
+{
+    [self useFullSampling];
+    [self startSession];
+
+    XCTAssertEqualObjects([self recordingMode], @"full");
+}
+
+- (void) testErrorThenErrorEventReportsFull
+{
+    [self useErrorSampling];
+    [self startSession];
+
+    [self.agent sessionReplayOnError:nil];
+    NRMADrainReplayQueue(self.manager);
+
+    XCTAssertEqualObjects([self recordingMode], @"full");
+}
+
+- (void) testPauseReportsOffAndErrorKeepsItPaused
+{
+    [self useFullSampling];
+    [self startSession];
+
+    XCTAssertTrue([self.agent pauseReplay]);
+    NRMADrainReplayQueue(self.manager);
+    XCTAssertEqualObjects([self recordingMode], @"off");
+
+    [self.agent sessionReplayOnError:nil];
+    NRMADrainReplayQueue(self.manager);
+    XCTAssertEqualObjects([self recordingMode], @"off");
+}
+
+- (void) testPauseInErrorModeReportsOffAndErrorKeepsItPaused
+{
+    [self useErrorSampling];
+    [self startSession];
+
+    XCTAssertTrue([self.agent pauseReplay]);
+    NRMADrainReplayQueue(self.manager);
+    XCTAssertEqualObjects([self recordingMode], @"off");
+
+    [self.agent sessionReplayOnError:nil];
+    NRMADrainReplayQueue(self.manager);
+    XCTAssertEqualObjects([self recordingMode], @"off");
+}
+
+- (void) testRecordAfterPauseReportsFull
+{
+    [self useFullSampling];
+    [self startSession];
+    XCTAssertTrue([self.agent pauseReplay]);
+    NRMADrainReplayQueue(self.manager);
+
+    XCTAssertTrue([self.agent recordReplay]);
+    NRMADrainReplayQueue(self.manager);
+
+    XCTAssertEqualObjects([self recordingMode], @"full");
+}
+
+- (void) testSessionEndReportsOff
+{
+    [self useFullSampling];
+    [self startSession];
+
+    [self.agent sessionReplayEndSession];
+    NRMADrainReplayQueue(self.manager);
+
+    XCTAssertEqualObjects([self recordingMode], @"off");
+}
+
+- (void) testStoppedSessionStartSampledOffReportsOff
+{
+    [self useFullSampling];
+    [self startSession];
+    [self.manager stop];
+
+    [self useOffSampling];
+    [self startSession];
+
+    XCTAssertEqualObjects([self recordingMode], @"off");
+}
+
+- (void) testReconnectSampledOffWhileRecordingKeepsRunningMode
+{
+    [self useOffSampling];
+    [self startSession];
+    XCTAssertTrue([self.agent recordReplay]);
+    NRMADrainReplayQueue(self.manager);
+    XCTAssertEqualObjects([self recordingMode], @"full");
+
+    // A mid-session reconnect runs the config path again with the same off-sampled seeds.
+    [self startSession];
+
+    XCTAssertEqualObjects([self recordingMode], @"full");
+    XCTAssertTrue([self.manager isRunning]);
+}
+
+- (void) testDisabledAfterRunningLeavesModeOff
+{
+    [self useFullSampling];
+    [self startSession];
+
+    self.config.session_replay_enabled = NO;
+    [self.agent sessionReplayDisabled];
+    NRMADrainReplayQueue(self.manager);
+
+    XCTAssertEqual(self.manager.sessionReplayMode, SessionReplayRecordingModeOff);
+}
+
+- (void) testErrorAfterErrorSessionEndedStaysOffAndKeepsMarker
+{
+    [self useErrorSampling];
+    [self startSession];
+    NSString *marker = errorModeMarkerPath();
+    [[NSFileManager defaultManager] createDirectoryAtPath:[marker stringByDeletingLastPathComponent]
+                              withIntermediateDirectories:YES attributes:nil error:nil];
+    XCTAssertTrue([[NSFileManager defaultManager] createFileAtPath:marker contents:[NSData data] attributes:nil]);
+
+    [self.agent sessionReplayEndSession];
+    [self.agent sessionReplayOnError:nil];
+    NRMADrainReplayQueue(self.manager);
+
+    XCTAssertEqualObjects([self recordingMode], @"off");
+    XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:marker],
+                  @"an error after the session ended must not clear the error-mode marker");
+}
+
+- (void) testGetterIsSafeFromBackgroundThreadsDuringModeChanges
+{
+    [self useFullSampling];
+    [self startSession];
+
+    NSSet *validModes = [NSSet setWithArray:@[@"off", @"error", @"full"]];
+    __block NSUInteger invalidResults = 0;
+    NSObject *lock = [NSObject new];
+    dispatch_group_t group = dispatch_group_create();
+    dispatch_group_async(group, dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+        dispatch_apply(200, dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^(size_t i) {
+            NSString *mode = [self.agent sessionReplayConfiguration][@"recordingMode"];
+            if (![validModes containsObject:mode]) {
+                @synchronized(lock) { invalidResults++; }
+            }
+        });
+    });
+
+    for (int i = 0; i < 20; i++) {
+        [self.agent pauseReplay];
+        [self.agent recordReplay];
+    }
+
+    XCTAssertEqual(dispatch_group_wait(group, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC)), 0);
+    XCTAssertEqual(invalidResults, (NSUInteger)0);
 }
 
 @end

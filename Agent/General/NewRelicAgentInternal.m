@@ -730,6 +730,11 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
                 }
             }
         }
+        else {
+            // Sampled off. Report off, unless capture is still running (e.g. recordReplay()
+            // was called before a reconnect re-ran this).
+            [_sessionReplay resetRecordingModeIfStopped];
+        }
     }
 #endif
 }
@@ -739,6 +744,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     if(_sessionReplay != nil){
         [_sessionReplay stop];
         [_sessionReplay clearAllData];
+        [_sessionReplay resetRecordingModeIfStopped];
         @synchronized(kNRMAAnalyticsInitializationLock) {
             [self.analyticsController removeNRSessionAttributeNamed:kNRMA_RA_hasReplay];
         }
