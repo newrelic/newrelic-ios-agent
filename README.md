@@ -110,7 +110,7 @@ The run-symbol-tool Run script must be added to your app's Xcode project build p
 
 ## Links
 - [newrelic-ios-agent-spm](https://github.com/newrelic/newrelic-ios-agent-spm) Released Swift packages are published here. 
-- [modular-crash-reporter-ios (aka PLCrashReporter)](https://github.com/microsoft/plcrashreporter) Crash reporting library, vendored in `modular-crash-reporter-ios/` from release 1.12.2 with the iOS/tvOS deployment targets raised to 15.0 in `CrashReporter.xcodeproj`.
+- [modular-crash-reporter-ios (aka PLCrashReporter)](https://github.com/microsoft/plcrashreporter) Crash reporting library, vendored in `modular-crash-reporter-ios/` from release 1.12.2. Only the `CrashReporter iOS` and `CrashReporter tvOS` static library targets and their sources are kept, with the deployment targets raised to 15.0.
 
 ## Support
 
