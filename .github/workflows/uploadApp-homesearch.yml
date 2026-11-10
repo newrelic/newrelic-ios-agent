@@ -1,0 +1,189 @@
+# Builds Test Harness/HomeSearch from `mobile-views-2` and uploads it to LambdaTest, the same way
+# uploadApp-expensestracker.yml does for ExpensesTracker, so HomeSearch always has a fresh app on LambdaTest
+# (LambdaTest expires uploads after 60 days).
+#
+# HomeSearch only exists on mobile-views-2: it needs the MobileViews API, which develop does not have.
+#
+# The app reads its token from HomeSearch/NRAPI-Info.plist, committed empty. The build job fills it in
+# from repository secrets with PlistBuddy, exactly as the ExpensesTracker and NRTestApp workflows do:
+#
+#   secrets.HOMESEARCH_APP_TOKEN                  required
+#   secrets.HOMESEARCH_MAIN_COLLECTOR_ADDRESS     optional, defaults to staging-mobile-collector.newrelic.com
+#   secrets.HOMESEARCH_CRASH_COLLECTOR_ADDRESS    optional, defaults to staging-mobile-crash.newrelic.com
+#
+# A token in the plist is what puts the app in live mode when LambdaTest launches it, since there is no
+# scheme to set NR_APP_TOKEN in. With an empty token the app falls back to capture mode and reports nowhere,
+# so the build fails rather than upload an app that sends no data.
+#
+# The upload script (LambdaTest/uploadAppToLambdaTest.mjs) is shared with NRTestApp and ExpensesTracker; LT_APP_ZIP and
+# LT_APP_ID_PREFIX point it at this app, and its timestamped custom_id means uploads never clobber each other.
+#
+# Note: keep this workflow's `name:` distinct from uploadApp.yml's — wdio.yml listens for workflow_run on
+# "Upload iOS NRTestApp to LambdaTest" and would otherwise run the NRTestApp suite against this app.
+
+name: Upload iOS HomeSearch (mobile-views-2) to LambdaTest
+
+permissions:
+  contents: read
+  actions: read
+
+on:
+ # enables option for workflow to be manually executed in Github UI
+ workflow_dispatch:
+
+ # Runs daily to build, upload, and refresh the LambdaTest app (which otherwise expires after 60 days)
+ schedule:
+   # Half an hour after uploadApp-expensestracker.yml, so the two suites do not compete for sessions.
+   - cron: "47 8 * * *"
+
+jobs:
+
+  build-ios:
+    name: Build iOS app
+    runs-on: macos-15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2
+        with:
+          ref: mobile-views-2
+          submodules: true
+
+      - name: Select Xcode 16.4
+        run: |
+          sudo xcode-select -switch /Applications/Xcode_16.4.app
+
+      - name: Set plist secrets
+        env:
+          HOMESEARCH_APP_TOKEN: ${{ secrets.HOMESEARCH_APP_TOKEN }}
+          HOMESEARCH_MAIN_COLLECTOR_ADDRESS: ${{ secrets.HOMESEARCH_MAIN_COLLECTOR_ADDRESS }}
+          HOMESEARCH_CRASH_COLLECTOR_ADDRESS: ${{ secrets.HOMESEARCH_CRASH_COLLECTOR_ADDRESS }}
+        run: |
+          if [ -z "$HOMESEARCH_APP_TOKEN" ]; then
+            echo "::error::secrets.HOMESEARCH_APP_TOKEN is not set; the app would start in capture mode and report nothing"
+            exit 1
+          fi
+          PLIST_PATH="./Test Harness/HomeSearch/HomeSearch/NRAPI-Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :NRAPIKey ${HOMESEARCH_APP_TOKEN}" "$PLIST_PATH"
+          # Left empty when unset, which NewRelicConfig reads as "use the staging collectors".
+          if [ -n "$HOMESEARCH_MAIN_COLLECTOR_ADDRESS" ]; then
+            /usr/libexec/PlistBuddy -c "Set :collectorAddress ${HOMESEARCH_MAIN_COLLECTOR_ADDRESS}" "$PLIST_PATH"
+          fi
+          if [ -n "$HOMESEARCH_CRASH_COLLECTOR_ADDRESS" ]; then
+            /usr/libexec/PlistBuddy -c "Set :crashCollectorAddress ${HOMESEARCH_CRASH_COLLECTOR_ADDRESS}" "$PLIST_PATH"
+          fi
+
+      # The project carries Agent.xcodeproj as a subproject, so this also builds the agent from this checkout.
+      - name: Build iOS app
+        run: |
+          xcodebuild build \
+            -project "Test Harness/HomeSearch/HomeSearch.xcodeproj" -scheme HomeSearch \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -derivedDataPath "derived_build"
+
+      - name: Compress iOS app
+        run: |
+          cd ./derived_build/Build/Products/Release-iphonesimulator/
+          ls
+          zip -r homesearch-ios.zip HomeSearch.app
+
+      - name: Upload iOS app
+        uses: actions/upload-artifact@v4
+        with:
+          name: homesearch-ios
+          path: ./derived_build/Build/Products/Release-iphonesimulator/homesearch-ios.zip
+          compression-level: 0
+          retention-days: 1
+
+  upload-apps:
+    name: Upload HomeSearch app to LT
+    needs: [build-ios]
+    runs-on: ubuntu-latest
+    outputs:
+      # Handed to wdio-homesearch.yml as a workflow_call input (not an artifact; see that file).
+      app_id: ${{ steps.app-id.outputs.app_id }}
+    env:
+      LT_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
+      LT_ACCESSKEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
+      LT_APP_ZIP: homesearch-ios.zip
+      LT_APP_ID_PREFIX: com.newrelic.HomeSearch
+    steps:
+      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # pin@v4
+        with:
+          ref: mobile-views-2
+
+      - name: Setup environment
+        uses: ./.github/actions/env-setup
+
+      - name: Download iOS artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: homesearch-ios
+          path: ${{ github.workspace }}/builds
+
+      - name: Run upload script
+        run: node LambdaTest/uploadAppToLambdaTest.mjs
+
+      # Read back the custom_id this run just wrote, validated before it leaves the job. It also goes on the
+      # run page, since it is what a hand-dispatched wdio-homesearch.yml run needs.
+      - name: Capture uploaded app ID
+        id: app-id
+        run: |
+          APP_ID_FILE="LambdaTest/last-app-id"
+          if [ ! -f "$APP_ID_FILE" ]; then
+            echo "::error::upload script did not write $APP_ID_FILE"
+            exit 1
+          fi
+          APP_ID="$(tr -d '\n' < "$APP_ID_FILE")"
+          if ! printf '%s' "$APP_ID" | grep -Eq '^com\.newrelic\.HomeSearch\.[A-Za-z0-9._:-]{1,160}$'; then
+            echo "::error::uploaded app ID is not in the expected format"
+            exit 1
+          fi
+          echo "app_id=$APP_ID" >> "$GITHUB_OUTPUT"
+          echo "Uploaded HomeSearch to LambdaTest as \`$APP_ID\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Log success
+        if: ${{ success() }}
+        run: echo "[ RUNNER ] - successfully uploaded HomeSearch to LambdaTest"
+
+      - name: Log failure
+        if: ${{ failure() || cancelled() }}
+        run: echo "[ RUNNER ] - failed to upload HomeSearch to LambdaTest"
+
+      - name: Notify failure
+        if: ${{ failure() || cancelled() }}
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # pin@v2
+        with:
+          webhook-type: incoming-webhook
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            blocks:
+              - type: "header"
+                text:
+                  type: "plain_text"
+                  text: ":crying-sunglasses-cowboy: LambdaTest Upload Failed (HomeSearch)"
+              - type: "divider"
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "Something went wrong while uploading the mobile-views-2 HomeSearch app to LambdaTest. Please check the logs for more details."
+                accessory:
+                  type: "button"
+                  text:
+                    type: "plain_text"
+                    text: "View logs"
+                    emoji: true
+                  value: "view_logs"
+                  url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  action_id: "button-action"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  run-tests:
+    name: Run HomeSearch LambdaTest suite
+    needs: [upload-apps]
+    uses: ./.github/workflows/wdio-homesearch.yml
+    secrets: inherit
+    with:
+      app_id: ${{ needs.upload-apps.outputs.app_id }}

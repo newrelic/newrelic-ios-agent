@@ -30,7 +30,7 @@
     // check if attribute name is reserved or attribute name matches reserved prefix.
     for (NSString* key in [NRMAAnalytics reservedKeywords]) {
         if ([key isEqualToString:name]) {
-            NRLOG_AGENT_ERROR(@"invalid attribute: name prefix disallowed");
+            NRLOG_AGENT_ERROR(@"invalid attribute: name disallowed");
             return false;
         }
     }
