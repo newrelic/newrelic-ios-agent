@@ -15,6 +15,8 @@ extern NSString *const kNRMA_RA_category;
 extern NSString *const kNRMA_RA_accountId;
 extern NSString *const kNRMA_RA_appId;
 extern NSString *const kNRMA_RA_appName;
+extern NSString *const kNRMA_RA_appBuild;
+extern NSString *const kNRMA_RA_appVersion;
 extern NSString *const kNRMA_RA_uuid;
 extern NSString *const kNRMA_RA_sessionDuration;
 extern NSString *const kNRMA_RA_sessionElapsedTime;
@@ -44,6 +46,8 @@ extern NSString *const kNRMA_RET_mobileRequestError;
 extern NSString *const kNRMA_RET_mobileCrash;
 extern NSString *const kNRMA_RET_mobileBreadcrumb;
 extern NSString *const kNRMA_RET_mobileUserAction;
+extern NSString *const kNRMA_RET_mobileView;
+extern NSString *const kNRMA_RET_mobileViewTiming;
 extern NSString *const kNRMA_RET_userAction;
 
 extern NSString *const kNRMA_RA_methodExecuted;
@@ -93,6 +97,7 @@ extern NSString *const  kNRMA_EventStoreFilename;
 extern NSString *const kNRMA_Offline_folder;
 extern NSString *const kNRMA_SessionReplayFrames_folder;
 extern NSString *const kNRMA_SessionReplayErrorMode_marker;
+extern NSString *const kNRMA_LastKnownView_fileName;
 
 extern NSString *const kNRMA_Collector_connect_url;
 extern NSString *const kNRMA_Collector_data_url;

@@ -16,6 +16,8 @@ NSString * const kNRMA_RA_category           = @"category";
 NSString * const kNRMA_RA_accountId          = @"accountId";
 NSString * const kNRMA_RA_appId              = @"appId";
 NSString * const kNRMA_RA_appName            = @"appName";
+NSString * const kNRMA_RA_appBuild           = @"appBuild";
+NSString * const kNRMA_RA_appVersion         = @"appVersion";
 NSString * const kNRMA_RA_uuid               = @"uuid";
 NSString * const kNRMA_RA_sessionDuration    = @"sessionDuration";
 NSString * const kNRMA_RA_sessionElapsedTime = @"timeSinceLoad";
@@ -46,6 +48,8 @@ NSString * const kNRMA_RET_mobileRequestError   = @"MobileRequestError";
 NSString * const kNRMA_RET_mobileCrash          = @"MobileCrash";
 NSString * const kNRMA_RET_mobileBreadcrumb     = @"MobileBreadcrumb";
 NSString * const kNRMA_RET_mobileUserAction     = @"MobileUserAction";
+NSString * const kNRMA_RET_mobileView           = @"MobileView";
+NSString * const kNRMA_RET_mobileViewTiming     = @"MobileViewTiming";
 NSString * const kNRMA_RET_userAction           = @"UserAction";
 
 //gesture attributes (not reserved)
@@ -102,6 +106,11 @@ NSString * const kNRMA_SessionReplayFrames_folder = @"SessionReplayFrames";
 // Its presence at next launch (with no crash) indicates the previous session left a stale
 // error-mode buffer that should be cleared.
 NSString * const kNRMA_SessionReplayErrorMode_marker = @".errorMode";
+// Holds the current/previous view referrer attributes as of the last view transition, so a crash
+// report processed on next launch can be decorated with the view the crashed session was last on --
+// the in-memory NRMAViewContext state does not survive the crash. Written on every transition,
+// read once at next-launch crash processing, then cleared unconditionally.
+NSString * const kNRMA_LastKnownView_fileName = @"NRMALastKnownView.plist";
 
 NSString * const kNRMA_Collector_connect_url   = @"/mobile/v5/connect";
 NSString * const kNRMA_Collector_data_url      = @"/mobile/v3/data";

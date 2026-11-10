@@ -531,14 +531,17 @@ func parseFunction(_ line: String) throws -> (String, String) {
 }
 
 func parseSourceLine(_ line: String, _ currentFunction: String) throws -> (String, String) {
-    let lineSplit = line.components(separatedBy: " ").filter { !$0.isEmpty }
-    guard lineSplit.count > 3 else {
+    // Take file:line from after the size's ")" rather than splitting the whole line: `symbols` right-aligns
+    // the size in an 8-char field, so a full-width size like "(0x102950)" has no space after "(".
+    guard let address = line.split(separator: " ").first,
+          let closeParen = line.firstIndex(of: ")"),
+          let fileAndLine = line[line.index(after: closeParen)...].split(separator: " ").first else {
         print("Found invalid SOURCE LINE symbol. Exiting map file conversion.")
         throw SymbolToolError.failedToConvert
     }
-    let sourceString = "\(currentFunction.trimmingCharacters(in: .whitespaces)) (\(lineSplit[3]))"
+    let sourceString = "\(currentFunction.trimmingCharacters(in: .whitespaces)) (\(fileAndLine))"
 
-    return (padHex(lineSplit[0]), sourceString)
+    return (padHex(String(address)), sourceString)
 }
 
 func padHex(_ hexString: String) -> String {

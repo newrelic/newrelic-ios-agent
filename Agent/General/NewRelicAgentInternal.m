@@ -27,6 +27,9 @@
 #import "NRMATaskQueue.h"
 #import "NRMAExceptionHandler.h"
 #import "NRMAMethodProfiler.h"
+#import "NRMAMobileViewTracker.h"
+#import "NRMAViewContext.h"
+#import "NRMAViewTiming.h"
 #import "NRMACPUVitals.h"
 #import "NRMAExceptionHandlerManager.h"
 #import "NRMAExceptionMetaDataStore.h"
@@ -351,6 +354,12 @@ static NewRelicAgentInternal* _sharedInstance;
         [[NRMAMethodProfiler sharedInstance] startMethodReplacement];
     }
 
+    if ([NRMAFlags shouldEnableAutomaticMobileViews]) {
+#if !TARGET_OS_WATCH
+        [[NRMAMobileViewTracker sharedInstance] start];
+#endif
+    }
+
     if ([NRMAFlags shouldEnableCrashReporting]) {
         [exceptionHandlerStartupManager startExceptionHandler:[[NRMACrashDataUploader alloc] initWithCrashCollectorURL:_agentConfiguration.crashCollectorHost
                                                                                                       applicationToken:_agentConfiguration.applicationToken.value
@@ -519,9 +528,9 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
                                                  name:kNRMemoryUsageDidChangeNotification
                                                object:nil];
 
-    [self.analyticsController setNRSessionAttribute:@"uuid"
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_uuid
                                               value:[NewRelicInternalUtils deviceId]];
-    [self.analyticsController setNRSessionAttribute:@"osName"
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_osName
                                               value:[NewRelicInternalUtils osName]];
 
 #if TARGET_OS_WATCH
@@ -538,19 +547,21 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         systemVersion = @"unknown";
     }
 
-    [self.analyticsController setNRSessionAttribute:@"osMajorVersion"
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_osMajorVersion
                                               value:majorVersion];
-    [self.analyticsController setNRSessionAttribute:@"osVersion"
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_osVersion
                                               value:systemVersion];
-    [self.analyticsController setNRSessionAttribute:@"deviceManufacturer"
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_deviceManufacturer
                                               value:@"Apple Inc."];
-    [self.analyticsController setNRSessionAttribute:@"deviceModel"
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_deviceModel
                                               value:[NewRelicInternalUtils deviceModel]];
-    [self.analyticsController setNRSessionAttribute:@"newRelicVersion"
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_newRelicVersion
                                               value:[NewRelicInternalUtils agentVersion]];
     NRMAConnectInformation *info = [NRMAAgentConfiguration connectionInformation];
-    [self.analyticsController setNRSessionAttribute:@"appBuild"
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_appBuild
                                               value:info.applicationInformation.appBuild];
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_appVersion
+                                              value:info.applicationInformation.appVersion];
     [self.analyticsController setNRSessionAttribute:kNRMA_RA_platform
                                               value:[NewRelicInternalUtils stringFromNRMAApplicationPlatform:info.deviceInformation.platform]];
     [self.analyticsController setNRSessionAttribute:kNRMA_RA_platformVersion
@@ -590,6 +601,8 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     NRMA_setSessionStartTime([NSString stringWithFormat:@"%lld",
                               (long long)NRMAMillisecondTimestamp()].UTF8String);
 
+    [[NRMAViewTiming sharedInstance] resetUnattributedCapForNewSession];
+
     NSString* backupStorePath = [NSString stringWithFormat:@"%@",[NewRelicInternalUtils getStorePath]];
     NSError* error = nil;
 
@@ -621,12 +634,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
                                                                                             sessionId:[self currentSessionId]
                                                                                    attributeValidator:[[NRMAAttributeValidator alloc] init]];
 
-        if (status != NotReachable) { // Because we support offline mode check if we're online before sending the handled exceptions
-            [self.handledExceptionsController processAndPublishPersistedReports];
-        }
-
         [NRMAHarvestController addHarvestListener:self.handledExceptionsController];
-
     }
 
 #if TARGET_OS_IOS
@@ -831,6 +839,19 @@ static const NSString *kNRMA_APPLICATION_WILL_TERMINATE =
         return;
     }
 
+    // Re-open the visits -applicationDidEnterBackground closed. Done here, before the work below is
+    // dispatched onto a global queue, for two reasons: this runs on the main thread where the view
+    // producers live, and it must not be inside kNRMA_BGFG_MUTEX, which the dispatched block holds
+    // while doing session-start work.
+    //
+    // Runs on every foreground, including ones with nothing on screen to re-open (the first
+    // foreground of a launch), where the on-screen list is empty and this is a no-op.
+    if ([NRMAFlags shouldEnableAutomaticMobileViews]) {
+#if !TARGET_OS_WATCH
+        [[NRMAMobileViewTracker sharedInstance] reopenOpenVisitsOnForeground];
+#endif
+    }
+
 #if TARGET_OS_WATCH
     _currentApplicationState = WKApplicationStateActive;
 #else
@@ -985,6 +1006,19 @@ static UIBackgroundTaskIdentifier background_task;
     // We are leaving the background.
     didFireEnterForeground = NO;
     didFireEnterBackground = YES;
+
+    // Close out every view that is still on screen, so the screen the user left the app on is
+    // reported at all. A MobileView event describes a completed visit and nothing else marks this
+    // moment as one: no view controller callback and no SwiftUI onDisappear fires when an app is
+    // backgrounded. Both producers re-open these visits when the app comes back.
+    if ([NRMAFlags shouldEnableManualMobileViews]) {
+        [[NRMAViewContext sharedInstance] flushCurrentManualViewOnBackground];
+    }
+    if ([NRMAFlags shouldEnableAutomaticMobileViews]) {
+#if !TARGET_OS_WATCH
+        [[NRMAMobileViewTracker sharedInstance] flushOpenVisitsOnBackground];
+#endif
+    }
 
 #if TARGET_OS_WATCH
     _currentApplicationState = WKApplicationStateBackground;

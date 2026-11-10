@@ -364,7 +364,11 @@ public class SessionReplayReporter: NSObject {
         catch {
             NRLOG_AGENT_DEBUG("Failed to retrieve session attributes: \(error)")
         }
-        
+
+        // After the session attributes, so the agent-owned referrer keys win over a customer
+        // attribute of the same name, as they do on every other producer.
+        Self.addReferrerAttributes(to: &attributes)
+
         let attributesString = attributes.map { key, value in
             return "\(key)=\(value)"
         }.joined(separator: "&")
@@ -381,6 +385,20 @@ public class SessionReplayReporter: NSObject {
         ]
 
         return urlComponents?.url
+    }
+
+    /// §5.5's referrer plumbing (currentView/currentViewInstanceId/previousView/
+    /// previousViewInstanceId), so a replay chunk can be joined back to the screen it was cut on.
+    /// Read when the chunk's upload URL is built, and that URL is what retries, offline storage and
+    /// next-launch recovery send, so a chunk keeps the view it ended on rather than whatever is on
+    /// screen when it finally uploads. A no-op unless a Mobile Views flag is on and a view is current.
+    static func addReferrerAttributes(to attributes: inout [String: String]) {
+        guard let referrer = NRMAViewContext.mergeReferrerAttributes(into: nil) else { return }
+        for (key, value) in referrer {
+            if let stringValue = value as? String {
+                attributes[key] = stringValue
+            }
+        }
     }
 }
 
