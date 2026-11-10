@@ -19,8 +19,16 @@
 //
 
 #import <XCTest/XCTest.h>
+#import <stdatomic.h>
 #import "NRMAHarvesterConfiguration.h"
 #import "NRAgentTestBase.h"
+#import "NRMAHarvester.h"
+#import "NRMAHarvestController.h"
+#import "NRMAHTTPUtilities.h"
+#import "NRMANetworkFacade.h"
+#import "NRMAAgentConfiguration.h"
+#import "NRMAAppToken.h"
+#import "NRMADataToken.h"
 
 @interface NRMAHarvesterConfigurationLifetimeTests : NRMAAgentTestBase
 @end
@@ -177,5 +185,168 @@
 // the override forces session_replay_maskAllUserTouches to NO, so correcting the comparison
 // would *reduce* masking and unmask user touches that are masked today. That needs product
 // review on its own, not a ride-along with a crash fix.
+
+@end
+
+#pragma mark - Concurrent replacement
+
+//  Regression coverage for NR-647662: addCrossProcessIdentifier: reads the configuration on
+//  request threads while the harvest thread replaces it or clears its cross_process_id.
+
+static NSString* const kNRMARaceTestAppToken = @"APP_TOKEN";
+static const NSTimeInterval kNRMARaceTestDuration = 5;
+
+static atomic_bool sNRMARaceTestFinished;
+static atomic_ulong sNRMARaceTestReads;
+static atomic_ulong sNRMARaceTestBadHeaders;
+
+@interface NRMAHarvester (ConfigurationRaceTests)
+- (void) disconnected;
+- (void) transitionToConnected:(NRMAHarvesterConfiguration*)configuration;
+@end
+
+@interface NRMAHarvestController (ConfigurationRaceTests)
+- (void) setHarvester:(NRMAHarvester*)harvester;
+@end
+
+// Returns a fresh configuration on every fetch and skips persistence and the network.
+@interface NRMAConfigurationReplacingHarvester : NRMAHarvester
+@end
+
+@implementation NRMAConfigurationReplacingHarvester
+
+- (NRMAHarvesterConfiguration*) fetchHarvestConfiguration
+{
+    NRMAHarvesterConfiguration* configuration = [[NRMAHarvesterConfiguration alloc] init];
+    configuration.application_token = kNRMARaceTestAppToken;
+    configuration.account_id = 190;
+    configuration.application_id = 36920;
+    configuration.data_token = [[NRMADataToken alloc] init];
+    configuration.data_token.clusterAgentId = 36920;
+    configuration.data_token.realAgentId = 36921;
+    // Too long for a tagged pointer, so clearing it frees it.
+    configuration.cross_process_id = [NSString stringWithFormat:@"190#%u-cross-process-id-%u", arc4random(), arc4random()];
+    return configuration;
+}
+
+- (void) saveHarvesterConfiguration:(NRMAHarvesterConfiguration*)harvestConfiguration
+{
+}
+
+- (void) transitionToConnected:(NRMAHarvesterConfiguration*)configuration
+{
+}
+
+@end
+
+@interface NRMAHarvesterConfigurationRaceTests : NRMAAgentTestBase
+{
+    NRMAConfigurationReplacingHarvester* harvester;
+}
+@end
+
+@implementation NRMAHarvesterConfigurationRaceTests
+
+- (void) setUp
+{
+    [super setUp];
+
+    NRMAAgentConfiguration* agentConfiguration = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:kNRMARaceTestAppToken]
+                                                                                  collectorAddress:@"staging-mobile-collector.newrelic.com"
+                                                                                      crashAddress:nil];
+    [NRMAHarvestController initialize:agentConfiguration];
+
+    harvester = [[NRMAConfigurationReplacingHarvester alloc] init];
+    [harvester setAgentConfiguration:agentConfiguration];
+    [[NRMAHarvestController harvestController] setHarvester:harvester];
+}
+
+- (void) tearDown
+{
+    [NRMAHarvestController stop];
+    harvester = nil;
+    [super tearDown];
+}
+
+- (void) runOnEveryCore:(void (^)(void))reader whileRepeating:(void (^)(void))writer
+{
+    atomic_store(&sNRMARaceTestFinished, false);
+    atomic_store(&sNRMARaceTestReads, 0);
+
+    NSUInteger readerCount = MAX([[NSProcessInfo processInfo] activeProcessorCount], (NSUInteger)4);
+    dispatch_group_t readers = dispatch_group_create();
+    for (NSUInteger i = 0; i < readerCount; i++) {
+        dispatch_group_async(readers, dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+            unsigned long reads = 0;
+            while (!atomic_load(&sNRMARaceTestFinished)) {
+                @autoreleasepool {
+                    reader();
+                }
+                reads++;
+            }
+            atomic_fetch_add(&sNRMARaceTestReads, reads);
+        });
+    }
+
+    NSDate* deadline = [NSDate dateWithTimeIntervalSinceNow:kNRMARaceTestDuration];
+    unsigned long writes = 0;
+    while ([deadline timeIntervalSinceNow] > 0) {
+        @autoreleasepool {
+            writer();
+        }
+        writes++;
+    }
+
+    atomic_store(&sNRMARaceTestFinished, true);
+    XCTAssertEqual(dispatch_group_wait(readers, dispatch_time(DISPATCH_TIME_NOW, 30 * NSEC_PER_SEC)), 0L,
+                   @"reader threads did not finish");
+
+    XCTAssertGreaterThan(writes, 0UL);
+    XCTAssertGreaterThan(atomic_load(&sNRMARaceTestReads), 0UL);
+}
+
+- (void) assertCrossProcessIdentifierSurvivesRepeated:(void (^)(void))writer
+{
+    atomic_store(&sNRMARaceTestBadHeaders, 0);
+    NSURLRequest* request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"https://example.com/"]];
+
+    [self runOnEveryCore:^{
+        NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
+        NSString* header = [mutableRequest valueForHTTPHeaderField:NEW_RELIC_CROSS_PROCESS_ID_HEADER_KEY];
+        if (header != nil && ![header hasPrefix:@"190#"]) {
+            atomic_fetch_add(&sNRMARaceTestBadHeaders, 1);
+        }
+    } whileRepeating:writer];
+
+    XCTAssertEqual(atomic_load(&sNRMARaceTestBadHeaders), 0UL);
+}
+
+- (void) testCrossProcessIdentifierWhileDisconnectedReplacesConfiguration
+{
+    NRMAConfigurationReplacingHarvester* writer = harvester;
+    [self assertCrossProcessIdentifierSurvivesRepeated:^{
+        [writer disconnected];
+    }];
+}
+
+- (void) testCrossProcessIdentifierWhileStoredConfigurationIsCleared
+{
+    NRMAConfigurationReplacingHarvester* writer = harvester;
+    [self assertCrossProcessIdentifierSurvivesRepeated:^{
+        [writer disconnected];
+        [writer clearStoredHarvesterConfiguration];
+    }];
+}
+
+// +[NewRelicAgentInternal shutdown] calls it on the caller's thread, not the harvest thread.
+- (void) testClearStoredHarvesterConfigurationWhileDisconnectedReplacesConfiguration
+{
+    NRMAConfigurationReplacingHarvester* writer = harvester;
+    [self runOnEveryCore:^{
+        [writer clearStoredHarvesterConfiguration];
+    } whileRepeating:^{
+        [writer disconnected];
+    }];
+}
 
 @end

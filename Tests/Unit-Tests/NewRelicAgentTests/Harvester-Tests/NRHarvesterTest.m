@@ -784,6 +784,23 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
     XCTAssertEqual(harvester.currentState, NRMA_HARVEST_CONNECTED, @"expected connected");
 }
 
+// Other threads read the configuration, and NRMAHTTPTransactions drops every transaction when it's nil.
+- (void) testUnparseableConnectResponseKeepsTheConfiguration
+{
+    id mockConnection = [OCMockObject partialMockForObject:[harvester connection]];
+    NRMAHarvestResponse* response = [[NRMAHarvestResponse alloc] init];
+    response.statusCode = 200;
+    response.responseBody = @"not json";
+    [[[mockConnection stub] andReturn:response] sendConnect];
+
+    [harvester disconnected];
+
+    XCTAssertNotNil([harvester harvesterConfiguration]);
+    XCTAssertEqual([harvester harvesterConfiguration].report_max_transaction_count, NRMA_DEFAULT_MAX_TRANSACTION_COUNT);
+
+    [mockConnection stopMocking];
+}
+
 // Regression coverage for the cached-config shortcut in -disconnected priming the
 // crash handler's account/agent id mirror (NR-646041). That mirror is a
 // process-global C static that resets to 0 on every launch and is normally only
