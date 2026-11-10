@@ -115,6 +115,7 @@ public class SessionReplayManager: NSObject {
                 
                 NRLOG_AGENT_DEBUG("Error detected - transitioning session replay to full mode")
                 sessionReplay.transitionToFullModeOnError()
+                self.publishConfiguration()
             }
         }
     }
@@ -208,7 +209,8 @@ public class SessionReplayManager: NSObject {
             }
             
             start(fromManual: true, with: .full)
-            
+            publishConfiguration()
+
             NRLOG_AGENT_DEBUG("Session replay started via manual recordReplay() API")
             return true
         }
@@ -227,8 +229,26 @@ public class SessionReplayManager: NSObject {
             stop()
             harvest()
             sessionReplayMode = .off
+            publishConfiguration()
             NRLOG_AGENT_DEBUG("Session replay paused via manual pauseReplay() API")
             return true
+        }
+    }
+
+    /// Posts kNRSessionReplayConfigurationDidChangeNotification with the current configuration.
+    /// Always queued, even when already on sessionReplayQueue, so it runs after any mode change
+    /// queued before it (start's block included). Posted on main so observers run off the replay
+    /// queue and can call pauseReplay() / recordReplay() without deadlocking.
+    @objc public func publishConfiguration() {
+        sessionReplayQueue.async {
+            guard let configuration = NewRelicAgentInternal.sharedInstance()?.sessionReplayConfiguration() else {
+                return
+            }
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: NSNotification.Name(kNRSessionReplayConfigurationDidChangeNotification),
+                                                object: nil,
+                                                userInfo: configuration)
+            }
         }
     }
     

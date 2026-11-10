@@ -157,6 +157,41 @@ static NSString *errorModeMarkerPath(void)
     return [self.agent sessionReplayConfiguration][@"recordingMode"];
 }
 
+// Lets queued work finish and any already-queued post reach the main run loop, so it can't
+// be mistaken for a post caused by what the test does next.
+- (void) settle
+{
+    NRMADrainReplayQueue(self.manager);
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+}
+
+- (XCTestExpectation *) expectNoConfigurationPost
+{
+    [self settle];
+    XCTestExpectation *expectation = [self expectationForNotification:kNRSessionReplayConfigurationDidChangeNotification
+                                                               object:nil
+                                                              handler:nil];
+    expectation.inverted = YES;
+    return expectation;
+}
+
+// Waits for the next post and returns its userInfo, checked against the getter at delivery.
+- (NSDictionary *) waitForConfigurationPostAfter:(void (^)(void))action
+{
+    __block NSDictionary *userInfo = nil;
+    XCTestExpectation *expectation = [self expectationForNotification:kNRSessionReplayConfigurationDidChangeNotification
+                                                               object:nil
+                                                              handler:^BOOL(NSNotification *note) {
+        XCTAssertTrue(NSThread.isMainThread);
+        XCTAssertEqualObjects(note.userInfo, [self.agent sessionReplayConfiguration]);
+        userInfo = note.userInfo;
+        return YES;
+    }];
+    action();
+    [self waitForExpectations:@[expectation] timeout:2.0];
+    return userInfo;
+}
+
 #pragma mark - Off shape
 
 - (void) testOffShapeWhenNoConfiguration
@@ -427,6 +462,123 @@ static NSString *errorModeMarkerPath(void)
 
     XCTAssertEqual(dispatch_group_wait(group, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC)), 0);
     XCTAssertEqual(invalidResults, (NSUInteger)0);
+}
+
+#pragma mark - Change notification
+
+- (void) testErrorSwitchPostsFullOnMainThread
+{
+    [self useErrorSampling];
+    [self startSession];
+    [self settle];
+
+    NSDictionary *userInfo = [self waitForConfigurationPostAfter:^{
+        [self.agent sessionReplayOnError:nil];
+    }];
+
+    XCTAssertEqualObjects(userInfo[@"recordingMode"], @"full");
+}
+
+- (void) testPausePostsOff
+{
+    [self useFullSampling];
+    [self startSession];
+    [self settle];
+
+    NSDictionary *userInfo = [self waitForConfigurationPostAfter:^{
+        XCTAssertTrue([self.agent pauseReplay]);
+    }];
+
+    XCTAssertEqualObjects(userInfo[@"recordingMode"], @"off");
+}
+
+- (void) testRecordPostsFull
+{
+    [self useFullSampling];
+    [self startSession];
+    [self settle];
+    [self waitForConfigurationPostAfter:^{
+        XCTAssertTrue([self.agent pauseReplay]);
+    }];
+
+    NSDictionary *userInfo = [self waitForConfigurationPostAfter:^{
+        XCTAssertTrue([self.agent recordReplay]);
+    }];
+
+    XCTAssertEqualObjects(userInfo[@"recordingMode"], @"full");
+}
+
+- (void) testNoPostWhenPauseOrRecordReturnsNo
+{
+    [self useFullSampling];
+    XCTestExpectation *noPost = [self expectNoConfigurationPost];
+
+    XCTAssertFalse([self.agent pauseReplay], @"nothing is recording yet");
+
+    [self startSession];
+    XCTAssertFalse([self.agent recordReplay], @"already recording in full");
+
+    [self.manager stop];
+    [self useErrorSampling];
+    [self startSession];
+    XCTAssertFalse([self.agent recordReplay], @"error mode is already recording");
+    NRMADrainReplayQueue(self.manager);
+    XCTAssertEqualObjects([self recordingMode], @"error");
+
+    [self waitForExpectations:@[noPost] timeout:0.5];
+}
+
+- (void) testNoPostOnErrorWhilePausedOrFull
+{
+    [self useFullSampling];
+    [self startSession];
+    XCTestExpectation *noPostWhileFull = [self expectNoConfigurationPost];
+    [self.agent sessionReplayOnError:nil];
+    NRMADrainReplayQueue(self.manager);
+    [self waitForExpectations:@[noPostWhileFull] timeout:0.5];
+
+    XCTAssertTrue([self.agent pauseReplay]);
+    XCTestExpectation *noPostWhilePaused = [self expectNoConfigurationPost];
+    [self.agent sessionReplayOnError:nil];
+    NRMADrainReplayQueue(self.manager);
+    [self waitForExpectations:@[noPostWhilePaused] timeout:0.5];
+}
+
+- (void) testNoPostAtSessionEndOrForErrorAfterIt
+{
+    [self useErrorSampling];
+    [self startSession];
+    XCTestExpectation *noPost = [self expectNoConfigurationPost];
+
+    [self.agent sessionReplayEndSession];
+    [self.agent sessionReplayOnError:nil];
+    NRMADrainReplayQueue(self.manager);
+
+    [self waitForExpectations:@[noPost] timeout:0.5];
+}
+
+- (void) testHandlerCanRecordFromInsideNotification
+{
+    [self useFullSampling];
+    [self startSession];
+    [self settle];
+
+    NSMutableArray<NSString *> *modes = [NSMutableArray array];
+    XCTestExpectation *twoPosts = [self expectationForNotification:kNRSessionReplayConfigurationDidChangeNotification
+                                                            object:nil
+                                                           handler:^BOOL(NSNotification *note) {
+        [modes addObject:note.userInfo[@"recordingMode"]];
+        if (modes.count == 1) {
+            XCTAssertTrue([self.agent recordReplay]);
+        }
+        return YES;
+    }];
+    twoPosts.expectedFulfillmentCount = 2;
+
+    XCTAssertTrue([self.agent pauseReplay]);
+    [self waitForExpectations:@[twoPosts] timeout:2.0];
+
+    XCTAssertEqualObjects(modes, (@[@"off", @"full"]));
 }
 
 @end

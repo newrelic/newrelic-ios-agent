@@ -990,6 +990,10 @@ extern "C" {
  *
  * The result is an immutable snapshot and is safe to call from any thread.
  *
+ * kNRSessionReplayConfigurationDidChangeNotification is posted on the main thread, with
+ * this dictionary as its userInfo, whenever the configuration resolves or changes and
+ * whenever the recording mode changes.
+ *
  * @return The current session replay configuration.
  */
 + (NSDictionary<NSString*, id>* _Nonnull) sessionReplayConfiguration;
