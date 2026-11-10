@@ -969,6 +969,31 @@ extern "C" {
  */
 + (BOOL) pauseReplay;
 
+/*!
+ * Returns the session replay configuration the agent resolved, for frameworks that
+ * capture their own replay (e.g. the New Relic Flutter agent) and need to follow the
+ * agent's decisions.
+ *
+ * Until the configuration resolves, and whenever session replay is disabled, this
+ * returns @{ @"enabled": @NO, @"recordingMode": @"off" }. Otherwise the keys are:
+ *
+ * - enabled (NSNumber, BOOL): YES.
+ * - mode (NSString): the masking mode, "default" or "custom".
+ * - recordingMode (NSString): "off", "error" or "full", the mode the agent is recording
+ *   in for the current session. It follows errors switching "error" to "full",
+ *   pauseReplay() and recordReplay().
+ * - maskApplicationText, maskUserInputText, maskAllImages, maskAllUserTouches
+ *   (NSNumber, BOOL).
+ * - maskedClasses, unmaskedClasses, maskedKeys, unmaskedKeys (NSArray of NSString):
+ *   the local masking rules merged with the custom masking rules from New Relic.
+ *   Keys are accessibility identifiers.
+ *
+ * The result is an immutable snapshot and is safe to call from any thread.
+ *
+ * @return The current session replay configuration.
+ */
++ (NSDictionary<NSString*, id>* _Nonnull) sessionReplayConfiguration;
+
 @end
 
 #ifdef __cplusplus

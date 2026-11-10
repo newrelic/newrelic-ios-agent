@@ -782,6 +782,57 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     return false;
 }
 
++ (NSDictionary<NSString*, id>*) sessionReplayOffConfiguration {
+    return @{ @"enabled": @NO, @"recordingMode": @"off" };
+}
+
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+static NSString* NRMASessionReplayRecordingModeName(SessionReplayRecordingMode mode) {
+    switch (mode) {
+        case SessionReplayRecordingModeFull:  return @"full";
+        case SessionReplayRecordingModeError: return @"error";
+        default:                              return @"off";
+    }
+}
+
+// Copied under the same lock the add/remove methods mutate the list with.
+static NSArray<NSString*>* NRMASessionReplayListSnapshot(NSMutableArray* list) {
+    if (list == nil) {
+        return @[];
+    }
+    @synchronized(list) {
+        return [list copy];
+    }
+}
+#endif
+
+// Resolved session replay configuration for consumers that produce their own replay
+// (e.g. the Flutter agent). Immutable, and safe to read from any thread.
+- (NSDictionary<NSString*, id>*) sessionReplayConfiguration {
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+    NRMAHarvesterConfiguration* config = [NRMAHarvestController configuration];
+    if (config == nil || !config.has_session_replay_config || !config.session_replay_enabled || _sessionReplay == nil) {
+        return [NewRelicAgentInternal sessionReplayOffConfiguration];
+    }
+
+    return @{
+        @"enabled":             @YES,
+        @"mode":                config.session_replay_mode ?: SessionReplayMaskingModeDefault,
+        @"recordingMode":       NRMASessionReplayRecordingModeName([_sessionReplay sessionReplayMode]),
+        @"maskApplicationText": @(config.session_replay_maskApplicationText),
+        @"maskUserInputText":   @(config.session_replay_maskUserInputText),
+        @"maskAllImages":       @(config.session_replay_maskAllImages),
+        @"maskAllUserTouches":  @(config.session_replay_maskAllUserTouches),
+        @"maskedClasses":       NRMASessionReplayListSnapshot(config.session_replay_maskedClassNames),
+        @"unmaskedClasses":     NRMASessionReplayListSnapshot(config.session_replay_unmaskedClassNames),
+        @"maskedKeys":          NRMASessionReplayListSnapshot(config.session_replay_maskedAccessibilityIdentifiers),
+        @"unmaskedKeys":        NRMASessionReplayListSnapshot(config.session_replay_unmaskedAccessibilityIdentifiers),
+    };
+#else
+    return [NewRelicAgentInternal sessionReplayOffConfiguration];
+#endif
+}
+
 - (void)sessionReplayOnError:(NSError *_Nullable)error {
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     if (_sessionReplay != nil) {

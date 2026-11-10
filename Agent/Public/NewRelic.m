@@ -931,6 +931,14 @@
     return [[NewRelicAgentInternal sharedInstance] pauseReplay];
 }
 
+/*
+ * Returns the resolved session replay configuration and the recording mode of the
+ * current session. Reports session replay as off until the agent has started.
+ */
++ (NSDictionary<NSString*, id>*) sessionReplayConfiguration {
+    return [[NewRelicAgentInternal sharedInstance] sessionReplayConfiguration] ?: [NewRelicAgentInternal sessionReplayOffConfiguration];
+}
+
 
 #pragma mark - Hidden APIs
 

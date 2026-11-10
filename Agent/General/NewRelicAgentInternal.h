@@ -145,6 +145,12 @@ NS_ASSUME_NONNULL_BEGIN
 // Notify Session Replay of an error
 - (void)sessionReplayOnError:(NSError *_Nullable)error;
 
+// Resolved session replay configuration plus the recording mode of the current session
+- (NSDictionary<NSString*, id>* _Nonnull) sessionReplayConfiguration;
+
+// What sessionReplayConfiguration reports until session replay is resolved and enabled
++ (NSDictionary<NSString*, id>* _Nonnull) sessionReplayOffConfiguration;
+
 // END SESSION REPLAY SECTION Methods to start and pause SessionReplay
 
 @end
