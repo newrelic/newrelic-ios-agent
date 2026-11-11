@@ -1375,18 +1375,24 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
                                                             sessionId:@"offline-persist-confirm-test-session"
                                                           realAgentId:7];
 
+    // Checks whether the sentinel is still on disk, via the same recovery sweep
+    // production uses. Recovered events are staged internally, not returned directly --
+    // read them back via -pendingGroupedRecoveryUploads (draining is in-memory only,
+    // so re-sweeping always reflects current disk state).
     BOOL (^containsSentinel)(void) = ^BOOL{
-        for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
-            if ([candidate[@"eventType"] isEqualToString:@"OfflinePersistConfirmSentinel"]) {
-                return YES;
+        [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil];
+        for (NSDictionary *bucket in [[NREventPersistenceController shared] pendingGroupedRecoveryUploads]) {
+            for (NSDictionary *candidate in bucket[@"events"]) {
+                if ([candidate[@"eventType"] isEqualToString:@"OfflinePersistConfirmSentinel"]) {
+                    return YES;
+                }
             }
         }
         return NO;
     };
 
-    // The write lands on NREventPersistenceController's own queue, asynchronously relative to
-    // -recordEvent:. This same call also IS the real staging, mirroring the -onSessionStart
-    // recovery sweep that runs before every harvest attempt -- poll until it lands.
+    // The write lands on NREventPersistenceController's own queue, asynchronously
+    // relative to -recordEvent: -- poll until it's actually on disk.
     NSDate *stagedDeadline = [NSDate dateWithTimeIntervalSinceNow:5];
     BOOL staged = NO;
     while ([stagedDeadline timeIntervalSinceNow] > 0) {
@@ -1394,7 +1400,12 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
         if (staged) { break; }
         [NSThread sleepForTimeInterval:0.05];
     }
-    XCTAssertTrue(staged, @"the event must be staged (pending confirmation) before the harvest attempt");
+    XCTAssertTrue(staged, @"the event must be persisted to disk before the harvest attempt");
+
+    // Simulates the live harvest path pulling this event off the buffer and marking it
+    // pending confirmation (NRMAEventManager -getEventJSONStringWithError:clearEvents:),
+    // which is what actually happens just before a real harvest attempt sends it.
+    [[NREventPersistenceController shared] markEventsPendingConfirmationWithEventUUIDs:@[@"offline-persist-confirm-uuid"]];
 
     id mockHarvester = [OCMockObject partialMockForObject:harvester];
     id mockConnection = [OCMockObject partialMockForObject:[mockHarvester connection]];

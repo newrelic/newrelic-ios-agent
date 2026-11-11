@@ -27,6 +27,14 @@ public class NREventPersistenceController: NSObject {
 
     // UUIDs staged for an outgoing harvest, dropped only once that harvest succeeds.
     private var pendingConfirmationUUIDs: Set<String> = []
+    // Recovered events, bucketed by the realAgentId they were actually recorded under
+    // (NREventRecord.realAgentId) -- ingest resolves appVersion from data_token's
+    // server-side mapping only, ignoring JSON attributes and header overrides, so every
+    // bucket ships in its own upload stamped with that historical token. Keyed by
+    // eventUUID, not a plain array, so a record re-discovered by a later sweep (this is
+    // a process-wide singleton that outlives a harvester restart) overwrites its entry
+    // instead of duplicating it -- see the Hex in-flight-dedup fix for the same pattern.
+    private var pendingGroupedUploads: [UInt64: [String: [String: Any]]] = [:]
     private let stateLock = NSLock()
 
     public override convenience init() {
@@ -101,24 +109,36 @@ public class NREventPersistenceController: NSObject {
     // MARK: - Replay
 
     /// Recovers every persisted event (resolving attributes via `resolveAttributes`) and
-    /// returns per-event JSON ready for `NRMAHarvestController +addRecoveredAnalyticsEvents:`.
-    /// `excludingSessionId` skips that session's events, left for the crash path to claim instead.
+    /// stages it for a dedicated per-realAgentId upload via `pendingGroupedRecoveryUploads()`.
+    /// `excludingSessionId` skips that session's events, left for the crash path to claim
+    /// instead. Always returns `[]` -- recovered events never ride the regular harvest
+    /// buffer; see `pendingGroupedUploads`'s doc comment for why.
     @discardableResult
     @objc(recoverPersistedEventsStagingForHarvestExcludingSessionId:)
     public func recoverPersistedEventsStagingForHarvest(excludingSessionId: String? = nil) -> [[String: Any]] {
         guard NRMAFlags.shouldEnableEventPersistence() else { return [] }
         guard eventStore.hasPersistedRecords() else { return [] }
-        let records = eventStore.fetchAll().filter { $0.sessionId != excludingSessionId }
+
+        // This sweep can run again mid-process (foreground, startNewSessionForUserId:,
+        // 4-hour restart) while an earlier harvest still has one of these events
+        // in flight and marked pending. Skip those so they don't get staged twice.
+        // Safe: pendingConfirmationUUIDs is in-memory only, so a skipped record is
+        // still recoverable on the next launch.
+        stateLock.lock()
+        let inFlightUUIDs = pendingConfirmationUUIDs
+        stateLock.unlock()
+
+        let records = eventStore.fetchAll().filter { $0.sessionId != excludingSessionId && !inFlightUUIDs.contains($0.eventUUID) }
         guard !records.isEmpty else { return [] }
         NRLOG_AGENT_VERBOSE("NREventPersistence: recovering \(records.count) persisted event(s) from a previous session")
 
-        var payloads: [[String: Any]] = []
-        var stagedUUIDs: [String] = []
+        var grouped: [UInt64: [String: [String: Any]]] = [:]
         for record in records {
-            // Session-level attributes first, then the event's own JSONObject output on top
-            // (custom attributes + its own timestamp/eventType) -- otherwise a recovered
-            // custom event would ship as an empty shell.
-            var json = resolveAttributes(for: record)
+            let sessionAttributes = resolveAttributes(manifest: manifestStore.manifest(forSessionId: record.sessionId))
+
+            // Session attributes first, then the event's own fields on top -- otherwise
+            // a recovered custom event would ship as an empty shell.
+            var json = sessionAttributes
             for (key, value) in record.attributes {
                 json[key] = value
             }
@@ -126,26 +146,60 @@ public class NREventPersistenceController: NSObject {
             json[kNRMA_RA_timestamp] = record.timestamp
             json[kNRMA_RA_eventType] = record.eventType
             json[kNRMA_RA_sessionId] = record.sessionId
-            payloads.append(json)
-            stagedUUIDs.append(record.eventUUID)
+
+            grouped[record.realAgentId, default: [:]][record.eventUUID] = json
         }
 
         stateLock.lock()
-        pendingConfirmationUUIDs.formUnion(stagedUUIDs)
+        for (realAgentId, entries) in grouped {
+            // Merge, not append -- see pendingGroupedUploads's doc comment.
+            pendingGroupedUploads[realAgentId, default: [:]].merge(entries) { _, new in new }
+        }
         stateLock.unlock()
 
-        return payloads
+        return []
+    }
+
+    /// Hands back every recovered bucket, grouped by originating realAgentId, for a
+    /// dedicated per-token upload -- clears internal state on read. Callers confirm each
+    /// bucket via `confirmGroupedRecoveryUploadSucceeded(eventUUIDs:)`; an unconfirmed
+    /// bucket stays persisted and is picked up again by the next sweep.
+    @objc public func pendingGroupedRecoveryUploads() -> [[String: Any]] {
+        stateLock.lock()
+        let grouped = pendingGroupedUploads
+        pendingGroupedUploads.removeAll()
+        stateLock.unlock()
+        return grouped.map { realAgentId, entries in
+            [
+                "realAgentId": NSNumber(value: realAgentId),
+                "eventUUIDs": Array(entries.keys),
+                "events": Array(entries.values)
+            ]
+        }
+    }
+
+    /// Deletes the persisted copies of a grouped bucket once its dedicated upload is
+    /// confirmed successful. Independent of `confirmLastRecoveryHarvestSucceeded` since a
+    /// grouped bucket's upload can succeed or fail independently of the regular harvest.
+    @objc(confirmGroupedRecoveryUploadSucceededWithEventUUIDs:)
+    public func confirmGroupedRecoveryUploadSucceeded(eventUUIDs: [String]) {
+        guard !eventUUIDs.isEmpty else { return }
+        eventStore.delete(eventUUIDs: eventUUIDs)
     }
 
     /// Manifest found -> its sessionAttributes. Missing/corrupt -> empty (graceful
     /// degradation; the record's own fields still ship, never dropped).
-    private func resolveAttributes(for record: NREventRecord) -> [String: Any] {
-        guard let manifest = manifestStore.manifest(forSessionId: record.sessionId) else {
+    private func resolveAttributes(manifest: NRSessionManifest?) -> [String: Any] {
+        guard let manifest else {
             NRMASupportMetricHelper.enqueueEventPersistenceManifestMissingMetric()
             return [:]
         }
         NRMASupportMetricHelper.enqueueEventPersistenceReattributedMetric()
         return manifest.sessionAttributes
+    }
+
+    private func resolveAttributes(for record: NREventRecord) -> [String: Any] {
+        resolveAttributes(manifest: manifestStore.manifest(forSessionId: record.sessionId))
     }
 
     // MARK: - Crash path

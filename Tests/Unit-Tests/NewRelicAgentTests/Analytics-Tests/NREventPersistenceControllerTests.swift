@@ -129,6 +129,7 @@ final class NREventPersistenceControllerTests: XCTestCase {
 
     func testRecoverWithNothingPersistedReturnsEmpty() {
         XCTAssertTrue(sut.recoverPersistedEventsStagingForHarvest().isEmpty)
+        XCTAssertTrue(sut.pendingGroupedRecoveryUploads().isEmpty)
     }
 
     func testRecoverIsNoopWhenFlagDisabled() {
@@ -137,6 +138,7 @@ final class NREventPersistenceControllerTests: XCTestCase {
 
         NRMAFlags.disableFeatures(NRMAFeatureFlags.NRFeatureFlag_EventPersistence)
         XCTAssertTrue(sut.recoverPersistedEventsStagingForHarvest().isEmpty)
+        XCTAssertTrue(sut.pendingGroupedRecoveryUploads().isEmpty, "a disabled flag must not stage anything for a grouped upload either")
     }
 
     func testRecoverUsesManifestSessionAttributesWhenFound() {
@@ -146,9 +148,124 @@ final class NREventPersistenceControllerTests: XCTestCase {
         eventStore.store(makeRecord(uuid: "uuid-1", sessionId: "session-1"))
         eventStore.synchronize()
 
-        let payloads = sut.recoverPersistedEventsStagingForHarvest()
-        XCTAssertEqual(payloads.count, 1)
-        XCTAssertEqual(payloads[0]["userId"] as? String, "abc")
+        _ = sut.recoverPersistedEventsStagingForHarvest()
+        let grouped = sut.pendingGroupedRecoveryUploads()
+        XCTAssertEqual(grouped.count, 1)
+        let events = grouped[0]["events"] as? [[String: Any]]
+        XCTAssertEqual(events?.count, 1)
+        XCTAssertEqual(events?[0]["userId"] as? String, "abc")
+    }
+
+    // MARK: - Grouped-by-originating-realAgentId recovery
+    //
+    // Every recovered event ships in its own dedicated upload stamped with the data_token
+    // (realAgentId) it was actually recorded under -- it never rides the regular harvest
+    // buffer anymore. Ingest resolves `appVersion` purely from data_token's server-side
+    // mapping; it ignores both the request's own JSON attributes and any header override
+    // (confirmed empirically), so there is no cheaper, event-level way to get this right.
+
+    func testRecoverNeverReturnsEventsDirectly() {
+        eventStore.store(makeRecord(uuid: "uuid-1", sessionId: "session-1"))
+        eventStore.synchronize()
+
+        XCTAssertTrue(sut.recoverPersistedEventsStagingForHarvest().isEmpty,
+                      "recovered events are staged for a dedicated upload, never returned for the regular harvest buffer")
+    }
+
+    func testPendingGroupedRecoveryUploadsReturnsTheRecoveredBucket() {
+        manifestStore.store(NRSessionManifest(sessionId: "session-1", realAgentId: 42, sessionStartMs: 0, lastUpdateMs: 0,
+                                               sessionAttributes: [:]))
+        manifestStore.synchronize()
+        eventStore.store(makeRecord(uuid: "uuid-1", sessionId: "session-1", eventAttributes: ["orderId": "XYZ"], realAgentId: 42))
+        eventStore.synchronize()
+
+        _ = sut.recoverPersistedEventsStagingForHarvest()
+        let grouped = sut.pendingGroupedRecoveryUploads()
+
+        XCTAssertEqual(grouped.count, 1)
+        XCTAssertEqual((grouped[0]["realAgentId"] as? NSNumber)?.uint64Value, 42)
+        XCTAssertEqual(grouped[0]["eventUUIDs"] as? [String], ["uuid-1"])
+        let events = grouped[0]["events"] as? [[String: Any]]
+        XCTAssertEqual(events?.count, 1)
+        XCTAssertEqual(events?[0]["orderId"] as? String, "XYZ")
+    }
+
+    func testPendingGroupedRecoveryUploadsBucketsByDistinctRealAgentId() {
+        eventStore.store(makeRecord(uuid: "uuid-a1", sessionId: "session-A", realAgentId: 1))
+        eventStore.store(makeRecord(uuid: "uuid-a2", sessionId: "session-A", realAgentId: 1))
+        eventStore.store(makeRecord(uuid: "uuid-b1", sessionId: "session-B", realAgentId: 2))
+        eventStore.synchronize()
+
+        _ = sut.recoverPersistedEventsStagingForHarvest()
+        let grouped = sut.pendingGroupedRecoveryUploads()
+
+        XCTAssertEqual(grouped.count, 2, "distinct originating realAgentIds must ship in separate buckets/uploads")
+        let eventCountsByRealAgentId = Dictionary(uniqueKeysWithValues: grouped.map {
+            (($0["realAgentId"] as! NSNumber).uint64Value, ($0["events"] as! [[String: Any]]).count)
+        })
+        XCTAssertEqual(eventCountsByRealAgentId[1], 2)
+        XCTAssertEqual(eventCountsByRealAgentId[2], 1)
+    }
+
+    func testPendingGroupedRecoveryUploadsClearsStateOnRead() {
+        eventStore.store(makeRecord(uuid: "uuid-1", sessionId: "session-1"))
+        eventStore.synchronize()
+
+        _ = sut.recoverPersistedEventsStagingForHarvest()
+        XCTAssertEqual(sut.pendingGroupedRecoveryUploads().count, 1)
+        XCTAssertTrue(sut.pendingGroupedRecoveryUploads().isEmpty, "a bucket must only be handed back once")
+    }
+
+    // Regression guard for a real duplicate-upload bug found via manual testing: `sut` is
+    // a process-wide singleton, so a second `onSessionStart` in the same process (e.g. an
+    // agent restart/reseed) before the first sweep's grouped bucket was ever drained used
+    // to re-add the same still-undeleted persisted record a second time, and both copies
+    // shipped in one upload.
+    func testRecoverTwiceBeforeDrainingDoesNotDuplicateTheGroupedBucket() {
+        eventStore.store(makeRecord(uuid: "uuid-1", sessionId: "session-1"))
+        eventStore.synchronize()
+
+        // Simulate the recovery sweep running twice (e.g. two onSessionStart calls) before
+        // anything drains/confirms the bucket in between.
+        _ = sut.recoverPersistedEventsStagingForHarvest()
+        _ = sut.recoverPersistedEventsStagingForHarvest()
+
+        let grouped = sut.pendingGroupedRecoveryUploads()
+        XCTAssertEqual(grouped.count, 1)
+        XCTAssertEqual(grouped[0]["eventUUIDs"] as? [String], ["uuid-1"],
+                       "the same persisted record re-discovered by a second sweep must not be queued twice")
+        XCTAssertEqual((grouped[0]["events"] as? [[String: Any]])?.count, 1,
+                       "must not ship the same event twice in one upload")
+    }
+
+    func testConfirmGroupedRecoveryUploadSucceededDeletesOnlyThoseEvents() {
+        eventStore.store(makeRecord(uuid: "other-uuid", sessionId: "session-B", realAgentId: 2))
+        eventStore.store(makeRecord(uuid: "target-uuid", sessionId: "session-A", realAgentId: 1))
+        eventStore.synchronize()
+
+        _ = sut.recoverPersistedEventsStagingForHarvest()
+        let grouped = sut.pendingGroupedRecoveryUploads()
+        let targetBucket = grouped.first { ($0["realAgentId"] as? NSNumber)?.uint64Value == 1 }!
+        sut.confirmGroupedRecoveryUploadSucceeded(eventUUIDs: targetBucket["eventUUIDs"] as! [String])
+        eventStore.synchronize()
+
+        let remaining = eventStore.fetchAll()
+        XCTAssertEqual(remaining.count, 1, "confirming a grouped upload must delete only that bucket's events")
+        XCTAssertEqual(remaining.first?.eventUUID, "other-uuid")
+    }
+
+    func testUnconfirmedGroupedRecoveryUploadLeavesEventsForRetry() {
+        eventStore.store(makeRecord(uuid: "uuid-1", sessionId: "session-1"))
+        eventStore.synchronize()
+
+        _ = sut.recoverPersistedEventsStagingForHarvest()
+        _ = sut.pendingGroupedRecoveryUploads()
+        // Simulate a failed dedicated upload: never call confirmGroupedRecoveryUploadSucceeded().
+
+        XCTAssertEqual(eventStore.fetchAll().count, 1, "a failed grouped upload must not drop the persisted record")
+
+        _ = sut.recoverPersistedEventsStagingForHarvest()
+        XCTAssertEqual(sut.pendingGroupedRecoveryUploads().count, 1, "the event must still be recoverable into a grouped bucket on a later retry")
     }
 
     // When the manifest is missing/corrupt, we never fabricate session-level attribution
@@ -161,20 +278,22 @@ final class NREventPersistenceControllerTests: XCTestCase {
                                      eventAttributes: ["orderId": "ABC123"]))
         eventStore.synchronize()
 
-        let payloads = sut.recoverPersistedEventsStagingForHarvest()
-        XCTAssertEqual(payloads.count, 1, "a record with no manifest must never be dropped")
-        XCTAssertEqual(payloads[0]["orderId"] as? String, "ABC123")
-        XCTAssertNil(payloads[0]["userId"], "must never fabricate attribution it can't vouch for")
-        XCTAssertEqual(payloads[0][kNRMA_RA_sessionId] as? String, "no-manifest-session")
+        _ = sut.recoverPersistedEventsStagingForHarvest()
+        let events = sut.pendingGroupedRecoveryUploads()[0]["events"] as? [[String: Any]]
+        XCTAssertEqual(events?.count, 1, "a record with no manifest must never be dropped")
+        XCTAssertEqual(events?[0]["orderId"] as? String, "ABC123")
+        XCTAssertNil(events?[0]["userId"], "must never fabricate attribution it can't vouch for")
+        XCTAssertEqual(events?[0][kNRMA_RA_sessionId] as? String, "no-manifest-session")
     }
 
     func testRecoverPreservesOriginalTimestampAndSessionId() {
         eventStore.store(makeRecord(uuid: "uuid-1", sessionId: "original-session", timestampMs: 42_000))
         eventStore.synchronize()
 
-        let payloads = sut.recoverPersistedEventsStagingForHarvest()
-        XCTAssertEqual(payloads[0][kNRMA_RA_timestamp] as? Int64, 42_000)
-        XCTAssertEqual(payloads[0][kNRMA_RA_sessionId] as? String, "original-session")
+        _ = sut.recoverPersistedEventsStagingForHarvest()
+        let events = sut.pendingGroupedRecoveryUploads()[0]["events"] as? [[String: Any]]
+        XCTAssertEqual(events?[0][kNRMA_RA_timestamp] as? Int64, 42_000)
+        XCTAssertEqual(events?[0][kNRMA_RA_sessionId] as? String, "original-session")
     }
 
     // Regression guard for a real bug found via manual testing: a recovered
@@ -187,11 +306,14 @@ final class NREventPersistenceControllerTests: XCTestCase {
                                      eventAttributes: ["orderId": "ABC123", "revenue": 42.5, "eventType": "CustomOrder"]))
         eventStore.synchronize()
 
-        let payloads = sut.recoverPersistedEventsStagingForHarvest()
-        XCTAssertEqual(payloads.count, 1)
-        XCTAssertEqual(payloads[0]["orderId"] as? String, "ABC123",
+        _ = sut.recoverPersistedEventsStagingForHarvest()
+        let grouped = sut.pendingGroupedRecoveryUploads()
+        XCTAssertEqual(grouped.count, 1)
+        let events = grouped[0]["events"] as? [[String: Any]]
+        XCTAssertEqual(events?.count, 1)
+        XCTAssertEqual(events?[0]["orderId"] as? String, "ABC123",
                        "the event's own custom attributes must survive into the recovered payload, not just session-level attributes")
-        XCTAssertEqual(payloads[0]["revenue"] as? Double, 42.5)
+        XCTAssertEqual(events?[0]["revenue"] as? Double, 42.5)
     }
 
     func testRecoverEventOwnAttributesDoNotOverrideAuthoritativeTimestampSessionIdEventType() {
@@ -202,10 +324,11 @@ final class NREventPersistenceControllerTests: XCTestCase {
                                      eventAttributes: [kNRMA_RA_timestamp: 999, kNRMA_RA_eventType: "WrongType"]))
         eventStore.synchronize()
 
-        let payloads = sut.recoverPersistedEventsStagingForHarvest()
-        XCTAssertEqual(payloads[0][kNRMA_RA_timestamp] as? Int64, 42_000)
-        XCTAssertEqual(payloads[0][kNRMA_RA_sessionId] as? String, "original-session")
-        XCTAssertEqual(payloads[0][kNRMA_RA_eventType] as? String, "Mobile")
+        _ = sut.recoverPersistedEventsStagingForHarvest()
+        let events = sut.pendingGroupedRecoveryUploads()[0]["events"] as? [[String: Any]]
+        XCTAssertEqual(events?[0][kNRMA_RA_timestamp] as? Int64, 42_000)
+        XCTAssertEqual(events?[0][kNRMA_RA_sessionId] as? String, "original-session")
+        XCTAssertEqual(events?[0][kNRMA_RA_eventType] as? String, "Mobile")
     }
 
     // MARK: - Crash path
@@ -286,6 +409,57 @@ final class NREventPersistenceControllerTests: XCTestCase {
         XCTAssertTrue(sut.claimPersistedEvents(forCrashSessionId: "crashed-session").isEmpty)
     }
 
+    // MARK: - In-flight dedup against a concurrent live harvest
+
+    // Regression guard for a real duplicate-upload bug found via manual testing:
+    // `onSessionStart` (and this sweep) can run again mid-process -- on foreground,
+    // `startNewSessionForUserId:`, or the 4-hour session restart -- while an earlier,
+    // still in-flight harvest has already pulled this exact event off the live buffer
+    // and marked it pending confirmation, but the network request hasn't resolved yet.
+    // A sweep that ignores that must not re-stage (and thus re-upload) the same event.
+    func testRecoverSkipsEventsCurrentlyPendingConfirmationFromALiveHarvest() {
+        eventStore.store(makeRecord(uuid: "in-flight-uuid", sessionId: "session-1"))
+        eventStore.synchronize()
+
+        sut.markEventsPendingConfirmation(eventUUIDs: ["in-flight-uuid"])
+
+        _ = sut.recoverPersistedEventsStagingForHarvest()
+        XCTAssertTrue(sut.pendingGroupedRecoveryUploads().isEmpty,
+                      "a record currently staged for an in-flight harvest attempt must not be re-staged by a concurrent/later sweep")
+    }
+
+    func testRecoverStillRecoversEventsNotPendingConfirmation() {
+        eventStore.store(makeRecord(uuid: "in-flight-uuid", sessionId: "session-1"))
+        eventStore.store(makeRecord(uuid: "unrelated-uuid", sessionId: "session-1"))
+        eventStore.synchronize()
+
+        sut.markEventsPendingConfirmation(eventUUIDs: ["in-flight-uuid"])
+
+        _ = sut.recoverPersistedEventsStagingForHarvest()
+        let grouped = sut.pendingGroupedRecoveryUploads()
+        XCTAssertEqual(grouped.count, 1)
+        XCTAssertEqual(grouped[0]["eventUUIDs"] as? [String], ["unrelated-uuid"],
+                       "only the in-flight record should be held back, not every record in the same sweep")
+    }
+
+    func testRecoverEventuallyRecoversAfterConfirmationResolves() {
+        eventStore.store(makeRecord(uuid: "in-flight-uuid", sessionId: "session-1"))
+        eventStore.synchronize()
+
+        sut.markEventsPendingConfirmation(eventUUIDs: ["in-flight-uuid"])
+        _ = sut.recoverPersistedEventsStagingForHarvest()
+        XCTAssertTrue(sut.pendingGroupedRecoveryUploads().isEmpty)
+
+        // The in-flight harvest resolves (success or offline-persisted) and confirms,
+        // deleting the persisted copy -- it must not resurrect as "still recoverable".
+        sut.confirmLastRecoveryHarvestSucceeded()
+        eventStore.synchronize()
+
+        _ = sut.recoverPersistedEventsStagingForHarvest()
+        XCTAssertTrue(sut.pendingGroupedRecoveryUploads().isEmpty,
+                      "once confirmed, the event's persisted copy is gone -- nothing left to recover")
+    }
+
     // MARK: - excludingSessionId (crash/recovery partitioning)
 
     func testRecoverExcludingSessionIdOmitsOnlyThatSessionsEvents() {
@@ -293,9 +467,12 @@ final class NREventPersistenceControllerTests: XCTestCase {
         eventStore.store(makeRecord(uuid: "uuid-b", sessionId: "session-B"))
         eventStore.synchronize()
 
-        let payloads = sut.recoverPersistedEventsStagingForHarvest(excludingSessionId: "session-A")
-        XCTAssertEqual(payloads.count, 1)
-        XCTAssertEqual(payloads[0][kNRMA_RA_sessionId] as? String, "session-B")
+        _ = sut.recoverPersistedEventsStagingForHarvest(excludingSessionId: "session-A")
+        let grouped = sut.pendingGroupedRecoveryUploads()
+        XCTAssertEqual(grouped.count, 1)
+        let events = grouped[0]["events"] as? [[String: Any]]
+        XCTAssertEqual(events?.count, 1)
+        XCTAssertEqual(events?[0][kNRMA_RA_sessionId] as? String, "session-B")
     }
 
     func testRecoverExcludingSessionIdLeavesExcludedEventOnDiskForLaterClaim() {
@@ -303,11 +480,10 @@ final class NREventPersistenceControllerTests: XCTestCase {
         eventStore.synchronize()
 
         _ = sut.recoverPersistedEventsStagingForHarvest(excludingSessionId: "session-A")
-        sut.confirmLastRecoveryHarvestSucceeded()
         eventStore.synchronize()
 
         XCTAssertEqual(eventStore.fetchAll().count, 1,
-                       "an excluded session's event must not be staged (and thus never confirmed/deleted) by the ordinary recovery sweep")
+                       "an excluded session's event must not be staged by the ordinary recovery sweep")
 
         let claimed = sut.claimPersistedEvents(forCrashSessionId: "session-A")
         XCTAssertEqual(claimed.count, 1, "the excluded event must still be available for the crash path to claim")
@@ -317,8 +493,8 @@ final class NREventPersistenceControllerTests: XCTestCase {
         eventStore.store(makeRecord(uuid: "uuid-a", sessionId: "session-A"))
         eventStore.synchronize()
 
-        let payloads = sut.recoverPersistedEventsStagingForHarvest(excludingSessionId: nil)
-        XCTAssertEqual(payloads.count, 1)
+        _ = sut.recoverPersistedEventsStagingForHarvest(excludingSessionId: nil)
+        XCTAssertEqual(sut.pendingGroupedRecoveryUploads().count, 1)
     }
 
     func testRecoverAndClaimPartitionEventsWithNoDuplicatesOrGaps() {
@@ -326,11 +502,14 @@ final class NREventPersistenceControllerTests: XCTestCase {
         eventStore.store(makeRecord(uuid: "uuid-b", sessionId: "session-B"))
         eventStore.synchronize()
 
-        let recovered = sut.recoverPersistedEventsStagingForHarvest(excludingSessionId: "session-A")
+        _ = sut.recoverPersistedEventsStagingForHarvest(excludingSessionId: "session-A")
+        let grouped = sut.pendingGroupedRecoveryUploads()
+        let recoveredSessionIds = Set(grouped.flatMap { bucket in
+            (bucket["events"] as! [[String: Any]]).map { $0[kNRMA_RA_sessionId] as? String }
+        })
         let claimed = sut.claimPersistedEvents(forCrashSessionId: "session-A")
-
-        let recoveredSessionIds = Set(recovered.map { $0[kNRMA_RA_sessionId] as? String })
         let claimedSessionIds = Set(claimed.map { $0[kNRMA_RA_sessionId] as? String })
+
         XCTAssertEqual(recoveredSessionIds, ["session-B"])
         XCTAssertEqual(claimedSessionIds, ["session-A"])
         XCTAssertTrue(recoveredSessionIds.isDisjoint(with: claimedSessionIds))
@@ -374,33 +553,6 @@ final class NREventPersistenceControllerTests: XCTestCase {
         XCTAssertEqual(eventStore.fetchAll().count, 1, "confirming with nothing pending must not delete unrelated records")
     }
 
-    // MARK: - Confirmation
-
-    func testConfirmSuccessDeletesStagedEvents() {
-        eventStore.store(makeRecord(uuid: "uuid-1", sessionId: "session-1"))
-        eventStore.synchronize()
-
-        _ = sut.recoverPersistedEventsStagingForHarvest()
-        sut.confirmLastRecoveryHarvestSucceeded()
-        eventStore.synchronize()
-
-        XCTAssertTrue(eventStore.fetchAll().isEmpty)
-    }
-
-    func testUnconfirmedRecoveryLeavesEventsForRetry() {
-        eventStore.store(makeRecord(uuid: "uuid-1", sessionId: "session-1"))
-        eventStore.synchronize()
-
-        let firstAttempt = sut.recoverPersistedEventsStagingForHarvest()
-        XCTAssertEqual(firstAttempt.count, 1)
-        // Simulate a failed harvest: never call confirmLastRecoveryHarvestSucceeded().
-
-        XCTAssertEqual(eventStore.fetchAll().count, 1, "a failed/unconfirmed harvest must not drop the persisted record")
-
-        let secondAttempt = sut.recoverPersistedEventsStagingForHarvest()
-        XCTAssertEqual(secondAttempt.count, 1, "the event must still be recoverable on a later retry")
-    }
-
     // MARK: - Retention
 
     func testRetentionSweepEvictsStaleEventAndItsUnreferencedManifest() {
@@ -441,13 +593,14 @@ final class NREventPersistenceControllerTests: XCTestCase {
     private func makeRecord(uuid: String,
                              sessionId: String,
                              timestampMs: Int64 = 1_000,
-                             eventAttributes: [String: Any] = [:]) -> NREventRecord {
+                             eventAttributes: [String: Any] = [:],
+                             realAgentId: UInt64 = 7) -> NREventRecord {
         NREventRecord(eventUUID: uuid,
                        eventType: "Mobile",
                        name: nil,
                        timestamp: timestampMs,
                        attributes: eventAttributes,
                        sessionId: sessionId,
-                       realAgentId: 7)
+                       realAgentId: realAgentId)
     }
 }

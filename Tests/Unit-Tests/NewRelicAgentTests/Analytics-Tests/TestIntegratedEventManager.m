@@ -411,12 +411,35 @@
 
 // MARK: - EventPersistence wiring (NR-631296)
 
+// Recovered events are staged internally and handed back grouped via
+// -pendingGroupedRecoveryUploads, not returned directly -- flatten that here so call
+// sites below get the same flat list the old return value used to give them. Safe to
+// call repeatedly: draining is in-memory only and doesn't touch disk.
+- (NSArray<NSDictionary *> *)stagedRecoveredEvents {
+    [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil];
+    NSMutableArray<NSDictionary *> *all = [NSMutableArray array];
+    for (NSDictionary *bucket in [[NREventPersistenceController shared] pendingGroupedRecoveryUploads]) {
+        [all addObjectsFromArray:bucket[@"events"]];
+    }
+    return all;
+}
+
+// Cleanup: confirms/deletes every staged grouped bucket plus any live pending UUIDs, so
+// this test's sentinel events don't leak into later tests sharing the same on-disk store.
+- (void)confirmAllStagedRecoveredEvents {
+    [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil];
+    for (NSDictionary *bucket in [[NREventPersistenceController shared] pendingGroupedRecoveryUploads]) {
+        [[NREventPersistenceController shared] confirmGroupedRecoveryUploadSucceededWithEventUUIDs:bucket[@"eventUUIDs"]];
+    }
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+}
+
 // Waits for `eventType` to show up in a recovery payload, polling the real
 // NREventPersistenceController.shared store -- the write lands on that
 // controller's own internal queue, asynchronously relative to -addEvent:.
 - (void)waitForRecoveredEventType:(NSString *)eventType {
     NSPredicate *predicate = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
-        for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
+        for (NSDictionary *candidate in [self stagedRecoveredEvents]) {
             if ([candidate[@"eventType"] isEqualToString:eventType]) {
                 return YES;
             }
@@ -440,7 +463,7 @@
     [self waitForRecoveredEventType:@"PersistenceWiringSentinel"];
 
     NSDictionary *found = nil;
-    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
+    for (NSDictionary *candidate in [self stagedRecoveredEvents]) {
         if ([candidate[@"eventType"] isEqualToString:@"PersistenceWiringSentinel"]) {
             found = candidate;
             break;
@@ -448,7 +471,7 @@
     }
     XCTAssertNotNil(found, @"the event persisted by addEvent: must be recoverable through the controller");
 
-    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [self confirmAllStagedRecoveredEvents];
 }
 
 - (void)testAddEventDoesNotPersistWhenFlagDisabled {
@@ -474,12 +497,12 @@
     XCTAssertTrue([manager addEvent:sentinel]);
     [self waitForRecoveredEventType:@"FlushSentinel"];
 
-    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
+    for (NSDictionary *candidate in [self stagedRecoveredEvents]) {
         XCTAssertNotEqualObjects(candidate[@"eventType"], @"FlagOffSentinel",
                                  @"an event added while the flag was disabled must never be persisted");
     }
 
-    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [self confirmAllStagedRecoveredEvents];
 }
 
 // Regression guard for a real bug found via manual testing: a freshly-recorded
@@ -503,9 +526,9 @@
     NSError *error = nil;
     NSString *json = [manager getEventJSONStringWithError:&error clearEvents:YES];
     XCTAssertTrue([json containsString:@"FreshHarvestConfirmSentinel"]);
-    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [self confirmAllStagedRecoveredEvents];
 
-    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
+    for (NSDictionary *candidate in [self stagedRecoveredEvents]) {
         XCTAssertNotEqualObjects(candidate[@"eventType"], @"FreshHarvestConfirmSentinel",
                                  @"an event already confirmed delivered via a normal harvest must never be recovered again");
     }
@@ -536,12 +559,12 @@
     XCTAssertTrue([manager addEvent:second]);
     [self waitForRecoveredEventType:@"EvictedSentinelReplacement"];
 
-    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
+    for (NSDictionary *candidate in [self stagedRecoveredEvents]) {
         XCTAssertNotEqualObjects(candidate[@"eventType"], @"EvictedSentinel",
                                  @"an event evicted from the live buffer must not still be in the persisted store");
     }
 
-    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [self confirmAllStagedRecoveredEvents];
 }
 
 // MARK: - Every event type survives persist+recover
@@ -549,7 +572,7 @@
 // Finds the first recovered payload of `eventType`. Callers must already have
 // waited for it via -waitForRecoveredEventType:.
 - (NSDictionary *)recoveredEventOfType:(NSString *)eventType {
-    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
+    for (NSDictionary *candidate in [self stagedRecoveredEvents]) {
         if ([candidate[@"eventType"] isEqualToString:eventType]) {
             return candidate;
         }
@@ -599,7 +622,7 @@
                    stringAttribute:@"XYZ-123"
                    numberAttribute:@42];
 
-    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [self confirmAllStagedRecoveredEvents];
 }
 
 - (void)testPersistedInteractionEventKeepsItsOwnFields {
@@ -627,7 +650,7 @@
     XCTAssertEqualObjects(found[kNRMA_RA_category], @"InteractionEventFieldsCategory");
     XCTAssertEqualObjects(found[kNRMA_Attrib_name], @"InteractionEventFieldsName");
 
-    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [self confirmAllStagedRecoveredEvents];
 }
 
 - (void)testPersistedSessionEventKeepsItsOwnFields {
@@ -653,7 +676,7 @@
                    numberAttribute:@42];
     XCTAssertEqualObjects(found[kNRMA_RA_category], @"SessionEventFieldsCategory");
 
-    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [self confirmAllStagedRecoveredEvents];
 }
 
 - (void)testPersistedUserActionEventKeepsItsOwnFields {
@@ -679,7 +702,7 @@
                    numberAttribute:@42];
     XCTAssertEqualObjects(found[kNRMA_RA_category], @"UserActionEventFieldsCategory");
 
-    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [self confirmAllStagedRecoveredEvents];
 }
 
 // NRMARequestEvent doesn't override -JSONObject -- its `payload` property never rides
@@ -712,7 +735,7 @@
                    stringAttribute:@"XYZ-123"
                    numberAttribute:@42];
 
-    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [self confirmAllStagedRecoveredEvents];
 }
 
 - (void)testPersistedNetworkErrorEventKeepsItsOwnFields {
@@ -747,7 +770,7 @@
     XCTAssertEqualObjects(found[kNRMA_RA_responseBody], @"NetworkErrorEventFieldsResponseBody");
     XCTAssertEqualObjects(found[kNRMA_RA_appDataHeader], @"NetworkErrorEventFieldsAppDataHeader");
 
-    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [self confirmAllStagedRecoveredEvents];
 }
 
 @end

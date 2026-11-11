@@ -11,6 +11,51 @@
 #import "NewRelicInternalUtils.h"
 #import "NRMASupportMetricHelper.h"
 #import "NRMAJSON.h"
+#import "NRMADataToken.h"
+#import "NRMAAgentConfiguration.h"
+#import "NRMAConnectInformation.h"
+#import "NRMADeviceInformation.h"
+#import <NewRelic/NewRelic-Swift.h>
+
+// Same JSON array shape as NRMAHarvestData.JSONObject, scoped to one bucket of recovered
+// events -- everything else is sent empty. Kept in ObjC, not Swift: it must subclass
+// NRMAHarvestableArray, which Swift can't expose publicly since it's only visible via
+// an @_implementationOnly import.
+@interface NRMARecoveredEventsUpload : NRMAHarvestableArray
+@property(nonatomic, strong) NRMADataToken* dataToken;
+@property(nonatomic, strong) NSArray* events;
+- (instancetype) initWithDataToken:(NRMADataToken*)dataToken events:(NSArray*)events;
+@end
+
+@implementation NRMARecoveredEventsUpload
+- (instancetype) initWithDataToken:(NRMADataToken*)dataToken events:(NSArray*)events
+{
+    self = [super init];
+    if (self) {
+        self.dataToken = dataToken;
+        self.events = events ?: @[];
+    }
+    return self;
+}
+
+- (id) JSONObject
+{
+    NSMutableArray* jsonArray = [[NSMutableArray alloc] init];
+    [jsonArray addObject:[self.dataToken JSONObject]];
+    [jsonArray addObject:[[NRMAAgentConfiguration connectionInformation].deviceInformation JSONObject]];
+    [jsonArray addObject:@0]; // harvestTimeDelta
+    [jsonArray addObject:@[]]; // httpTransactions
+    [jsonArray addObject:@[]]; // metrics
+    [jsonArray addObject:@[]]; // EMPTY NODE required by spec (historically HTTPErrors)
+    [jsonArray addObject:@[]]; // activityTraces
+    [jsonArray addObject:@[]]; // agent health node
+    // No analyticsAttributes: the events already carry their own resolved attributes,
+    // and this request's attributes must not be this session's.
+    [jsonArray addObject:@{}];
+    [jsonArray addObject:self.events];
+    return jsonArray;
+}
+@end
 
 #ifdef __cplusplus
 extern "C" {
@@ -448,6 +493,37 @@ static NSObject* NRMAHarvestControllerAccessorLock;
     if (harvestData == nil) return;
     @synchronized(harvestData) {
         [harvestData.activityTraces addActivityTraces:activity];
+    }
+}
+
++ (void) uploadRecoveredAnalyticsEvents:(NSArray*)events
+                              eventUUIDs:(NSArray*)eventUUIDs
+                             realAgentId:(long long)realAgentId
+{
+    if (events.count == 0) return;
+    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+    NRMAHarvester* harvester = [controller harvester];
+    if (harvester == nil) {
+        NRLOG_AGENT_ERROR(@"uploadRecoveredAnalyticsEvents: harvester unavailable; leaving %lu event(s) persisted for a later launch.", (unsigned long)events.count);
+        return;
+    }
+
+    // clusterAgentId is invariant across app versions, so this session's current value
+    // is fine; realAgentId must be the one these events were actually recorded under.
+    NRMADataToken* dataToken = [[NRMADataToken alloc] init];
+    dataToken.clusterAgentId = harvester.harvestData.dataToken.clusterAgentId;
+    dataToken.realAgentId = realAgentId;
+
+    NRMARecoveredEventsUpload* upload = [[NRMARecoveredEventsUpload alloc] initWithDataToken:dataToken events:events];
+
+    NRLOG_AGENT_VERBOSE(@"Uploading %lu recovered event(s) under originating realAgentId %lld, distinct from this session's.", (unsigned long)events.count, realAgentId);
+
+    NRMAHarvestResponse* response = [[harvester connection] sendData:upload];
+
+    if (!response.isError) {
+        [[NREventPersistenceController shared] confirmGroupedRecoveryUploadSucceededWithEventUUIDs:eventUUIDs];
+    } else {
+        NRLOG_AGENT_VERBOSE(@"Recovered-events upload failed (status %d); leaving %lu event(s) persisted for a later launch.", response.statusCode, (unsigned long)events.count);
     }
 }
 

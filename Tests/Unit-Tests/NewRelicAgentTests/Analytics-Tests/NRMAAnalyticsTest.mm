@@ -1014,7 +1014,7 @@
     XCTAssertTrue([analytics addCustomEvent:@"LegacyEvictedSentinelReplacement" withAttributes:@{}]);
 
     NSPredicate *predicate = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
-        for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
+        for (NSDictionary *candidate in [self stagedRecoveredEvents]) {
             if ([candidate[@"eventType"] isEqualToString:@"LegacyEvictedSentinelReplacement"]) {
                 return YES;
             }
@@ -1023,12 +1023,12 @@
     }];
     [self waitForExpectations:@[[[XCTNSPredicateExpectation alloc] initWithPredicate:predicate object:nil]] timeout:5];
 
-    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
+    for (NSDictionary *candidate in [self stagedRecoveredEvents]) {
         XCTAssertNotEqualObjects(candidate[@"eventType"], @"LegacyEvictedSentinel",
                                  @"an event evicted from the live buffer must not still be in the persisted store");
     }
 
-    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [self confirmAllStagedRecoveredEvents];
     [NRMAAnalytics clearDuplicationStores];
 }
 
@@ -1036,8 +1036,31 @@
 // NewEventSystem is disabled in this class's -setUp, so these all exercise the legacy
 // C++ AnalyticsController/EventManager/NRMAEventPersistenceBridge path, not NRMAEventManager.
 
+// Recovered events are staged internally and handed back grouped via
+// -pendingGroupedRecoveryUploads, not returned directly -- flatten that here so call
+// sites below get the same flat list the old return value used to give them. Safe to
+// call repeatedly: draining is in-memory only and doesn't touch disk.
+- (NSArray<NSDictionary *> *)stagedRecoveredEvents {
+    [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil];
+    NSMutableArray<NSDictionary *> *all = [NSMutableArray array];
+    for (NSDictionary *bucket in [[NREventPersistenceController shared] pendingGroupedRecoveryUploads]) {
+        [all addObjectsFromArray:bucket[@"events"]];
+    }
+    return all;
+}
+
+// Cleanup: confirms/deletes every staged grouped bucket plus any live pending UUIDs, so
+// this test's sentinel events don't leak into later tests sharing the same on-disk store.
+- (void)confirmAllStagedRecoveredEvents {
+    [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil];
+    for (NSDictionary *bucket in [[NREventPersistenceController shared] pendingGroupedRecoveryUploads]) {
+        [[NREventPersistenceController shared] confirmGroupedRecoveryUploadSucceededWithEventUUIDs:bucket[@"eventUUIDs"]];
+    }
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+}
+
 - (NSDictionary *)recoveredLegacyEventMatchingKey:(NSString *)key value:(NSString *)value {
-    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
+    for (NSDictionary *candidate in [self stagedRecoveredEvents]) {
         if ([candidate[key] isEqualToString:value]) {
             return candidate;
         }
@@ -1065,7 +1088,7 @@
     XCTAssertEqualObjects(found[@"stringAttribute"], @"XYZ-123");
     XCTAssertEqualObjects(found[@"numberAttribute"], @42);
 
-    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [self confirmAllStagedRecoveredEvents];
     [NRMAAnalytics clearDuplicationStores];
 }
 
@@ -1083,7 +1106,7 @@
     XCTAssertEqualObjects(found[@"stringAttribute"], @"XYZ-123");
     XCTAssertEqualObjects(found[@"numberAttribute"], @42);
 
-    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [self confirmAllStagedRecoveredEvents];
     [NRMAAnalytics clearDuplicationStores];
 }
 
@@ -1099,7 +1122,7 @@
     XCTAssertEqualObjects(found[kNRMA_RA_category], @"Interaction");
     XCTAssertEqualObjects(found[kNRMA_RA_InteractionDuration], @1.5);
 
-    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [self confirmAllStagedRecoveredEvents];
     [NRMAAnalytics clearDuplicationStores];
 }
 
@@ -1121,7 +1144,7 @@
     XCTAssertEqualObjects(found[kNRMA_RA_targetObject], @"LegacyUserActionFieldsClass");
     XCTAssertEqualObjects(found[kNRMA_RA_label], @"LegacyUserActionFieldsLabel");
 
-    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [self confirmAllStagedRecoveredEvents];
     [NRMAAnalytics clearDuplicationStores];
 }
 
@@ -1154,7 +1177,7 @@
     XCTAssertEqualObjects(found[@"bytesReceived"], @654);
     XCTAssertEqualObjects(found[@"statusCode"], @200);
 
-    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [self confirmAllStagedRecoveredEvents];
     [NRMAAnalytics clearDuplicationStores];
     [NRMAFlags disableFeatures:NRFeatureFlag_NetworkRequestEvents];
 }
@@ -1197,7 +1220,7 @@
     XCTAssertEqualObjects(found[kNRMA_RA_responseBody], responseBodyEncoded);
     XCTAssertEqualObjects(found[kNRMA_RA_appDataHeader], appDataHeader);
 
-    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [self confirmAllStagedRecoveredEvents];
     [NRMAAnalytics clearDuplicationStores];
 }
 
@@ -2122,13 +2145,36 @@
 
 // MARK: - EventPersistence wiring, legacy (C++) path (NR-631296)
 
+// Recovered events are staged internally and handed back grouped via
+// -pendingGroupedRecoveryUploads, not returned directly -- flatten that here so call
+// sites below get the same flat list the old return value used to give them. Safe to
+// call repeatedly: draining is in-memory only and doesn't touch disk.
+- (NSArray<NSDictionary *> *)stagedRecoveredEvents {
+    [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil];
+    NSMutableArray<NSDictionary *> *all = [NSMutableArray array];
+    for (NSDictionary *bucket in [[NREventPersistenceController shared] pendingGroupedRecoveryUploads]) {
+        [all addObjectsFromArray:bucket[@"events"]];
+    }
+    return all;
+}
+
+// Cleanup: confirms/deletes every staged grouped bucket plus any live pending UUIDs, so
+// this test's sentinel events don't leak into later tests sharing the same on-disk store.
+- (void)confirmAllStagedRecoveredEvents {
+    [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil];
+    for (NSDictionary *bucket in [[NREventPersistenceController shared] pendingGroupedRecoveryUploads]) {
+        [[NREventPersistenceController shared] confirmGroupedRecoveryUploadSucceededWithEventUUIDs:bucket[@"eventUUIDs"]];
+    }
+    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+}
+
 // Waits for `eventType` to show up in a recovery payload, polling the real
 // NREventPersistenceController.shared store -- the legacy path's bridge call
 // lands asynchronously (on NREventPersistenceController's own queue)
 // relative to -addCustomEvent:.
 - (void)waitForRecoveredLegacyEventType:(NSString *)eventType {
     NSPredicate *predicate = [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary<NSString *,id> *bindings) {
-        for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
+        for (NSDictionary *candidate in [self stagedRecoveredEvents]) {
             if ([candidate[@"eventType"] isEqualToString:eventType]) {
                 return YES;
             }
@@ -2148,7 +2194,7 @@
     [self waitForRecoveredLegacyEventType:@"LegacyPersistenceWiringSentinel"];
 
     NSDictionary *found = nil;
-    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
+    for (NSDictionary *candidate in [self stagedRecoveredEvents]) {
         if ([candidate[@"eventType"] isEqualToString:@"LegacyPersistenceWiringSentinel"]) {
             found = candidate;
             break;
@@ -2156,7 +2202,7 @@
     }
     XCTAssertNotNil(found, @"a custom event added through the legacy C++ path must be recoverable through the controller");
 
-    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
+    [self confirmAllStagedRecoveredEvents];
     [NRMAAnalytics clearDuplicationStores];
 }
 
@@ -2173,29 +2219,12 @@
     XCTAssertTrue([analytics addCustomEvent:@"LegacyFlushSentinel" withAttributes:@{}]);
     [self waitForRecoveredLegacyEventType:@"LegacyFlushSentinel"];
 
-    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
+    for (NSDictionary *candidate in [self stagedRecoveredEvents]) {
         XCTAssertNotEqualObjects(candidate[@"eventType"], @"LegacyFlagOffSentinel",
                                  @"an event added through the legacy path while the flag was disabled must never be persisted");
     }
 
-    [[NREventPersistenceController shared] confirmLastRecoveryHarvestSucceeded];
-    [NRMAAnalytics clearDuplicationStores];
-}
-
-- (void)testOnHarvestSuccessConfirmsRecoveredEvents {
-    [NRMAFlags enableFeatures:NRFeatureFlag_EventPersistence];
-
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
-    XCTAssertTrue([analytics addCustomEvent:@"OnHarvestSuccessSentinel" withAttributes:@{}]);
-    [self waitForRecoveredLegacyEventType:@"OnHarvestSuccessSentinel"];
-
-    [analytics onHarvestSuccess];
-
-    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
-        XCTAssertNotEqualObjects(candidate[@"eventType"], @"OnHarvestSuccessSentinel",
-                                 @"-onHarvestSuccess must confirm (and thus delete) the events it just staged for recovery");
-    }
-
+    [self confirmAllStagedRecoveredEvents];
     [NRMAAnalytics clearDuplicationStores];
 }
 
@@ -2216,7 +2245,7 @@
     XCTAssertTrue([json containsString:@"FreshLegacyHarvestConfirmSentinel"]);
     [analytics onHarvestSuccess];
 
-    for (NSDictionary *candidate in [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:nil]) {
+    for (NSDictionary *candidate in [self stagedRecoveredEvents]) {
         XCTAssertNotEqualObjects(candidate[@"eventType"], @"FreshLegacyHarvestConfirmSentinel",
                                  @"a legacy-path event already confirmed delivered via a normal harvest must never be recovered again");
     }

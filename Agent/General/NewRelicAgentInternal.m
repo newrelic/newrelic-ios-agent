@@ -683,12 +683,9 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         }
 #endif
 
-        NSArray *recoveredEvents = [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:pendingCrashSessionId];
-        if (recoveredEvents.count > 0) {
-            NRLOG_AGENT_VERBOSE(@"NREventPersistence: adding %lu recovered event(s) to harvest data: %@",
-                                (unsigned long)recoveredEvents.count, recoveredEvents);
-            [NRMAHarvestController addRecoveredAnalyticsEvents:recoveredEvents];
-        }
+        // Recovered events are staged internally for upload,
+        // flushed from NRMAHarvester once this session's connect succeeds
+        [[NREventPersistenceController shared] recoverPersistedEventsStagingForHarvestExcludingSessionId:pendingCrashSessionId];
     }
 
     // Attempt to upload crash report files (if any exist)

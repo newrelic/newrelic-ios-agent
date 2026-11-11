@@ -82,6 +82,17 @@
 // +addHarvestableAnalytics:, never touches harvestData.analyticsAttributes, so a
 // recovered session's attributes can't clobber the current session's.
 + (void) addRecoveredAnalyticsEvents:(NSArray* _Nonnull)events;
+
+// Uploads recovered events in their own request, with data_token's realAgentId set to
+// the value they were actually recorded under (clusterAgentId stays this session's --
+// it's invariant across app versions). Ingest resolves appVersion only from data_token,
+// not from any header or JSON attribute, so this is the only way to re-attribute a
+// recovered event correctly. Must only run after this session's own connect/harvest has
+// succeeded (see NR-646833 -- uploading earlier gets rejected outright). `eventUUIDs`
+// are confirmed (deleted) only once this upload succeeds.
++ (void) uploadRecoveredAnalyticsEvents:(NSArray* _Nonnull)events
+                              eventUUIDs:(NSArray* _Nonnull)eventUUIDs
+                             realAgentId:(long long)realAgentId;
 @end
 
 #ifdef __cplusplus

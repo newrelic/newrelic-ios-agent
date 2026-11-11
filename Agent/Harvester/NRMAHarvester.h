@@ -72,6 +72,8 @@ typedef enum {
 - (void) clearStoredHarvesterConfiguration;
 - (void) clearStoredApplicationIdentifier;
 
+- (NRMAHarvesterConnection*) connection;
+
 // Harvest Aware.
 - (NSArray*) getHarvestAwareList;
 - (void) addHarvestAwareObject:(id<NRMAHarvestAware>)harvestAware;

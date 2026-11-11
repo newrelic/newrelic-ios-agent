@@ -25,6 +25,7 @@
 #import "NewRelicAgentInternal.h"
 #import "NewRelicInternalUtils.h"
 #import "NRAutoLogCollector.h"
+#import "NRMAHarvestController.h"
 #import <NewRelic/NewRelic-Swift.h>
 
 #define kNRSupportabilityResponseCode kNRSupportabilityPrefix @"/Collector/ResponseStatusCodes"
@@ -572,6 +573,14 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
         [self handleSessionReplayConfigurationUpdate];
         [self flushPersistedHandledExceptions];
 
+        if ([NRMAFlags shouldEnableEventPersistence]) {
+            for (NSDictionary* bucket in [[NREventPersistenceController shared] pendingGroupedRecoveryUploads]) {
+                [NRMAHarvestController uploadRecoveredAnalyticsEvents:bucket[@"events"]
+                                                            eventUUIDs:bucket[@"eventUUIDs"]
+                                                           realAgentId:[bucket[@"realAgentId"] longLongValue]];
+            }
+        }
+
         [self transitionToConnected:configuration];
         return;
     } else {
@@ -615,6 +624,14 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
         [self handleLoggingConfigurationUpdate];
         [self handleSessionReplayConfigurationUpdate];
         [self flushPersistedHandledExceptions];
+        
+        if ([NRMAFlags shouldEnableEventPersistence]) {
+            for (NSDictionary* bucket in [[NREventPersistenceController shared] pendingGroupedRecoveryUploads]) {
+                [NRMAHarvestController uploadRecoveredAnalyticsEvents:bucket[@"events"]
+                                                            eventUUIDs:bucket[@"eventUUIDs"]
+                                                           realAgentId:[bucket[@"realAgentId"] longLongValue]];
+            }
+        }
 
         [NRMASupportMetricHelper processDeferredMetrics];
         
