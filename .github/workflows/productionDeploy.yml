@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+env:
+  # Install exactly what Gemfile.lock pins; fail if the lockfile is out of date.
+  BUNDLE_FROZEN: "true"
+
 jobs:
   # The deployS3Production job copies the existing build from staging download location to the production download location.
   # The job relies on the existence of the xcframework desired for production promotion at the staging download location url: https://download.newrelic.com/ios-v5/${{ env.version }}.zip
@@ -25,11 +29,11 @@ jobs:
     outputs:
       version: ${{ steps.setOutput.outputs.version }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
         with:
           submodules: true
       
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199 # v1.338.0
         with:
           ruby-version: '3.2'
           bundler-cache: false
@@ -37,9 +41,6 @@ jobs:
       - name: Install Bundler 2.7.2
         run: gem install bundler:2.7.2
       
-      - name: Update gem
-        run: bundle update
-
       - name: Install gems
         run: bundle install
 
@@ -70,17 +71,17 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout Main repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
         with:
           path: main
 
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199 # v1.338.0
         with:
           ruby-version: '3.2'
           bundler-cache: false
 
       - name: Checkout SPM
-        uses: actions/checkout@v3
+        uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
         with:
           repository: newrelic/newrelic-ios-agent-spm
           token: ${{ secrets.SPM_PAT }}
@@ -131,7 +132,7 @@ jobs:
         # The following step creates a PR containing that new NewRelicAgent.podspec and Package.swift file at the root of the repo.
         # Since production builds are infrequent this creates a PR that must be manually approved and merged.
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
+        uses: peter-evans/create-pull-request@18f7dc018cc2cd597073088f7c7591b9d1c02672 # v3.14.0
         with:
           path: main
           title: "[${{ env.version }}] Production Release"
@@ -157,7 +158,7 @@ jobs:
   #     VERSION_STRING: ${{ needs.deployS3Production.outputs.version }}
   #   steps:
   #     - name: Checkout docs-website (next branch) for release-notes body
-  #       uses: actions/checkout@v4
+  #       uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
   #       with:
   #         repository: ${{ env.DOCS_REPO }}
   #         token: ${{ secrets.DOCS_WEBSITE_PAT }}
@@ -205,7 +206,7 @@ jobs:
   #     BOT_EMAIL: ${{ secrets.BOT_EMAIL }}
   #   steps:
   #     - name: Checkout docs-website (next branch)
-  #       uses: actions/checkout@v4
+  #       uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
   #       with:
   #         repository: ${{ env.DOCS_REPO }}
   #         token: ${{ secrets.DOCS_WEBSITE_PAT }}
