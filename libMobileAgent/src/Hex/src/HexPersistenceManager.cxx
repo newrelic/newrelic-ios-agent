@@ -35,11 +35,18 @@ void NewRelic::Hex::HexPersistenceManager::retrieveAndPublishReports() {
             auto bundle = fbs::CreateHexAgentDataBundle(*context->getBuilder(), agentDataVector);
             FinishHexAgentDataBundleBuffer(*context->getBuilder(), bundle);
 
+            // The report's own appVersion (captured when it was originally recorded —
+            // see AppInfo::serialize) must drive the upload, not whatever version this
+            // session is currently running; a report recorded under an older version and
+            // flushed after an app-version change otherwise uploads under the new one.
+            std::string appVersion = agentDataObj->applicationInfo ? agentDataObj->applicationInfo->appVersion
+                                                                    : std::string();
+
             // Publish the context for this agent data. The report is removed from disk
             // only when the publisher says so: shouldRemove==true on a confirmed upload
             // OR after the per-report retry limit is reached; false keeps it for retry.
             if (context) {
-                _publisher->publish(context, reportId, [store, reportId](bool shouldRemove) {
+                _publisher->publish(context, reportId, appVersion, [store, reportId](bool shouldRemove) {
                     if (shouldRemove) {
                         store->markUploaded(reportId);
                     } else {
