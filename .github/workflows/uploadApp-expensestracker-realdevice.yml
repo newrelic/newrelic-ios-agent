@@ -40,12 +40,12 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # pin@v4
+        uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
         with:
           ref: mobile-views-2
           submodules: true
 
-      - uses: maxim-lobanov/setup-xcode@v1
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
           xcode-version: "26.2"
 
@@ -255,7 +255,7 @@ jobs:
           ls -la "$GITHUB_WORKSPACE/builds/expensestracker-ios.ipa"
 
       - name: Upload IPA artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: expensestracker-ios-ipa
           path: builds/expensestracker-ios.ipa
@@ -280,7 +280,7 @@ jobs:
       LT_APP_ID_PREFIX: com.newrelic.ExpensesTracker
       LT_APP_ID_FILE: last-app-id-expensestracker-realdevice
     steps:
-      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # pin@v4
+      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
         with:
           ref: mobile-views-2
 
@@ -288,7 +288,7 @@ jobs:
         uses: ./.github/actions/env-setup
 
       - name: Download IPA artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
         with:
           name: expensestracker-ios-ipa
           path: ${{ github.workspace }}/builds
@@ -324,7 +324,7 @@ jobs:
 
       - name: Notify failure
         if: ${{ failure() || cancelled() }}
-        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # pin@v2
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
         with:
           webhook-type: incoming-webhook
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
