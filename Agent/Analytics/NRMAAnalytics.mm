@@ -1298,7 +1298,6 @@ static PersistentStore<std::string,BaseValue>* __attributeStore;
             kNRMA_RA_appId,
             kNRMA_RA_appName,
             kNRMA_RA_appBuild,
-            kNRMA_RA_appVersion,
             kNRMA_RA_uuid,
             kNRMA_RA_sessionDuration,
             kNRMA_RA_osName,

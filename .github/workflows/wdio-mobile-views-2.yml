@@ -47,7 +47,7 @@ jobs:
       # Surfaces this run as "[mobile-views-2] ..." + a tag chip in the LambdaTest dashboard
       LT_RUN_LABEL: mobile-views-2
     steps:
-      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # pin@v4
+      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
         with:
           ref: mobile-views-2
       - name: Setup environment
@@ -96,7 +96,7 @@ jobs:
 
       - name: Notify failure
         if: ${{ failure() || cancelled() }}
-        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # pin@v2
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
         with:
           webhook-type: incoming-webhook
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}

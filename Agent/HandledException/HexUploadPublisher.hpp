@@ -31,6 +31,13 @@ namespace NewRelic {
             virtual void publish(std::shared_ptr<HexContext>const& context,
                                  const std::string& reportId,
                                  std::function<void(bool shouldRemove)> onComplete);
+            // appVersion is the version the report was originally recorded under; the
+            // outgoing request's X-NewRelic-App-Version header is set from it rather
+            // than from this publisher's (session-fixed) applicationVersion.
+            virtual void publish(std::shared_ptr<HexContext>const& context,
+                                 const std::string& reportId,
+                                 const std::string& appVersion,
+                                 std::function<void(bool shouldRemove)> onComplete);
             virtual ~HexUploadPublisher();
 //            void auditFlatBuffer(uint8_t* buf);
             void retry();
