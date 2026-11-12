@@ -25,6 +25,10 @@
 @property(strong) NSData* data;
 // Persisted report path; nil for non-persisted (live) uploads.
 @property(strong) NSString* reportId;
+// App version the report was originally recorded under; overrides the uploader's
+// own applicationVersion for the X-NewRelic-App-Version header on this payload's
+// request. Nil falls back to the uploader's applicationVersion.
+@property(strong) NSString* appVersion;
 @property(copy) void(^completion)(BOOL shouldRemove);
 // Set when a >= 400 HTTP response is seen for the current attempt; reset on retry.
 @property(assign) BOOL httpError;
@@ -123,6 +127,10 @@ static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
 }
 
 - (void) sendData:(NSData*)data reportId:(NSString*)reportId completion:(void(^)(BOOL shouldRemove))completion {
+    [self sendData:data reportId:reportId appVersion:nil completion:completion];
+}
+
+- (void) sendData:(NSData*)data reportId:(NSString*)reportId appVersion:(NSString*)appVersion completion:(void(^)(BOOL shouldRemove))completion {
     if (data == nil) {
         // Nothing to upload; keep any persisted report untouched.
         if (completion) completion(NO);
@@ -141,6 +149,7 @@ static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
     NRMAHexPayload* payload = [NRMAHexPayload new];
     payload.data = data;
     payload.reportId = reportId;
+    payload.appVersion = appVersion;
     payload.completion = completion;
 
     NSMutableArray<NRMAHexPayload*>* dropped = nil;
@@ -196,6 +205,12 @@ static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
     request.HTTPMethod = @"POST";
     [request setValue:@"application/octet-stream" forHTTPHeaderField:@"Content-Type"];
     [request setValue:[NSString stringWithFormat:@"%lu", (unsigned long)data.length] forHTTPHeaderField:@"Content-Length"];
+    // Override with the report's own origin version when known (a persisted report
+    // flushed after an app-version change must upload under the version that
+    // produced it, not whatever applicationVersion this uploader was built with).
+    if (payload.appVersion.length) {
+        [request setValue:payload.appVersion forHTTPHeaderField:@"X-NewRelic-App-Version"];
+    }
 
     // Important: do NOT set HTTPBody on the request. NSURLSessionUploadTask
     // requires the payload to come exclusively from `fromData:`, and iOS

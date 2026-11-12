@@ -1889,13 +1889,6 @@
 			remoteGlobalIDString = 05CD31520EE936A9000FDE88;
 			remoteInfo = "CrashReporter-iOS-Device";
 		};
-		2B40AD29292D6E6C00047D73 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 32CF777F26DFBB080087748A;
-			remoteInfo = "CrashReporter macOS Static Framework";
-		};
 		3431DD1C2BED375E00FF145F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 021A15B124C9EEE700E8DFD5 /* Project object */;
@@ -1903,96 +1896,12 @@
 			remoteGlobalIDString = 348232212BC5EEE60070FAC3;
 			remoteInfo = "Agent-watchOS";
 		};
-		344891CF26AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 8DC2EF5B0486A6940098B216;
-			remoteInfo = "CrashReporter macOS Framework";
-		};
-		344891D126AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 058812B91040582D009128FB;
-			remoteInfo = "CrashReporter iOS Framework";
-		};
-		344891D326AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 8064D8BB1C4D22E5005A8B4C;
-			remoteInfo = "CrashReporter tvOS Framework";
-		};
-		344891D526AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 05E731F30EFA1AAB005EDFB7;
-			remoteInfo = "CrashReporter macOS";
-		};
 		344891D726AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 8064D81B1C4D22D8005A8B4C;
 			remoteInfo = "CrashReporter tvOS";
-		};
-		344891D926AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 05CD32690EE93DC3000FDE88;
-			remoteInfo = "CrashReporter macOS Tests";
-		};
-		344891DB26AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 05CD33240EE94439000FDE88;
-			remoteInfo = "CrashReporter iOS Tests";
-		};
-		344891DD26AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 8064D9951C4D27E2005A8B4C;
-			remoteInfo = "CrashReporter tvOS Tests";
-		};
-		344891DF26AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 05F40CE70EF7AB80008050CF;
-			remoteInfo = "DemoCrash macOS";
-		};
-		344891E126AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 052A45CF136353FB00987004;
-			remoteInfo = "DemoCrash iOS";
-		};
-		344891E326AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 8064D9A31C4D27E9005A8B4C;
-			remoteInfo = "DemoCrash tvOS";
-		};
-		344891E526AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 05E731E30EFA1A3E005EDFB7;
-			remoteInfo = plcrashutil;
-		};
-		344891E726AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 050DE24D0F61B80B00152ED3;
-			remoteInfo = "Fuzz Testing";
 		};
 		34666B1D29245564005A7010 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -4171,21 +4080,8 @@
 		02FF4AD524DC815300115469 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				344891D026AA0F4E00AADB9D /* CrashReporter.framework */,
-				2B40AD2A292D6E6C00047D73 /* CrashReporter.framework */,
-				344891D226AA0F4E00AADB9D /* CrashReporter.framework */,
-				344891D426AA0F4E00AADB9D /* CrashReporter.framework */,
-				344891D626AA0F4E00AADB9D /* libCrashReporter.a */,
 				02FF4AD924DC815400115469 /* libCrashReporter.a */,
 				344891D826AA0F4E00AADB9D /* libCrashReporter.a */,
-				344891DA26AA0F4E00AADB9D /* Tests macOS.xctest */,
-				344891DC26AA0F4E00AADB9D /* Tests iOS.xctest */,
-				344891DE26AA0F4E00AADB9D /* CrashReporter tvOS Tests.xctest */,
-				344891E026AA0F4E00AADB9D /* DemoCrash macOS.app */,
-				344891E226AA0F4E00AADB9D /* DemoCrash iOS.app */,
-				344891E426AA0F4E00AADB9D /* DemoCrash tvOS.app */,
-				344891E626AA0F4E00AADB9D /* plcrashutil */,
-				344891E826AA0F4E00AADB9D /* Fuzz Testing */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -5511,102 +5407,11 @@
 			remoteRef = 02FF4AD824DC815400115469 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		2B40AD2A292D6E6C00047D73 /* CrashReporter.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = CrashReporter.framework;
-			remoteRef = 2B40AD29292D6E6C00047D73 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		344891D026AA0F4E00AADB9D /* CrashReporter.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = CrashReporter.framework;
-			remoteRef = 344891CF26AA0F4E00AADB9D /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		344891D226AA0F4E00AADB9D /* CrashReporter.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = CrashReporter.framework;
-			remoteRef = 344891D126AA0F4E00AADB9D /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		344891D426AA0F4E00AADB9D /* CrashReporter.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = CrashReporter.framework;
-			remoteRef = 344891D326AA0F4E00AADB9D /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		344891D626AA0F4E00AADB9D /* libCrashReporter.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libCrashReporter.a;
-			remoteRef = 344891D526AA0F4E00AADB9D /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 		344891D826AA0F4E00AADB9D /* libCrashReporter.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libCrashReporter.a;
 			remoteRef = 344891D726AA0F4E00AADB9D /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		344891DA26AA0F4E00AADB9D /* Tests macOS.xctest */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = "Tests macOS.xctest";
-			remoteRef = 344891D926AA0F4E00AADB9D /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		344891DC26AA0F4E00AADB9D /* Tests iOS.xctest */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = "Tests iOS.xctest";
-			remoteRef = 344891DB26AA0F4E00AADB9D /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		344891DE26AA0F4E00AADB9D /* CrashReporter tvOS Tests.xctest */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = "CrashReporter tvOS Tests.xctest";
-			remoteRef = 344891DD26AA0F4E00AADB9D /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		344891E026AA0F4E00AADB9D /* DemoCrash macOS.app */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.application;
-			path = "DemoCrash macOS.app";
-			remoteRef = 344891DF26AA0F4E00AADB9D /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		344891E226AA0F4E00AADB9D /* DemoCrash iOS.app */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.application;
-			path = "DemoCrash iOS.app";
-			remoteRef = 344891E126AA0F4E00AADB9D /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		344891E426AA0F4E00AADB9D /* DemoCrash tvOS.app */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.application;
-			path = "DemoCrash tvOS.app";
-			remoteRef = 344891E326AA0F4E00AADB9D /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		344891E626AA0F4E00AADB9D /* plcrashutil */ = {
-			isa = PBXReferenceProxy;
-			fileType = "compiled.mach-o.executable";
-			path = plcrashutil;
-			remoteRef = 344891E526AA0F4E00AADB9D /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		344891E826AA0F4E00AADB9D /* Fuzz Testing */ = {
-			isa = PBXReferenceProxy;
-			fileType = "compiled.mach-o.executable";
-			path = "Fuzz Testing";
-			remoteRef = 344891E726AA0F4E00AADB9D /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		34A9291C2912D721001449B6 /* Hex.framework */ = {

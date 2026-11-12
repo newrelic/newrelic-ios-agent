@@ -31,7 +31,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2
+        uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
         with:
           ref: mobile-views-2
           submodules: true
@@ -39,13 +39,10 @@ jobs:
       - name: Setup environment
         uses: ./.github/actions/env-setup
 
-      - uses: maxim-lobanov/setup-xcode@v1
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
           xcode-version: "27.0"
 
-      - name: Install dependencies
-        run: |
-          npm install
       # before building iOS app, please set the main server, the crash server, and the app token secret
       # the plist to be modified is located at ./Test Harness/NRTestApp/NRAPI-Info.plist
       # the secret mapping is as follows secrets.NRTESTAPP_CRASH_COLLECTOR_ADDRESS , secrets.NRTESTAPP_MAIN_COLLECTOR_ADDRESS, secrets.NRTESTAPP_APP_TOKEN
@@ -81,7 +78,7 @@ jobs:
           zip -r nrtestapp-ios.zip NRTestApp.app
 
       - name: Upload iOS app
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: nrtestapp-ios
           path: ./derived_build//Build/Products/Release-iphonesimulator/nrtestapp-ios.zip
@@ -101,7 +98,7 @@ jobs:
       LT_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
       LT_ACCESSKEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
     steps:
-      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # pin@v4
+      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
         with:
           ref: mobile-views-2
 
@@ -109,7 +106,7 @@ jobs:
         uses: ./.github/actions/env-setup
 
       - name: Download iOS artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
         with:
           name: nrtestapp-ios
           path: ${{ github.workspace }}/builds
@@ -140,7 +137,7 @@ jobs:
       # downstream workflow to download it (artifact poisoning).
       - name: Upload custom_id artifact
         if: ${{ success() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: lambdatest-app-id
           path: LambdaTest/last-app-id
@@ -156,7 +153,7 @@ jobs:
 
       - name: Notify failure
         if: ${{ failure() || cancelled() }}
-        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # pin@v2
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
         with:
           webhook-type: incoming-webhook
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
