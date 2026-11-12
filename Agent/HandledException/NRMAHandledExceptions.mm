@@ -159,7 +159,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 
         _persistenceManager = std::make_shared<NewRelic::Hex::HexPersistenceManager>(_store,_publisher);
 
-        _controller = new NewRelic::Hex::HexController(std::shared_ptr<const NewRelic::AnalyticsController>(_analytics), std::make_shared<NewRelic::Hex::Report::AppInfo>(_appLicense, [self fbsPlatformFromString:platform]), _publisher, _store, sessionId.UTF8String);
+        _controller = new NewRelic::Hex::HexController(std::shared_ptr<const NewRelic::AnalyticsController>(_analytics), std::make_shared<NewRelic::Hex::Report::AppInfo>(_appLicense, [self fbsPlatformFromString:platform], version.UTF8String), _publisher, _store, sessionId.UTF8String);
     }
     return self;
 }
@@ -484,7 +484,6 @@ static const int kNRMARecordErrorAgentFrames = 2;
 
     threadVector.push_back(std::make_shared<NewRelic::Hex::Report::Thread>(frameVector));
     // END: Assemble threadVector from the stackTraceElements dict.
-
 
     if([NRMAFlags shouldEnableNewEventSystem]){
         auto resultMap = [self getSessionAttributesResultMap];

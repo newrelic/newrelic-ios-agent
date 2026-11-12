@@ -877,6 +877,15 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             return NO;
         }
 
+        // Reserved event types belong to the agent. Checked here, ahead of the event-system
+        // switch, because only the old system's AnalyticsController validates the event type.
+        for (NSString* reserved in [NRMAAnalytics reservedEventTypes]) {
+            if ([reserved isEqualToString:eventType]) {
+                NRLOG_AGENT_ERROR(@"Failed to add event type: %@. \"%@\" is reserved for use by the agent.", eventType, reserved);
+                return NO;
+            }
+        }
+
         if([NRMAFlags shouldEnableNewEventSystem]){
             NRMACustomEvent* event = [[NRMACustomEvent alloc] initWithEventType:eventType
                                                                       timestamp:[NRMAAnalytics currentTimeMillis]
@@ -1274,6 +1283,19 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     return timeInMilisInt64;
 }
 
+/*
+ * Must match AnalyticsController::_reserved_eventTypes, so a reserved -recordCustomEvent: name is
+ * rejected identically whichever event system is live. MobileUserAction is in neither list.
+ */
++ (NSArray<NSString*>*) reservedEventTypes {
+    return @[kNRMA_RET_mobile,
+             kNRMA_RET_mobileCrash,
+             kNRMA_RET_mobileRequest,
+             kNRMA_RET_mobileRequestError,
+             kNRMA_RET_mobileSession,
+             kNRMA_RET_mobileBreadcrumb];
+}
+
 + (NSArray<NSString*>*) reservedKeywords {
     return [NSArray arrayWithObjects:
             kNRMA_RA_eventType,
@@ -1283,6 +1305,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             kNRMA_RA_accountId,
             kNRMA_RA_appId,
             kNRMA_RA_appName,
+            kNRMA_RA_appBuild,
             kNRMA_RA_uuid,
             kNRMA_RA_sessionDuration,
             kNRMA_RA_osName,
