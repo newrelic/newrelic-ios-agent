@@ -14,11 +14,15 @@
 #import "NRMAAppToken.h"
 #import "NRMAFlags.h"
 #import "NRLogger.h"
+#import "NRMAPlatformDetector.h"
 
 static NSString* __NRMA__customAppVersionString = nil;
 static NSString* __NRMA__customAppBuildString = nil;
 static NRMAApplicationPlatform __NRMA__applicationPlatform = NRMAPlatform_Native;
 static NSString* __NRMA__applicationPlatformVersion = nil;
+// Set by +setPlatform: and +setPlatformVersion:, so the resolver can tell "never set" from "set to Native".
+static BOOL __NRMA__applicationPlatformExplicit = NO;
+static BOOL __NRMA__applicationPlatformVersionExplicit = NO;
 
 // Default max event buffer time is 1 minute (60 seconds).
 static NSUInteger __NRMA__maxEventBufferTime = 60;
@@ -38,10 +42,59 @@ static NSUInteger __NRMA__maxOfflineStorageSizeBytes = 100000000; // 100 MB in b
 
 +(void) setPlatform:(NRMAApplicationPlatform)platform {
     __NRMA__applicationPlatform = platform;
+    __NRMA__applicationPlatformExplicit = YES;
 }
 + (void) setPlatformVersion:(NSString*)platformVersion
 {
     __NRMA__applicationPlatformVersion = platformVersion;
+    __NRMA__applicationPlatformVersionExplicit = YES;
+}
+
++ (BOOL) isPlatformExplicit {
+    return __NRMA__applicationPlatformExplicit;
+}
+
++ (void) resolvePlatform {
+    [self resolvePlatformWithDetector:^NRMAPlatformDetection* {
+        return [NRMAPlatformDetector detectPlatform];
+    }];
+}
+
++ (void) resolvePlatformWithDetector:(NRMAPlatformDetection* (^)(void))detect {
+    // An explicit +setPlatform: always wins, and then the detector does not run at all.
+    if (__NRMA__applicationPlatformExplicit) {
+        return;
+    }
+
+    NRMAPlatformDetection* detection = nil;
+    @try {
+        CFAbsoluteTime start = CFAbsoluteTimeGetCurrent();
+        detection = detect();
+        NRLOG_AGENT_DEBUG(@"Platform detection took %.3f ms", (CFAbsoluteTimeGetCurrent() - start) * 1000);
+    } @catch (NSException* exception) {
+        NRLOG_AGENT_ERROR(@"Platform detection failed, reporting Native: %@", exception);
+        detection = nil;
+    }
+
+    // Whatever an earlier start in the same process left behind, nothing detected means Native.
+    __NRMA__applicationPlatform = detection ? detection.platform : NRMAPlatform_Native;
+    if (!__NRMA__applicationPlatformVersionExplicit) {
+        // nil keeps today's default: the platform version falls back to the agent version.
+        __NRMA__applicationPlatformVersion = detection.platformVersion;
+    }
+
+    if (detection) {
+        NRLOG_AGENT_INFO(@"Detected platform %@ (version %@)",
+                         [NewRelicInternalUtils stringFromNRMAApplicationPlatform:detection.platform],
+                         detection.platformVersion ?: @"not declared");
+    }
+}
+
++ (void) resetPlatformForTesting {
+    __NRMA__applicationPlatform = NRMAPlatform_Native;
+    __NRMA__applicationPlatformVersion = nil;
+    __NRMA__applicationPlatformExplicit = NO;
+    __NRMA__applicationPlatformVersionExplicit = NO;
 }
 
 + (void) setMaxEventBufferTime:(NSUInteger)seconds {
