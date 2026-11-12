@@ -403,6 +403,8 @@
 		034768DFFF38A50411DB9C8B /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				05CD31520EE936A9000FDE88 /* libCrashReporter.a */,
+				8064D81B1C4D22D8005A8B4C /* libCrashReporter.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
