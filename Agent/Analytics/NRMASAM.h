@@ -29,6 +29,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSString*) sessionAttributeJSONString;
 - (BOOL) setLastInteraction:(NSString*)name;
+
+// Private "NR" attributes only.
+- (NSDictionary*) currentPrivateAttributes;
+
+// Public and private attributes merged.
+- (NSDictionary*) currentSessionAttributes;
 @end
 
 NS_ASSUME_NONNULL_END

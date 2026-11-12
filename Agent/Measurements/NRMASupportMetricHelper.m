@@ -380,6 +380,22 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
     }
 }
 
++ (void) enqueueEventPersistenceReattributedMetric {
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAEventPersistenceReattributedMetric
+                                                              value:@1
+                                                              scope:nil]];
+    }
+}
+
++ (void) enqueueEventPersistenceManifestMissingMetric {
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAEventPersistenceManifestMissingMetric
+                                                              value:@1
+                                                              scope:nil]];
+    }
+}
+
 + (void) processDeferredMetrics {
     // Handle any deferred app start metrics
     if ([[NRMAStartTimer sharedInstance] appLaunchDuration] != 0) {

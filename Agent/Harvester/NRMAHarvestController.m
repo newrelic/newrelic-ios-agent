@@ -427,6 +427,21 @@ static NSObject* NRMAHarvestControllerAccessorLock;
     }
 }
 
++ (void) addRecoveredAnalyticsEvents:(NSArray*)events
+{
+    if (events.count == 0) return;
+    NRMAHarvestData* harvestData = [[self class] harvestData];
+    if (harvestData == nil) return;
+    @synchronized(harvestData) {
+        NSError *error = nil;
+        NSData *eventsData = [NRMAJSON dataWithJSONObject:events options:0 error:&error];
+        if (eventsData != nil) {
+            [NRMASupportMetricHelper enqueueEventSizeUncompressedMetric:eventsData.length];
+        }
+        [harvestData.analyticsEvents addEvents:events];
+    }
+}
+
 + (void) addHarvestableActivity:(NRMAHarvestableActivity*)activity
 {
     NRMAHarvestData* harvestData = [[self class] harvestData];

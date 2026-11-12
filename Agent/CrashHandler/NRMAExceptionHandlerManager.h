@@ -16,6 +16,5 @@
 + (NRMAExceptionHandlerManager*) manager;
 
 + (void) startHandlerWithLastSessionsAttributes:(NSDictionary*)attributes
-                             andAnalyticsEvents:(NSArray*)events
                                   uploadManager:(NRMACrashDataUploader*)uploader;
 @end

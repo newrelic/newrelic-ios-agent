@@ -20,6 +20,9 @@ namespace NewRelic {
         double _session_elapsed_time_sec;
         AttributeValidator& _attributeValidator;
         std::map<std::string, std::shared_ptr<AttributeBase>> _attributes;
+        // In-memory only -- key for persisting via EventPersistenceBridge, not part of
+        // the on-disk format; a deserialized event gets a freshly-minted one.
+        std::string _eventUUID;
     protected:
         bool insertAttribute(std::shared_ptr<AttributeBase> attribute);
 
@@ -35,6 +38,7 @@ namespace NewRelic {
         virtual const std::string& getEventType() const;
         virtual void put(std::ostream& os) const = 0;
         unsigned long long getAgeInMillis();
+        const std::string& getEventUUID() const;
 
         AnalyticEvent(const AnalyticEvent& event);
         AnalyticEvent& operator=(const AnalyticEvent& event);

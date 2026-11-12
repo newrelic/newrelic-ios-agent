@@ -19,6 +19,8 @@
 - (instancetype) initWithCrashReporter:(PLCrashReporter*)crashReporter;
 #endif
 
-- (void) processReportsWithSessionAttributes:(NSDictionary*)attributes
-                             analyticsEvents:(NSArray*)events;
+- (void) processReportsWithSessionAttributes:(NSDictionary*)attributes;
+
+// Returns the sessionId of the pending crash report, if any, without consuming it.
++ (nullable NSString *) pendingCrashSessionId;
 @end

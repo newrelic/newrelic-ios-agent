@@ -205,8 +205,10 @@ class MainCoordinator: Coordinator {
     }
 
     func showCaptureViewer() {
+#if os(iOS)
         let vc = UIHostingController(rootView: CaptureViewerView())
         navigationController.pushViewController(vc, animated: true)
+#endif
     }
 
 }

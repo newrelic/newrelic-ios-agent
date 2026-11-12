@@ -17,7 +17,6 @@
 #if !TARGET_OS_WATCH
 + (BOOL) writeCrashReport:(PLCrashReport*)report
              withMetaData:(NSDictionary*)metaDictionary
-        sessionAttributes:(NSDictionary*)attributes
-          analyticsEvents:(NSArray*)events;
+        sessionAttributes:(NSDictionary*)attributes;
 #endif
 @end
