@@ -46,9 +46,21 @@ static const NRMAPlatformRule kNRMAPlatformRules[] = {
 
 static const size_t kNRMAPlatformRuleCount = sizeof(kNRMAPlatformRules) / sizeof(kNRMAPlatformRules[0]);
 
-// Reads the metaclass's own method list instead of sending -respondsToSelector:, so a plugin class that does not
-// declare anything is never sent a message (and its +initialize never runs because of the agent).
-static BOOL NRMAClassDefinesClassMethod(Class cls, SEL selector) {
+// A looked-up class is only ever held __unsafe_unretained and never returned. Under ARC a strong or returned Class
+// is sent -retain, and a message to a class that is not initialized yet runs its +initialize, so a plain lookup would
+// run third-party code at agent start. objc_lookUpClass sends no message.
+static NSString* NRMARuntimeClassName(const char* className, NSString* (^runtimeClassName)(NSString*)) {
+    return className ? runtimeClassName(@(className)) : nil;
+}
+
+static BOOL NRMAClassExists(const char* className, NSString* (^runtimeClassName)(NSString*)) {
+    NSString* name = NRMARuntimeClassName(className, runtimeClassName);
+    return name && objc_lookUpClass(name.UTF8String) != Nil;
+}
+
+// Reads the metaclass's own method list, which sends the class no message: a plugin class that declares nothing
+// stays uninitialized.
+static BOOL NRMAClassDefinesClassMethod(__unsafe_unretained Class cls, SEL selector) {
     unsigned int count = 0;
     Method* methods = class_copyMethodList(object_getClass(cls), &count);
     BOOL found = NO;
@@ -71,63 +83,10 @@ static BOOL NRMAPlatformFromName(NSString* name, NRMAApplicationPlatform* platfo
     return NO;
 }
 
-@implementation NRMAPlatformDetector
-
-+ (NRMAPlatformDetection*) detectPlatform {
-    NSString* bundlePath = [NSBundle mainBundle].bundlePath;
-    NSFileManager* fileManager = [NSFileManager defaultManager];
-
-    return [self detectPlatformWithClassLookup:^Class(NSString* className) {
-        return NSClassFromString(className);
-    } fileExists:^BOOL(NSString* bundleRelativePath) {
-        return [fileManager fileExistsAtPath:[bundlePath stringByAppendingPathComponent:bundleRelativePath]];
-    }];
-}
-
-+ (NRMAPlatformDetection*) detectPlatformWithClassLookup:(Class (^)(NSString*))classLookup
-                                              fileExists:(BOOL (^)(NSString*))fileExists {
-    for (size_t i = 0; i < kNRMAPlatformRuleCount; i++) {
-        Class pluginClass = [self lookUp:kNRMAPlatformRules[i].pluginClass with:classLookup];
-        NRMAPlatformDetection* declared = [self declarationOfPluginClass:pluginClass];
-        if (declared) {
-            return declared;
-        }
-    }
-
-    for (size_t i = 0; i < kNRMAPlatformRuleCount; i++) {
-        if ([self lookUp:kNRMAPlatformRules[i].pluginClass with:classLookup]) {
-            return [[NRMAPlatformDetection alloc] initWithPlatform:kNRMAPlatformRules[i].platform
-                                                   platformVersion:nil
-                                                            source:NRMAPlatformDetectionSource_PluginClass];
-        }
-    }
-
-    for (size_t i = 0; i < kNRMAPlatformRuleCount; i++) {
-        for (size_t c = 0; c < 3; c++) {
-            if ([self lookUp:kNRMAPlatformRules[i].frameworkClasses[c] with:classLookup]) {
-                return [[NRMAPlatformDetection alloc] initWithPlatform:kNRMAPlatformRules[i].platform
-                                                       platformVersion:nil
-                                                                source:NRMAPlatformDetectionSource_FrameworkClass];
-            }
-        }
-    }
-
-    for (size_t i = 0; i < kNRMAPlatformRuleCount; i++) {
-        if (fileExists(@(kNRMAPlatformRules[i].bundleFiles[0])) && fileExists(@(kNRMAPlatformRules[i].bundleFiles[1]))) {
-            return [[NRMAPlatformDetection alloc] initWithPlatform:kNRMAPlatformRules[i].platform
-                                                   platformVersion:nil
-                                                            source:NRMAPlatformDetectionSource_FrameworkBundleFiles];
-        }
-    }
-
-    return nil;
-}
-
-+ (Class) lookUp:(const char*)className with:(Class (^)(NSString*))classLookup {
-    return className ? classLookup(@(className)) : nil;
-}
-
-+ (NRMAPlatformDetection*) declarationOfPluginClass:(Class)pluginClass {
+// Only a class that declares the platform is sent a message, and that runs its +initialize as any first message does.
+static NRMAPlatformDetection* NRMADeclarationOfPluginClass(const char* className, NSString* (^runtimeClassName)(NSString*)) {
+    NSString* name = NRMARuntimeClassName(className, runtimeClassName);
+    __unsafe_unretained Class pluginClass = name ? objc_lookUpClass(name.UTF8String) : Nil;
     if (!pluginClass || !NRMAClassDefinesClassMethod(pluginClass, @selector(newRelicApplicationPlatform))) {
         return nil;
     }
@@ -150,6 +109,57 @@ static BOOL NRMAPlatformFromName(NSString* name, NRMAApplicationPlatform* platfo
     return [[NRMAPlatformDetection alloc] initWithPlatform:platform
                                            platformVersion:platformVersion
                                                     source:NRMAPlatformDetectionSource_PluginDeclaration];
+}
+
+@implementation NRMAPlatformDetector
+
++ (NRMAPlatformDetection*) detectPlatform {
+    NSString* bundlePath = [NSBundle mainBundle].bundlePath;
+    NSFileManager* fileManager = [NSFileManager defaultManager];
+
+    return [self detectPlatformWithRuntimeClassName:^NSString*(NSString* className) {
+        return className;
+    } fileExists:^BOOL(NSString* bundleRelativePath) {
+        return [fileManager fileExistsAtPath:[bundlePath stringByAppendingPathComponent:bundleRelativePath]];
+    }];
+}
+
++ (NRMAPlatformDetection*) detectPlatformWithRuntimeClassName:(NSString* (^)(NSString*))runtimeClassName
+                                                   fileExists:(BOOL (^)(NSString*))fileExists {
+    for (size_t i = 0; i < kNRMAPlatformRuleCount; i++) {
+        NRMAPlatformDetection* declared = NRMADeclarationOfPluginClass(kNRMAPlatformRules[i].pluginClass, runtimeClassName);
+        if (declared) {
+            return declared;
+        }
+    }
+
+    for (size_t i = 0; i < kNRMAPlatformRuleCount; i++) {
+        if (NRMAClassExists(kNRMAPlatformRules[i].pluginClass, runtimeClassName)) {
+            return [[NRMAPlatformDetection alloc] initWithPlatform:kNRMAPlatformRules[i].platform
+                                                   platformVersion:nil
+                                                            source:NRMAPlatformDetectionSource_PluginClass];
+        }
+    }
+
+    for (size_t i = 0; i < kNRMAPlatformRuleCount; i++) {
+        for (size_t c = 0; c < 3; c++) {
+            if (NRMAClassExists(kNRMAPlatformRules[i].frameworkClasses[c], runtimeClassName)) {
+                return [[NRMAPlatformDetection alloc] initWithPlatform:kNRMAPlatformRules[i].platform
+                                                       platformVersion:nil
+                                                                source:NRMAPlatformDetectionSource_FrameworkClass];
+            }
+        }
+    }
+
+    for (size_t i = 0; i < kNRMAPlatformRuleCount; i++) {
+        if (fileExists(@(kNRMAPlatformRules[i].bundleFiles[0])) && fileExists(@(kNRMAPlatformRules[i].bundleFiles[1]))) {
+            return [[NRMAPlatformDetection alloc] initWithPlatform:kNRMAPlatformRules[i].platform
+                                                   platformVersion:nil
+                                                            source:NRMAPlatformDetectionSource_FrameworkBundleFiles];
+        }
+    }
+
+    return nil;
 }
 
 @end

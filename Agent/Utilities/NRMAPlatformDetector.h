@@ -53,9 +53,10 @@ typedef NS_ENUM(NSInteger, NRMAPlatformDetectionSource) {
 // Looks in the running app. Returns nil when nothing matches, which means Native.
 + (nullable NRMAPlatformDetection*) detectPlatform;
 
-// The same rules with injectable signal sources, for tests.
-+ (nullable NRMAPlatformDetection*) detectPlatformWithClassLookup:(Class _Nullable (^)(NSString* className))classLookup
-                                                      fileExists:(BOOL (^)(NSString* bundleRelativePath))fileExists;
+// The same rules with injectable signal sources, for tests. runtimeClassName returns the name of the class that
+// stands for className in the runtime (className itself in the app), or nil when there is none.
++ (nullable NRMAPlatformDetection*) detectPlatformWithRuntimeClassName:(NSString* _Nullable (^)(NSString* className))runtimeClassName
+                                                           fileExists:(BOOL (^)(NSString* bundleRelativePath))fileExists;
 
 @end
 

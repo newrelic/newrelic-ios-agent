@@ -61,7 +61,6 @@ static NSUInteger __NRMA__maxOfflineStorageSizeBytes = 100000000; // 100 MB in b
 }
 
 + (void) resolvePlatformWithDetector:(NRMAPlatformDetection* (^)(void))detect {
-    // An explicit +setPlatform: always wins, and then the detector does not run at all.
     if (__NRMA__applicationPlatformExplicit) {
         return;
     }
@@ -79,7 +78,7 @@ static NSUInteger __NRMA__maxOfflineStorageSizeBytes = 100000000; // 100 MB in b
     // Whatever an earlier start in the same process left behind, nothing detected means Native.
     __NRMA__applicationPlatform = detection ? detection.platform : NRMAPlatform_Native;
     if (!__NRMA__applicationPlatformVersionExplicit) {
-        // nil keeps today's default: the platform version falls back to the agent version.
+        // nil leaves the default: the platform version falls back to the agent version.
         __NRMA__applicationPlatformVersion = detection.platformVersion;
     }
 

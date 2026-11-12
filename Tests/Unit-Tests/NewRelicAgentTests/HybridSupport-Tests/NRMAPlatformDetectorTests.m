@@ -9,8 +9,8 @@
 #import "NRMAPlatformDetector.h"
 #import "NRMAAgentConfiguration.h"
 
-// Stand-ins for New Relic hybrid plugin classes. Tests reach them only through NSClassFromString, which does not
-// run +initialize, so NRMAFakeSilentPlugin can tell whether the detector sent it a message.
+// Stand-ins for New Relic hybrid plugin classes. The tests only ever refer to them by name, so
+// NRMAFakeSilentPlugin can tell whether the detector sent it a message.
 
 @interface NRMAFakeDeclaringPlugin : NSObject
 @end
@@ -46,11 +46,12 @@ static BOOL NRMAFakeSilentPluginInitialized = NO;
 + (void) initialize { NRMAFakeSilentPluginInitialized = YES; }
 @end
 
-static BOOL NRMAFakeControlInitialized = NO;
-@interface NRMAFakeControl : NSObject
+static BOOL NRMAFakeFrameworkClassInitialized = NO;
+
+@interface NRMAFakeFrameworkClass : NSObject
 @end
-@implementation NRMAFakeControl
-+ (void) initialize { NRMAFakeControlInitialized = YES; }
+@implementation NRMAFakeFrameworkClass
++ (void) initialize { NRMAFakeFrameworkClassInitialized = YES; }
 @end
 
 @interface NRMAPlatformDetectorTests : XCTestCase
@@ -62,9 +63,8 @@ static BOOL NRMAFakeControlInitialized = NO;
 
 // classes maps a name the detector looks up to the name of a real class that stands in for it.
 - (NRMAPlatformDetection*) detectWithClasses:(NSDictionary<NSString*, NSString*>*)classes files:(NSArray<NSString*>*)files {
-    return [NRMAPlatformDetector detectPlatformWithClassLookup:^Class(NSString* className) {
-        NSString* standIn = classes[className];
-        return standIn ? NSClassFromString(standIn) : nil;
+    return [NRMAPlatformDetector detectPlatformWithRuntimeClassName:^NSString*(NSString* className) {
+        return classes[className];
     } fileExists:^BOOL(NSString* bundleRelativePath) {
         return [files containsObject:bundleRelativePath];
     }];
@@ -191,9 +191,15 @@ static BOOL NRMAFakeControlInitialized = NO;
 }
 
 - (void) testSilentPluginIsNeverMessaged {
-    NSLog(@"PROBE before: silent=%d control=%d", NRMAFakeSilentPluginInitialized, NRMAFakeControlInitialized);
-    [self detectWithClasses:@{ @"NRMModularAgent" : @"NRMAFakeSilentPlugin" } files:@[]];
+    NRMAPlatformDetection* detection = [self detectWithClasses:@{ @"NRMModularAgent" : @"NRMAFakeSilentPlugin" } files:@[]];
+    XCTAssertEqual(detection.platform, NRMAPlatform_ReactNative);
     XCTAssertFalse(NRMAFakeSilentPluginInitialized);
+}
+
+- (void) testFrameworkClassIsNeverMessaged {
+    NRMAPlatformDetection* detection = [self detectWithClasses:@{ @"FlutterEngine" : @"NRMAFakeFrameworkClass" } files:@[]];
+    XCTAssertEqual(detection.platform, NRMAPlatform_Flutter);
+    XCTAssertFalse(NRMAFakeFrameworkClassInitialized);
 }
 
 #pragma mark - Resolver
