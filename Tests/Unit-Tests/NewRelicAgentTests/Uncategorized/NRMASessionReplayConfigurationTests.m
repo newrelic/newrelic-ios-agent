@@ -14,7 +14,6 @@
 #import "NewRelicAgentInternal.h"
 #import "NRMAHarvestController.h"
 #import "NRMAHarvesterConfiguration.h"
-#import "NRMAAgentConfiguration.h"
 #import "NRMASupportMetricHelper.h"
 #import "NRMATaskQueue.h"
 #import "Constants.h"
@@ -33,13 +32,6 @@
 @end
 
 @implementation NRMASessionReplayConfigurationTests
-
-// The masking lists are backed by process-wide arrays in NRMAAgentConfiguration, so every
-// name a test adds must be removed again or it leaks into later tests.
-static NSArray<NSString *> *testRuleNames(void)
-{
-    return @[@"LocalSecretView", @"RemoteSecretView", @"RemotePublicView", @"remote-private", @"remote-public", @"AddedLater"];
-}
 
 static NSDictionary *offShape(void)
 {
@@ -88,13 +80,6 @@ static NSString *errorModeMarkerPath(void)
     [[NSFileManager defaultManager] removeItemAtPath:errorModeMarkerPath() error:nil];
     [self.mockAgentInternal stopMocking];
     [self.mockHarvestController stopMocking];
-
-    for (NSString *name in testRuleNames()) {
-        [[NRMAAgentConfiguration local_session_replay_maskedAccessibilityIdentifiers] removeObject:name];
-        [[NRMAAgentConfiguration local_session_replay_unmaskedAccessibilityIdentifiers] removeObject:name];
-        [[NRMAAgentConfiguration local_session_replay_maskedClassNames] removeObject:name];
-        [[NRMAAgentConfiguration local_session_replay_unmaskedClassNames] removeObject:name];
-    }
 
     // Parsing a session_replay config enqueues SessionReplay/Config supportability metrics.
     [NRMASupportMetricHelper processDeferredMetrics];
@@ -246,8 +231,7 @@ static NSString *errorModeMarkerPath(void)
     NSDictionary *result = [self.agent sessionReplayConfiguration];
 
     NSSet *expectedKeys = [NSSet setWithArray:@[@"enabled", @"mode", @"recordingMode",
-                                                @"maskApplicationText", @"maskUserInputText", @"maskAllImages", @"maskAllUserTouches",
-                                                @"maskedClasses", @"unmaskedClasses", @"maskedKeys", @"unmaskedKeys"]];
+                                                @"maskApplicationText", @"maskUserInputText", @"maskAllImages", @"maskAllUserTouches"]];
     XCTAssertEqualObjects([NSSet setWithArray:result.allKeys], expectedKeys);
     XCTAssertEqualObjects(result[@"enabled"], @YES);
     XCTAssertEqualObjects(result[@"mode"], @"custom");
@@ -267,36 +251,6 @@ static NSString *errorModeMarkerPath(void)
 
     self.manager.sessionReplayMode = SessionReplayRecordingModeOff;
     XCTAssertEqualObjects([self.agent sessionReplayConfiguration][@"recordingMode"], @"off");
-}
-
-- (void) testListsMergeLocalRulesAndCustomRules
-{
-    [[NRMAAgentConfiguration local_session_replay_maskedClassNames] addObject:@"LocalSecretView"];
-    self.config = [self configWithSessionReplayJSON:@"{\"enabled\":true,\"mode\":\"custom\",\"custom_masking_rules\":["
-                   "{\"type\":\"mask\",\"operator\":\"equals\",\"name\":[\"RemoteSecretView\"],\"identifier\":\"class\"},"
-                   "{\"type\":\"unmask\",\"operator\":\"equals\",\"name\":[\"RemotePublicView\"],\"identifier\":\"class\"},"
-                   "{\"type\":\"mask\",\"operator\":\"equals\",\"name\":[\"remote-private\"],\"identifier\":\"accessibilityIdentifier\"},"
-                   "{\"type\":\"unmask\",\"operator\":\"equals\",\"name\":[\"remote-public\"],\"identifier\":\"accessibilityIdentifier\"}]}"];
-
-    NSDictionary *result = [self.agent sessionReplayConfiguration];
-
-    XCTAssertTrue([result[@"maskedClasses"] containsObject:@"LocalSecretView"]);
-    XCTAssertTrue([result[@"maskedClasses"] containsObject:@"RemoteSecretView"]);
-    XCTAssertTrue([result[@"unmaskedClasses"] containsObject:@"RemotePublicView"]);
-    XCTAssertTrue([result[@"maskedKeys"] containsObject:@"remote-private"]);
-    XCTAssertTrue([result[@"unmaskedKeys"] containsObject:@"remote-public"]);
-}
-
-- (void) testListsAreImmutableSnapshots
-{
-    self.config = [self configWithSessionReplayJSON:@"{\"enabled\":true,\"mode\":\"custom\"}"];
-
-    NSDictionary *result = [self.agent sessionReplayConfiguration];
-    XCTAssertFalse([result[@"maskedClasses"] isKindOfClass:[NSMutableArray class]]);
-
-    [self.config addMaskedClassNames:@[@"AddedLater"]];
-
-    XCTAssertFalse([result[@"maskedClasses"] containsObject:@"AddedLater"]);
 }
 
 #pragma mark - Recording mode
@@ -555,35 +509,6 @@ static NSString *errorModeMarkerPath(void)
     NRMADrainReplayQueue(self.manager);
 
     [self waitForExpectations:@[noPost] timeout:0.5];
-}
-
-// Native masking applies a rule added mid-session right away, so an external replay source
-// has to hear about it too, not just at the next session.
-- (void) testAddingMaskingRulesPostsUpdatedLists
-{
-    [self useFullSampling];
-    [self startSession];
-    [self settle];
-
-    NSDictionary *afterMaskedClass = [self waitForConfigurationPostAfter:^{
-        XCTAssertTrue([NewRelic addSessionReplayMaskViewClass:@"AddedLater"]);
-    }];
-    XCTAssertTrue([afterMaskedClass[@"maskedClasses"] containsObject:@"AddedLater"]);
-
-    NSDictionary *afterUnmaskedClass = [self waitForConfigurationPostAfter:^{
-        XCTAssertTrue([NewRelic addSessionReplayUnmaskViewClass:@"RemotePublicView"]);
-    }];
-    XCTAssertTrue([afterUnmaskedClass[@"unmaskedClasses"] containsObject:@"RemotePublicView"]);
-
-    NSDictionary *afterMaskedKey = [self waitForConfigurationPostAfter:^{
-        XCTAssertTrue([NewRelic addSessionReplayMaskedAccessibilityIdentifier:@"remote-private"]);
-    }];
-    XCTAssertTrue([afterMaskedKey[@"maskedKeys"] containsObject:@"remote-private"]);
-
-    NSDictionary *afterUnmaskedKey = [self waitForConfigurationPostAfter:^{
-        XCTAssertTrue([NewRelic addSessionReplayUnmaskedAccessibilityIdentifier:@"remote-public"]);
-    }];
-    XCTAssertTrue([afterUnmaskedKey[@"unmaskedKeys"] containsObject:@"remote-public"]);
 }
 
 - (void) testHandlerCanRecordFromInsideNotification

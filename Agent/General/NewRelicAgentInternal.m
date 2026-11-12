@@ -806,16 +806,6 @@ static NSString* NRMASessionReplayRecordingModeName(SessionReplayRecordingMode m
         default:                              return @"off";
     }
 }
-
-// Copied under the same lock the add/remove methods mutate the list with.
-static NSArray<NSString*>* NRMASessionReplayListSnapshot(NSMutableArray* list) {
-    if (list == nil) {
-        return @[];
-    }
-    @synchronized(list) {
-        return [list copy];
-    }
-}
 #endif
 
 // Resolved session replay configuration for consumers that produce their own replay
@@ -835,10 +825,6 @@ static NSArray<NSString*>* NRMASessionReplayListSnapshot(NSMutableArray* list) {
         @"maskUserInputText":   @(config.session_replay_maskUserInputText),
         @"maskAllImages":       @(config.session_replay_maskAllImages),
         @"maskAllUserTouches":  @(config.session_replay_maskAllUserTouches),
-        @"maskedClasses":       NRMASessionReplayListSnapshot(config.session_replay_maskedClassNames),
-        @"unmaskedClasses":     NRMASessionReplayListSnapshot(config.session_replay_unmaskedClassNames),
-        @"maskedKeys":          NRMASessionReplayListSnapshot(config.session_replay_maskedAccessibilityIdentifiers),
-        @"unmaskedKeys":        NRMASessionReplayListSnapshot(config.session_replay_unmaskedAccessibilityIdentifiers),
     };
 #else
     return [NewRelicAgentInternal sessionReplayOffConfiguration];
