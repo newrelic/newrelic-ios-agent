@@ -1025,6 +1025,7 @@
 		2BAE5C7A2E85FAB6001D2B88 /* MakeCFTypeSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C792E85FAB6001D2B88 /* MakeCFTypeSafe.swift */; };
 		2BBBE70E28BD528F003CADF3 /* NRMAStartTimerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BBBE70D28BD528F003CADF3 /* NRMAStartTimerTests.m */; };
 		2BBC1A552DEDF61A00F5C584 /* SessionReplayTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BBC1A532DEDF61A00F5C584 /* SessionReplayTest.m */; };
+		CD11FE00110000000000C002 /* NRMASessionReplayConfigurationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE00100000000000C001 /* NRMASessionReplayConfigurationTests.m */; };
 		2BCA57B42B7E85AD00991C5E /* NRLoggerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BCA57B32B7E85AD00991C5E /* NRLoggerTests.m */; };
 		2BCA57B52B7E85AD00991C5E /* NRLoggerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BCA57B32B7E85AD00991C5E /* NRLoggerTests.m */; };
 		2BD073892EB0386A00E3556B /* NRMAWebViewSupportability.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BD073752EB0386000E3556B /* NRMAWebViewSupportability.h */; };
@@ -2641,6 +2642,7 @@
 		2BBBE6FA28BD528F003CADF3 /* NRMAStartTimerTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMAStartTimerTests.h; sourceTree = "<group>"; };
 		2BBBE70D28BD528F003CADF3 /* NRMAStartTimerTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAStartTimerTests.m; sourceTree = "<group>"; };
 		2BBC1A532DEDF61A00F5C584 /* SessionReplayTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SessionReplayTest.m; sourceTree = "<group>"; };
+		CD11FE00100000000000C001 /* NRMASessionReplayConfigurationTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMASessionReplayConfigurationTests.m; sourceTree = "<group>"; };
 		2BCA579F2B7E85AD00991C5E /* NRLoggerTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRLoggerTests.h; sourceTree = "<group>"; };
 		2BCA57B32B7E85AD00991C5E /* NRLoggerTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRLoggerTests.m; sourceTree = "<group>"; };
 		2BD073752EB0386000E3556B /* NRMAWebViewSupportability.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAWebViewSupportability.h; sourceTree = "<group>"; };
@@ -3173,6 +3175,7 @@
 			children = (
 				D4DCC23F30192068008B5C59 /* UIHostingViewRecordOrchestratorWidthOffsetTests.swift */,
 				2BBC1A532DEDF61A00F5C584 /* SessionReplayTest.m */,
+				CD11FE00100000000000C001 /* NRMASessionReplayConfigurationTests.m */,
 				0209ACB524E747FA00E45C90 /* NewRelicAgentTests.h */,
 				F85ABB482F1557150098A2CF /* UILabelThingyTests.swift */,
 				871C12BAE9249E1084E7A385 /* IncrementalDiffGeneratorTests.swift */,
@@ -5710,6 +5713,7 @@
 				0209AC9D24E7393300E45C90 /* NRMAUpgradeMetricGeneratorTest.m in Sources */,
 				0209AC4024E7075200E45C90 /* NRHarvesterConnectionTests.m in Sources */,
 				2BBC1A552DEDF61A00F5C584 /* SessionReplayTest.m in Sources */,
+				CD11FE00110000000000C002 /* NRMASessionReplayConfigurationTests.m in Sources */,
 				D4580CA72F563363003BAD8C /* JSErrorControllerTests.m in Sources */,
 				F8CF3ABF3051955E003E48CA /* SessionReplayHarvestEndToEndTests.swift in Sources */,
 				F85ABB642F155B6E0098A2CF /* IDGenerator.swift in Sources */,

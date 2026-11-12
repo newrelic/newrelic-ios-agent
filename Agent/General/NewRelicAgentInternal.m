@@ -730,6 +730,11 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
                 }
             }
         }
+        else {
+            // Sampled off. Report off, unless capture is still running (e.g. recordReplay()
+            // was called before a reconnect re-ran this).
+            [_sessionReplay resetRecordingModeIfStopped];
+        }
     }
 #endif
 }
@@ -739,10 +744,17 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     if(_sessionReplay != nil){
         [_sessionReplay stop];
         [_sessionReplay clearAllData];
+        [_sessionReplay resetRecordingModeIfStopped];
         @synchronized(kNRMAAnalyticsInitializationLock) {
             [self.analyticsController removeNRSessionAttributeNamed:kNRMA_RA_hasReplay];
         }
     }
+#endif
+}
+
+- (void) publishSessionReplayConfiguration {
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+    [_sessionReplay publishConfiguration];
 #endif
 }
 
@@ -780,6 +792,43 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     return false;
 #endif
     return false;
+}
+
++ (NSDictionary<NSString*, id>*) sessionReplayOffConfiguration {
+    return @{ @"enabled": @NO, @"recordingMode": @"off" };
+}
+
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+static NSString* NRMASessionReplayRecordingModeName(SessionReplayRecordingMode mode) {
+    switch (mode) {
+        case SessionReplayRecordingModeFull:  return @"full";
+        case SessionReplayRecordingModeError: return @"error";
+        default:                              return @"off";
+    }
+}
+#endif
+
+// Resolved session replay configuration for consumers that produce their own replay
+// (e.g. the Flutter agent). Immutable, and safe to read from any thread.
+- (NSDictionary<NSString*, id>*) sessionReplayConfiguration {
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+    NRMAHarvesterConfiguration* config = [NRMAHarvestController configuration];
+    if (config == nil || !config.has_session_replay_config || !config.session_replay_enabled || _sessionReplay == nil) {
+        return [NewRelicAgentInternal sessionReplayOffConfiguration];
+    }
+
+    return @{
+        @"enabled":             @YES,
+        @"mode":                config.session_replay_mode ?: SessionReplayMaskingModeDefault,
+        @"recordingMode":       NRMASessionReplayRecordingModeName([_sessionReplay sessionReplayMode]),
+        @"maskApplicationText": @(config.session_replay_maskApplicationText),
+        @"maskUserInputText":   @(config.session_replay_maskUserInputText),
+        @"maskAllImages":       @(config.session_replay_maskAllImages),
+        @"maskAllUserTouches":  @(config.session_replay_maskAllUserTouches),
+    };
+#else
+    return [NewRelicAgentInternal sessionReplayOffConfiguration];
+#endif
 }
 
 - (void)sessionReplayOnError:(NSError *_Nullable)error {
