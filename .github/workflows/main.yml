@@ -25,7 +25,7 @@ jobs:
     # *** runs-on: ubuntu-latest is used when running via act on mac os. ***
     runs-on: xcode-27
     steps:
-      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
 
@@ -56,7 +56,7 @@ jobs:
     # *** runs-on: ubuntu-latest is used when running via act on mac os. ***
     runs-on: xcode-27
     steps:
-      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
 
@@ -88,7 +88,7 @@ jobs:
       # Pin every xcrun/xcodebuild/fastlane call in this job to Xcode 27.0.
       DEVELOPER_DIR: /Applications/Xcode_27.app/Contents/Developer
     steps:
-      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
 
@@ -151,7 +151,7 @@ jobs:
     outputs:
       version: ${{ steps.setOutput.outputs.version }}
     steps:
-      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
 
@@ -219,7 +219,7 @@ jobs:
 
       - name: Upload build reports
         if: failure() && steps.build-step.outcome != 'success'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: build-reports
           path: /Users/runner/Library/Logs/fastlane/xcbuild/
@@ -243,7 +243,7 @@ jobs:
     needs: [deployS3, archiveNRTestApp]
     if: github.ref == 'refs/heads/staging'
     steps:
-      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
       
@@ -295,7 +295,7 @@ jobs:
 
       # Use git-auto-commit-action to push NewRelicAgent.podspec & Package.swift up to root of newrelic-ios-agent branch: staging.
       # This should also tag the staging release branch w/ version number tag.
-      - uses: stefanzweifel/git-auto-commit-action@3ea6ae190baf489ba007f7c92608f33ce20ef04a # v4.16.0
+      - uses: stefanzweifel/git-auto-commit-action@d0b01107b5db882071f96de5dd4b54961ea93f4c # v7.2.1
         with:
           commit_message: "[${{ env.version }}] Staging Release"
           branch: staging

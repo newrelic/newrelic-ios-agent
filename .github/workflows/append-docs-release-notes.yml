@@ -46,7 +46,7 @@ jobs:
         if: always() # Ensures cleanup runs even if previous steps fail
 
       - name: Fetch release-notes template from ios-agent
-        uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: ios-agent-src
           sparse-checkout: ios-agent-next.mdx
@@ -58,7 +58,7 @@ jobs:
         run: cp ios-agent-src/ios-agent-next.mdx "$RUNNER_TEMP/ios-agent-next.mdx"
 
       - name: Checkout docs-website (next branch if it exists)
-        uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
           repository: ${{ env.DOCS_REPO }}
@@ -70,7 +70,7 @@ jobs:
 
       - name: Bootstrap — checkout base and create next branch
         if: steps.checkout_next.outcome != 'success'
-        uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ env.DOCS_REPO }}
           token: ${{ secrets.DOCS_WEBSITE_PAT }}
