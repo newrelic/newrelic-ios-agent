@@ -15,6 +15,7 @@ extern NSString *const kNRMA_RA_category;
 extern NSString *const kNRMA_RA_accountId;
 extern NSString *const kNRMA_RA_appId;
 extern NSString *const kNRMA_RA_appName;
+extern NSString *const kNRMA_RA_appBuild;
 extern NSString *const kNRMA_RA_uuid;
 extern NSString *const kNRMA_RA_sessionDuration;
 extern NSString *const kNRMA_RA_sessionElapsedTime;

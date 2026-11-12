@@ -161,6 +161,12 @@ func generateDiff(old:[any SessionReplayViewThingy], new:[any SessionReplayViewT
                 if newElement.hashValue != oldElement.hashValue {
                     changes.append(.Update(Operation.UpdateChange(oldElement: oldElement, newElement: newElement)))
                 }
+            } else {
+                // Same view, different recorder (e.g. a label that just became blocked is now
+                // recorded as a plain view). An update can't cross recorder types, so replace the
+                // node; otherwise the old node, and its content, would stay in the replay.
+                changes.append(.Remove(Operation.RemoveChange(parentId: oldElement.viewDetails.parentId ?? 0, id: newElement.viewDetails.viewId)))
+                changes.append(.Add(Operation.AddChange(parentId: newElement.viewDetails.parentId ?? 0, id: newElement.viewDetails.viewId, node: newElement)))
             }
         }
     }

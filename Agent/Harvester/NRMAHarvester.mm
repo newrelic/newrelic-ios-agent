@@ -51,13 +51,17 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
 @end
 
 @implementation NRMAHarvester
+{
+    // Guards `configuration`. Not @synchronized(self): -execute holds that across network calls.
+    NSObject* _configurationLock;
+}
 @synthesize currentState;
 
 - (id) init
 {
     self = [super init];
     if (self) {
-        
+        _configurationLock = [[NSObject alloc] init];
         currentState = NRMA_HARVEST_UNINITIALIZED;
         connection = [[NRMAHarvesterConnection alloc] init];
         _harvestData = [[NRMAHarvestData alloc] init];
@@ -123,7 +127,18 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
 }
 - (NRMAHarvesterConfiguration*) harvesterConfiguration
 {
-    return configuration;
+    NRMAHarvesterConfiguration* current;
+    @synchronized(_configurationLock) {
+        current = configuration;
+    }
+    return current;
+}
+
+- (void) storeConfiguration:(NRMAHarvesterConfiguration*)newConfiguration
+{
+    @synchronized(_configurationLock) {
+        configuration = newConfiguration;
+    }
 }
 
 - (void) transition:(NRMAHarvesterState)state
@@ -332,7 +347,7 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
 - (void) clearStoredHarvesterConfiguration
 {
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-    configuration.cross_process_id  = @"";
+    [self harvesterConfiguration].cross_process_id = @"";
     [defaults removeObjectForKey:kNRMAHarvesterConfigurationStoreKey];
     [defaults synchronize];
 }
@@ -531,20 +546,25 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
 - (void) disconnected
 {
     // Handle stored config.
-    configuration = [self fetchHarvestConfiguration];
+    NRMAHarvesterConfiguration* storedConfiguration = [self fetchHarvestConfiguration];
 
     // There was no stored config! set a reasonable default.
-    if (configuration == nil) {
-        configuration = [NRMAHarvesterConfiguration defaultHarvesterConfiguration];
+    if (storedConfiguration == nil) {
+        storedConfiguration = [NRMAHarvesterConfiguration defaultHarvesterConfiguration];
     }
+    [self storeConfiguration:storedConfiguration];
 
     [self handleLoggingConfigurationUpdate];
 
     // If we have a data token (config is valid), then skip the connect call.
     if (configuration.isValid && [configuration.application_token isEqualToString:_agentConfiguration.applicationToken.value]) {
+        [self saveHarvesterConfiguration:configuration];
+        
         [NRMAMeasurements recordSessionStartMetric];
         [NRMASupportMetricHelper processDeferredMetrics];
+        
         [self handleSessionReplayConfigurationUpdate];
+        [self flushPersistedHandledExceptions];
 
         [self transitionToConnected:configuration];
         return;
@@ -576,18 +596,19 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
     }
     
     if ([response isOK]) {
-        configuration = [self configureFromCollector:response];
-        if (configuration == nil) {
+        NRMAHarvesterConfiguration* collectorConfiguration = [self configureFromCollector:response];
+        if (collectorConfiguration == nil) {
             NRLOG_AGENT_ERROR(@"Unable to configure Harvester using Collector Configuration");
             return;
         }
+        collectorConfiguration.application_token = connection.applicationToken;
+        [self storeConfiguration:collectorConfiguration];
         // Configuration saved here.
-        configuration.application_token = connection.applicationToken;
+        [self saveHarvesterConfiguration:configuration];
 
         [self handleLoggingConfigurationUpdate];
         [self handleSessionReplayConfigurationUpdate];
-
-        [self saveHarvesterConfiguration:configuration];
+        [self flushPersistedHandledExceptions];
 
         [NRMASupportMetricHelper processDeferredMetrics];
         
@@ -990,6 +1011,12 @@ static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
         [[NewRelicAgentInternal sharedInstance] sessionReplayDisabled];
     }
 
+}
+
+// Called from both connect-success paths below so persisted Hex reports aren't
+// uploaded with info this session's /connect hasn't acknowledged yet.
+- (void) flushPersistedHandledExceptions {
+    [[NewRelicAgentInternal sharedInstance].handledExceptionsController onHarvest];
 }
 
 @end
