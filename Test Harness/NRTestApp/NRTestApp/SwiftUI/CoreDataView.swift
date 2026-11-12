@@ -180,9 +180,3 @@ struct CoreDataView: View {
         NRCoreDataItem.triggerNestedFetch = false
     }
 }
-
-struct CoreDataView_Previews: PreviewProvider {
-    static var previews: some View {
-        CoreDataView()
-    }
-}

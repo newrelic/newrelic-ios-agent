@@ -8,10 +8,15 @@ dotenv.config();
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 const targetDir = path.resolve(__dirname, "../builds");
 
+// Defaults upload NRTestApp. Other test apps reuse this script by overriding both,
+// e.g. uploadApp-expensestracker.yml sets LT_APP_ZIP=expensestracker-ios.zip.
+const appZip = process.env.LT_APP_ZIP || "nrtestapp-ios.zip";
+const appIdPrefix = process.env.LT_APP_ID_PREFIX || "com.newrelic.NRApp.bitcode";
+
 // Generate a unique custom_id with timestamp to avoid caching
 function generateCustomId() {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-  return `com.newrelic.NRApp.bitcode.${timestamp}`;
+  return `${appIdPrefix}.${timestamp}`;
 }
  
 function uploadFileToLambdaTest(name, path, customId) {
@@ -40,8 +45,8 @@ console.log(`Using custom_id: ${customId}`);
 
 Promise.all([
   uploadFileToLambdaTest(
-    "nrtestapp-iOS",
-    `${targetDir}/nrtestapp-ios.zip`,
+    appZip,
+    `${targetDir}/${appZip}`,
     customId
   ),
 ])

@@ -30,6 +30,7 @@ struct SegmentedControlsView: View {
         }
         .navigationTitle("Segmented Controls")
         .NRTrackView(name: "SegmentedControlsView")
+
     }
 }
 

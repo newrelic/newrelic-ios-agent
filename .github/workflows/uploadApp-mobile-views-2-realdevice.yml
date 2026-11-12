@@ -255,7 +255,11 @@ jobs:
             exit 1
           fi
           APP_ID="$(tr -d '\n' < "$APP_ID_FILE")"
-          if ! printf '%s' "$APP_ID" | grep -Eq '^[A-Za-z0-9._:-]{1,200}$'; then
+          # Two shapes are legal: an `lt://APP...` app URL (what LambdaTest returns
+          # for a real-device upload, and what a real-device session needs) or a
+          # dotted custom_id. The virtual pipeline's allowlist had no "/" and so
+          # silently rejected every lt:// id.
+          if ! printf '%s' "$APP_ID" | grep -Eq '^(lt://[A-Za-z0-9]{1,190}|[A-Za-z0-9._:-]{1,200})$'; then
             echo "::error::uploaded app ID is not in the expected format"
             exit 1
           fi

@@ -91,7 +91,9 @@ exports.config = {
   framework: "mocha",
   mochaOpts: {
     ui: "bdd",
-    timeout: 60000, // Reduced from 100000ms to 60000ms
+    // Each drag the specs scroll by costs a few seconds on LambdaTest, and the longest tests scroll ~15 times.
+    // The HomeSearch and ExpensesTracker configs set their own.
+    timeout: 120000,
   },
 
   // Writes a pass/fail summary so the CI workflow can report it to Slack
@@ -106,4 +108,40 @@ exports.config = {
     );
   },
 };
+
+// Against a local simulator, through a local Appium server with the xcuitest driver installed:
+//   npx appium &
+//   NT_LOCAL_APP="/path/to/Release-iphonesimulator/NRTestApp.app" npm run test:wdio-ios
+// NT_LOCAL_UDID picks the simulator; without it Appium chooses one matching NT_LOCAL_DEVICE/NT_LOCAL_OS.
+// The HomeSearch and ExpensesTracker configs build on the LambdaTest config above, so they are unaffected.
+if (process.env.NT_LOCAL_APP) {
+  exports.config = {
+    ...exports.config,
+    user: undefined,
+    key: undefined,
+    hostname: "127.0.0.1",
+    port: Number(process.env.APPIUM_PORT || 4723),
+    path: "/",
+    protocol: "http",
+    // One simulator, so one session at a time.
+    maxInstances: 1,
+    // The first local session builds WebDriverAgent, which takes minutes.
+    connectionRetryTimeout: 600000,
+    connectionRetryCount: 1,
+    capabilities: [
+      {
+        platformName: "iOS",
+        "appium:automationName": "XCUITest",
+        "appium:app": process.env.NT_LOCAL_APP,
+        "appium:udid": process.env.NT_LOCAL_UDID,
+        "appium:deviceName": process.env.NT_LOCAL_DEVICE || "iPhone 17",
+        "appium:platformVersion": process.env.NT_LOCAL_OS,
+        "appium:noReset": false,
+        "appium:fullReset": false,
+        "appium:newCommandTimeout": 300,
+        "appium:wdaLaunchTimeout": 300000,
+      },
+    ],
+  };
+}
   

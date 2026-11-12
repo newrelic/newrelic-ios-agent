@@ -12,24 +12,28 @@ struct DatePickersView: View {
     @State private var selectedDate = Date()
     
     var body: some View {
-        VStack {
-            Text("Select a Date")
-                .font(.headline)
-                .padding()
+        // Scrolls because the graphical and wheel pickers together are taller than an iPhone screen; without
+        // it the stack overflows under the navigation bar and past the bottom edge.
+        ScrollView {
+            VStack {
+                Text("Select a Date")
+                    .font(.headline)
+                    .padding()
 
-            DatePicker("Choose a date:", selection: $selectedDate, displayedComponents: [.date])
-                .datePickerStyle(GraphicalDatePickerStyle())
-                .padding()
+                DatePicker("Choose a date:", selection: $selectedDate, displayedComponents: [.date])
+                    .datePickerStyle(GraphicalDatePickerStyle())
+                    .padding()
 
-            Text("Selected Date: \(formattedDate(selectedDate))")
-                .padding()
+                Text("Selected Date: \(formattedDate(selectedDate))")
+                    .padding()
 
-            DatePicker("Choose a time:", selection: $selectedDate, displayedComponents: [.hourAndMinute])
-                .datePickerStyle(WheelDatePickerStyle())
-                .padding()
+                DatePicker("Choose a time:", selection: $selectedDate, displayedComponents: [.hourAndMinute])
+                    .datePickerStyle(WheelDatePickerStyle())
+                    .padding()
 
-            Text("Selected Time: \(formattedTime(selectedDate))")
-                .padding()
+                Text("Selected Time: \(formattedTime(selectedDate))")
+                    .padding()
+            }
         }
         .navigationTitle("Date Pickers")
         .NRTrackView(name: "DatePickersView")

@@ -1,90 +1,45 @@
 /**
- * SwiftUI Buttons Screen Tests
- * Tests various button types and interactions in SwiftUI
- *
- * This screen contains comprehensive button testing:
- * - "Buttons Demo" title
- * - "Press Me" button with press counter
- * - Toggle button that shows state (OFF/ON)
- * - Custom styled button
- * - Star button with icon and label
- *
- * Elements include:
- * - Button press counter ("Button pressed 0 times")
- * - Toggle state button ("Toggle is OFF")
- * - Icon button with star.fill image
+ * SwiftUI Buttons: ButtonsView's counter button, a button that toggles its own title, a custom-styled button
+ * and an icon-and-text button. Each tap is checked by the state it changes where the screen shows one.
  */
 
+const h = require("./helpers");
+
 describe("SwiftUI Buttons Screen", () => {
-  it("Should navigate to Buttons screen and verify all button functionality", async () => {
-    // Navigate to SwiftUI screen
-    const helloWorldText = await $("~public");
-    await helloWorldText.waitForExist({ timeout: 15000 });
-
-    const swiftUIButton = await $("~SwiftUI");
-    await swiftUIButton.waitForExist({ timeout: 5000 });
-    await swiftUIButton.click();
-
-    // Navigate to Buttons screen
-    const buttonsButton = await $("~Buttons");
-    await buttonsButton.waitForExist({ timeout: 5000 });
-    await buttonsButton.click();
-
-    // Verify we're on Buttons screen
-    const buttonsTitle = await $("~Buttons Demo");
-    await buttonsTitle.waitForExist({ timeout: 5000 });
-
-    // Verify initial button press counter
-    const pressCounter = await $("~Button pressed 0 times");
-    await pressCounter.waitForExist({ timeout: 5000 });
-
-    // Test "Press Me" button - click 3 times
-    const pressMeButton = await $("~Press Me");
-    await pressMeButton.waitForExist({ timeout: 5000 });
-    await pressMeButton.click();
-    await pressMeButton.click();
-    await pressMeButton.click();
-
-    // Test Toggle button - verify both states
-    const toggleButtonOff = await $("~Toggle is OFF");
-    await toggleButtonOff.waitForExist({ timeout: 5000 });
-    await toggleButtonOff.click();
-
-    const toggleButtonOn = await $("~Toggle is ON");
-    await toggleButtonOn.waitForExist({ timeout: 5000 });
-    await toggleButtonOn.click();
-
-    const toggleButtonOffAgain = await $("~Toggle is OFF");
-    await toggleButtonOffAgain.waitForExist({ timeout: 5000 });
-
-    // Test Custom Styled Button
-    const customStyledButton = await $("~Custom Styled Button");
-    await customStyledButton.waitForExist({ timeout: 5000 });
-    await customStyledButton.click();
-    await customStyledButton.click();
-
-    // Test Star Button with icon
-    const starButton = await $("~Star Button");
-    await starButton.waitForExist({ timeout: 5000 });
-    await starButton.click();
-    await starButton.click();
-
-    // Verify Star Button has icon
-    const starIcon = await $('//XCUIElementTypeImage[@name="star.fill"]');
-    await starIcon.waitForExist({ timeout: 5000 });
+  before(async () => {
+    await h.waitForHome();
   });
 
-  it("Should navigate back to MainScreen", async () => {
-    // Navigate back twice
-    await driver.back();
-    await driver.back();
+  it("opens Buttons from the SwiftUI list", async () => {
+    await h.openSwiftUIScreen("Buttons");
+    await h.expectVisible(h.sel.text("Buttons Demo"));
+    await h.expectVisible(h.sel.text("Button pressed 0 times"));
+  });
 
-    // Verify we're back on MainScreen
-    const helloWorldText = await $("~public");
-    await helloWorldText.waitForExist({ timeout: 5000 });
+  it("counts presses of Press Me", async () => {
+    for (let i = 0; i < 3; i++) {
+      await h.tap(h.sel.button("Press Me"));
+    }
+    await h.expectVisible(h.sel.text("Button pressed 3 times"));
+  });
 
-    // Put app in background to trigger any pending events
-    await driver.activateApp('com.apple.Preferences');
-    await driver.pause(2000);
+  it("flips the toggle button's title both ways", async () => {
+    await h.tap(h.sel.button("Toggle is OFF"));
+    await h.tap(h.sel.button("Toggle is ON"));
+    await h.expectVisible(h.sel.button("Toggle is OFF"));
+  });
+
+  it("taps the custom-styled and star buttons", async () => {
+    await h.tap(h.sel.button("Custom Styled Button"));
+    await h.tap(h.sel.button("Star Button"));
+    await h.expectVisible('-ios predicate string:type == "XCUIElementTypeImage" AND name == "star.fill"');
+  });
+
+  it("returns to the home screen", async () => {
+    await h.goHome();
+  });
+
+  it("flushes the harvest", async () => {
+    await h.flushHarvest();
   });
 });
