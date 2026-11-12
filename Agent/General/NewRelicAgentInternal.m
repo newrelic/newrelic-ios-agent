@@ -1422,6 +1422,10 @@ void applicationDidEnterBackgroundCF(void) {
 
     dispatch_once(&onceToken,
                   ^{
+        // Decide the platform before anything captures it: the device information, the session attributes,
+        // the crash uploader, the harvester connect and the supportability metric names.
+        [NRMAAgentConfiguration resolvePlatform];
+
         _sharedInstance = [[NewRelicAgentInternal alloc] initWithCollectorAddress:url
                                                             crashCollectorAddress:crashCollector
                                                               andApplicationToken:[[NRMAAppToken alloc] initWithApplicationToken:appToken]];
