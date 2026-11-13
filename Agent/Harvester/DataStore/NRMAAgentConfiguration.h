@@ -47,6 +47,10 @@
 + (void)setApplicationBuild:(NSString *)buildString;
 + (void) setPlatform:(NRMAApplicationPlatform)platform;
 + (void) setPlatformVersion:(NSString*)platformVersion;
+// The platform/version in effect: an explicit setPlatform:/setPlatformVersion: call, else the framework plist
+// shipped by a hybrid plugin (NewRelicHybrid.plist), else Native/nil.
++ (NRMAApplicationPlatform) effectivePlatform;
++ (NSString*) effectivePlatformVersion;
 
 + (void) setMaxEventBufferTime:(NSUInteger)seconds;
 + (NSUInteger) getMaxEventBufferTime;
