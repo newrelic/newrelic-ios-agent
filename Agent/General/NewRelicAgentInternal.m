@@ -831,9 +831,14 @@ static NSString* NRMASessionReplayRecordingModeName(SessionReplayRecordingMode m
         return [NewRelicAgentInternal sessionReplayOffConfiguration];
     }
 
+    SessionReplayMaskingMode maskingMode = config.session_replay_mode;
+    if (maskingMode == nil) {
+        maskingMode = SessionReplayMaskingModeDefault;
+    }
+
     return @{
         @"enabled":             @YES,
-        @"mode":                config.session_replay_mode ?: SessionReplayMaskingModeDefault,
+        @"mode":                maskingMode,
         @"recordingMode":       NRMASessionReplayRecordingModeName([_sessionReplay sessionReplayMode]),
         @"maskApplicationText": @(config.session_replay_maskApplicationText),
         @"maskUserInputText":   @(config.session_replay_maskUserInputText),

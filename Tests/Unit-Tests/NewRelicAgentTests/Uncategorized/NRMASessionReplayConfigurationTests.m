@@ -227,6 +227,15 @@ static NSString *errorModeMarkerPath(void)
     XCTAssertEqualObjects([NewRelic sessionReplayConfiguration], offShape());
 }
 
+- (void) testPublicGetterReturnsTheStartedAgentsConfiguration
+{
+    [self useFullSampling];
+    self.manager.sessionReplayMode = SessionReplayRecordingModeFull;
+
+    XCTAssertEqualObjects([NewRelic sessionReplayConfiguration], [self.agent sessionReplayConfiguration]);
+    XCTAssertEqualObjects([NewRelic sessionReplayConfiguration][@"recordingMode"], @"full");
+}
+
 #pragma mark - Resolved configuration
 
 - (void) testEnabledConfigurationReportsAllKeys
@@ -248,6 +257,14 @@ static NSString *errorModeMarkerPath(void)
     XCTAssertEqualObjects(result[@"maskUserInputText"], @YES);
     XCTAssertEqualObjects(result[@"maskAllImages"], @NO);
     XCTAssertEqualObjects(result[@"maskAllUserTouches"], @YES);
+}
+
+- (void) testMissingMaskingModeReportsDefault
+{
+    self.config = [self configWithSessionReplayJSON:@"{\"enabled\":true}"];
+    self.config.session_replay_mode = nil;
+
+    XCTAssertEqualObjects([self.agent sessionReplayConfiguration][@"mode"], @"default");
 }
 
 - (void) testRecordingModeStrings
