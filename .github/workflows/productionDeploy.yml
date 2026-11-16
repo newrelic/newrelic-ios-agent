@@ -29,7 +29,7 @@ jobs:
     outputs:
       version: ${{ steps.setOutput.outputs.version }}
     steps:
-      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
       
@@ -71,7 +71,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout Main repo
-        uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: main
 
@@ -81,7 +81,7 @@ jobs:
           bundler-cache: false
 
       - name: Checkout SPM
-        uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: newrelic/newrelic-ios-agent-spm
           token: ${{ secrets.SPM_PAT }}
@@ -132,7 +132,7 @@ jobs:
         # The following step creates a PR containing that new NewRelicAgent.podspec and Package.swift file at the root of the repo.
         # Since production builds are infrequent this creates a PR that must be manually approved and merged.
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@18f7dc018cc2cd597073088f7c7591b9d1c02672 # v3.14.0
+        uses: peter-evans/create-pull-request@15733dbdfeedb4f7fdb73d13c6f5ac83b710fab8 # v8.1.2
         with:
           path: main
           title: "[${{ env.version }}] Production Release"
@@ -158,7 +158,7 @@ jobs:
   #     VERSION_STRING: ${{ needs.deployS3Production.outputs.version }}
   #   steps:
   #     - name: Checkout docs-website (next branch) for release-notes body
-  #       uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
+  #       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
   #       with:
   #         repository: ${{ env.DOCS_REPO }}
   #         token: ${{ secrets.DOCS_WEBSITE_PAT }}
@@ -206,7 +206,7 @@ jobs:
   #     BOT_EMAIL: ${{ secrets.BOT_EMAIL }}
   #   steps:
   #     - name: Checkout docs-website (next branch)
-  #       uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # v4.0.0
+  #       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
   #       with:
   #         repository: ${{ env.DOCS_REPO }}
   #         token: ${{ secrets.DOCS_WEBSITE_PAT }}
