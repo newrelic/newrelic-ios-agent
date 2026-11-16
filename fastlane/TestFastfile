@@ -15,21 +15,23 @@ platform :ios do
   # iOS Tests
 
   desc "Run Agent tests for iOS and generate code coverage"
-  lane :runIOSTests do 
+  desc "Pass device:\"<name> (<os>)\" to pick the simulator, e.g. device:\"iPhone 17 (27.2)\""
+  lane :runIOSTests do |options|
 
     deleteBuildArtifacts
     
-    internalRunIOSTests
+    internalRunIOSTests(device: options[:device])
 
     coverage
   end
   
-  lane :internalRunIOSTests do
+  lane :internalRunIOSTests do |options|
     run_tests(
       workspace: "Agent.xcworkspace",
       code_coverage: true,
       scheme: "Agent-iOS",
-      device: "iPhone 17",
+      device: options[:device] || "iPhone 17",
+      ensure_devices_found: true,
       disable_xcpretty: true
     )
   end
@@ -73,7 +75,8 @@ platform :ios do
   # tvOS Tests
   
   desc "Run Agent tests for tvOS"
-  lane :runTVOSTests do 
+  desc "Pass device:\"<name> (<os>)\" to pick the simulator, e.g. device:\"Apple TV 4K (4th generation) (27.2)\""
+  lane :runTVOSTests do |options|
     
     deleteBuildArtifacts
 
@@ -81,7 +84,8 @@ platform :ios do
       workspace: "Agent.xcworkspace",
       code_coverage: true,
       scheme: "Agent-tvOS",
-      device: "Apple TV 4K (3rd generation)",
+      device: options[:device] || "Apple TV 4K (3rd generation)",
+      ensure_devices_found: true,
       disable_xcpretty: true
 
     )
@@ -118,7 +122,8 @@ platform :ios do
   # watchOS Tests
   
   desc "Run Agent tests for watchOS"
-  lane :runWatchOSTests do 
+  desc "Pass device:\"<name> (<os>)\" to pick the simulator, e.g. device:\"Apple Watch SE 3 (40mm) (27.2)\""
+  lane :runWatchOSTests do |options|
     
     deleteBuildArtifacts
 
@@ -126,7 +131,7 @@ platform :ios do
       workspace: "Agent.xcworkspace",
       code_coverage: true,
       scheme: "Agent-watchOS",
-      device: "Apple Watch SE 3 (40mm)",
+      device: options[:device] || "Apple Watch SE 3 (40mm)",
       ensure_devices_found: true,
       xcargs: "-testPlan Agent-watchOS"
     )

@@ -14,15 +14,16 @@
 # CoreSimulatorService so it picks the runtime up.
 #
 # Usage (from the repo root):
-#   scripts/ensure_watchos_simulator.sh [timeout_seconds]   # default 900
+#   [TEST_SIMULATOR_OS=27.2] scripts/ensure_watchos_simulator.sh [timeout_seconds]   # default 900
 #
 set -u
 
-# Keep in sync with the runWatchOSTests device in fastlane/TestFastfile.
+# Keep in sync with the runWatchOSTests device passed in .github/workflows/main.yml.
 SIM_NAME="Apple Watch SE 3 (40mm)"
 SIM_TYPE="com.apple.CoreSimulator.SimDeviceType.Apple-Watch-SE-3-40mm"
-# The runtime Xcode 27.0's watchsimulator27.0 SDK runs on.
-RUNTIME_ID="com.apple.CoreSimulator.SimRuntime.watchOS-27-0"
+# watchOS version of the runtime to wait for; 27.0 is the one Xcode 27.0's watchsimulator27.0 SDK runs on.
+SIM_OS="${TEST_SIMULATOR_OS:-27.0}"
+RUNTIME_ID="com.apple.CoreSimulator.SimRuntime.watchOS-${SIM_OS//./-}"
 WORKSPACE="Agent.xcworkspace"
 SCHEME="Agent-watchOS"
 TIMEOUT="${1:-900}"
@@ -32,7 +33,7 @@ sim_visible() {
   local destinations
   destinations="$(xcodebuild -showdestinations -workspace "$WORKSPACE" -scheme "$SCHEME" 2>&1)"
   # Real simulators carry an arch; the placeholder destinations do not.
-  grep -F "name:$SIM_NAME }" <<<"$destinations" | grep -q "platform:watchOS Simulator, arch:"
+  grep -F "OS:$SIM_OS, name:$SIM_NAME }" <<<"$destinations" | grep -q "platform:watchOS Simulator, arch:"
 }
 
 # "<build> <state>" for every watchOS runtime disk image, comma separated.
