@@ -17,7 +17,6 @@ NSString * const kNRMA_RA_accountId          = @"accountId";
 NSString * const kNRMA_RA_appId              = @"appId";
 NSString * const kNRMA_RA_appName            = @"appName";
 NSString * const kNRMA_RA_appBuild           = @"appBuild";
-NSString * const kNRMA_RA_appVersion         = @"appVersion";
 NSString * const kNRMA_RA_uuid               = @"uuid";
 NSString * const kNRMA_RA_sessionDuration    = @"sessionDuration";
 NSString * const kNRMA_RA_sessionElapsedTime = @"timeSinceLoad";

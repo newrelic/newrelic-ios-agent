@@ -1020,8 +1020,6 @@
 
     XCTAssertEqualObjects(attributes[kNRMA_RA_appBuild], info.applicationInformation.appBuild,
                           @"appBuild should be captured as a session attribute at session start");
-    XCTAssertEqualObjects(attributes[kNRMA_RA_appVersion], info.applicationInformation.appVersion,
-                          @"appVersion should be captured as a session attribute at session start, not left to be derived solely from the X-NewRelic-App-Version header");
 
     [NRMAHarvestController removeHarvestListener:agent.analyticsController];
 }

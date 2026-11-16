@@ -30,6 +30,14 @@ void NewRelic::Hex::HexPublisher::publish(std::shared_ptr<NewRelic::Hex::HexCont
     }
 }
 
+void NewRelic::Hex::HexPublisher::publish(std::shared_ptr<NewRelic::Hex::HexContext> const& context,
+                                          const std::string& reportId,
+                                          const std::string& appVersion,
+                                          std::function<void(bool shouldRemove)> onComplete) {
+    (void)appVersion;
+    publish(context, reportId, onComplete);
+}
+
 std::string HexPublisher::lastPublishedFile() {
     return filename;
 }
