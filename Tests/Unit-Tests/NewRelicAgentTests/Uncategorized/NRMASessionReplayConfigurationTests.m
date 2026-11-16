@@ -227,6 +227,15 @@ static NSString *errorModeMarkerPath(void)
     XCTAssertEqualObjects([NewRelic sessionReplayConfiguration], offShape());
 }
 
+- (void) testPublicGetterReturnsTheStartedAgentsConfiguration
+{
+    [self useFullSampling];
+    self.manager.sessionReplayMode = SessionReplayRecordingModeFull;
+
+    XCTAssertEqualObjects([NewRelic sessionReplayConfiguration], [self.agent sessionReplayConfiguration]);
+    XCTAssertEqualObjects([NewRelic sessionReplayConfiguration][@"recordingMode"], @"full");
+}
+
 #pragma mark - Resolved configuration
 
 - (void) testEnabledConfigurationReportsAllKeys

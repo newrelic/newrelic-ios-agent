@@ -936,7 +936,12 @@
  * current session. Reports session replay as off until the agent has started.
  */
 + (NSDictionary<NSString*, id>*) sessionReplayConfiguration {
-    return [[NewRelicAgentInternal sharedInstance] sessionReplayConfiguration] ?: [NewRelicAgentInternal sessionReplayOffConfiguration];
+    NewRelicAgentInternal* agent = [NewRelicAgentInternal sharedInstance];
+    if (agent != nil) {
+        return [agent sessionReplayConfiguration];
+    } else {
+        return [NewRelicAgentInternal sessionReplayOffConfiguration];
+    }
 }
 
 
