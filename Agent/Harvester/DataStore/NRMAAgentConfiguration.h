@@ -10,6 +10,7 @@
 #import <Foundation/Foundation.h>
 
 @class NRMAAppToken;
+@class NRMAPlatformDetection;
 
 // Collector Hosts.
 #define kNRMA_DEFAULT_COLLECTOR_HOST         @"mobile-collector.newrelic.com"
@@ -47,6 +48,15 @@
 + (void)setApplicationBuild:(NSString *)buildString;
 + (void) setPlatform:(NRMAApplicationPlatform)platform;
 + (void) setPlatformVersion:(NSString*)platformVersion;
+
+// YES once +setPlatform: was called, even with NRMAPlatform_Native. A detected platform does not count.
++ (BOOL) isPlatformExplicit;
+// Decides the platform before anything captures it. Precedence: an explicit +setPlatform: (the detector then does
+// not run), then what NRMAPlatformDetector finds, then Native. A detected version is used only when +setPlatformVersion: was not called.
++ (void) resolvePlatform;
++ (void) resolvePlatformWithDetector:(NRMAPlatformDetection* (^)(void))detect;
+// Testing only: back to the defaults, with nothing set explicitly.
++ (void) resetPlatformForTesting;
 
 + (void) setMaxEventBufferTime:(NSUInteger)seconds;
 + (NSUInteger) getMaxEventBufferTime;
