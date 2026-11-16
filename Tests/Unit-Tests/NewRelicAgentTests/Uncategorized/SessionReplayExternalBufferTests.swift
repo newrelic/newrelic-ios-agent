@@ -43,6 +43,11 @@ final class SessionReplayExternalBufferTests: XCTestCase {
         return String(decoding: data, as: UTF8.self)
     }
 
+    private func payloadTimestamps(_ chunk: ExternalReplayChunk) throws -> [Int] {
+        let events = try XCTUnwrap(JSONSerialization.jsonObject(with: gunzipForTests(chunk.payload)) as? [[String: Any]])
+        return events.map { ($0["timestamp"] as? Int) ?? -1 }
+    }
+
     // MARK: - Appending
 
     func testEventsBeforeTheFirstMetaAreDropped() {
@@ -91,6 +96,80 @@ final class SessionReplayExternalBufferTests: XCTestCase {
         buffer.reset()
         XCTAssertFalse(buffer.hasOpenSegment)
         XCTAssertEqual(append(rrwebEvent(3, 2)), .appended(kept: 0, droppedBeforeMeta: 1))
+    }
+
+    // MARK: - Taking chunks
+
+    func testRegularTakeKeepsTheSegmentInProgress() throws {
+        append(rrwebEvent(4, 1), rrwebEvent(2, 1), rrwebEvent(3, 2))
+        append(rrwebEvent(4, 3), rrwebEvent(2, 3))
+        let chunks = buffer.takeChunks(final: false, isFirstChunk: true)
+        XCTAssertEqual(try chunks.map(payloadTimestamps), [[1, 1, 2]])
+        XCTAssertEqual(chunks[0].metadata.firstTimestamp, 1)
+        XCTAssertEqual(chunks[0].metadata.lastTimestamp, 2)
+        XCTAssertNil(file("s1/frame_0.json"))
+        XCTAssertNotNil(file("s1/frame_1.json"))
+        XCTAssertTrue(buffer.hasOpenSegment)
+    }
+
+    func testRegularTakeWithOnlyTheOpenSegmentSendsNothing() {
+        append(rrwebEvent(4, 1), rrwebEvent(2, 1))
+        XCTAssertTrue(buffer.takeChunks(final: false, isFirstChunk: true).isEmpty)
+        XCTAssertNotNil(file("s1/frame_0.json"))
+    }
+
+    func testFinalTakeSendsEverythingAndClosesTheBuffer() throws {
+        append(rrwebEvent(4, 1), rrwebEvent(2, 1))
+        append(rrwebEvent(4, 3), rrwebEvent(2, 3))
+        XCTAssertEqual(try buffer.takeChunks(final: true, isFirstChunk: true).map(payloadTimestamps), [[1, 1, 3, 3]])
+        XCTAssertFalse(buffer.hasOpenSegment)
+        XCTAssertNil(file("s1_upload_url.txt"))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: directory.appendingPathComponent("s1").path))
+    }
+
+    func testFinalTakeDropsATrailingSegmentWithoutItsFullSnapshot() throws {
+        append(rrwebEvent(4, 1), rrwebEvent(2, 1), rrwebEvent(4, 9))
+        XCTAssertEqual(try buffer.takeChunks(final: true, isFirstChunk: true).map(payloadTimestamps), [[1, 1]])
+    }
+
+    func testOnlyTheFirstChunkIsMarkedFirst() {
+        buffer = makeBuffer(maxUploadBytes: 3_000)
+        for t in 1...3 { append(rrwebEvent(4, t), rrwebEvent(2, t, #"{"t":"\#(randomText(2_000))"}"#)) }
+        XCTAssertEqual(buffer.takeChunks(final: true, isFirstChunk: true).map(\.metadata.isFirstChunk), [true, false, false])
+    }
+
+    func testEventsAreNotReordered() throws {
+        append(rrwebEvent(4, 10), rrwebEvent(2, 10), rrwebEvent(3, 5))
+        let chunk = try XCTUnwrap(buffer.takeChunks(final: true, isFirstChunk: false).first)
+        XCTAssertEqual(try payloadTimestamps(chunk), [10, 10, 5])
+        XCTAssertEqual(chunk.metadata.lastTimestamp, 5)
+    }
+
+    func testWholeSegmentsArePackedUnderTheLimit() throws {
+        buffer = makeBuffer(maxUploadBytes: 5_000)
+        for t in 1...6 { append(rrwebEvent(4, t), rrwebEvent(2, t, #"{"t":"\#(randomText(1_500))"}"#)) }
+        let chunks = buffer.takeChunks(final: true, isFirstChunk: true)
+        XCTAssertGreaterThan(chunks.count, 1)
+        XCTAssertTrue(chunks.allSatisfy { $0.payload.count <= 5_000 })
+        XCTAssertEqual(try chunks.flatMap(payloadTimestamps), (1...6).flatMap { [$0, $0] })   // whole segments, in order
+    }
+
+    func testASegmentOverTheLimitGoesOutAlone() throws {
+        buffer = makeBuffer(maxUploadBytes: 1_000)
+        append(rrwebEvent(4, 1), rrwebEvent(2, 1, #"{"t":"\#(randomText(3_000))"}"#))
+        append(rrwebEvent(4, 2), rrwebEvent(2, 2))
+        let chunks = buffer.takeChunks(final: true, isFirstChunk: true)
+        XCTAssertEqual(try chunks.map(payloadTimestamps), [[1, 1], [2, 2]])
+        XCTAssertGreaterThan(chunks[0].payload.count, 1_000)   // the reporter drops it and counts the max-payload metric
+    }
+
+    func testURLFileIsRewrittenForWhatRemains() {
+        append(rrwebEvent(4, 1), rrwebEvent(2, 1))
+        append(rrwebEvent(4, 3), rrwebEvent(2, 3), rrwebEvent(3, 4))
+        _ = buffer.takeChunks(final: false, isFirstChunk: true)
+        XCTAssertEqual(provided.last?.firstTimestamp, 3)
+        XCTAssertEqual(provided.last?.lastTimestamp, 4)
+        XCTAssertEqual(provided.last?.isFirstChunk, false)
     }
 
     // Runs the real recovery path over files the buffer wrote, as after a crash.

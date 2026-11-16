@@ -27,6 +27,13 @@ enum ExternalReplayAppendResult: Equatable {
     case invalid
 }
 
+/// One upload's worth of whole segments: a JSON array that starts with a Meta, gzipped when possible.
+@available(iOS 13.0, *)
+struct ExternalReplayChunk {
+    let payload: Data
+    let metadata: ExternalReplayUploadMetadata
+}
+
 /// Holds rrweb events from an external replay source, such as the Flutter agent, until they're uploaded.
 ///
 /// Events keep the bytes they arrived with, in the layout crash recovery reads
@@ -49,6 +56,14 @@ final class SessionReplayExternalBuffer {
         let type: Int
         let timestamp: TimeInterval
         let bytes: Range<Data.Index>
+    }
+
+    private struct TakenSegment {
+        let segment: Segment
+        let contents: Data
+        let gzipped: Data?
+
+        var estimatedUploadSize: Int { return gzipped?.count ?? contents.count }
     }
 
     private static let metaType = 4
@@ -113,6 +128,66 @@ final class SessionReplayExternalBuffer {
         return .appended(kept: kept, droppedBeforeMeta: droppedBeforeMeta)
     }
 
+    /// Takes whole segments for upload, packed into chunks of at most `maxUploadBytes` after gzip.
+    /// A regular take keeps the segment in progress, so the next upload starts at a Meta too.
+    /// A final take sends everything except a trailing segment that never got its FullSnapshot,
+    /// and leaves no segment open. A single segment over the limit still goes out, alone.
+    func takeChunks(final: Bool, isFirstChunk: Bool) -> [ExternalReplayChunk] {
+        let taken = final ? segments : Array(segments.dropLast())
+        segments.removeFirst(taken.count)
+        if final {
+            hasOpenSegment = false
+        }
+        guard !taken.isEmpty else {
+            return []
+        }
+
+        var sent = taken
+        if final, let last = sent.last, !last.hasFullSnapshot {
+            NRLOG_AGENT_DEBUG("Dropping external session replay events after a Meta that has no FullSnapshot.")
+            sent.removeLast()
+        }
+
+        // Greedy, by each segment's own gzipped size. packPayloads checks the real combined size.
+        var packs: [[TakenSegment]] = []
+        var packSize = 0
+        for segment in sent.compactMap(load) {
+            if packs.isEmpty || packSize + segment.estimatedUploadSize > maxUploadBytes {
+                packs.append([])
+                packSize = 0
+            }
+            packs[packs.count - 1].append(segment)
+            packSize += segment.estimatedUploadSize
+        }
+        let chunks = packs.flatMap { packPayloads($0[...]) }.enumerated().map { index, packed in
+            ExternalReplayChunk(payload: packed.payload,
+                                metadata: ExternalReplayUploadMetadata(uncompressedSize: packed.uncompressedSize,
+                                                                       firstTimestamp: packed.firstTimestamp,
+                                                                       lastTimestamp: packed.lastTimestamp,
+                                                                       isFirstChunk: isFirstChunk && index == 0,
+                                                                       isGZipped: packed.payload.isGzipped,
+                                                                       rrwebVersion: rrwebVersion))
+        }
+
+        for segment in taken {
+            if let fileURL = segmentFileURL(segment.fileIndex) {
+                try? FileManager.default.removeItem(at: fileURL)
+            }
+        }
+        if segments.isEmpty {
+            if let folder = folderURL() {
+                try? FileManager.default.removeItem(at: folder)
+            }
+            if let urlFile = urlFileURL() {
+                try? FileManager.default.removeItem(at: urlFile)
+            }
+            folderSessionId = nil
+        } else {
+            writeURLFile(isFirstChunk: isFirstChunk && chunks.isEmpty)
+        }
+        return chunks
+    }
+
     /// Forgets the buffered segments and leaves their files on disk. Events are dropped until the next Meta.
     func reset() {
         segments.removeAll()
@@ -148,6 +223,66 @@ final class SessionReplayExternalBuffer {
             return nil
         }
         return number
+    }
+
+    // MARK: - Uploads
+
+    private typealias PackedPayload = (payload: Data, uncompressedSize: Int, firstTimestamp: TimeInterval, lastTimestamp: TimeInterval)
+
+    /// Reads a segment's file and gzips it, to estimate its share of an upload.
+    private func load(_ segment: Segment) -> TakenSegment? {
+        guard let fileURL = segmentFileURL(segment.fileIndex),
+              let contents = try? Data(contentsOf: fileURL),
+              contents.count > 2, contents.first == UInt8(ascii: "["), contents.last == UInt8(ascii: "]") else {
+            NRLOG_AGENT_DEBUG("Failed to read an external session replay segment.")
+            return nil
+        }
+        return TakenSegment(segment: segment, contents: contents, gzipped: Self.gzip(contents))
+    }
+
+    /// Nil if gzip fails; the upload then goes out uncompressed, as the agent's own replay does.
+    private static func gzip(_ data: Data) -> Data? {
+        do {
+            return try data.gzipped()
+        } catch {
+            NRLOG_AGENT_DEBUG("Failed to gzip external session replay data: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    /// One payload for the pack, halved until each part fits or holds a single segment.
+    private func packPayloads(_ pack: ArraySlice<TakenSegment>) -> [PackedPayload] {
+        guard let first = pack.first, let last = pack.last else {
+            return []
+        }
+        let raw: Data
+        let gzipped: Data?
+        if pack.count == 1 {
+            raw = first.contents
+            gzipped = first.gzipped
+        } else {
+            raw = Self.joinArrays(pack.map(\.contents))
+            gzipped = Self.gzip(raw)
+        }
+        let payload = gzipped ?? raw
+        if payload.count > maxUploadBytes && pack.count > 1 {
+            let middle = pack.startIndex + pack.count / 2
+            return packPayloads(pack[..<middle]) + packPayloads(pack[middle...])
+        }
+        return [(payload, raw.count, first.segment.firstTimestamp, last.segment.lastTimestamp)]
+    }
+
+    /// Joins JSON arrays into one, keeping their elements' bytes.
+    private static func joinArrays(_ arrays: [Data]) -> Data {
+        var joined = Data("[".utf8)
+        for (index, array) in arrays.enumerated() {
+            if index > 0 {
+                joined.append(contentsOf: ",".utf8)
+            }
+            joined.append(array[(array.startIndex + 1)..<(array.endIndex - 1)])
+        }
+        joined.append(contentsOf: "]".utf8)
+        return joined
     }
 
     // MARK: - Files
