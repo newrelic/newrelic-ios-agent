@@ -285,7 +285,8 @@ static long long _accountId;
             //application text mask - true
             //image placeholders - true
             //hide taps and touches - false
-            if (self.session_replay_mode == SessionReplayMaskingModeDefault){
+            //Compare by value: a collector-supplied or stored mode is never the SessionReplayMaskingModeDefault instance.
+            if ([SessionReplayMaskingModeDefault isEqual:self.session_replay_mode]){
                 self.session_replay_maskApplicationText = YES;
                 self.session_replay_maskUserInputText = YES;
                 self.session_replay_maskAllImages = YES;
