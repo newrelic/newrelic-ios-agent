@@ -189,6 +189,7 @@ typedef NSString NRMetricUnit;
 #define kNRMASessionReplay kNRAgentHealthPrefix @"/%@/%@/SessionReplay"
 #define kNRMASessionReplayMetricFailedUpload    kNRMASessionReplay @"/FailedUpload"
 #define kNRMASessionReplayMetricURLTooLarge       kNRMASessionReplay @"/UrlTooLarge"
+#define kNRMASessionReplayMetricExternalEventsInvalid kNRMASessionReplay @"/ExternalEvents/Invalid"
 #define kNRMASessionReplayMetricSuccessfulSize    kNRMASessionReplay @"/Size/Uncompressed"
 
 // Session Replay Configuration

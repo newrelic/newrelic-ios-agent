@@ -29,8 +29,16 @@ public class SessionReplayManager: NSObject {
     private static let queueKey = DispatchSpecificKey<String>()
     
     private var isManuallyRecording: Bool = false
-    
-    
+
+    /// Set when another source, such as the Flutter agent, captures the replay. Native screen and
+    /// touch capture are skipped, and the events from recordExternalEvents() are uploaded instead.
+    /// Set it before the first start().
+    @objc public var externalCaptureSource = false
+
+    // Used only on sessionReplayQueue.
+    private let externalBuffer: SessionReplayExternalBuffer
+
+
     // TWO SESSION REPLAY MODEs
     // Written on sessionReplayQueue, but readable from any thread: the public session
     // replay configuration getter reads it without touching the queue.
@@ -54,6 +62,10 @@ public class SessionReplayManager: NSObject {
         self.url = url
         self.sessionReplay = NRMASessionReplay(url: self.url)
         self.sessionReplayReporter = reporter
+        self.externalBuffer = SessionReplayExternalBuffer(directory: SessionReplayManager.externalBufferDirectory(),
+                                                          maxUploadBytes: Int(kNRMAMaxPayloadSizeLimit)) { [reporter] metadata in
+            SessionReplayManager.uploadURL(from: reporter, for: metadata)
+        }
         sessionReplayQueue.setSpecific(key: SessionReplayManager.queueKey, value: "com.newrelic.sessionReplayQueue")
         super.init()
         
@@ -135,7 +147,10 @@ public class SessionReplayManager: NSObject {
 
             // END SESSION REPLAY ERRORED SESSION SAMPLING HANDLING
 
-            sessionReplay.start()
+            // With an external capture source the timer still runs, for the uploads, but nothing is captured natively.
+            if !externalCaptureSource {
+                sessionReplay.start()
+            }
             self.harvestseconds = 0
             
             self.isManuallyRecording = fromManual
@@ -183,7 +198,7 @@ public class SessionReplayManager: NSObject {
         let endBlock = { [self] in
             stop()
             if harvest {
-                self.harvest()
+                self.harvest(final: true)
             }
             // The ended session's mode no longer applies. Reset after the harvest, which skips in off mode.
             sessionReplayMode = .off
@@ -193,6 +208,9 @@ public class SessionReplayManager: NSObject {
 
             // Reset the isFirstChunk for new session
             self.sessionReplay.isFirstChunk = true
+
+            // The next session's external events start at its own first Meta.
+            externalBuffer.reset()
         }
 
         if DispatchQueue.getSpecific(key: SessionReplayManager.queueKey) != nil {
@@ -229,7 +247,7 @@ public class SessionReplayManager: NSObject {
             }
             
             stop()
-            harvest()
+            harvest(final: true)
             sessionReplayMode = .off
             publishConfiguration()
             NRLOG_AGENT_DEBUG("Session replay paused via manual pauseReplay() API")
@@ -261,6 +279,7 @@ public class SessionReplayManager: NSObject {
     @objc public func clearAllData() {
         sessionReplayQueue.sync { [self] in
             sessionReplay.clearAllData()
+            externalBuffer.reset()
         }
     }
     
@@ -279,41 +298,54 @@ public class SessionReplayManager: NSObject {
         }
         
         harvestseconds += 1
-        sessionReplay.takeFrame()
-        
+        if !externalCaptureSource {
+            sessionReplay.takeFrame()
+        }
+
         if harvestseconds == harvestPeriod {
             harvest()
         }
     }
     
     @objc public func harvest() {
+        harvest(final: false)
+    }
+
+    /// A final harvest, at pause or session end, also uploads the external events still in progress.
+    func harvest(final: Bool) {
         // sync is required here or session replay upload fails.
         // When called from sessionReplayTick (already on the queue), run inline to avoid deadlock.
         if DispatchQueue.getSpecific(key: SessionReplayManager.queueKey) != nil {
-            harvestSessionReplayFramesAndTouches()
+            harvestSessionReplayFramesAndTouches(final: final)
         } else {
             sessionReplayQueue.sync { [weak self] in
-                self?.harvestSessionReplayFramesAndTouches()
+                self?.harvestSessionReplayFramesAndTouches(final: final)
             }
         }
     }
-    
-    private func harvestSessionReplayFramesAndTouches() {
-        
+
+    private func harvestSessionReplayFramesAndTouches(final: Bool) {
+
         defer {
             self.harvestseconds = 0
         }
-        
+
         if sessionReplayMode == .off {
             NRLOG_AGENT_DEBUG("Skipping harvest in off mode.")
             return
         }
-        
+
         if sessionReplayMode == .error {
             NRLOG_AGENT_DEBUG("Skipping harvest in ERROR mode.")
             return
         }
-        
+
+        // getSessionReplayFrames() clears the whole frames folder, which holds the external buffer too.
+        if externalCaptureSource {
+            harvestExternalEvents(final: final)
+            return
+        }
+
         let frames = self.sessionReplay.getSessionReplayFrames()
 
         // A chunk with no frames has no viewport/DOM to establish Meta from, so any
@@ -455,7 +487,65 @@ public class SessionReplayManager: NSObject {
 
         return SessionReplayData(sessionReplayFramesData: jsonData, url: url)
     }
-    
+
+    // EXTERNAL CAPTURE SOURCE
+
+    /// Stores rrweb events from the external capture source, to upload with the next harvest.
+    /// Safe to call from any thread: the work runs on the replay queue. Events are dropped when
+    /// native capture isn't suppressed, or when the mode is no longer full by the time they're stored.
+    @objc public func recordExternalEvents(_ eventsJSON: String, rrwebVersion: String) {
+        sessionReplayQueue.async { [self] in
+            guard externalCaptureSource, sessionReplayMode == .full else {
+                NRLOG_AGENT_DEBUG("Dropping external session replay events: native capture isn't suppressed, or replay isn't recording in full mode.")
+                return
+            }
+            let sessionId = NewRelicAgentInternal.sharedInstance()?.currentSessionId() ?? "unknown_session"
+            switch externalBuffer.append(Data(eventsJSON.utf8), rrwebVersion: rrwebVersion, sessionId: sessionId,
+                                         isFirstChunk: sessionReplay.isFirstChunk) {
+            case .invalid:
+                NRLOG_AGENT_DEBUG("Dropping external session replay events that aren't a JSON array of rrweb events.")
+                NRMASupportMetricHelper.enqueueSessionReplayExternalEventsInvalidMetric()
+            case .appended(_, let droppedBeforeMeta) where droppedBeforeMeta > 0:
+                NRLOG_AGENT_DEBUG("Dropped \(droppedBeforeMeta) external session replay events that arrived before a Meta event.")
+            case .appended:
+                break
+            }
+        }
+    }
+
+    // Must run on sessionReplayQueue.
+    private func harvestExternalEvents(final: Bool) {
+        let chunks = externalBuffer.takeChunks(final: final, isFirstChunk: sessionReplay.isFirstChunk)
+        for chunk in chunks {
+            guard let url = SessionReplayManager.uploadURL(from: sessionReplayReporter, for: chunk.metadata) else {
+                NRLOG_AGENT_DEBUG("Failed to construct upload URL for session replay.")
+                continue
+            }
+            sessionReplayReporter.enqueueSessionReplayUpload(upload: SessionReplayData(sessionReplayFramesData: chunk.payload, url: url))
+        }
+        if !chunks.isEmpty {
+            self.sessionReplay.isFirstChunk = false
+        }
+    }
+
+    private static func uploadURL(from reporter: SessionReplayReporter, for metadata: ExternalReplayUploadMetadata) -> URL? {
+        return reporter.uploadURL(uncompressedDataSize: metadata.uncompressedSize,
+                                  firstTimestamp: metadata.firstTimestamp,
+                                  lastTimestamp: metadata.lastTimestamp,
+                                  isFirstChunk: metadata.isFirstChunk,
+                                  isGZipped: metadata.isGZipped,
+                                  rrwebVersion: metadata.rrwebVersion)
+    }
+
+    // The folder crash recovery reads. Static, because the buffer is created before super.init().
+    private static func externalBufferDirectory() -> URL {
+        guard let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            NRLOG_AGENT_DEBUG("Could not access the documents directory; external session replay events are buffered in the temporary directory.")
+            return FileManager.default.temporaryDirectory.appendingPathComponent(kNRMA_SessionReplayFrames_folder)
+        }
+        return documents.appendingPathComponent(kNRMA_SessionReplayFrames_folder)
+    }
+
     // REPLAY PERSISTENCE
     
     public func checkForPreviousSessionFiles() {

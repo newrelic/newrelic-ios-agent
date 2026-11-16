@@ -1606,6 +1606,7 @@
 		CD11FE002000000000000141 /* NRMASessionReplayIngestTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE002000000000000140 /* NRMASessionReplayIngestTests.m */; };
 		CD11FE002000000000000151 /* SessionReplayExternalTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE002000000000000150 /* SessionReplayExternalTestSupport.swift */; };
 		CD11FE002000000000000161 /* SessionReplayExternalBufferTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE002000000000000160 /* SessionReplayExternalBufferTests.swift */; };
+		CD11FE002000000000000171 /* SessionReplayExternalIngestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE002000000000000170 /* SessionReplayExternalIngestTests.swift */; };
 		D4580CA72F563363003BAD8C /* JSErrorControllerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4580CA52F563363003BAD8C /* JSErrorControllerTests.m */; };
 		D46F91C02F69CD5600FD2EBE /* UISwitchThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91BF2F69CD5600FD2EBE /* UISwitchThingy.swift */; };
 		D46F91C12F69CD5600FD2EBE /* UISwitchThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91BF2F69CD5600FD2EBE /* UISwitchThingy.swift */; };
@@ -2651,6 +2652,7 @@
 		CD11FE002000000000000140 /* NRMASessionReplayIngestTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMASessionReplayIngestTests.m; sourceTree = "<group>"; };
 		CD11FE002000000000000150 /* SessionReplayExternalTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayExternalTestSupport.swift; sourceTree = "<group>"; };
 		CD11FE002000000000000160 /* SessionReplayExternalBufferTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayExternalBufferTests.swift; sourceTree = "<group>"; };
+		CD11FE002000000000000170 /* SessionReplayExternalIngestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayExternalIngestTests.swift; sourceTree = "<group>"; };
 		D4580CA52F563363003BAD8C /* JSErrorControllerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JSErrorControllerTests.m; sourceTree = "<group>"; };
 		D46F91BF2F69CD5600FD2EBE /* UISwitchThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UISwitchThingy.swift; sourceTree = "<group>"; };
 		D48D55172F4E46B2003BE3AB /* JSErrorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSErrorController.swift; sourceTree = "<group>"; };
@@ -3174,6 +3176,7 @@
 				CD11FE002000000000000140 /* NRMASessionReplayIngestTests.m */,
 				CD11FE002000000000000150 /* SessionReplayExternalTestSupport.swift */,
 				CD11FE002000000000000160 /* SessionReplayExternalBufferTests.swift */,
+				CD11FE002000000000000170 /* SessionReplayExternalIngestTests.swift */,
 			);
 			path = Uncategorized;
 			sourceTree = "<group>";
@@ -5610,6 +5613,7 @@
 				CD11FE002000000000000141 /* NRMASessionReplayIngestTests.m in Sources */,
 				CD11FE002000000000000151 /* SessionReplayExternalTestSupport.swift in Sources */,
 				CD11FE002000000000000161 /* SessionReplayExternalBufferTests.swift in Sources */,
+				CD11FE002000000000000171 /* SessionReplayExternalIngestTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
