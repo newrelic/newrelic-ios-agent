@@ -29,6 +29,9 @@ NS_ASSUME_NONNULL_BEGIN
 // available guess.
 + (NSDictionary<NSString*, NSString*>* _Nullable) currentTraceAttributes;
 
+// Whether `payload`'s trace is still in flight, newest or not.
++ (BOOL) isInFlight:(id _Nullable)payload;
+
 + (void) reset;
 
 @end

@@ -99,6 +99,19 @@
     XCTAssertEqualObjects([NRMAInFlightTraces currentTraceAttributes][@"trace.id"], @"trace-2");
 }
 
+- (void) testOlderTraceIsInFlightBehindANewerOne {
+    NSObject* first = [NSObject new];
+    NSObject* second = [NSObject new];
+    [NRMAInFlightTraces traceStarted:first traceId:@"trace-1" spanId:@"span-1"];
+    [NRMAInFlightTraces traceStarted:second traceId:@"trace-2" spanId:@"span-2"];
+
+    XCTAssertTrue([NRMAInFlightTraces isInFlight:first]);
+    [NRMAInFlightTraces traceFinished:first];
+    XCTAssertFalse([NRMAInFlightTraces isInFlight:first]);
+    XCTAssertTrue([NRMAInFlightTraces isInFlight:second]);
+    XCTAssertFalse([NRMAInFlightTraces isInFlight:nil]);
+}
+
 - (void) testTraceOfReleasedPayloadIsDropped {
     NSObject* survivor = [NSObject new];
     [NRMAInFlightTraces traceStarted:survivor traceId:@"trace-1" spanId:@"span-1"];

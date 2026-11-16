@@ -79,6 +79,21 @@ static NSMutableArray<NRMAInFlightTrace*>* _traces;
     }
 }
 
++ (BOOL) isInFlight:(id)payload {
+    if (payload == nil) {
+        return NO;
+    }
+
+    @synchronized (self) {
+        for (NRMAInFlightTrace* trace in _traces) {
+            if (trace.payload == payload) {
+                return YES;
+            }
+        }
+        return NO;
+    }
+}
+
 + (void) reset {
     @synchronized (self) {
         [_traces removeAllObjects];

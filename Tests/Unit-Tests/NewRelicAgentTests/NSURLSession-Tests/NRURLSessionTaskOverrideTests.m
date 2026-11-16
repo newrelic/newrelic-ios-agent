@@ -453,15 +453,19 @@
     [self prepareInFlightTraces];
     // Created by the instrumented session, so it is marked handled and carries its payload.
     NSURLSessionDataTask* task = [self.session dataTaskWithRequest:[NSURLRequest requestWithURL:[self localFileURL]]];
-    XCTAssertNotNil([NRMAHTTPUtilities inFlightTraceForRequest:task.originalRequest]);
+    // Held here so only the backstop, not the payload's release, can take its trace out of flight.
+    id inFlightTrace = [NRMAHTTPUtilities inFlightTraceForRequest:task.originalRequest];
+    XCTAssertNotNil(inFlightTrace);
 
     NRMAOverride__urlSessionTask_SetState(task, @selector(setState:), NSURLSessionTaskStateCompleted);
-    XCTAssertNotNil([NRMAInFlightTraces currentTraceAttributes], @"the app's handlers get the grace period first");
+    XCTAssertTrue([NRMAInFlightTraces isInFlight:inFlightTrace], @"the app's handlers get the grace period first");
 
+    // Asks after this task's trace alone: any task in the process changing state can start a trace
+    // meanwhile. The timeout leaves a loaded runner room past the grace period.
     XCTestExpectation* ended = [self expectationForPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary* bindings) {
-        return [NRMAInFlightTraces currentTraceAttributes] == nil;
+        return ![NRMAInFlightTraces isInFlight:inFlightTrace];
     }] evaluatedWithObject:self handler:nil];
-    [self waitForExpectations:@[ended] timeout:10];
+    [self waitForExpectations:@[ended] timeout:30];
 }
 
 - (void) testUploadTaskWithoutCompletionHandlerSendsItsTrace
