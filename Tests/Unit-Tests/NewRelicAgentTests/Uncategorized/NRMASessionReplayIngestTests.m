@@ -40,6 +40,8 @@
 
 @implementation NRMASessionReplayIngestTests
 
+static NSString *const batch = @"[{\"type\":4,\"timestamp\":1,\"data\":{}}]";
+
 // isManuallyActive runs a sessionReplayQueue.sync, so returning from it means every block
 // queued before it has run.
 static void NRMADrainReplayQueue(SessionReplayManager *manager)
@@ -70,6 +72,7 @@ static NSString *uploadAttributes(NSURL *url)
     self.reporter = [[SessionReplayReporter alloc] initWithApplicationToken:@"test-token"
                                                                         url:@"mobile-collector.newrelic.com"];
     self.manager = [[SessionReplayManager alloc] initWithReporter:self.reporter url:@"mobile-collector.newrelic.com"];
+    self.manager.externalCaptureSource = YES;
     [self.agent setValue:self.manager forKey:@"sessionReplay"];
 
     // Return whatever self.config holds when the agent asks, so a test can swap or nil it.
@@ -87,7 +90,11 @@ static NSString *uploadAttributes(NSURL *url)
 - (void) tearDown
 {
     [self.manager stop];
+    [self.manager clearAllData];
     [[NSFileManager defaultManager] removeItemAtPath:errorModeMarkerPath() error:nil];
+    // Leave native capture unsuppressed for later tests, even when a test stops early.
+    [self stubSharedInstance:nil];
+    [NewRelic setSessionReplayExternalCaptureSource:NO];
     [self.mockAgentInternal stopMocking];
     [self.mockHarvestController stopMocking];
 
@@ -145,6 +152,19 @@ static NSString *uploadAttributes(NSURL *url)
     NRMADrainReplayQueue(self.manager);
 }
 
+- (NSString *) ingest:(NSString *)json
+{
+    return [self.agent recordSessionReplayEvents:json rrwebVersion:@"2.0.0-test"];
+}
+
+// Replaces the sharedInstance stub, so a test can act before the agent starts (nil) or after.
+- (void) stubSharedInstance:(NewRelicAgentInternal *)agent
+{
+    [self.mockAgentInternal stopMocking];
+    self.mockAgentInternal = [OCMockObject mockForClass:[NewRelicAgentInternal class]];
+    [[[[self.mockAgentInternal stub] classMethod] andReturn:agent] sharedInstance];
+}
+
 #pragma mark - Upload URL
 
 - (void) testUploadURLStampsTheGivenRRWebVersion
@@ -162,6 +182,104 @@ static NSString *uploadAttributes(NSURL *url)
     NSURL *url = [self.manager generateUploadURLWithUncompressedDataSize:10 firstTimestamp:1000 lastTimestamp:2000
                                                             isFirstChunk:YES isGZipped:YES];
     XCTAssertTrue([uploadAttributes(url) containsString:@"rrweb.version=^2.0.0-alpha.17"]);
+}
+
+#pragma mark - Ingest gate
+
+- (void) testAcceptedWhenRecordingInFull
+{
+    [self useFullSampling];
+    [self startSession];
+    XCTAssertEqualObjects([self ingest:batch], kNRSessionReplayIngestAccepted);
+}
+
+- (void) testDroppedDisabledWhenNativeCaptureIsNotSuppressed
+{
+    self.manager.externalCaptureSource = NO;
+    [self useFullSampling];
+    [self startSession];
+    XCTAssertEqualObjects([self ingest:batch], kNRSessionReplayIngestDroppedDisabled);
+}
+
+- (void) testDroppedDisabledWhenReplayIsOff
+{
+    XCTAssertEqualObjects([self ingest:batch], kNRSessionReplayIngestDroppedDisabled);          // no config
+    [self useFullSampling];
+    self.config.session_replay_enabled = NO;
+    XCTAssertEqualObjects([self ingest:batch], kNRSessionReplayIngestDroppedDisabled);          // disabled
+    [self useOffSampling];
+    [self startSession];
+    XCTAssertEqualObjects([self ingest:batch], kNRSessionReplayIngestDroppedDisabled);          // sampled off
+}
+
+- (void) testDroppedDisabledWhilePausedAndAfterSessionEnd
+{
+    [self useFullSampling];
+    [self startSession];
+    XCTAssertTrue([self.agent pauseReplay]);
+    NRMADrainReplayQueue(self.manager);
+    XCTAssertEqualObjects([self ingest:batch], kNRSessionReplayIngestDroppedDisabled);
+    XCTAssertTrue([self.agent recordReplay]);
+    NRMADrainReplayQueue(self.manager);
+    XCTAssertEqualObjects([self ingest:batch], kNRSessionReplayIngestAccepted);
+    [self.agent sessionReplayEndSession];
+    NRMADrainReplayQueue(self.manager);
+    XCTAssertEqualObjects([self ingest:batch], kNRSessionReplayIngestDroppedDisabled);
+}
+
+- (void) testErrorModeIsDroppedUntilAnErrorSwitchesToFull
+{
+    [self useErrorSampling];
+    [self startSession];
+    XCTAssertEqualObjects([self ingest:batch], kNRSessionReplayIngestDroppedDisabled);
+    [self.agent sessionReplayOnError:nil];
+    NRMADrainReplayQueue(self.manager);
+    XCTAssertEqualObjects([self ingest:batch], kNRSessionReplayIngestAccepted);
+}
+
+- (void) testAcceptedAfterRecordReplayInAnUnsampledSession
+{
+    [self useOffSampling];
+    [self startSession];
+    XCTAssertTrue([self.agent recordReplay]);
+    NRMADrainReplayQueue(self.manager);
+    XCTAssertEqualObjects([self ingest:batch], kNRSessionReplayIngestAccepted);
+}
+
+- (void) testDroppedInvalidForEmptyEventsOrVersion
+{
+    [self useFullSampling];
+    [self startSession];
+    XCTAssertEqualObjects([self ingest:@""], kNRSessionReplayIngestDroppedInvalid);
+    XCTAssertEqualObjects([self.agent recordSessionReplayEvents:batch rrwebVersion:@""], kNRSessionReplayIngestDroppedInvalid);
+}
+
+- (void) testUTF8LimitIsMeasuredInBytes
+{
+    [self useFullSampling];
+    [self startSession];
+    NSString *euros = [@"" stringByPaddingToLength:333334 withString:@"€" startingAtIndex:0];        // 1,000,002 bytes
+    XCTAssertEqualObjects([self ingest:euros], kNRSessionReplayIngestDroppedInvalid);
+    NSString *exact = [NSString stringWithFormat:@"[%@]", [@"" stringByPaddingToLength:999998 withString:@" " startingAtIndex:0]];
+    XCTAssertEqualObjects([self ingest:exact], kNRSessionReplayIngestAccepted);                    // exactly 1,000,000
+}
+
+- (void) testPublicEntryBeforeTheAgentStartsIsDroppedDisabled
+{
+    [self stubSharedInstance:nil];
+    XCTAssertEqualObjects([NewRelic recordSessionReplayEvents:batch rrwebVersion:@"2.0.0-test"], kNRSessionReplayIngestDroppedDisabled);
+}
+
+- (void) testExternalCaptureSourceIsOnlySetBeforeStart
+{
+    [self stubSharedInstance:nil];
+    [NewRelic setSessionReplayExternalCaptureSource:YES];
+    XCTAssertTrue([NewRelicAgentInternal sessionReplayExternalCaptureSource]);
+    [self stubSharedInstance:self.agent];
+    [NewRelic setSessionReplayExternalCaptureSource:NO];
+    XCTAssertTrue([NewRelicAgentInternal sessionReplayExternalCaptureSource], @"ignored after start");
+    [self stubSharedInstance:nil];
+    [NewRelic setSessionReplayExternalCaptureSource:NO];                                             // leave it off for other tests
 }
 
 @end

@@ -939,6 +939,26 @@
     return [[NewRelicAgentInternal sharedInstance] sessionReplayConfiguration] ?: [NewRelicAgentInternal sessionReplayOffConfiguration];
 }
 
+/*
+ * Takes rrweb events from an external replay source. Drops them as disabled until the
+ * agent has started.
+ */
++ (NSString*) recordSessionReplayEvents:(NSString*)eventsJSON rrwebVersion:(NSString*)rrwebVersion {
+    NewRelicAgentInternal* agent = [NewRelicAgentInternal sharedInstance];
+    if (agent == nil) {
+        return kNRSessionReplayIngestDroppedDisabled;
+    }
+    return [agent recordSessionReplayEvents:eventsJSON rrwebVersion:rrwebVersion];
+}
+
+/*
+ * Replaces native session replay capture with an external source. Only takes effect
+ * before the agent starts.
+ */
++ (void) setSessionReplayExternalCaptureSource:(BOOL)external {
+    [NewRelicAgentInternal setSessionReplayExternalCaptureSource:external];
+}
+
 
 #pragma mark - Hidden APIs
 

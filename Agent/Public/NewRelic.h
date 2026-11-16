@@ -1000,6 +1000,44 @@ extern "C" {
  */
 + (NSDictionary<NSString*, id>* _Nonnull) sessionReplayConfiguration;
 
+/*!
+ * Takes rrweb events from a framework that captures its own replay (e.g. the New Relic
+ * Flutter agent). The agent uploads them with its own session replay: about once a
+ * minute, and when replay is paused or the session ends.
+ *
+ * Safe to call from any thread. It only does cheap checks before returning; the events
+ * are parsed and stored in the background.
+ *
+ * @param eventsJSON A JSON array of rrweb events, in play order.
+ * @param rrwebVersion The rrweb version of the encoder that produced the events. Their
+ *                     uploads report it as rrweb.version.
+ *
+ * @return One of:
+ * - kNRSessionReplayIngestAccepted: the events will be uploaded with this session's replay.
+ * - kNRSessionReplayIngestDroppedDisabled: the agent isn't recording replay in "full" mode,
+ *   the recordingMode that sessionReplayConfiguration reports. For example, the session
+ *   wasn't sampled, replay is paused or disabled, the session ended, or the agent hasn't
+ *   started. Also returned for "error" mode, and for every call unless
+ *   setSessionReplayExternalCaptureSource:YES was called before the agent started.
+ *   Don't retry.
+ * - kNRSessionReplayIngestDroppedInvalid: eventsJSON or rrwebVersion is empty, or eventsJSON
+ *   is over 1,000,000 bytes of UTF-8. Don't retry. Take a new Meta and FullSnapshot, so the
+ *   events that follow have a base again.
+ */
++ (NSString* _Nonnull) recordSessionReplayEvents:(NSString* _Nonnull) eventsJSON rrwebVersion:(NSString* _Nonnull) rrwebVersion;
+
+/*!
+ * Turns off the agent's own session replay screen and touch capture, for a framework that
+ * captures replay itself and sends it with recordSessionReplayEvents:rrwebVersion:.
+ * Sampling, pauseReplay(), recordReplay() and uploads work as before.
+ *
+ * Call it before starting the agent. Calls after the agent starts are ignored, with a warning.
+ * It applies to the whole app, so screens the framework doesn't capture get no replay.
+ *
+ * @param external YES to replace native capture with the external source.
+ */
++ (void) setSessionReplayExternalCaptureSource:(BOOL) external;
+
 @end
 
 #ifdef __cplusplus
