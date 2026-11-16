@@ -259,6 +259,14 @@ static NSString *errorModeMarkerPath(void)
     XCTAssertEqualObjects(result[@"maskAllUserTouches"], @YES);
 }
 
+- (void) testMissingMaskingModeReportsDefault
+{
+    self.config = [self configWithSessionReplayJSON:@"{\"enabled\":true}"];
+    self.config.session_replay_mode = nil;
+
+    XCTAssertEqualObjects([self.agent sessionReplayConfiguration][@"mode"], @"default");
+}
+
 - (void) testRecordingModeStrings
 {
     self.config = [self configWithSessionReplayJSON:@"{\"enabled\":true}"];
