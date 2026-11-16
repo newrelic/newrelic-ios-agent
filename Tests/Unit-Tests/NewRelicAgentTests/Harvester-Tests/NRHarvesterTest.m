@@ -164,9 +164,13 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
 }
 
 - (id) makeMockURLSessionWithConfig:(NRMAHarvesterConfiguration*)config {
+    return [self makeMockURLSessionWithResponse:[config asDictionary]];
+}
+
+- (id) makeMockURLSessionWithResponse:(NSDictionary*)response {
     __block NSURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://staging-mobile-collector.newrelic.com"] statusCode:200 HTTPVersion:@"1.1" headerFields:nil];
 
-    NSData *data = [NSJSONSerialization dataWithJSONObject:[config asDictionary] options:NSJSONWritingPrettyPrinted error:nil];
+    NSData *data = [NSJSONSerialization dataWithJSONObject:response options:NSJSONWritingPrettyPrinted error:nil];
     
     id mockNSURLSession = [OCMockObject mockForClass:NSURLSession.class];
     [[[mockNSURLSession stub] classMethod] andReturn:mockNSURLSession];
@@ -996,12 +1000,16 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
 
 - (void) testConnectWithoutSessionReplayConfigPostsOffShape
 {
-    NRMAHarvesterConfiguration* config = [self makeHarvestConfig];
-    config.has_session_replay_config = NO;
-    harvester.connection.harvestSession = [self makeMockURLSessionWithConfig:config];
+    // Leave out the "configuration" object. The parser treats any configuration object as
+    // having a session replay config, even one with no session_replay key.
+    NSMutableDictionary* response = [[[self makeHarvestConfig] asDictionary] mutableCopy];
+    [response removeObjectForKey:kNRMA_CONFIG_KEY];
+    harvester.connection.harvestSession = [self makeMockURLSessionWithResponse:response];
 
     NSDictionary* userInfo = [self sessionReplayConfigurationPostedWhileConnecting];
 
+    XCTAssertFalse([harvester harvesterConfiguration].has_session_replay_config,
+                   @"the connect response must parse as having no session replay config");
     XCTAssertEqualObjects(userInfo, (@{@"enabled": @NO, @"recordingMode": @"off"}));
 }
 #endif
