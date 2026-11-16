@@ -29,6 +29,7 @@
 @property NewRelicAgentInternal *agent;
 @property SessionReplayManager *manager;
 @property NRMAHarvesterConfiguration *config;
+@property (atomic) dispatch_semaphore_t replayQueueGate;
 @end
 
 @implementation NRMASessionReplayConfigurationTests
@@ -63,9 +64,16 @@ static NSString *errorModeMarkerPath(void)
     [self.agent setValue:self.manager forKey:@"sessionReplay"];
 
     // Return whatever self.config holds when the agent asks, so a test can swap or nil it.
+    // While replayQueueGate is set, a read on the replay queue waits for it to be signaled,
+    // which lets a test hold that queue and line up work behind it.
     __weak typeof(self) weakSelf = self;
     self.mockHarvestController = [OCMockObject mockForClass:[NRMAHarvestController class]];
     [[[[self.mockHarvestController stub] classMethod] andDo:^(NSInvocation *invocation) {
+        dispatch_semaphore_t gate = weakSelf.replayQueueGate;
+        if (gate != nil && strcmp(dispatch_queue_get_label(DISPATCH_CURRENT_QUEUE_LABEL), "com.newrelic.sessionReplayQueue") == 0) {
+            dispatch_semaphore_wait(gate, dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)));
+            dispatch_semaphore_signal(gate); // stays open for any later read
+        }
         NRMAHarvesterConfiguration *config = weakSelf.config;
         [invocation setReturnValue:&config];
     }] configuration];
@@ -361,6 +369,21 @@ static NSString *errorModeMarkerPath(void)
     XCTAssertTrue([self.manager isRunning]);
 }
 
+- (void) testReconnectSampledErrorAfterAnErrorKeepsFull
+{
+    [self useErrorSampling];
+    [self startSession];
+    [self.agent sessionReplayOnError:nil];
+    NRMADrainReplayQueue(self.manager);
+    XCTAssertEqualObjects([self recordingMode], @"full");
+
+    // A mid-session reconnect runs the config path again, and the same seeds sample error.
+    [self startSession];
+
+    XCTAssertEqualObjects([self recordingMode], @"full");
+    XCTAssertTrue([self.manager isRunning]);
+}
+
 - (void) testDisabledAfterRunningLeavesModeOff
 {
     [self useFullSampling];
@@ -389,6 +412,41 @@ static NSString *errorModeMarkerPath(void)
     XCTAssertEqualObjects([self recordingMode], @"off");
     XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:marker],
                   @"an error after the session ended must not clear the error-mode marker");
+}
+
+- (void) testErrorQueuedDuringSessionEndStaysOffAndKeepsMarker
+{
+    [self useErrorSampling];
+    [self startSession];
+    NSString *marker = errorModeMarkerPath();
+    [[NSFileManager defaultManager] createDirectoryAtPath:[marker stringByDeletingLastPathComponent]
+                              withIntermediateDirectories:YES attributes:nil error:nil];
+    XCTAssertTrue([[NSFileManager defaultManager] createFileAtPath:marker contents:[NSData data] attributes:nil]);
+
+    // Hold the replay queue on a configuration read, so session end and then the error
+    // queue up behind it, in that order.
+    self.replayQueueGate = dispatch_semaphore_create(0);
+    [self.agent publishSessionReplayConfiguration];
+
+    dispatch_semaphore_t ending = dispatch_semaphore_create(0);
+    XCTestExpectation *ended = [self expectationWithDescription:@"session ended"];
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+        dispatch_semaphore_signal(ending);
+        [self.agent sessionReplayEndSession];
+        [ended fulfill];
+    });
+    dispatch_semaphore_wait(ending, DISPATCH_TIME_FOREVER);
+    [NSThread sleepForTimeInterval:0.2]; // session end is now waiting on the replay queue
+    [self.agent sessionReplayOnError:nil];
+    dispatch_semaphore_signal(self.replayQueueGate);
+
+    [self waitForExpectations:@[ended] timeout:5.0];
+    self.replayQueueGate = nil;
+    [self settle];
+
+    XCTAssertEqualObjects([self recordingMode], @"off");
+    XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:marker],
+                  @"an error queued during session end must not clear the error-mode marker");
 }
 
 - (void) testGetterIsSafeFromBackgroundThreadsDuringModeChanges
@@ -509,6 +567,23 @@ static NSString *errorModeMarkerPath(void)
     NRMADrainReplayQueue(self.manager);
 
     [self waitForExpectations:@[noPost] timeout:0.5];
+}
+
+- (void) testCaptureStoppedByAClearedConfigPostsOff
+{
+    [self useFullSampling];
+    [self startSession];
+    [self settle];
+
+    // A reconnect after a 403, a 409 or an invalid agent ID keeps the default configuration,
+    // with session replay disabled, in place until /connect returns. The next tick stops capture.
+    NSDictionary *userInfo = [self waitForConfigurationPostAfter:^{
+        self.config = [NRMAHarvesterConfiguration defaultHarvesterConfiguration];
+    }];
+
+    XCTAssertEqualObjects(userInfo, offShape());
+    XCTAssertFalse([self.manager isRunning]);
+    XCTAssertEqual(self.manager.sessionReplayMode, SessionReplayRecordingModeOff);
 }
 
 - (void) testHandlerCanRecordFromInsideNotification
