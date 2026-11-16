@@ -6,7 +6,7 @@
     "@wdio/local-runner": "^10.0.2",
     "@wdio/mocha-framework": "^10.0.1",
     "appium": "^3.9.0",
-    "basic-ftp": "^6.2.1",
+    "basic-ftp": "^6.2.4",
     "body-parser": "^2.4.0",
     "dayjs": "^1.11.19",
     "diff": "^5.2.2",

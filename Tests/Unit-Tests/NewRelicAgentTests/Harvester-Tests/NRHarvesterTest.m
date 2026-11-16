@@ -140,7 +140,7 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
 
     config.session_replay_maskApplicationText = YES;
     config.session_replay_maskUserInputText = YES;
-    config.session_replay_maskAllUserTouches = YES;
+    config.session_replay_maskAllUserTouches = NO;
     config.session_replay_maskAllImages = YES;
     
     config.session_replay_customRules = [NSMutableArray array];;

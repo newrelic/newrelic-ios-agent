@@ -176,15 +176,47 @@
     XCTAssertEqual(a.hash, b.hash);
 }
 
-// NOTE: a separate, unfixed defect lives next to this one. In -initWithDictionary: the
-// default-masking override is gated on `self.session_replay_mode == SessionReplayMaskingModeDefault`,
-// a raw pointer comparison. SessionReplayMaskingModeDefault is a `static const` in a header,
-// so each Mach-O image gets its own @"default" instance, and a collector-supplied "default"
-// is a freshly parsed string either way -- the comparison is therefore never true in practice
-// and the documented default masking booleans never apply. It is deliberately NOT fixed here:
-// the override forces session_replay_maskAllUserTouches to NO, so correcting the comparison
-// would *reduce* masking and unmask user touches that are masked today. That needs product
-// review on its own, not a ride-along with a crash fix.
+#pragma mark - Default masking mode
+
+- (NSString *) defaultModePayloadWithNonDefaultMasking
+{
+    return @"{"
+            "\"data_token\":[1234,5678],"
+            "\"account_id\":190,"
+            "\"configuration\":{\"session_replay\":{\"enabled\":true,\"mode\":\"default\","
+                "\"mask_application_text\":false,\"mask_user_input_text\":false,"
+                "\"mask_all_images\":false,\"mask_all_user_touches\":true}}"
+            "}";
+}
+
+// The default-mode override was gated on a pointer comparison against
+// SessionReplayMaskingModeDefault, which a collector-supplied "default" never matches,
+// so the collector's booleans leaked through instead of the documented defaults.
+- (void) testCollectorDefaultModeAppliesDefaultMasking
+{
+    NRMAHarvesterConfiguration *configuration = [self configurationFromJSON:[self defaultModePayloadWithNonDefaultMasking]];
+
+    XCTAssertEqualObjects(configuration.session_replay_mode, SessionReplayMaskingModeDefault);
+    XCTAssertNotEqual(configuration.session_replay_mode, SessionReplayMaskingModeDefault, @"must be a distinct instance for this test to mean anything");
+    XCTAssertTrue(configuration.session_replay_maskApplicationText);
+    XCTAssertTrue(configuration.session_replay_maskUserInputText);
+    XCTAssertTrue(configuration.session_replay_maskAllImages);
+    XCTAssertFalse(configuration.session_replay_maskAllUserTouches);
+}
+
+// Custom mode must keep honouring the collector's booleans.
+- (void) testCollectorCustomModeKeepsCollectorMasking
+{
+    NRMAHarvesterConfiguration *configuration = [self configurationFromJSON:
+        [[self defaultModePayloadWithNonDefaultMasking] stringByReplacingOccurrencesOfString:@"\"mode\":\"default\""
+                                                                                 withString:@"\"mode\":\"custom\""]];
+
+    XCTAssertEqualObjects(configuration.session_replay_mode, SessionReplayMaskingModeCustom);
+    XCTAssertFalse(configuration.session_replay_maskApplicationText);
+    XCTAssertFalse(configuration.session_replay_maskUserInputText);
+    XCTAssertFalse(configuration.session_replay_maskAllImages);
+    XCTAssertTrue(configuration.session_replay_maskAllUserTouches);
+}
 
 @end
 
