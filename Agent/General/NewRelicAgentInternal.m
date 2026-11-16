@@ -519,9 +519,9 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
                                                  name:kNRMemoryUsageDidChangeNotification
                                                object:nil];
 
-    [self.analyticsController setNRSessionAttribute:@"uuid"
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_uuid
                                               value:[NewRelicInternalUtils deviceId]];
-    [self.analyticsController setNRSessionAttribute:@"osName"
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_osName
                                               value:[NewRelicInternalUtils osName]];
 
 #if TARGET_OS_WATCH
@@ -538,18 +538,18 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         systemVersion = @"unknown";
     }
 
-    [self.analyticsController setNRSessionAttribute:@"osMajorVersion"
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_osMajorVersion
                                               value:majorVersion];
-    [self.analyticsController setNRSessionAttribute:@"osVersion"
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_osVersion
                                               value:systemVersion];
-    [self.analyticsController setNRSessionAttribute:@"deviceManufacturer"
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_deviceManufacturer
                                               value:@"Apple Inc."];
-    [self.analyticsController setNRSessionAttribute:@"deviceModel"
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_deviceModel
                                               value:[NewRelicInternalUtils deviceModel]];
-    [self.analyticsController setNRSessionAttribute:@"newRelicVersion"
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_newRelicVersion
                                               value:[NewRelicInternalUtils agentVersion]];
     NRMAConnectInformation *info = [NRMAAgentConfiguration connectionInformation];
-    [self.analyticsController setNRSessionAttribute:@"appBuild"
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_appBuild
                                               value:info.applicationInformation.appBuild];
     [self.analyticsController setNRSessionAttribute:kNRMA_RA_platform
                                               value:[NewRelicInternalUtils stringFromNRMAApplicationPlatform:info.deviceInformation.platform]];
@@ -621,12 +621,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
                                                                                             sessionId:[self currentSessionId]
                                                                                    attributeValidator:[[NRMAAttributeValidator alloc] init]];
 
-        if (status != NotReachable) { // Because we support offline mode check if we're online before sending the handled exceptions
-            [self.handledExceptionsController processAndPublishPersistedReports];
-        }
-
         [NRMAHarvestController addHarvestListener:self.handledExceptionsController];
-
     }
 
 #if TARGET_OS_IOS

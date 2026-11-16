@@ -13,7 +13,7 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-ios-
 ## Content
 * [Apple Reachability 5.0.0](#apple-reachability)
 * [JSON++ 1.0.0](#json++)
-* [PLCrashReporter 1.11.0](#plcrashreporter)
+* [PLCrashReporter 1.12.2](#plcrashreporter)
 * [Flatbuffers 1.7.1](#Flatbuffers)
 * [Fastlane 2.211.0](#fastlane)
 * [XcodeCoverage 1.4.0](#xcode-coverage)

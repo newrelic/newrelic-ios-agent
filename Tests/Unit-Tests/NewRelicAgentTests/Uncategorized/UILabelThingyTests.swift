@@ -1,4 +1,5 @@
 import Foundation
+import ObjectiveC
 import Testing
 import UIKit
 
@@ -554,5 +555,128 @@ struct UILabelThingyTests {
         let details = makeViewDetails(isMasked: false)
         let thingy = UILabelThingy(viewDetails: details, attributedText: attrString)
         #expect(thingy.isItalic)
+    }
+
+    // MARK: - React Native text views (RCTTextView / RCTParagraphComponentView)
+    //
+    // Neither class exists outside a React Native runtime, so these synthesize
+    // a same-named UIView subclass at the Objective-C runtime level — matching
+    // the shape `isKind(of:)`/KVC detection in UILabelThingy's `init(view: UIView,
+    // viewDetails:)` actually sees: an object-type ivar, optionally exposed
+    // through a real getter method.
+
+    @Test func `RCTTextView legacy architecture unmasked`() {
+        let view = RCTRuntimeTestClass.makeInstance(named: RCTTextViewLegacy, ivarName: "_textStorage", getterSelectorName: nil)
+
+        let font = UIFont(name: "Arial", size: 16) ?? UIFont.systemFont(ofSize: 16)
+        let color = UIColor.red
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = .center
+        let attrString = NSAttributedString(string: "Legacy RN Text", attributes: [
+            .font: font,
+            .foregroundColor: color,
+            .paragraphStyle: paragraph
+        ])
+        let textStorage = NSTextStorage(attributedString: attrString)
+        RCTRuntimeTestClass.setIvar(on: view, ivarName: "_textStorage", value: textStorage)
+
+        let details = makeViewDetails(isMasked: false)
+        let thingy = UILabelThingy(view: view, viewDetails: details)
+
+        #expect(thingy.labelText == "Legacy RN Text")
+        #expect(thingy.fontSize == 16)
+        #expect(thingy.textColor == color)
+        #expect(thingy.textAlignment == "center")
+    }
+
+    @Test func `RCTTextView legacy architecture masked`() {
+        let view = RCTRuntimeTestClass.makeInstance(named: RCTTextViewLegacy, ivarName: "_textStorage", getterSelectorName: nil)
+
+        let attrString = NSAttributedString(string: "SecretText")
+        let textStorage = NSTextStorage(attributedString: attrString)
+        RCTRuntimeTestClass.setIvar(on: view, ivarName: "_textStorage", value: textStorage)
+
+        let details = makeViewDetails(isMasked: true)
+        let thingy = UILabelThingy(view: view, viewDetails: details)
+
+        #expect(thingy.labelText == String(repeating: "*", count: attrString.string.count))
+        #expect(thingy.isMasked)
+    }
+
+    @Test func `RCTParagraphComponentView Fabric architecture unmasked`() {
+        let view = RCTRuntimeTestClass.makeInstance(named: RCTParagraphComponentView, ivarName: "_attributedText", getterSelectorName: "attributedText")
+
+        let font = UIFont(name: "Arial", size: 18) ?? UIFont.systemFont(ofSize: 18)
+        let color = UIColor.blue
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = .right
+        let attrString = NSAttributedString(string: "Fabric RN Text", attributes: [
+            .font: font,
+            .foregroundColor: color,
+            .paragraphStyle: paragraph
+        ])
+        RCTRuntimeTestClass.setIvar(on: view, ivarName: "_attributedText", value: attrString)
+
+        let details = makeViewDetails(isMasked: false)
+        let thingy = UILabelThingy(view: view, viewDetails: details)
+
+        #expect(thingy.labelText == "Fabric RN Text")
+        #expect(thingy.fontSize == 18)
+        #expect(thingy.textColor == color)
+        #expect(thingy.textAlignment == "right")
+    }
+
+    @Test func `RCTParagraphComponentView Fabric architecture masked`() {
+        let view = RCTRuntimeTestClass.makeInstance(named: RCTParagraphComponentView, ivarName: "_attributedText", getterSelectorName: "attributedText")
+
+        let attrString = NSAttributedString(string: "SecretText")
+        RCTRuntimeTestClass.setIvar(on: view, ivarName: "_attributedText", value: attrString)
+
+        let details = makeViewDetails(isMasked: true)
+        let thingy = UILabelThingy(view: view, viewDetails: details)
+
+        #expect(thingy.labelText == String(repeating: "*", count: attrString.string.count))
+        #expect(thingy.isMasked)
+    }
+}
+
+/// Synthesizes a UIView subclass at the Objective-C runtime level, under a
+/// given class name, with a single object-type ivar — optionally exposed
+/// through a real getter method (needed for classes whose extraction code
+/// gates on `responds(to:)` rather than reading the ivar directly via KVC).
+private enum RCTRuntimeTestClass {
+    static func makeInstance(named className: String, ivarName: String, getterSelectorName: String?) -> UIView {
+        let cls: AnyClass
+        if let existing = NSClassFromString(className) {
+            cls = existing
+        } else {
+            guard let newClass = objc_allocateClassPair(UIView.self, className, 0) else {
+                fatalError("Could not allocate class pair for \(className)")
+            }
+            let size = MemoryLayout<AnyObject>.size
+            let alignment = UInt8(log2(Double(MemoryLayout<AnyObject>.alignment)))
+            guard class_addIvar(newClass, ivarName, size, alignment, "@") else {
+                fatalError("Could not add ivar \(ivarName) to \(className)")
+            }
+
+            if let getterSelectorName, let ivar = class_getInstanceVariable(newClass, ivarName) {
+                let getter: @convention(block) (AnyObject) -> AnyObject? = { obj in
+                    object_getIvar(obj, ivar) as AnyObject?
+                }
+                class_addMethod(newClass, Selector(getterSelectorName), imp_implementationWithBlock(getter), "@@:")
+            }
+
+            objc_registerClassPair(newClass)
+            cls = newClass
+        }
+
+        return (cls as! UIView.Type).init(frame: .zero)
+    }
+
+    static func setIvar(on view: UIView, ivarName: String, value: AnyObject) {
+        guard let ivar = class_getInstanceVariable(object_getClass(view), ivarName) else {
+            fatalError("Missing ivar \(ivarName)")
+        }
+        object_setIvar(view, ivar, value)
     }
 }
