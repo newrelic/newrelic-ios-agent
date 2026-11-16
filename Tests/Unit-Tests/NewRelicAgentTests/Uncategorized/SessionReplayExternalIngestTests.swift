@@ -132,6 +132,9 @@ final class SessionReplayExternalIngestTests: XCTestCase {
         let native = SessionReplayManager(reporter: reporter, url: "mobile-collector.newrelic.com" as NSString)
         native.start(with: .full); _ = native.isManuallyActive()
         native.recordExternalEvents(rrwebBatch([rrwebEvent(4, 1), rrwebEvent(2, 1)]), rrwebVersion: "2.0.0-test")
+        _ = native.isManuallyActive()
+        // Storing a batch builds its crash-recovery URL file, which asks the reporter for a URL.
+        XCTAssertTrue(reporter.requests.isEmpty, "nothing was stored")
         native.harvest(final: true); _ = native.isManuallyActive()
         native.stop()
         XCTAssertTrue(reporter.uploads.isEmpty)
