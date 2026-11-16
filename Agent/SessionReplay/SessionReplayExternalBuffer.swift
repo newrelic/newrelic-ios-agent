@@ -69,6 +69,10 @@ final class SessionReplayExternalBuffer {
     private static let metaType = 4
     private static let fullSnapshotType = 2
 
+    /// rrweb timestamps are milliseconds since 1970. A value outside this range is an encoder bug,
+    /// and outside Int's range it would stop the app when the upload URL converts it.
+    private static let timestampRange = 0.0..<1e15
+
     private let directory: URL
     private let maxUploadBytes: Int
     private let urlProvider: (ExternalReplayUploadMetadata) -> URL?
@@ -210,7 +214,8 @@ final class SessionReplayExternalBuffer {
         for (element, range) in zip(elements, ranges) {
             guard let object = element as? [String: Any],
                   let type = number(object["type"]),
-                  let timestamp = number(object["timestamp"]) else {
+                  let timestamp = number(object["timestamp"]),
+                  timestampRange.contains(timestamp.doubleValue) else {
                 return nil
             }
             events.append(Event(type: type.intValue, timestamp: timestamp.doubleValue, bytes: range))

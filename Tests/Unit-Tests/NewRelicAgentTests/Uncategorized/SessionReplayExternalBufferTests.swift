@@ -68,6 +68,15 @@ final class SessionReplayExternalBufferTests: XCTestCase {
         XCTAssertFalse(buffer.hasOpenSegment)
     }
 
+    // The upload URL converts timestamps to Int, which stops the app for a value outside Int's range.
+    func testTimestampsOutsideTheMillisecondRangeAreInvalid() {
+        for timestamp in ["1e19", "-1e19", "99999999999999999999", "1e15", "-1"] {
+            let batch = #"[{"type":4,"timestamp":\#(timestamp),"data":{}}]"#
+            XCTAssertEqual(buffer.append(Data(batch.utf8), rrwebVersion: "v", sessionId: "s1", isFirstChunk: true), .invalid, timestamp)
+        }
+        XCTAssertEqual(append(rrwebEvent(4, 1_731_783_600_000)), .appended(kept: 1, droppedBeforeMeta: 0))
+    }
+
     func testEachSegmentIsOneFileThatStartsWithItsMeta() {
         append(rrwebEvent(4, 1), rrwebEvent(2, 1), rrwebEvent(3, 2))
         append(rrwebEvent(3, 3), rrwebEvent(4, 4))   // the second segment's Meta ends this batch
