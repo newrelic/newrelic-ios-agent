@@ -17,6 +17,11 @@ permissions:
 env:
   # Install exactly what Gemfile.lock pins; fail if the lockfile is out of date.
   BUNDLE_FROZEN: "true"
+  # Simulator OS the test jobs run on. On xcode-27-arm64 runners the 27.0 runtimes (the ones scan picks by
+  # default, matching Xcode 27.0's SDKs) get re-staged while a job runs, so the simulator scan chose can
+  # vanish between build and test ("The requested device could not be found"). The 27.2 runtimes stay put.
+  # Test device names must exist on this runtime (tvOS 27.2 only has the 4th-generation Apple TV 4K).
+  TEST_SIMULATOR_OS: "27.2"
 
 jobs:
   testIOS:
@@ -48,7 +53,7 @@ jobs:
         run: bundle install
 
       - name: Run tests on iOS (using fastlane)
-        run: bundle exec fastlane runIOSTests
+        run: bundle exec fastlane runIOSTests device:"iPhone 17 ($TEST_SIMULATOR_OS)"
 
   testTVOS:
     name: TestTVOS
@@ -77,7 +82,7 @@ jobs:
         run: bundle install
 
       - name: Run tests on tvOS (using fastlane)
-        run: bundle exec fastlane runTVOSTests
+        run: bundle exec fastlane runTVOSTests device:"Apple TV 4K (4th generation) ($TEST_SIMULATOR_OS)"
 
   testWatchOS:
     name: TestWatchOS
@@ -134,7 +139,7 @@ jobs:
         run: scripts/ensure_watchos_simulator.sh
 
       - name: Run tests on watchOS (using fastlane)
-        run: bundle exec fastlane runWatchOSTests
+        run: bundle exec fastlane runWatchOSTests device:"Apple Watch SE 3 (40mm) ($TEST_SIMULATOR_OS)"
 
   deployS3:
     name: DeployS3
