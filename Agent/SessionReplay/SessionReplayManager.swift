@@ -151,6 +151,12 @@ public class SessionReplayManager: NSObject {
             if !externalCaptureSource {
                 sessionReplay.start()
             }
+
+            // A session can end without endSession, after a reconnect has stopped capture. Its buffered
+            // external events stay on disk for the next launch's recovery, under their own URL file.
+            if let bufferedSessionId = externalBuffer.sessionId, bufferedSessionId != currentSessionId() {
+                externalBuffer.reset()
+            }
             self.harvestseconds = 0
             
             self.isManuallyRecording = fromManual
@@ -499,8 +505,7 @@ public class SessionReplayManager: NSObject {
                 NRLOG_AGENT_DEBUG("Dropping external session replay events: native capture isn't suppressed, or replay isn't recording in full mode.")
                 return
             }
-            let sessionId = NewRelicAgentInternal.sharedInstance()?.currentSessionId() ?? "unknown_session"
-            switch externalBuffer.append(Data(eventsJSON.utf8), rrwebVersion: rrwebVersion, sessionId: sessionId,
+            switch externalBuffer.append(Data(eventsJSON.utf8), rrwebVersion: rrwebVersion, sessionId: currentSessionId(),
                                          isFirstChunk: sessionReplay.isFirstChunk) {
             case .invalid:
                 NRLOG_AGENT_DEBUG("Dropping external session replay events that aren't a JSON array of rrweb events.")
@@ -511,6 +516,11 @@ public class SessionReplayManager: NSObject {
                 break
             }
         }
+    }
+
+    /// The session external events are filed under, with the same fallback as the native frame files.
+    func currentSessionId() -> String {
+        return NewRelicAgentInternal.sharedInstance()?.currentSessionId() ?? "unknown_session"
     }
 
     // Must run on sessionReplayQueue.

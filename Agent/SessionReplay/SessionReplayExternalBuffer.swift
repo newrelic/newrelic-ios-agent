@@ -86,6 +86,11 @@ final class SessionReplayExternalBuffer {
     /// and again after a final take, a reset, or a failed write.
     private(set) var hasOpenSegment = false
 
+    /// The session whose folder holds the buffered events, or nil when nothing is buffered.
+    var sessionId: String? {
+        return folderSessionId
+    }
+
     init(directory: URL, maxUploadBytes: Int, urlProvider: @escaping (ExternalReplayUploadMetadata) -> URL?) {
         self.directory = directory
         self.maxUploadBytes = maxUploadBytes

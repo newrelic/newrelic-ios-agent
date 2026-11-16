@@ -11,6 +11,15 @@
 import XCTest
 @testable import NewRelic
 
+/// Files external events under a session the test can change.
+private final class SessionSwitchingManager: SessionReplayManager {
+    var sessionId = "session-a-\(UUID().uuidString)"
+
+    override func currentSessionId() -> String {
+        return sessionId
+    }
+}
+
 final class SessionReplayExternalIngestTests: XCTestCase {
     private var reporter: CapturingSessionReplayReporter!
     private var manager: SessionReplayManager!
@@ -118,6 +127,30 @@ final class SessionReplayExternalIngestTests: XCTestCase {
         manager.harvest(); drain()
         XCTAssertEqual(try uploadedTimestamps(1), [7, 7])            // the new session starts at its own Meta
         XCTAssertEqual(request(for: reporter.uploads[1])?.isFirstChunk, true)
+    }
+
+    // A reconnect can stop capture, and the session can then change without endSession, so replay
+    // starts again with the earlier session's segments still buffered.
+    func testAnEarlierSessionsEventsArentUploadedWithTheNextSession() throws {
+        let switching = SessionSwitchingManager(reporter: reporter, url: "mobile-collector.newrelic.com" as NSString)
+        switching.externalCaptureSource = true
+        switching.start(with: .full)
+        switching.recordExternalEvents(rrwebBatch([rrwebEvent(4, 1), rrwebEvent(2, 1)]), rrwebVersion: "2.0.0-test")
+        switching.recordExternalEvents(rrwebBatch([rrwebEvent(4, 2), rrwebEvent(2, 2)]), rrwebVersion: "2.0.0-test")
+        switching.stop()
+        let earlierSession = switching.sessionId
+        switching.sessionId = "session-b-\(UUID().uuidString)"
+        switching.start(with: .full)
+        switching.recordExternalEvents(rrwebBatch([rrwebEvent(4, 5), rrwebEvent(2, 5)]), rrwebVersion: "2.0.0-test")
+        switching.recordExternalEvents(rrwebBatch([rrwebEvent(4, 6), rrwebEvent(2, 6)]), rrwebVersion: "2.0.0-test")
+        switching.harvest()
+        switching.stop()
+        XCTAssertEqual(try uploadedTimestamps(0), [5, 5])
+        // The earlier session's events stay on disk, for the next launch's recovery under their own URL file.
+        let frames = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("SessionReplayFrames")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: frames.appendingPathComponent("\(earlierSession)/frame_0.json").path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: frames.appendingPathComponent("\(earlierSession)_upload_url.txt").path))
     }
 
     func testBatchQueuedAfterTheSessionEndedIsDropped() {
