@@ -33,6 +33,13 @@
     "axios": "^1.13.5",
     "@puppeteer/browsers": "3.0.2",
     "shell-quote": "^1.11.0",
+    "glob": "^14.0.6",
+    "mocha": {
+      "minimatch": "^11.0.8"
+    },
+    "readdir-glob": {
+      "minimatch": "^11.0.8"
+    },
     "wdio-lambdatest-service": {
       "@wdio/cli": "$@wdio/cli",
       "@wdio/types": "^10.0.1",
