@@ -16,6 +16,11 @@
 #import "NRMANetworkFacade.h"
 #import "NRMAFlags.h"
 #import "NRConstants.h"
+#import "NRMAInFlightTraces.h"
+
+// How long after a handled task completes its trace may stay in flight, for the app's completion
+// handler or delegate to run and end it.
+#define kNRMAInFlightTraceCompletionGrace (5 * NSEC_PER_SEC)
 
 static IMP NRMAOriginal__resume;
 static IMP NRMAOriginal__urlSessionTask_SetState;
@@ -118,6 +123,19 @@ void NRMAOverride__urlSessionTask_SetState(NSURLSessionTask* task, SEL _cmd, NSU
                 NSNumber *isHandled = objc_getAssociatedObject(task, NRMAHandledRequestKey);
 
                 if (isHandled != nil && [isHandled boolValue]) {
+                    if (newState == NSURLSessionTaskStateCompleted) {
+                        // Backstop for a task whose completion no hook records, e.g. one with its
+                        // own task delegate, whose payload lives as long as the app holds the task.
+                        // Reads an associated object only, leaving the request itself alone (see
+                        // the note on the async branch below).
+                        id inFlightTrace = [NRMAHTTPUtilities inFlightTraceForRequest:task.originalRequest];
+                        if (inFlightTrace != nil) {
+                            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kNRMAInFlightTraceCompletionGrace),
+                                           dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+                                [NRMAInFlightTraces traceFinished:inFlightTrace];
+                            });
+                        }
+                    }
                     if (NRMAOriginal__urlSessionTask_SetState!= nil) {
                         // Call original setState function.
                         ((void(*)(NSURLSessionTask *,SEL,NSURLSessionTaskState))NRMAOriginal__urlSessionTask_SetState)(task, _cmd, newState);
@@ -147,16 +165,17 @@ void NRMAOverride__urlSessionTask_SetState(NSURLSessionTask* task, SEL _cmd, NSU
                         NSData *data = NRMA__getDataForSessionTask(task);
                         NSURLResponse *response = task.response;
                         NSError *taskError = task.error;
+                        // Read before recording detaches it. The awaiting caller resumes later on
+                        // its own executor, out of reach, so the trace ends at completion.
+                        id inFlightTrace = [NRMAHTTPUtilities inFlightTraceForRequest:task.originalRequest];
 
                         NRMA__recordTask(task, data, response, taskError);
+                        [NRMAInFlightTraces traceFinished:inFlightTrace];
                     } else {
                         // The task is starting. Add Distributed Tracing traceId\trace.id, guid, id
                         // and payload before the request goes out. This is safe because the task
                         // is not yet being torn down / cached by CFNetwork.
-                        //1
                         NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:currentRequest];
-                        mutableRequest = [NRMAHTTPUtilities addConnectivityHeaderAndPayload:mutableRequest];
-                        // 2
                         if([NRMAFlags shouldEnableNewEventSystem]){
                             NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
                             [NRMAHTTPUtilities attachNRMAPayload:payload

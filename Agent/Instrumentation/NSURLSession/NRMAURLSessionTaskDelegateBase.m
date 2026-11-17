@@ -11,6 +11,8 @@
 #import "NRMAURLSessionTaskOverride.h"
 #import "NRMAURLSessionOverride.h"
 #import "NRMAExceptionHandler.h"
+#import "NRMAHTTPUtilities.h"
+#import "NRMAInFlightTraces.h"
 
 @implementation NRURLSessionTaskDelegateBase
 
@@ -38,6 +40,10 @@
 
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(NSError *)error
 {
+    // Ended whether or not the task was timed. A task created with a completion handler has its
+    // payload attached only once that handler runs, so this can't end its trace ahead of it.
+    id inFlightTrace = [NRMAHTTPUtilities inFlightTraceForRequest:task.originalRequest];
+
     @try {
         NRTimer* timer = NRMA__getTimerForSessionTask(task);
         // If timer is nil then maybe we didn't instrument the task in time, let's not record it.
@@ -73,6 +79,9 @@
     if ([self.realDelegate respondsToSelector:@selector(URLSession:task:didCompleteWithError:)]) {
         [self.realDelegate URLSession:session task:task didCompleteWithError:error];
     }
+
+    // After the app's delegate, so the logs it writes carry the trace.
+    [NRMAInFlightTraces traceFinished:inFlightTrace];
 }
 
 - (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveData:(NSData *)data

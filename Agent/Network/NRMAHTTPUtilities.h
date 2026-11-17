@@ -39,5 +39,11 @@ NS_ASSUME_NONNULL_BEGIN
 + (void) addTrackedHeaders:(NSDictionary *)headers to:(NRMANetworkRequestData*)requestData;
 + (void) attachPayload:(NRMAPayloadContainer*)payload to:(id)object;
 + (NRMAPayloadContainer*) addConnectivityHeader:(NSMutableURLRequest*)request;
+
+// The payload attached to `request`, which keys its in-flight trace, left attached for the network
+// event to report against. Pass it to +[NRMAInFlightTraces traceFinished:] once the app has handled
+// the response. Read it before +noticeResponse/+noticeError, which detach it, and hold it until
+// then: the trace leaves the in-flight set when its payload is released.
++ (id _Nullable) inFlightTraceForRequest:(NSURLRequest*)request;
 @end
 NS_ASSUME_NONNULL_END
