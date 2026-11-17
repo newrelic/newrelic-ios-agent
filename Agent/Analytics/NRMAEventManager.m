@@ -14,14 +14,15 @@
 #import "NRMANetworkErrorEvent.h"
 #import "NRMAAgentConfiguration.h"
 #import "NRMASupportMetricHelper.h"
+#import "NRMAFlags.h"
+#import "NewRelicAgentInternal.h"
+#import "NRMAExceptionMetaDataStore.h"
+#import <NewRelic/NewRelic-Swift.h>
 
 static const NSUInteger kDefaultBufferSize = 1000;
 static const NSUInteger kDefaultBufferTimeSeconds = 60; // 60 seconds
 static const NSUInteger kBufferTimeSecondsLeeway = 60; // 60 seconds
 static const double kMillisecondsPerSecond = 1000.0; // milliseconds to seconds conversion
-
-// Event Key Format String: TimeStamp|SessionElapsedTime|EventType
-static NSString* const eventKeyFormat = @"%f|%f|%@";
 
 @implementation NRMAEventManager {
     NSMutableArray<NRMAAnalyticEventProtocol> *events;
@@ -34,11 +35,9 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
 
     NSUInteger eventsRecorded;
     NSUInteger eventsEvicted;
-
-    PersistentEventStore *_persistentStore;
 }
 
-- (nonnull instancetype)initWithPersistentStore:(PersistentEventStore *)store {
+- (nonnull instancetype)init {
     self = [super init];
     if (self) {
         events = [[NSMutableArray<NRMAAnalyticEventProtocol> alloc] init];
@@ -46,7 +45,6 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
         maxBufferTimeSeconds = [NRMAAgentConfiguration getMaxEventBufferTime];
         totalAttemptedInserts = 0;
         oldestEventTimestamp = 0;
-        _persistentStore = store;
     }
     return self;
 }
@@ -99,8 +97,6 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
         if (events.count < maxBufferSize) {
             [events addObject:event];
 
-            [_persistentStore setObject:event forKey:[self createKeyForEvent:event]];
-
             if(events.count == 1) {
                 oldestEventTimestamp = event.timestamp;
             }
@@ -113,11 +109,14 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
             // between evicting newer events and older events.
             NSUInteger evictionIndex = [self getEvictionIndex];
             if (evictionIndex < events.count) {
+                id<NRMAAnalyticEventProtocol> evictedEvent = events[evictionIndex];
                 [events removeObjectAtIndex:evictionIndex];
                 [events addObject:event];
-
-                [_persistentStore removeObjectForKey:[self createKeyForEvent:event]];
                 added = YES;
+
+                if (evictedEvent.eventUUID && [NRMAFlags shouldEnableEventPersistence]) {
+                    [[NREventPersistenceController shared] discardPersistedEventWithEventUUID:evictedEvent.eventUUID];
+                }
             }
             // else: the random eviction index landed outside the queue's current
             // bounds -- drop the incoming event instead of silently losing it,
@@ -130,6 +129,17 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
         if (added) {
             [NRMASupportMetricHelper enqueueEventAddedMetric];
             eventsRecorded++;
+
+            // Persist freshly-recorded events for crash/force-quit recovery.
+            if ([NRMAFlags shouldEnableEventPersistence]) {
+                NSString *sessionId = [[NewRelicAgentInternal sharedInstance] currentSessionId] ?: @"";
+                [[NREventPersistenceController shared] recordEventWithEventUUID:event.eventUUID
+                                                                        eventType:event.eventType
+                                                                      timestampMs:(int64_t)event.timestamp
+                                                                       attributes:(NSDictionary *)[event JSONObject]
+                                                                        sessionId:sessionId
+                                                                      realAgentId:NRMA_getAgentId()];
+            }
         }
     }
     return added;
@@ -143,14 +153,9 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
     return eventsEvicted;
 }
 
-- (NSString *)createKeyForEvent:(id<NRMAAnalyticEventProtocol>)event {
-    return [NSString stringWithFormat:eventKeyFormat, event.timestamp, event.sessionElapsedTimeSeconds, event.eventType];
-}
-
 - (void)empty {
     @synchronized (events) {
         [events removeAllObjects];
-        [_persistentStore clearAll];
         totalAttemptedInserts = 0;
     }
 }
@@ -179,34 +184,21 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
         // Clear under the same lock the events were read under. Clearing after releasing it
         // also wiped any event -addEvent: inserted in between, which was never serialized.
         if (clearEvents) {
+            // Mark pending (not delete) until the harvest is confirmed successful --
+            // otherwise a successfully harvested event would be recovered again later.
+            if ([NRMAFlags shouldEnableEventPersistence]) {
+                NSMutableArray<NSString *> *eventUUIDs = [NSMutableArray arrayWithCapacity:events.count];
+                for (id<NRMAAnalyticEventProtocol> event in events) {
+                    if (event.eventUUID) {
+                        [eventUUIDs addObject:event.eventUUID];
+                    }
+                }
+                [[NREventPersistenceController shared] markEventsPendingConfirmationWithEventUUIDs:eventUUIDs];
+            }
             [self empty];
         }
     }
     return eventJsonString;
-}
-
-+ (NSString *)getLastSessionEventsFromFilename:(NSString *)filename {
-    NSDictionary *lastSessionEvents = [PersistentEventStore getLastSessionEventsFromFilename:filename];
-    NSString *lastSessionEventJsonString = nil;
-    @synchronized (lastSessionEvents) {
-        @try {
-            NSMutableArray *jsonEvents = [[NSMutableArray alloc] init];
-            for(id<NRMAAnalyticEventProtocol> event in lastSessionEvents.allValues) {
-                [jsonEvents addObject:[event JSONObject]];
-                
-                NSData *lastSessionEventJsonData = [NRMAJSON dataWithJSONObject:jsonEvents
-                                                                        options:0
-                                                                          error:nil];
-                lastSessionEventJsonString = [[NSString alloc] initWithData:lastSessionEventJsonData
-                                                                   encoding:NSUTF8StringEncoding];
-            }
-        }
-        @catch (NSException *e) {
-            NRLOG_AGENT_ERROR(@"FAILED TO CREATE LAST SESSION EVENT JSON: %@", e.reason);
-        }
-    }
-    
-    return lastSessionEventJsonString;
 }
 
 @end

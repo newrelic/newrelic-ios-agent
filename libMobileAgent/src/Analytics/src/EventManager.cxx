@@ -3,6 +3,7 @@
 #include <sstream>
 #include <array>
 #include <iostream>
+#include <iomanip>
 #include "Analytics/EventManager.hpp"
 #include <algorithm>
 #include "NetworkErrorEvent.hpp"
@@ -15,8 +16,43 @@ static const int kBufferTimeSecondsLeeway = 60; // 60 seconds
 
 namespace NewRelic {
 
-EventManager::EventManager(PersistentStore<std::string, AnalyticEvent>& store) :
-        _eventDuplicationStore(store) {
+std::shared_ptr<EventPersistenceBridge> EventManager::_persistenceBridge = nullptr;
+
+void EventManager::setPersistenceBridge(std::shared_ptr<EventPersistenceBridge> bridge) {
+    _persistenceBridge = bridge;
+}
+
+void EventManager::persistIfBridged(std::shared_ptr<AnalyticEvent> event) const {
+    if (!_persistenceBridge || !event) {
+        return;
+    }
+    std::stringstream ss;
+    ss << std::setprecision(15) << *(event->generateJSONObject());
+    _persistenceBridge->persistEvent(event->getEventUUID(), event->getEventType(), ss.str());
+}
+
+void EventManager::discardIfBridged(std::shared_ptr<AnalyticEvent> event) const {
+    if (!_persistenceBridge || !event) {
+        return;
+    }
+    _persistenceBridge->discardEvent(event->getEventUUID());
+}
+
+void EventManager::markEventsPendingConfirmationIfBridged(const std::vector<std::shared_ptr<AnalyticEvent>>& events) {
+    if (!_persistenceBridge || events.empty()) {
+        return;
+    }
+    std::vector<std::string> uuids;
+    uuids.reserve(events.size());
+    for (const auto& event : events) {
+        if (event) {
+            uuids.push_back(event->getEventUUID());
+        }
+    }
+    _persistenceBridge->markEventsPendingConfirmation(uuids);
+}
+
+EventManager::EventManager() {
 }
 
 EventManager::~EventManager() {
@@ -46,7 +82,6 @@ void EventManager::empty() {
     std::unique_lock<std::recursive_mutex> lock1(this->_eventsMutex, std::defer_lock);
     lock1.lock();
     _events.clear();
-    _eventDuplicationStore.clear();
     //we're empty so let's reset the total number of attempted inserts.
     _total_attempted_inserts = 0;
 }
@@ -80,34 +115,30 @@ EventAddResult EventManager::addEvent(std::shared_ptr<AnalyticEvent> event) {
         if (index < _events.size()) {
             //iterator the event to remove
             auto eventIterator = _events.begin() + index;
-            //remove it from the duplication store, under the same key it was stored with
-            _eventDuplicationStore.remove(EventManager::createKey(*eventIterator));
+            std::shared_ptr<AnalyticEvent> evictedEvent = *eventIterator;
             //remove it from the vector
             _events.erase(eventIterator);
             //add new event to the vector
             _events.push_back(event);
-            //insert new event into the duplication store
-            _eventDuplicationStore.store(EventManager::createKey(event), event);
             result.added = true;
             _events_recorded++;
+            persistIfBridged(event);
+            discardIfBridged(evictedEvent);
         }
-        // else: the random removal index landed outside the queue's current bounds --
-        // drop the incoming event instead of silently losing it (matches the Android
-        // agent's handling of the equivalent case).
+        // else: index landed outside the queue's bounds -- drop the incoming event instead.
         result.evicted = true;
         _events_evicted++;
     } else {
         //buffer size limit not reached
         //simply add new event to vector
         _events.push_back(event);
-        //and to duplication store.
-        _eventDuplicationStore.store(EventManager::createKey(event), event);
         if (_events.size() == 1) {
             //wait until the event is actually pushed before we assume it's the oldest event.
             _oldest_event_timestamp_ms = event->_timestamp_epoch_millis;
         }
         result.added = true;
         _events_recorded++;
+        persistIfBridged(event);
     }
     //increment the total attempted inserts.
     _total_attempted_inserts++;

@@ -17,6 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property  NSTimeInterval sessionElapsedTimeSeconds;
 @property (nonatomic, strong) NSString *eventType;
 @property (strong) NSMutableDictionary<NSString *, id> *attributes;
+@property (nonatomic, strong) NSString *eventUUID;
 
 @property (weak) id <AttributeValidatorProtocol> attributeValidator;
 

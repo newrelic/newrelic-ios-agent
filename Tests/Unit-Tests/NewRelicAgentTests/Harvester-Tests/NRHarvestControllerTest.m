@@ -19,6 +19,9 @@
 #import <NewRelic/NewRelic-Swift.h>
 #import "NRMeasurementConsumerHelper.h"
 #import "NRMAHarvestableAnalytics.h"
+#import "NRMAHarvestData.h"
+#import "NRMAAnalyticsEvents.h"
+#import "NRMAHarvestableEvent.h"
 #import "NRMASupportMetricHelper.h"
 #import "NRMATaskQueue.h"
 #import "NRMANamedValueMeasurement.h"
@@ -74,6 +77,16 @@
 @interface NRMAHarvester (test)
 - (void) clearStoredHarvesterConfiguration;
 - (NRMAHarvesterConnection*)connection;
+- (void) fireOnHarvestSuccess;
+@end
+
+@interface NRMAOnHarvestSuccessTester : NSObject <NRMAHarvestAware>
+@property (nonatomic) BOOL onHarvestSuccessCalled;
+@end
+@implementation NRMAOnHarvestSuccessTester
+- (void) onHarvestSuccess {
+    self.onHarvestSuccessCalled = YES;
+}
 @end
 
 @interface NRMAHarvestTimer (test)
@@ -319,6 +332,40 @@
     XCTAssertEqualObjects(found.value, @(expectedData.length));
 
     [NRMAMeasurements removeMeasurementConsumer:helper];
+}
+
+- (void) testAddRecoveredAnalyticsEventsAddsEventsWithoutTouchingAttributes {
+    NRMAHarvestData *harvestData = [NRMAHarvestController harvestData];
+    [harvestData clear];
+    harvestData.analyticsAttributes = @{@"existing": @"attribute"};
+
+    NSArray *recoveredEvents = @[@{@"eventType": @"RecoveredSentinel", @"timestamp": @12345}];
+    [NRMAHarvestController addRecoveredAnalyticsEvents:recoveredEvents];
+
+    XCTAssertEqual(harvestData.analyticsEvents.events.count, 1);
+    NRMAHarvestableEvent *addedEvent = harvestData.analyticsEvents.events.firstObject;
+    XCTAssertEqualObjects(addedEvent.event[@"eventType"], @"RecoveredSentinel");
+    XCTAssertEqualObjects(harvestData.analyticsAttributes, (@{@"existing": @"attribute"}),
+                          @"+addRecoveredAnalyticsEvents: must never touch analyticsAttributes");
+
+    [harvestData clear];
+}
+
+- (void) testAddRecoveredAnalyticsEventsNoopForEmptyArray {
+    NRMAHarvestData *harvestData = [NRMAHarvestController harvestData];
+    [harvestData clear];
+
+    XCTAssertNoThrow([NRMAHarvestController addRecoveredAnalyticsEvents:@[]]);
+    XCTAssertEqual(harvestData.analyticsEvents.events.count, 0);
+}
+
+- (void) testFireOnHarvestSuccessNotifiesListeners {
+    NRMAOnHarvestSuccessTester *tester = [[NRMAOnHarvestSuccessTester alloc] init];
+    [NRMAHarvestController addHarvestListener:tester];
+
+    [[[NRMAHarvestController harvestController] harvester] fireOnHarvestSuccess];
+
+    XCTAssertTrue(tester.onHarvestSuccessCalled, @"onHarvestSuccess should be dispatched to all harvest-aware listeners");
 }
 
 @end

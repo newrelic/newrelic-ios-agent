@@ -7,6 +7,7 @@
 #include <Utilities/Number.hpp>
 #include <Utilities/String.hpp>
 #include <Utilities/Boolean.hpp>
+#include <Utilities/UUID.hpp>
 
 namespace NewRelic {
 
@@ -17,7 +18,8 @@ namespace NewRelic {
             : _eventType(eventType),
               _timestamp_epoch_millis(timestamp_epoch_millis),
               _session_elapsed_time_sec(session_elapsed_time_sec),
-              _attributeValidator(attributeValidator) {
+              _attributeValidator(attributeValidator),
+              _eventUUID(UUID::createUUID().toString()) {
     }
 
 
@@ -26,6 +28,7 @@ namespace NewRelic {
         _session_elapsed_time_sec = event._session_elapsed_time_sec;
         _attributes = event._attributes;
         _attributeValidator = event._attributeValidator;
+        _eventUUID = event._eventUUID;
 
         return *this;
     }
@@ -52,7 +55,8 @@ namespace NewRelic {
             _timestamp_epoch_millis(event._timestamp_epoch_millis),
             _session_elapsed_time_sec(event._session_elapsed_time_sec),
             _attributeValidator (event._attributeValidator),
-            _attributes(event._attributes)
+            _attributes(event._attributes),
+            _eventUUID(event._eventUUID)
     {}
 
     const std::string& AnalyticEvent::getEventType() const {
@@ -64,6 +68,10 @@ namespace NewRelic {
 
     unsigned long long AnalyticEvent::getAgeInMillis() {
         return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock().now().time_since_epoch()).count() - _timestamp_epoch_millis;
+    }
+
+    const std::string& AnalyticEvent::getEventUUID() const {
+        return _eventUUID;
     }
 
     bool AnalyticEvent::insertAttribute(std::shared_ptr<AttributeBase> attribute) {

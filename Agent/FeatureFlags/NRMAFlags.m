@@ -48,7 +48,8 @@ static NSString* __deviceIdentifierReplacement = NULL;
                               NRFeatureFlag_RequestErrorEvents |
                               NRFeatureFlag_DistributedTracing |
                               NRFeatureFlag_AppStartMetrics |
-                              NRFeatureFlag_JSErrorEvents;
+                              NRFeatureFlag_JSErrorEvents |
+                              NRFeatureFlag_EventPersistence;
                   });
     return __flags;
 }
@@ -186,6 +187,10 @@ static NSString* __deviceIdentifierReplacement = NULL;
     return ([NRMAFlags featureFlags] & NRFeatureFlag_AutoCollectLogs) != 0;
 }
 
++ (BOOL) shouldEnableEventPersistence {
+    return ([NRMAFlags featureFlags] & NRFeatureFlag_EventPersistence) != 0;
+}
+
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags {
     NSMutableArray *retArray = [NSMutableArray array];
     if ((flags & NRFeatureFlag_InteractionTracing) == NRFeatureFlag_InteractionTracing) {
@@ -251,7 +256,10 @@ static NSString* __deviceIdentifierReplacement = NULL;
     if ((flags & NRFeatureFlag_AutoCollectLogs) == NRFeatureFlag_AutoCollectLogs) {
         [retArray addObject:@"AutoCollectLogs"];
     }
-    
+    if ((flags & NRFeatureFlag_EventPersistence) == NRFeatureFlag_EventPersistence) {
+        [retArray addObject:@"EventPersistence"];
+    }
+
     return retArray;
 }
 

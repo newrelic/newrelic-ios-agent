@@ -22,6 +22,9 @@
 - (NSUInteger) getEventsRecordedCount;
 - (NSUInteger) getEventsEvictedCount;
 
+// Full current session attribute set, for a session's persisted manifest.
+- (NSDictionary*) currentSessionAttributesForPersistence;
+
 - (id) initWithSessionStartTimeMS:(long long) sessionStartTime;
 
 - (BOOL) addEventNamed:(NSString*)name withAttributes:(NSDictionary*)attributes;
@@ -59,7 +62,6 @@
 
 + (void) clearDuplicationStores;
 + (NSString*) getLastSessionsAttributes;
-+ (NSString*) getLastSessionsEvents;
 - (void) clearLastSessionsAnalytics;
 
 - (BOOL) checkOfflineStatus;

@@ -12,6 +12,7 @@
 #include <Analytics/UserActionEvent.hpp>
 #include <Analytics/CustomEvent.hpp>
 #include <Analytics/PersistentStore.hpp>
+#include <Analytics/EventPersistenceBridge.hpp>
 
 #ifndef __EventManager_H_
 #define __EventManager_H_
@@ -36,7 +37,6 @@ namespace NewRelic {
     private :
         mutable std::recursive_mutex _eventsMutex;
         std::vector<std::shared_ptr<AnalyticEvent>> _events;
-        PersistentStore<std::string,AnalyticEvent>&  _eventDuplicationStore;
 
         //helper function for deserialization.
         static std::stringstream readStreamToDelimiter(std::istream& is, char delimiter);
@@ -48,7 +48,7 @@ namespace NewRelic {
         unsigned int _events_evicted = 0;
 
     public:
-        EventManager(PersistentStore<std::string,AnalyticEvent>& store);
+        EventManager();
 
         virtual ~EventManager();
 
@@ -115,6 +115,21 @@ namespace NewRelic {
         bool didExceedMaxQueueTime(unsigned long long currentTimestamp_ms); //strict check (no leeway) used for supportability metrics
         void empty(); //removes all events in _events;
         void resetTimestamp(); //resets _oldest_event_timestamp_ms to 0 (for session clear)
+
+        // One process-wide bridge, set once at agent init, mirrors LibLogger::setLogger.
+        // Null means persistence is skipped.
+        static void setPersistenceBridge(std::shared_ptr<EventPersistenceBridge> bridge);
+
+        // Called just before AnalyticsController::getEventsJSON(true) clears _events, so
+        // the persisted copies aren't deleted until the harvest is confirmed successful.
+        static void markEventsPendingConfirmationIfBridged(const std::vector<std::shared_ptr<AnalyticEvent>>& events);
+
+    private:
+        static std::shared_ptr<EventPersistenceBridge> _persistenceBridge;
+        void persistIfBridged(std::shared_ptr<AnalyticEvent> event) const;
+
+        // Called when an event is evicted from _events, so it isn't resurrected later.
+        void discardIfBridged(std::shared_ptr<AnalyticEvent> event) const;
     };
 }
 #endif
