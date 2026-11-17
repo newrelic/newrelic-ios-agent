@@ -6,6 +6,7 @@
 //
 
 import Foundation
+@_implementationOnly import NewRelicPrivate
 
 /// File-per-session persisted store for `NRSessionManifest`s, under
 /// `<storePath>/nr_session_manifest/`. Looked up directly by filename
@@ -30,7 +31,7 @@ final class NRSessionManifestStore {
 
     func store(_ manifest: NRSessionManifest) {
         queue.async { [directoryURL] in
-            guard let data = try? JSONSerialization.data(withJSONObject: manifest.dictionaryRepresentation) else {
+            guard let data = try? NRMAJSON.data(withJSONObject: manifest.dictionaryRepresentation, options: []) else {
                 NRLOG_AGENT_ERROR("NREventPersistence: failed to serialize session manifest \(manifest.sessionId)")
                 return
             }
@@ -102,7 +103,7 @@ final class NRSessionManifestStore {
 
     private static func readManifest(at url: URL) -> NRSessionManifest? {
         guard let data = try? Data(contentsOf: url),
-              let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let dict = try? NRMAJSON.jsonObject(with: data, options: []) as? [String: Any],
               let manifest = NRSessionManifest(dictionary: dict) else {
             return nil
         }

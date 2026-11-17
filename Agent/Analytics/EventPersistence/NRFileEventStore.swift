@@ -6,6 +6,7 @@
 //
 
 import Foundation
+@_implementationOnly import NewRelicPrivate
 
 /// File-per-event persisted store for `NREventRecord`s, under
 /// `<storePath>/nr_event_cache/`. Each event is its own `<eventUUID>.json` file;
@@ -28,14 +29,14 @@ final class NRFileEventStore {
 
     private func readIndex() -> [String] {
         guard let data = try? Data(contentsOf: indexFileURL),
-              let array = try? JSONSerialization.jsonObject(with: data) as? [String] else {
+              let array = try? NRMAJSON.jsonObject(with: data, options: []) as? [String] else {
             return []
         }
         return array
     }
 
     private func writeIndex(_ eventUUIDs: [String]) {
-        guard let data = try? JSONSerialization.data(withJSONObject: eventUUIDs) else { return }
+        guard let data = try? NRMAJSON.data(withJSONObject: eventUUIDs, options: []) else { return }
         try? data.write(to: indexFileURL, options: .atomic)
     }
 
@@ -55,7 +56,7 @@ final class NRFileEventStore {
 
     func store(_ record: NREventRecord) {
         queue.async { [directoryURL] in
-            guard let data = try? JSONSerialization.data(withJSONObject: record.dictionaryRepresentation) else {
+            guard let data = try? NRMAJSON.data(withJSONObject: record.dictionaryRepresentation, options: []) else {
                 NRLOG_AGENT_ERROR("NREventPersistence: failed to serialize event \(record.eventUUID)")
                 return
             }
@@ -161,7 +162,7 @@ final class NRFileEventStore {
     private static func readRecord(uuid: String, directoryURL: URL) -> NREventRecord? {
         let fileURL = directoryURL.appendingPathComponent("\(uuid).json")
         guard let data = try? Data(contentsOf: fileURL),
-              let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let dict = try? NRMAJSON.jsonObject(with: data, options: []) as? [String: Any],
               let record = NREventRecord(dictionary: dict) else {
             return nil
         }

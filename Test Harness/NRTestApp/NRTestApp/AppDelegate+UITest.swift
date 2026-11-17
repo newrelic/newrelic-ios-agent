@@ -55,6 +55,42 @@ extension AppDelegate {
         }
     }
 
+    // Headless driver for the event-persistence end-to-end UITest (NREventPersistenceUITests).
+    //
+    //   EPRun=<id>      tag for this launch; every event it records carries nrTestRun=<id>
+    //   EPCount=<n>     how many (custom + breadcrumb) event pairs to record
+    //   EPAppVersion=<v> (read in AppDelegate, before NewRelic.start)
+    //
+    // Each event also carries a unique nrTestSeq, so the stub collector can tell exactly which
+    // events arrived, and how many times. After the writes have had time to reach disk the app
+    // reports its session id to the stub (which outlives this process) -- the test then kills
+    // the app and relaunches it.
+    func runEventPersistenceScenarioIfRequested() {
+        let env = ProcessInfo.processInfo.environment
+        guard let run = env["EPRun"] else { return }
+        let count = Int(env["EPCount"] ?? "") ?? 0
+
+        // Delay so NewRelic.start() has finished starting the session.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            for i in 0..<count {
+                NewRelic.recordCustomEvent("NRTestCustom",
+                                           attributes: ["nrTestRun": run, "nrTestSeq": "custom-\(i)", "orderId": "ABC\(i)"])
+                NewRelic.recordBreadcrumb("NRTestBreadcrumb",
+                                          attributes: ["nrTestRun": run, "nrTestSeq": "breadcrumb-\(i)"])
+            }
+            NSLog("[NRTestApp] EventPersistenceScenario: recorded \(count * 2) event(s) for run \(run)")
+
+            // Persistence writes are asynchronous; let them land before reporting "recorded".
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                var components = URLComponents(string: "http://localhost:\(NRCaptureServer.port)/ep/recorded")!
+                components.queryItems = [URLQueryItem(name: "run", value: run),
+                                         URLQueryItem(name: "sessionId", value: NewRelic.currentSessionId() ?? ""),
+                                         URLQueryItem(name: "count", value: "\(count * 2)")]
+                URLSession.shared.dataTask(with: components.url!).resume()
+            }
+        }
+    }
+
     // Headless driver for GitHub issue #884 / NR-614312: the reporter's suggested
     // repro -- "call recordError in a tight loop ... while the device is nearly out
     // of memory, so that the allocations inside HexStore::store and

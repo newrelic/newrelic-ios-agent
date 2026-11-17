@@ -144,3 +144,79 @@ final class NRTestAppTests: XCTestCase, URLAuthenticationChallengeSender {
         await fulfillment(of: [promise], timeout: 5)
     }
 }
+
+// MARK: - Capture server: recovered events
+
+final class CaptureServerRecoveredEventChecksTests: XCTestCase {
+
+    private let t0 = Date(timeIntervalSinceReferenceDate: 1_000)
+
+    private func dataCapture(at offset: TimeInterval, session: String, events: [[String: Any]]) -> CapturedRequest {
+        let body: [Any] = [[1, 2], [], 0, [], [], [], [], [], ["sessionId": session], events]
+        let data = try! JSONSerialization.data(withJSONObject: body)
+        return CapturedRequest(timestamp: t0.addingTimeInterval(offset), endpoint: "/mobile/v3/data",
+                               headers: [:], queryParams: [], decodedBody: data, prettyJSON: "")
+    }
+
+    private func checks(_ captures: [CapturedRequest]) -> [UUID: VerificationCheck] {
+        NRCaptureServer.recoveredEventChecks(for: captures.reversed())   // newest-first, like verifyAll
+    }
+
+    private func live(_ type: String, ts: Int, seq: String) -> [String: Any] {
+        ["eventType": type, "timestamp": ts, "nrTestSeq": seq]
+    }
+
+    private func recovered(_ type: String, ts: Int, seq: String, session: String) -> [String: Any] {
+        ["eventType": type, "timestamp": ts, "nrTestSeq": seq, "sessionId": session, "appVersion": "1.0"]
+    }
+
+    func testUploadWithoutRecoveredEventsHasNoCheck() {
+        let c = dataCapture(at: 0, session: "S2", events: [live("NRTestCustom", ts: 1, seq: "a")])
+        XCTAssertTrue(checks([c]).isEmpty)
+    }
+
+    func testRecoveredEventsPassAndNameTheirOriginatingSession() {
+        let c = dataCapture(at: 0, session: "S2", events: [recovered("NRTestCustom", ts: 1, seq: "a", session: "S1")])
+        let check = checks([c])[c.id]
+        XCTAssertEqual(check?.passed, true)
+        XCTAssertTrue(check?.detail?.contains("S1") == true)
+    }
+
+    func testRecoveredEventAlreadyDeliveredLiveInAnEarlierUploadFails() {
+        let first = dataCapture(at: 0, session: "S1", events: [live("NRTestCustom", ts: 1, seq: "a")])
+        let second = dataCapture(at: 30, session: "S2", events: [recovered("NRTestCustom", ts: 1, seq: "a", session: "S1")])
+        XCTAssertEqual(checks([first, second])[second.id]?.passed, false)
+    }
+
+    func testRecoveredEventDeliveredTwiceAcrossUploadsFails() {
+        let e = recovered("NRTestCustom", ts: 1, seq: "a", session: "S1")
+        let first = dataCapture(at: 0, session: "S2", events: [e])
+        let second = dataCapture(at: 30, session: "S2", events: [e])
+        XCTAssertEqual(checks([first, second])[first.id]?.passed, true)
+        XCTAssertEqual(checks([first, second])[second.id]?.passed, false)
+    }
+
+    func testDifferentEventsWithTheSameTimestampAreNotDuplicates() {
+        let first = dataCapture(at: 0, session: "S1", events: [live("NRTestCustom", ts: 1, seq: "a")])
+        let second = dataCapture(at: 30, session: "S2", events: [recovered("NRTestCustom", ts: 1, seq: "b", session: "S1")])
+        XCTAssertEqual(checks([first, second])[second.id]?.passed, true)
+    }
+}
+
+// MARK: - Capture server: persistence across launches
+
+final class PersistedCaptureTests: XCTestCase {
+    func testCaptureSurvivesEncodeDecodeWithLaunchAndBody() throws {
+        var original = CapturedRequest(timestamp: Date(timeIntervalSinceReferenceDate: 5), endpoint: "/mobile/v3/data",
+                                       headers: ["a": "b"], queryParams: [("k", "v")],
+                                       decodedBody: Data([1, 2, 3]), prettyJSON: "{}")
+        original.launch = 2
+        let data = try JSONEncoder().encode([PersistedCapture(original)])
+        let restored = try JSONDecoder().decode([PersistedCapture].self, from: data)[0].capture
+        XCTAssertEqual(restored.id, original.id)
+        XCTAssertEqual(restored.launch, 2)
+        XCTAssertEqual(restored.decodedBody, Data([1, 2, 3]))
+        XCTAssertEqual(restored.queryParams.first?.0, "k")
+        XCTAssertEqual(restored.queryParams.first?.1, "v")
+    }
+}
