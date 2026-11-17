@@ -42,6 +42,9 @@ static NSMutableArray *deferredMetrics;
 + (void) enqueueJSErrorUploadThrottledMetric;
 + (void) enqueueJSErrorFailedUploadMetric;
 
++ (void) enqueueRetrySuccessMetric:(NSString*)endpoint;
++ (void) enqueueRetryFailedMetric:(NSString*)endpoint;
+
 + (void) enqueueKMMDetectionMetric;
 
 // Events (queue lifecycle) supportability metrics -- Android parity (NR-478730)

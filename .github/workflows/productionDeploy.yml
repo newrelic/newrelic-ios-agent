@@ -9,22 +9,31 @@ on:
 permissions:
   contents: read
 
+env:
+  # Install exactly what Gemfile.lock pins; fail if the lockfile is out of date.
+  BUNDLE_FROZEN: "true"
+
 jobs:
   # The deployS3Production job copies the existing build from staging download location to the production download location.
   # The job relies on the existence of the xcframework desired for production promotion at the staging download location url: https://download.newrelic.com/ios-v5/${{ env.version }}.zip
   # inputs: version (String): The version number to promote to production. (ex 7.4.0)
   deployS3Production:
     name: deployS3Production
-    runs-on: macos-15
+    runs-on: xcode-27
     if: github.ref == 'refs/heads/main'
+    # OIDC trust on the AWS role is pinned to this environment.
+    environment: s3-publish
+    permissions:
+      contents: read
+      id-token: write
     outputs:
       version: ${{ steps.setOutput.outputs.version }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
       
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199 # v1.338.0
         with:
           ruby-version: '3.2'
           bundler-cache: false
@@ -32,9 +41,6 @@ jobs:
       - name: Install Bundler 2.7.2
         run: gem install bundler:2.7.2
       
-      - name: Update gem
-        run: bundle update
-
       - name: Install gems
         run: bundle install
 
@@ -45,17 +51,19 @@ jobs:
         name: Print name
         run: echo "version=${{ env.version }}"  >> $GITHUB_OUTPUT
 
+      - name: Configure AWS credentials via GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
       - name: Deploy to production S3
         run: "aws s3 cp s3://nr-downloads-main/ios-v5/NewRelic_XCFramework_Agent_${{ env.version }}.zip s3://nr-downloads-main/ios_agent/ --copy-props none"
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
 
   # The deployProductionSpecs job creates the prod Podspec and Prod Package.swift from template and pushes to cp trunk.
   deployProductionSpecs:
     name: deployProductionSpecs
-    runs-on: macos-14
+    runs-on: xcode-27
     needs: [deployS3Production]
     if: github.ref == 'refs/heads/main'
     permissions:
@@ -63,17 +71,17 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout Main repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: main
 
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199 # v1.338.0
         with:
           ruby-version: '3.2'
           bundler-cache: false
 
       - name: Checkout SPM
-        uses: actions/checkout@v3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: newrelic/newrelic-ios-agent-spm
           token: ${{ secrets.SPM_PAT }}
@@ -85,20 +93,13 @@ jobs:
       - name: Print XCFramework name
         run: echo "${{ env.version }}"
 
-      - name: Create Prod Podspec for XCFramework version
+      - name: Publish Prod Podspec for XCFramework version
         continue-on-error: true
-        run: |
-          cd main
-
-          cp cocoapods/NewRelicAgent.podspec.template NewRelicAgent.podspec
-          REPLACE=X.XX
-          sed -i bak "s/$REPLACE/${{ env.version }}/g" NewRelicAgent.podspec
-
-          rm NewRelicAgent.podspecbak
-
-          pod trunk push --allow-warnings NewRelicAgent.podspec
-        env:
-          COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
+        uses: ./main/.github/actions/publish-cocoapods
+        with:
+          version: ${{ env.version }}
+          trunk-token: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
+          working-directory: main
 
       - name: Create Prod Package.swift for XCFramework version
         run: |
@@ -131,7 +132,7 @@ jobs:
         # The following step creates a PR containing that new NewRelicAgent.podspec and Package.swift file at the root of the repo.
         # Since production builds are infrequent this creates a PR that must be manually approved and merged.
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
+        uses: peter-evans/create-pull-request@15733dbdfeedb4f7fdb73d13c6f5ac83b710fab8 # v8.1.2
         with:
           path: main
           title: "[${{ env.version }}] Production Release"
@@ -142,105 +143,105 @@ jobs:
   # release notes accumulated on the docs-website `next` branch as the body.
   # `gh release create <tag>` creates the tag at the target commit if it does
   # not already exist, satisfying both the "tag the repo" and "make a Release" asks.
-  createGithubRelease:
-    name: createGithubRelease
-    runs-on: ubuntu-latest
-    needs: [deployS3Production, deployProductionSpecs]
-    if: github.ref == 'refs/heads/main'
-    permissions:
-      contents: write
-    env:
-      DOCS_REPO: newrelic/docs-website
-      DOCS_HEAD: next
-      # Keep in sync with append-docs-release-notes.yml DOCS_FILE.
-      DOCS_FILE: src/content/docs/release-notes/mobile-release-notes/ios-release-notes/ios-agent-next.mdx
-      VERSION_STRING: ${{ needs.deployS3Production.outputs.version }}
-    steps:
-      - name: Checkout docs-website (next branch) for release-notes body
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ env.DOCS_REPO }}
-          token: ${{ secrets.DOCS_WEBSITE_PAT }}
-          ref: ${{ env.DOCS_HEAD }}
-          fetch-depth: 1
-          path: docs-website
+  # createGithubRelease:
+  #   name: createGithubRelease
+  #   runs-on: ubuntu-latest
+  #   needs: [deployS3Production, deployProductionSpecs]
+  #   if: github.ref == 'refs/heads/main'
+  #   permissions:
+  #     contents: write
+  #   env:
+  #     DOCS_REPO: newrelic/docs-website
+  #     DOCS_HEAD: next
+  #     # Keep in sync with append-docs-release-notes.yml DOCS_FILE.
+  #     DOCS_FILE: src/content/docs/release-notes/mobile-release-notes/ios-release-notes/ios-agent-next.mdx
+  #     VERSION_STRING: ${{ needs.deployS3Production.outputs.version }}
+  #   steps:
+  #     - name: Checkout docs-website (next branch) for release-notes body
+  #       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+  #       with:
+  #         repository: ${{ env.DOCS_REPO }}
+  #         token: ${{ secrets.DOCS_WEBSITE_PAT }}
+  #         ref: ${{ env.DOCS_HEAD }}
+  #         fetch-depth: 1
+  #         path: docs-website
 
-      - name: Build release body from release-notes mdx
-        run: |
-          set -euo pipefail
-          SRC="docs-website/${DOCS_FILE}"
-          # Strip the YAML frontmatter (everything up to and including the 2nd
-          # `---`), leaving the "New in this release" / "Fixed in this release"
-          # sections as the GitHub Release body.
-          awk 'done==1 {print} /^---[[:space:]]*$/ {c++; if (c==2) done=1}' "$SRC" > release-body.md
-          echo "----- release body -----"
-          cat release-body.md
+  #     - name: Build release body from release-notes mdx
+  #       run: |
+  #         set -euo pipefail
+  #         SRC="docs-website/${DOCS_FILE}"
+  #         # Strip the YAML frontmatter (everything up to and including the 2nd
+  #         # `---`), leaving the "New in this release" / "Fixed in this release"
+  #         # sections as the GitHub Release body.
+  #         awk 'done==1 {print} /^---[[:space:]]*$/ {c++; if (c==2) done=1}' "$SRC" > release-body.md
+  #         echo "----- release body -----"
+  #         cat release-body.md
 
-      - name: Create GitHub Release and tag
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          gh release create "$VERSION_STRING" \
-            --repo "${{ github.repository }}" \
-            --target main \
-            --title "iOS Agent $VERSION_STRING" \
-            --notes-file release-body.md
+  #     - name: Create GitHub Release and tag
+  #       env:
+  #         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       run: |
+  #         set -euo pipefail
+  #         gh release create "$VERSION_STRING" \
+  #           --repo "${{ github.repository }}" \
+  #           --target main \
+  #           --title "iOS Agent $VERSION_STRING" \
+  #           --notes-file release-body.md
 
   # Finalizes the accumulated docs-website release notes: fills in the
   # {VERSION-STRING} and {RELEASE-DATE} placeholders (sourced from the production
   # `version` input and the current date), then marks the draft PR ready for review.
-  finalizeDocsReleaseNotes:
-    name: finalizeDocsReleaseNotes
-    runs-on: ubuntu-latest
-    needs: [deployS3Production, deployProductionSpecs]
-    if: github.ref == 'refs/heads/main'
-    env:
-      DOCS_REPO: newrelic/docs-website
-      DOCS_BASE: develop
-      DOCS_HEAD: next
-      # Keep in sync with append-docs-release-notes.yml DOCS_FILE.
-      DOCS_FILE: src/content/docs/release-notes/mobile-release-notes/ios-release-notes/ios-agent-next.mdx
-      VERSION_STRING: ${{ needs.deployS3Production.outputs.version }}
-      BOT_EMAIL: ${{ secrets.BOT_EMAIL }}
-    steps:
-      - name: Checkout docs-website (next branch)
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ env.DOCS_REPO }}
-          token: ${{ secrets.DOCS_WEBSITE_PAT }}
-          ref: ${{ env.DOCS_HEAD }}
-          fetch-depth: 0
+  # finalizeDocsReleaseNotes:
+  #   name: finalizeDocsReleaseNotes
+  #   runs-on: ubuntu-latest
+  #   needs: [deployS3Production, deployProductionSpecs]
+  #   if: github.ref == 'refs/heads/main'
+  #   env:
+  #     DOCS_REPO: newrelic/docs-website
+  #     DOCS_BASE: develop
+  #     DOCS_HEAD: next
+  #     # Keep in sync with append-docs-release-notes.yml DOCS_FILE.
+  #     DOCS_FILE: src/content/docs/release-notes/mobile-release-notes/ios-release-notes/ios-agent-next.mdx
+  #     VERSION_STRING: ${{ needs.deployS3Production.outputs.version }}
+  #     BOT_EMAIL: ${{ secrets.BOT_EMAIL }}
+  #   steps:
+  #     - name: Checkout docs-website (next branch)
+  #       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+  #       with:
+  #         repository: ${{ env.DOCS_REPO }}
+  #         token: ${{ secrets.DOCS_WEBSITE_PAT }}
+  #         ref: ${{ env.DOCS_HEAD }}
+  #         fetch-depth: 0
 
-      - name: Set release date
-        run: echo "RELEASE_DATE=$(date -u +%Y-%m-%d)" >> "$GITHUB_ENV"
+  #     - name: Set release date
+  #       run: echo "RELEASE_DATE=$(date -u +%Y-%m-%d)" >> "$GITHUB_ENV"
 
-      - name: Fill in version and release date placeholders
-        run: |
-          set -euo pipefail
-          sed -i \
-            -e "s/{VERSION-STRING}/${VERSION_STRING}/g" \
-            -e "s/{RELEASE-DATE}/${RELEASE_DATE}/g" \
-            "$DOCS_FILE"
-          echo "----- finalized frontmatter -----"
-          head -n 6 "$DOCS_FILE"
+  #     - name: Fill in version and release date placeholders
+  #       run: |
+  #         set -euo pipefail
+  #         sed -i \
+  #           -e "s/{VERSION-STRING}/${VERSION_STRING}/g" \
+  #           -e "s/{RELEASE-DATE}/${RELEASE_DATE}/g" \
+  #           "$DOCS_FILE"
+  #         echo "----- finalized frontmatter -----"
+  #         head -n 6 "$DOCS_FILE"
 
-      - name: Commit and push finalized release notes
-        run: |
-          set -euo pipefail
-          git config user.name "newrelic-mobile-agent-bot"
-          git config user.email "${{ env.BOT_EMAIL }}"
-          git add "$DOCS_FILE"
-          if git diff --staged --quiet; then
-            echo "No changes to commit (placeholders already filled)."
-          else
-            git commit -m "chore(release): finalize iOS agent ${VERSION_STRING} release notes"
-            git push origin "$DOCS_HEAD"
-          fi
+  #     - name: Commit and push finalized release notes
+  #       run: |
+  #         set -euo pipefail
+  #         git config user.name "newrelic-mobile-agent-bot"
+  #         git config user.email "${{ env.BOT_EMAIL }}"
+  #         git add "$DOCS_FILE"
+  #         if git diff --staged --quiet; then
+  #           echo "No changes to commit (placeholders already filled)."
+  #         else
+  #           git commit -m "chore(release): finalize iOS agent ${VERSION_STRING} release notes"
+  #           git push origin "$DOCS_HEAD"
+  #         fi
 
-      - name: Mark docs release-notes PR ready for review
-        env:
-          GH_TOKEN: ${{ secrets.DOCS_WEBSITE_PAT }}
-        run: |
-          set -euo pipefail
-          gh pr ready "$DOCS_HEAD" --repo "$DOCS_REPO"
+  #     - name: Mark docs release-notes PR ready for review
+  #       env:
+  #         GH_TOKEN: ${{ secrets.DOCS_WEBSITE_PAT }}
+  #       run: |
+  #         set -euo pipefail
+  #         gh pr ready "$DOCS_HEAD" --repo "$DOCS_REPO"

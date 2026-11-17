@@ -52,9 +52,7 @@
     XCTAssertEqual([event[@"timestamp"] doubleValue], timestamp);
     XCTAssertEqual([event[@"timeSinceLoad"] unsignedLongLongValue], elapsedTime);
     
-    NSDictionary* dict = event[@"payload"];
-    NSDictionary* dict2 = [payload JSONObject];
-    XCTAssertEqualObjects(dict, dict2);
+    XCTAssertNil(event[@"payload"], @"the payload must not be serialized as an event attribute");
     XCTAssertEqualObjects(event[@"eventType"], eventType);
 }
 

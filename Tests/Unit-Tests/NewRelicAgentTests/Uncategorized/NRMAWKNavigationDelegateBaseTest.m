@@ -16,9 +16,13 @@
 #import "NRMeasurementConsumerHelper.h"
 #import "NRMAMeasurements.h"
 #import "NRMAHTTPTransactionMeasurement.h"
+#import "NRMAWebViewSupportability.h"
+#import "NRMANamedValueMeasurement.h"
+#import "NRConstants.h"
 
 @interface NRMATaskQueue (tests)
 + (void) clear;
++ (dispatch_queue_t) dispatchQueue;
 @end
 
 @interface NRMAWKNavigationDelegateWithDelegateFunctions : NSObject <WKNavigationDelegate>
@@ -38,6 +42,7 @@
 @interface NRWKNavigationDelegateBase ()
 - (instancetype) initWithOriginalDelegate:(NSObject<WKNavigationDelegate>* __nullable __weak)delegate;
 + (NSURL*) navigationURL:(WKNavigation*) nav;
++ (NSURL*) currentURLForWebView:(WKWebView*) webView;
 + (NRTimer*) navigationTimer:(WKNavigation*) nav;
 + (void) navigation:(WKNavigation*)nav setURL:(NSURL*)url;
 + (void) navigation:(WKNavigation*)nav setTimer:(NRTimer*)timer;
@@ -97,6 +102,14 @@
     [NRMAMeasurements removeMeasurementConsumer:self.helper];
     self.helper = nil;
     [NRMAMeasurements shutdown];
+    
+    // Each WKWebView launches its own WebContent process, and XCTest keeps this test case
+    // instance (and so these properties) alive after the test ends. Release them here, or
+    // this class leaves ~40 web content processes running, enough to slow WebKit and the
+    // agent's background queues to a crawl on a CI runner.
+    self.webView = nil;
+    self.webViewWithDelegateFunction = nil;
+    self.webViewWithOldDelegateFunction = nil;
     
     [super tearDown];
 }
@@ -259,18 +272,10 @@
     [self startWebKitLoad];
     
     [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction didFinishNavigation:self.navigationItem];
-    sleep(1);
     
     NSString* fullMetricName = self.url.absoluteString;
     
-    NRMAHTTPTransactionMeasurement* foundMeasurement;
-    
-    for (id measurement in self.helper.consumedMeasurements) {
-        if([((NRMAHTTPTransactionMeasurement*)measurement).url isEqualToString:fullMetricName]) {
-            foundMeasurement = measurement;
-            break;
-        }
-    }
+    NRMAHTTPTransactionMeasurement* foundMeasurement = [self waitForMeasurementWithURL:fullMetricName statusCode:200 errorCode:0];
     
     XCTAssertEqualObjects(foundMeasurement.url, fullMetricName, @"Metric is not generated properly.");
 }
@@ -278,19 +283,12 @@
 - (void)testWebViewLoadFailedProvisionalNavigationMetric {
     [self startWebKitLoad];
     
-    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webView didFailProvisionalNavigation:self.navigationItem withError:[self createNSError]];
-    sleep(1);
+    NSError* error = [self createNSError];
+    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webView didFailProvisionalNavigation:self.navigationItem withError:error];
     
     NSString* fullMetricName = self.url.absoluteString;
     
-    NRMAHTTPTransactionMeasurement* foundMeasurement;
-    
-    for (id measurement in self.helper.consumedMeasurements) {
-        if([((NRMAHTTPTransactionMeasurement*)measurement).url isEqualToString:fullMetricName]) {
-            foundMeasurement = measurement;
-            break;
-        }
-    }
+    NRMAHTTPTransactionMeasurement* foundMeasurement = [self waitForMeasurementWithURL:fullMetricName statusCode:0 errorCode:(int)error.code];
     
     XCTAssertEqualObjects(foundMeasurement.url, fullMetricName, @"Metric is not generated properly.");
     
@@ -299,19 +297,12 @@
 - (void)testWebViewLoadDidFailNavigationMetric {
     [self startWebKitLoad];
     
-    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webView didFailNavigation:self.navigationItem withError:[self createNSError]];
-    sleep(1);
+    NSError* error = [self createNSError];
+    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webView didFailNavigation:self.navigationItem withError:error];
     
     NSString* fullMetricName = self.url.absoluteString;
     
-    NRMAHTTPTransactionMeasurement* foundMeasurement;
-    
-    for (id measurement in self.helper.consumedMeasurements) {
-        if([((NRMAHTTPTransactionMeasurement*)measurement).url isEqualToString:fullMetricName]) {
-            foundMeasurement = measurement;
-            break;
-        }
-    }
+    NRMAHTTPTransactionMeasurement* foundMeasurement = [self waitForMeasurementWithURL:fullMetricName statusCode:0 errorCode:(int)error.code];
     
     XCTAssertEqualObjects(foundMeasurement.url, fullMetricName, @"Metric is not generated properly.");
     
@@ -320,8 +311,44 @@
 - (void) startWebKitLoad {
     NSURLRequest* urlRequest = [[NSURLRequest alloc] initWithURL:self.url];
     [self.webViewWithDelegateFunction loadRequest:urlRequest];
-    
+
+    // WebKit resolves the load asynchronously on the main run loop (-URL and the
+    // decidePolicyForNavigationAction callback the agent captures the URL from),
+    // so spin it until the agent can see the URL before driving the delegate by hand.
+    NSDate* deadline = [NSDate dateWithTimeIntervalSinceNow:5.0];
+    while ([NRWKNavigationDelegateBase currentURLForWebView:self.webViewWithDelegateFunction] == nil &&
+           [NSDate.date compare:deadline] == NSOrderedAscending) {
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.05]];
+    }
+
     [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction didStartProvisionalNavigation:self.navigationItem];
+}
+
+// The agent records the measurement asynchronously (a global-queue hop, then the
+// NRMATaskQueue), which can take well over a second on a loaded CI runner, so poll for it
+// rather than sleeping a fixed interval. Match the codes as well as the URL: the web view's
+// real load of self.url is recorded too, and a previous test's measurement can arrive late,
+// and neither may stand in for the one this test drove by hand.
+- (NRMAHTTPTransactionMeasurement*) waitForMeasurementWithURL:(NSString*)url
+                                                   statusCode:(int)statusCode
+                                                    errorCode:(int)errorCode {
+    NSDate* deadline = [NSDate dateWithTimeIntervalSinceNow:15.0];
+    while ([NSDate.date compare:deadline] == NSOrderedAscending) {
+        // The helper appends to consumedMeasurements on the NRMATaskQueue dispatch queue.
+        __block NSArray* measurements;
+        dispatch_sync([NRMATaskQueue dispatchQueue], ^{
+            measurements = [self.helper.consumedMeasurements copy];
+        });
+        for (NRMAHTTPTransactionMeasurement* measurement in measurements) {
+            if ([measurement.url isEqualToString:url] &&
+                measurement.statusCode == statusCode &&
+                measurement.errorCode == errorCode) {
+                return measurement;
+            }
+        }
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+    }
+    return nil;
 }
 
 - (NSError*) createNSError {
@@ -375,6 +402,114 @@
 
 - (void)webViewWebContentProcessDidTerminate:(WKWebView *)webView {
     self.didTerminateCalled = YES;
+}
+
+@end
+
+// ---------------------------------------------------------------------------
+#pragma mark - NRMAWebViewBrowserAgentDetectionTests
+
+@interface NRMAWebViewBrowserAgentDetectionTests : XCTestCase
+@property (strong) NRMAMeasurementConsumerHelper *helper;
+@end
+
+@implementation NRMAWebViewBrowserAgentDetectionTests
+
+- (void)setUp {
+    [super setUp];
+    [NRMATaskQueue clear];
+    self.helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
+    [NRMAMeasurements initializeMeasurements];
+    [NRMAMeasurements addMeasurementConsumer:self.helper];
+}
+
+- (void)tearDown {
+    [NRMAMeasurements removeMeasurementConsumer:self.helper];
+    self.helper = nil;
+    [NRMAMeasurements shutdown];
+    [super tearDown];
+}
+
+- (void)testDetectionRecordsMetricWhenBrowserAgentPresent {
+    // A non-zero frame keeps the WebView from being treated as having nothing to display.
+    WKWebView *webView = [[WKWebView alloc] initWithFrame:CGRectMake(0, 0, 320, 480)];
+    [webView loadHTMLString:@"<html><body><script>window.newrelic = {}</script></body></html>" baseURL:nil];
+
+    // CI runners (e.g. GitHub Actions macOS) can be slow to spin up WebKit's WebContent
+    // process on a cold start (launches of over 20s have been seen there), so give the
+    // initial load a generous timeout rather than the ~5s that's plenty locally but
+    // flakes under CI load.
+    NSDate *loadDeadline = [NSDate dateWithTimeIntervalSinceNow:60.0];
+    while (webView.isLoading && [NSDate.date compare:loadDeadline] == NSOrderedAscending) {
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+    }
+    XCTAssertFalse(webView.isLoading, @"WebView timed out while loading");
+
+    [NRMAWebViewSupportability startBrowserAgentDetection:webView];
+
+    // Poll until the specific browser agent metric arrives (ignore other NRMANamedValueMeasurements
+    // such as memory/CPU produced by NRMANamedValueProducer while the run loop spins). Give this a
+    // generous deadline too: each evaluateJavaScript: round-trip in NRMAWebViewSupportability's own
+    // polling can itself be slow on a loaded-down CI runner, pushing out its 8-attempt/2s budget.
+    NSDate *detectDeadline = [NSDate dateWithTimeIntervalSinceNow:15.0];
+    NRMANamedValueMeasurement *found = nil;
+    while (!found && [NSDate.date compare:detectDeadline] == NSOrderedAscending) {
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+        [NRMATaskQueue synchronousDequeue];
+        for (NRMANamedValueMeasurement *m in self.helper.consumedMeasurements) {
+            if ([m.name isEqualToString:kNRMAWebViewBrowserAgentDetectedMetric]) {
+                found = m;
+                break;
+            }
+        }
+    }
+
+    XCTAssertNotNil(found, @"Browser agent detection metric should be recorded");
+    XCTAssertEqualObjects(found.name, kNRMAWebViewBrowserAgentDetectedMetric);
+}
+
+- (void)testDetectionDoesNotRecordMetricWhenBrowserAgentAbsent {
+    // Use an unloaded WKWebView — it has no JavaScript context that could define
+    // window.newrelic, eliminating the unreliable page-load wait and any chance of
+    // picking up injected scripts.  evaluateJavaScript: on an unloaded WebView either
+    // errors immediately (our handler returns early) or evaluates to false; neither
+    // path records the metric.
+    WKWebView *webView = [[WKWebView alloc] init];
+
+    [NRMAWebViewSupportability startBrowserAgentDetection:webView];
+
+    // Spin long enough for all 8 polling attempts to exhaust (8 × 250 ms = 2 s).
+    NSDate *pollDeadline = [NSDate dateWithTimeIntervalSinceNow:2.5];
+    while ([NSDate.date compare:pollDeadline] == NSOrderedAscending) {
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+        [NRMATaskQueue synchronousDequeue];
+    }
+
+    BOOL browserAgentMetricRecorded = NO;
+    for (NRMANamedValueMeasurement *m in self.helper.consumedMeasurements) {
+        if ([m.name isEqualToString:kNRMAWebViewBrowserAgentDetectedMetric]) {
+            browserAgentMetricRecorded = YES;
+            break;
+        }
+    }
+    XCTAssertFalse(browserAgentMetricRecorded, @"Browser agent detection metric should not be recorded when browser agent is absent");
+}
+
+- (void)testDetectionDoesNotRetainWebView {
+    __weak WKWebView *weakRef = nil;
+
+    @autoreleasepool {
+        WKWebView *webView = [[WKWebView alloc] init];
+        weakRef = webView;
+        [NRMAWebViewSupportability startBrowserAgentDetection:webView];
+        // webView's only strong owner goes out of scope here
+    }
+
+    // Spin the run loop to let any in-flight dispatch_after blocks fire and release.
+    // The blocks capture weakWebView weakly, so they cannot keep the WKWebView alive.
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.3]];
+
+    XCTAssertNil(weakRef, @"Detection polling must not hold a strong reference to WKWebView");
 }
 
 @end

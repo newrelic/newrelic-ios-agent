@@ -9,9 +9,6 @@
 #include <memory>
 
 
-#define __FILENAME__ (strrchr(__FILE__, '/') != NULL ? strrchr(__FILE__, '/') + 1 : __FILE__)
-
-
 namespace NewRelic {
     class LibLogger {
     public:
@@ -31,13 +28,14 @@ namespace NewRelic {
                         unsigned line,
                         const char* method,
                         const char* format,
-                        ...);
+                        ...) __attribute__((format(printf, 5, 6)));
 
         static void setLogger(std::shared_ptr<LoggerBridge> bridge);
     };
 
+// __FILE__ here would embed the absolute build-machine path in the compiled binary.
 #define LLOG(level, format, ...) \
-    LibLogger::log(level,__FILENAME__ ,__LINE__,__FUNCTION__,format, ##__VA_ARGS__)
+    LibLogger::log(level,__FILE_NAME__ ,__LINE__,__FUNCTION__,format, ##__VA_ARGS__)
 
 #define LLOG_ERROR(format,...) LLOG(LibLogger::LLogLevel::LLogLevelError,format, ##__VA_ARGS__)
 #define LLOG_WARNING(format,...) LLOG(LibLogger::LLogLevel::LLogLevelWarning, format, ##__VA_ARGS__)

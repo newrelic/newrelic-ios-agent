@@ -101,6 +101,10 @@ static NRMAURLTransformer* urlTransformer;
 @property(nonatomic, strong) NRMAAppInstallMetricGenerator* appInstallMetricGenerator;
 @property(nonatomic, strong) NRMAAppUpgradeMetricGenerator* appUpgradeMetricGenerator;
 
+#if TARGET_OS_IOS
+@property(atomic, strong, nullable) JSErrorController* jsErrorController;
+#endif
+
 - (void) applicationWillEnterForeground;
 #if !TARGET_OS_WATCH
 - (void) applicationWillEnterForeground:(UIApplication*)application;
@@ -150,6 +154,14 @@ static NewRelicAgentInternal* _sharedInstance;
     return urlTransformer;
 }
 - (void) setMaxEventBufferTime:(unsigned int)seconds {
+    if (seconds < kNRMA_MinEventBufferTimeSeconds) {
+        NRLOG_AGENT_WARNING(@"setMaxEventBufferTime: value %u is less than the minimum of %u seconds. Defaulting to %u seconds.", seconds, kNRMA_MinEventBufferTimeSeconds, kNRMA_MinEventBufferTimeSeconds);
+        seconds = kNRMA_MinEventBufferTimeSeconds;
+    } else if (seconds > kNRMA_MaxEventBufferTimeSeconds) {
+        NRLOG_AGENT_WARNING(@"setMaxEventBufferTime: value %u is greater than the maximum of %u seconds. Defaulting to %u seconds.", seconds, kNRMA_MaxEventBufferTimeSeconds, kNRMA_MaxEventBufferTimeSeconds);
+        seconds = kNRMA_MaxEventBufferTimeSeconds;
+    }
+
     [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityPrefix@"/API/setMaxBufferTime"
                                                     value:@1
                                                     scope:@""]];
@@ -161,6 +173,13 @@ static NewRelicAgentInternal* _sharedInstance;
 
 }
 - (void) setMaxEventPoolSize:(unsigned int)size {
+    if (size < kNRMA_MinEventPoolSize) {
+        NRLOG_AGENT_WARNING(@"setMaxEventPoolSize: value %u is less than the minimum of %u. Defaulting to %u.", size, kNRMA_MinEventPoolSize, kNRMA_MinEventPoolSize);
+        size = kNRMA_MinEventPoolSize;
+    } else if (size > kNRMA_MaxEventPoolSize) {
+        NRLOG_AGENT_WARNING(@"setMaxEventPoolSize: value %u is greater than the recommended maximum of %u.", size, kNRMA_MaxEventPoolSize);
+    }
+
     [NRMASupportMetricHelper enqueueBufferPoolSizeConfiguration:size];
     // TODO clean up references to poolsize/buffersize. Lets pick one and stick with it throughout our code.
     // Note: the name for the metric representing "PoolSize" will change throught the code. Occasianally referenced as 'PoolSize' or 'BufferSize'
@@ -500,9 +519,9 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
                                                  name:kNRMemoryUsageDidChangeNotification
                                                object:nil];
 
-    [self.analyticsController setNRSessionAttribute:@"uuid"
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_uuid
                                               value:[NewRelicInternalUtils deviceId]];
-    [self.analyticsController setNRSessionAttribute:@"osName"
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_osName
                                               value:[NewRelicInternalUtils osName]];
 
 #if TARGET_OS_WATCH
@@ -519,18 +538,18 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         systemVersion = @"unknown";
     }
 
-    [self.analyticsController setNRSessionAttribute:@"osMajorVersion"
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_osMajorVersion
                                               value:majorVersion];
-    [self.analyticsController setNRSessionAttribute:@"osVersion"
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_osVersion
                                               value:systemVersion];
-    [self.analyticsController setNRSessionAttribute:@"deviceManufacturer"
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_deviceManufacturer
                                               value:@"Apple Inc."];
-    [self.analyticsController setNRSessionAttribute:@"deviceModel"
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_deviceModel
                                               value:[NewRelicInternalUtils deviceModel]];
-    [self.analyticsController setNRSessionAttribute:@"newRelicVersion"
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_newRelicVersion
                                               value:[NewRelicInternalUtils agentVersion]];
     NRMAConnectInformation *info = [NRMAAgentConfiguration connectionInformation];
-    [self.analyticsController setNRSessionAttribute:@"appBuild"
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_appBuild
                                               value:info.applicationInformation.appBuild];
     [self.analyticsController setNRSessionAttribute:kNRMA_RA_platform
                                               value:[NewRelicInternalUtils stringFromNRMAApplicationPlatform:info.deviceInformation.platform]];
@@ -602,12 +621,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
                                                                                             sessionId:[self currentSessionId]
                                                                                    attributeValidator:[[NRMAAttributeValidator alloc] init]];
 
-        if (status != NotReachable) { // Because we support offline mode check if we're online before sending the handled exceptions
-            [self.handledExceptionsController processAndPublishPersistedReports];
-        }
-
         [NRMAHarvestController addHarvestListener:self.handledExceptionsController];
-
     }
 
 #if TARGET_OS_IOS
@@ -776,6 +790,31 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     }
 #endif
 }
+
+#if TARGET_OS_IOS
+- (BOOL) recordJavascriptErrorWithName:(NSString*)name
+                               message:(NSString*)message
+                            stackTrace:(NSString*)stackTrace
+                               isFatal:(BOOL)isFatal
+                  additionalAttributes:(NSDictionary* _Nullable)additionalAttributes {
+    JSErrorController* controller = self.jsErrorController;
+
+    if (controller == nil) {
+        NRLOG_AGENT_ERROR(@"JS Error Controller is not initialized. Cannot record JS error.");
+        return NO;
+    }
+
+    [self sessionReplayOnError:nil];
+
+    [controller recordJSError:name
+                     message:message
+                  stackTrace:stackTrace
+                     isFatal:isFatal
+        additionalAttributes:additionalAttributes];
+
+    return YES;
+}
+#endif
 
 static const NSString *kNRMA_BGFG_MUTEX = @"com.newrelic.bgfg.mutex";
 static const NSString *kNRMA_APPLICATION_WILL_TERMINATE =

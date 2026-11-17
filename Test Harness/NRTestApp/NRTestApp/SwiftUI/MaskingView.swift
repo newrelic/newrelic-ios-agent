@@ -17,10 +17,49 @@ struct MaskingView: View {
     @State private var childUnmaskedInput: String = ""
     @State private var maskedInsideUnmaskedInput: String = ""
     @State private var deepMaskedInput: String = ""
+    @State private var blockedFieldInput: String = "swiftui-blocked-textfield"
+    @State private var blockedEditorInput: String = "swiftui-blocked-texteditor"
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
+
+                // blockView content whose text should never reach the replay, in colors that do or
+                // don't contrast with the agent's black block box.
+                sectionTitle("Blocked (blockView: true)")
+                VStack(alignment: .leading, spacing: 12) {
+                    NRConditionalMaskView(blockView: true) {
+                        Text("swiftui-blocked-default")
+                    }
+                    NRConditionalMaskView(blockView: true) {
+                        Text("swiftui-blocked-white")
+                            .foregroundColor(.white)
+                            .background(Color.gray)
+                    }
+                    NRConditionalMaskView(blockView: true) {
+                        Text("swiftui-blocked-red")
+                            .foregroundColor(.red)
+                    }
+                    NRConditionalMaskView(blockView: true) {
+                        TextField("Blocked TextField", text: $blockedFieldInput)
+                            .textFieldStyle(.roundedBorder)
+                    }
+                    NRConditionalMaskView(blockView: true) {
+                        TextEditor(text: $blockedEditorInput)
+                            .foregroundColor(.blue)
+                            .frame(height: 44)
+                            .border(Color.gray.opacity(0.4))
+                    }
+                    NRConditionalMaskView(blockView: true) {
+                        VStack(alignment: .leading) {
+                            Text("swiftui-blocked-container-child")
+                                .foregroundColor(.green)
+                        }
+                        .padding(8)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.yellow.opacity(0.3))
+                    }
+                }
 
                 sectionTitle("Direct Elements (Single Controls)")
                 VStack(alignment: .leading, spacing: 12) {

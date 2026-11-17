@@ -22,6 +22,7 @@
 #import "NRMAMeasurements.h"
 #import "NewRelicAgentInternal.h"
 #import "NewRelicAgentTests.h"
+#import "Constants.h"
 #import "NRMAHarvestController.h"
 #import "NRMAHTTPUtilities.h"
 #import "NRMAAppToken.h"
@@ -615,6 +616,44 @@ static NewRelicAgentInternal* _sharedInstance;
     XCTAssertNoThrow([NewRelic recordHandledExceptionWithStackTrace: dict]);
     [NewRelic disableFeatures:NRFeatureFlag_NewEventSystem];
 
+}
+
+- (void) testSetMaxEventBufferTimeBelowMinimumDefaultsToMinimum {
+    [NewRelic setMaxEventBufferTime:10];
+    XCTAssertEqual([NRMAAgentConfiguration getMaxEventBufferTime], kNRMA_MinEventBufferTimeSeconds);
+}
+
+- (void) testSetMaxEventBufferTimeAtOrAboveMinimumIsRespected {
+    [NewRelic setMaxEventBufferTime:kNRMA_MinEventBufferTimeSeconds];
+    XCTAssertEqual([NRMAAgentConfiguration getMaxEventBufferTime], kNRMA_MinEventBufferTimeSeconds);
+
+    [NewRelic setMaxEventBufferTime:120];
+    XCTAssertEqual([NRMAAgentConfiguration getMaxEventBufferTime], 120);
+}
+
+- (void) testSetMaxEventBufferTimeAboveMaximumDefaultsToMaximum {
+    [NewRelic setMaxEventBufferTime:900];
+    XCTAssertEqual([NRMAAgentConfiguration getMaxEventBufferTime], kNRMA_MaxEventBufferTimeSeconds);
+}
+
+- (void) testSetMaxEventBufferTimeAtMaximumIsRespected {
+    [NewRelic setMaxEventBufferTime:kNRMA_MaxEventBufferTimeSeconds];
+    XCTAssertEqual([NRMAAgentConfiguration getMaxEventBufferTime], kNRMA_MaxEventBufferTimeSeconds);
+}
+
+- (void) testSetMaxEventPoolSizeBelowMinimumDefaultsToMinimum {
+    [NewRelic setMaxEventPoolSize:10];
+    XCTAssertEqual([NRMAAgentConfiguration getMaxEventBufferSize], kNRMA_MinEventPoolSize);
+}
+
+- (void) testSetMaxEventPoolSizeAboveMaximumIsNotClamped {
+    [NewRelic setMaxEventPoolSize:5000];
+    XCTAssertEqual([NRMAAgentConfiguration getMaxEventBufferSize], 5000);
+}
+
+- (void) testSetMaxEventPoolSizeWithinRangeIsRespected {
+    [NewRelic setMaxEventPoolSize:500];
+    XCTAssertEqual([NRMAAgentConfiguration getMaxEventBufferSize], 500);
 }
 
 @end

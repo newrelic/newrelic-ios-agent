@@ -78,6 +78,7 @@
 
 + (int64_t) currentTimeMillis;
 + (NSArray<NSString*>*) reservedKeywords;
++ (NSArray<NSString*>*) reservedEventTypes;
 + (NSArray<NSString*>*) reservedPrefixes;
 
 @end

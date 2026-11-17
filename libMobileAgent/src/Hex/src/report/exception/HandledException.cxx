@@ -13,23 +13,40 @@ using namespace com::newrelic::mobile;
 using namespace flatbuffers;
 using namespace NewRelic::Hex::Report;
 
-// Build a container of Flatbuffer Libraries, given the global list of libraries found by LibraryController.
-// Uses librariesSnapshot() so the lock is acquired internally and we copy
-// out before serializing — avoids holding the mutex across flatbuffer writes
-// and is safe even if the caller forgets to lock.
-std::vector<Offset<fbs::ios::Library>> buildLibraries(FlatBufferBuilder& builder) {
-    std::vector<Offset<fbs::ios::Library>> libraries;
-
+// Copy out the global library list found by LibraryController.
+//
+// This touches no flatbuffer state, so it IS safe to guard: if LibraryController
+// is unavailable we serialize zero libraries rather than failing the whole
+// report. Uses librariesSnapshot() so the lock is acquired internally and we
+// copy out before serializing — avoids holding the mutex across flatbuffer
+// writes and is safe even if the caller forgets to lock.
+static std::vector<NewRelic::Hex::Report::Library> librarySnapshot() {
     try {
-        auto& libraryController = NewRelic::LibraryController::getInstance();
-        auto snapshot = libraryController.librariesSnapshot();
-        libraries.reserve(snapshot.size());
-        for (auto& l : snapshot) {
-            libraries.push_back(l.serialize(builder));
-        }
+        return NewRelic::LibraryController::getInstance().librariesSnapshot();
     } catch (...) {
-        // Never let library serialization failure escape — a partial
-        // libraries vector is preferable to crashing the host app.
+        return {};
+    }
+}
+
+// Build a container of Flatbuffer Libraries from that snapshot.
+//
+// DO NOT wrap the serialization loop in try/catch. Library::serialize() writes
+// into `builder` via CreateLibrary(), which opens a table. Swallowing an
+// exception thrown part-way through leaves the builder with nested_ == true,
+// and the next CreateString/CreateVector then trips
+// FLATBUFFERS_ASSERT(!nested) — which aborts in debug and, because release
+// builds define NDEBUG (ENABLE_NS_ASSERTIONS = NO), silently emits a malformed
+// buffer in production. A half-written builder cannot be salvaged, so the throw
+// must propagate and the caller must abandon the entire report. The crash
+// boundary that catches it lives in -[NRMAHandledExceptions recordError:...]
+// and its siblings. See GitHub issue #884 / NR-614312.
+std::vector<Offset<fbs::ios::Library>> buildLibraries(FlatBufferBuilder& builder) {
+    auto snapshot = librarySnapshot();
+
+    std::vector<Offset<fbs::ios::Library>> libraries;
+    libraries.reserve(snapshot.size());
+    for (auto& l : snapshot) {
+        libraries.push_back(l.serialize(builder));
     }
     return libraries;
 }
@@ -43,12 +60,11 @@ HandledException::serialize(flatbuffers::FlatBufferBuilder& builder) const {
     std::vector<Offset<fbs::hex::Thread>> threads;
     for (auto const& t : _threads) {
         if (!t) continue;
-        try {
-            threads.push_back(t->serialize(builder));
-        } catch (...) {
-            // Skip a thread that fails to serialize rather than aborting
-            // the whole exception report.
-        }
+        // Not guarded, for the same reason as buildLibraries(): Thread::serialize()
+        // writes into `builder`, so swallowing a mid-write throw here would leave
+        // the builder nested and corrupt the report. Let it propagate to the
+        // crash boundary in NRMAHandledExceptions, which drops the report.
+        threads.push_back(t->serialize(builder));
     }
 
     auto fbsThreads = builder.CreateVector(threads);
@@ -57,8 +73,9 @@ HandledException::serialize(flatbuffers::FlatBufferBuilder& builder) const {
 
     // getAppImage() is guaranteed to return a valid (possibly zero-UUID)
     // Library even when no images have been registered — see
-    // LibraryController::getAppImage(). We still wrap in try/catch as
-    // belt-and-suspenders against any future change.
+    // LibraryController::getAppImage(). This try/catch is safe to keep because
+    // nothing in it writes to `builder`; it only copies a Library and reads two
+    // integers off it, so swallowing here cannot leave the builder nested.
     uint64_t appUuidLow = 0;
     uint64_t appUuidHigh = 0;
     try {

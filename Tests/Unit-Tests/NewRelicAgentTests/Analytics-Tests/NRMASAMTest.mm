@@ -39,8 +39,18 @@
 }
 
 - (void) tearDown {
-    [super tearDown];
     [manager removeAllSessionAttributes];
+
+    // PersistentEventStore debounces disk writes (minimum delay of .025s). Give
+    // the pending writes triggered by -removeAllSessionAttributes time to settle
+    // before the next test's -setUp deletes the backing files, otherwise a
+    // straggling async write can recreate a file the next test also uses.
+    NSDate *settleDeadline = [NSDate dateWithTimeIntervalSinceNow:0.1];
+    while ([NSDate.date compare:settleDeadline] == NSOrderedAscending) {
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
+    }
+
+    [super tearDown];
 }
 
 - (NRMASAM*) samTest {

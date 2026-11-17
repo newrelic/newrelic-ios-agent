@@ -110,7 +110,7 @@ The run-symbol-tool Run script must be added to your app's Xcode project build p
 
 ## Links
 - [newrelic-ios-agent-spm](https://github.com/newrelic/newrelic-ios-agent-spm) Released Swift packages are published here. 
-- [modular-crash-reporter-ios (aka PLCrashReporter)](https://github.com/microsoft/plcrashreporter) Crash reporting brought in as a submodule using this library.
+- [modular-crash-reporter-ios (aka PLCrashReporter)](https://github.com/microsoft/plcrashreporter) Crash reporting library, vendored in `modular-crash-reporter-ios/` from release 1.12.2. Only the `CrashReporter iOS` and `CrashReporter tvOS` static library targets and their sources are kept, with the deployment targets raised to 15.0.
 
 ## Support
 
@@ -136,4 +136,3 @@ To all contributors, we thank you!  Without your contribution, this project woul
 ## License
 New Relic iOS Agent is licensed under the [Apache 2.0](http://apache.org/licenses/LICENSE-2.0.txt) License.
 The New Relic iOS agent also uses source code from third-party libraries. Full details on which libraries are used and the terms under which they are licensed can be found  in the [third-party notices](./THIRD_PARTY_NOTICES.md).
-

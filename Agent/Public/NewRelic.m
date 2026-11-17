@@ -397,22 +397,17 @@
                         httpMethod:(NSString*)httpMethod
                          withTimer:(NRTimer *)timer
                     andFailureCode:(NSInteger)iOSFailureCode {
-    NSError* error = [NSError errorWithDomain:NSURLErrorDomain
-                                         code:iOSFailureCode
-                                     userInfo:nil];
-
-    NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url];
-    [request setHTTPMethod:httpMethod];
-
-    [NRMANetworkFacade noticeNetworkFailure:request
-                                  withTimer:timer
-                                  withError:error];
+    [NewRelic noticeNetworkFailureForURL:url
+                             httpMethod:httpMethod
+                              withTimer:timer
+                           traceHeaders:nil
+                         andFailureCode:iOSFailureCode];
 }
 
 + (void)noticeNetworkFailureForURL:(NSURL *)url
                         httpMethod:(NSString*)httpMethod
-                         startTime:(double)startTime
-                           endTime:(double)endTime
+                         withTimer:(NRTimer *)timer
+                      traceHeaders:(NSDictionary*)traceHeaders
                     andFailureCode:(NSInteger)iOSFailureCode {
     NSError* error = [NSError errorWithDomain:NSURLErrorDomain
                                          code:iOSFailureCode
@@ -422,8 +417,35 @@
     [request setHTTPMethod:httpMethod];
 
     [NRMANetworkFacade noticeNetworkFailure:request
-                                  withTimer:[[NRTimer alloc] initWithStartTime:startTime andEndTime:endTime]
-                                  withError:error];
+                                  withTimer:timer
+                                  withError:error
+                               traceHeaders:traceHeaders];
+}
+
++ (void)noticeNetworkFailureForURL:(NSURL *)url
+                        httpMethod:(NSString*)httpMethod
+                         startTime:(double)startTime
+                           endTime:(double)endTime
+                    andFailureCode:(NSInteger)iOSFailureCode {
+    [NewRelic noticeNetworkFailureForURL:url
+                             httpMethod:httpMethod
+                              startTime:startTime
+                                endTime:endTime
+                           traceHeaders:nil
+                         andFailureCode:iOSFailureCode];
+}
+
++ (void)noticeNetworkFailureForURL:(NSURL *)url
+                        httpMethod:(NSString*)httpMethod
+                         startTime:(double)startTime
+                           endTime:(double)endTime
+                      traceHeaders:(NSDictionary*)traceHeaders
+                    andFailureCode:(NSInteger)iOSFailureCode {
+    [NewRelic noticeNetworkFailureForURL:url
+                             httpMethod:httpMethod
+                              withTimer:[[NRTimer alloc] initWithStartTime:startTime andEndTime:endTime]
+                           traceHeaders:traceHeaders
+                         andFailureCode:iOSFailureCode];
 }
 
 + (NSDictionary<NSString*,NSString*>*)generateDistributedTracingHeaders {
@@ -432,6 +454,25 @@
     } else {
         return [NRMAHTTPUtilities generateConnectivityHeadersWithPayload:[NRMAHTTPUtilities generatePayload]];
     }
+}
+
++ (NSDictionary<NSString*,NSString*>*)generateDistributedTracingContext {
+    NSMutableDictionary<NSString*,NSString*>* context = [NSMutableDictionary dictionary];
+
+    // One trace, both representations: the W3C headers to put on the wire and the trace's identity
+    // keyed by the attribute names the event records it under. Generating them from a single
+    // payload is the point -- two separate calls would mint two unrelated traces.
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        NRMAPayload* payload = [NRMAHTTPUtilities generateNRMAPayload];
+        [context addEntriesFromDictionary:[NRMAHTTPUtilities generateConnectivityHeadersWithNRMAPayload:payload]];
+        [context addEntriesFromDictionary:[NRMAHTTPUtilities traceAttributesWithNRMAPayload:payload]];
+    } else {
+        NRMAPayloadContainer* payload = [NRMAHTTPUtilities generatePayload];
+        [context addEntriesFromDictionary:[NRMAHTTPUtilities generateConnectivityHeadersWithPayload:payload]];
+        [context addEntriesFromDictionary:[NRMAHTTPUtilities traceAttributesWithPayload:payload]];
+    }
+
+    return context;
 }
 
 +  (void)addHTTPHeaderTrackingFor:(NSArray<NSString*> *_Nonnull)headers {
@@ -763,24 +804,11 @@
     }
 
 #if TARGET_OS_IOS
-    // Get the JS Error Controller (iOS only - for React Native)
-    JSErrorController* jsErrorController = [NewRelicAgentInternal sharedInstance].jsErrorController;
-
-    if (jsErrorController == nil) {
-        NRLOG_AGENT_ERROR(@"JS Error Controller is not initialized. Cannot record JS error.");
-        return false;
-    }
-    
-    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
-
-    // Route to JS Error Controller for Mobile Errors Protocol
-    [jsErrorController recordJSError:name
-                             message:message
-                          stackTrace:stackTrace
-                             isFatal:isFatal
-               additionalAttributes:additionalAttributes];
-
-    return true;
+    return [[NewRelicAgentInternal sharedInstance] recordJavascriptErrorWithName:name
+                                                                        message:message
+                                                                     stackTrace:stackTrace
+                                                                        isFatal:isFatal
+                                                           additionalAttributes:additionalAttributes];
 #else
     // JS Error reporting is only available on iOS (for React Native)
     NRLOG_AGENT_ERROR(@"JS Error reporting is only available on iOS. Cannot record JS error.");

@@ -17,7 +17,6 @@
 
 static const NSUInteger kDefaultBufferSize = 1000;
 static const NSUInteger kDefaultBufferTimeSeconds = 60; // 60 seconds
-static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
 static const NSUInteger kBufferTimeSecondsLeeway = 60; // 60 seconds
 static const double kMillisecondsPerSecond = 1000.0; // milliseconds to seconds conversion
 
@@ -61,13 +60,6 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
 }
 
 - (void)setMaxEventBufferTimeInSeconds:(NSUInteger)seconds {
-    if(seconds < kMinBufferTimeSeconds) {
-        NRLOG_AGENT_ERROR(@"Buffer Time cannot be less than %lu Seconds", (unsigned long)kMinBufferTimeSeconds);
-        maxBufferTimeSeconds = kMinBufferTimeSeconds;
-    } else if (seconds > kDefaultBufferTimeSeconds){
-        NRLOG_AGENT_WARNING(@"Buffer Time should not be longer than %lu seconds", (unsigned long)kDefaultBufferTimeSeconds);
-        maxBufferTimeSeconds = kDefaultBufferTimeSeconds;
-    }
     maxBufferTimeSeconds = seconds;
 }
 
@@ -181,13 +173,14 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
                                                            error:error];
             eventJsonString = [[NSString alloc] initWithData:eventJsonData
                                                     encoding:NSUTF8StringEncoding];
-            [self empty];
         } @catch (NSException *e) {
             NRLOG_AGENT_ERROR(@"FAILED TO CREATE EVENT JSON: %@", e.reason);
         }
-    }
-    if (clearEvents){
-        [self empty];
+        // Clear under the same lock the events were read under. Clearing after releasing it
+        // also wiped any event -addEvent: inserted in between, which was never serialized.
+        if (clearEvents) {
+            [self empty];
+        }
     }
     return eventJsonString;
 }

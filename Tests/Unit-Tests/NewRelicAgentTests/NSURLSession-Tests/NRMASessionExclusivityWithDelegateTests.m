@@ -77,7 +77,8 @@
 
     NSDictionary *headers = [[task currentRequest] allHTTPHeaderFields];
 
-    XCTAssertNotNil(headers[@"newrelic"]);
+    // The proprietary "newrelic" header is no longer sent for Distributed Tracing.
+    XCTAssertNil(headers[@"newrelic"]);
     XCTAssertNotNil(headers[@"traceparent"]);
     XCTAssertNotNil(headers[@"tracestate"]);
 

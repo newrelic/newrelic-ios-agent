@@ -7,6 +7,7 @@
 
 import Foundation
 import CoreData
+import NewRelic
 
 extension AppDelegate {
     func clearConnectUserDefaults() {
@@ -51,6 +52,70 @@ extension AppDelegate {
             NSLog("[NRTestApp] CoreDataRepro: nested re-entrant fetch -> \(nestedCount) results (survived)")
 
             NSLog("[NRTestApp] CoreDataRepro: DONE — app survived the executeFetchRequest:error: instrumentation path")
+        }
+    }
+
+    // Headless driver for GitHub issue #884 / NR-614312: the reporter's suggested
+    // repro -- "call recordError in a tight loop ... while the device is nearly out
+    // of memory, so that the allocations inside HexStore::store and
+    // HandledException::serialize start failing."
+    //
+    // Normally driven by scripts/run_oom_resilience_tests.sh, which pairs this loop
+    // with the operator-new injector in Tests/OOM-Resilience/oom_injector.cxx. By hand:
+    //
+    //   SIMCTL_CHILD_DYLD_INSERT_LIBRARIES=<path>/liboominject.dylib \
+    //   SIMCTL_CHILD_NR_OOM_ONE_IN=1000 SIMCTL_CHILD_NR_OOM_DELAY=12 \
+    //   xcrun simctl launch --console <sim> com.newrelic.NRApp.bitcode \
+    //       -RunHexOOMRepro -HexOOMIterations 20000 -HexOOMStartDelay 16
+    //
+    // Prints "DONE" with a count if the process survives. -HexOOMBallastMB additionally
+    // pins N MiB resident first; that alone will not make a simulator's malloc fail
+    // (see Tests/OOM-RESILIENCE.md), so it is off by default.
+    func runHexOOMReproIfRequested() {
+        guard ProcessInfo.processInfo.arguments.contains("-RunHexOOMRepro") else { return }
+
+        let args = ProcessInfo.processInfo.arguments
+        func intArg(_ name: String, _ fallback: Int) -> Int {
+            guard let i = args.firstIndex(of: name), i + 1 < args.count,
+                  let v = Int(args[i + 1]) else { return fallback }
+            return v
+        }
+        let iterations = intArg("-HexOOMIterations", 20000)
+        let ballastMB  = intArg("-HexOOMBallastMB", 0)
+        // Delay the loop so the DYLD_INSERT_LIBRARIES OOM injector (if used) has
+        // armed itself first, and so agent startup runs on a healthy heap.
+        let startDelay = Double(intArg("-HexOOMStartDelay", 1))
+
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + startDelay) {
+            // The OOM injector only fails allocations on this thread name, so that the
+            // agent's harvest/upload threads are not dragged into the test. Must match
+            // NR_OOM_THREAD in Tests/OOM-Resilience/oom_injector.cxx.
+            pthread_setname_np("nr-oom-loop")
+
+            var ballast: [UnsafeMutableRawPointer] = []
+            if ballastMB > 0 {
+                NSLog("[NRTestApp] HexOOMRepro: allocating \(ballastMB) MiB of ballast to squeeze the heap")
+                for _ in 0..<ballastMB {
+                    let sz = 1 << 20
+                    guard let p = malloc(sz) else {
+                        NSLog("[NRTestApp] HexOOMRepro: malloc returned NULL after \(ballast.count) MiB")
+                        break
+                    }
+                    memset(p, 0xA5, sz)   // touch it so it is really resident
+                    ballast.append(p)
+                }
+                NSLog("[NRTestApp] HexOOMRepro: ballast resident = \(ballast.count) MiB")
+            }
+
+            NSLog("[NRTestApp] HexOOMRepro: starting tight recordError loop, \(iterations) iterations")
+            let err = NSError(domain: "PlatformException", code: 1,
+                              userInfo: [NSLocalizedDescriptionKey: "Flutter recordError"])
+            for i in 0..<iterations {
+                NewRelic.recordError(err, attributes: ["id": i])
+                if i % 2000 == 0 { NSLog("[NRTestApp] HexOOMRepro: \(i) recordError calls survived") }
+            }
+            NSLog("[NRTestApp] HexOOMRepro: DONE — survived \(iterations) recordError calls")
+            for p in ballast { free(p) }
         }
     }
 }

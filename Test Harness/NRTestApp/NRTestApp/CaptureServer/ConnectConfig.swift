@@ -41,9 +41,10 @@ struct ConnectConfig: Codable {
         var maskAllImages: Bool = false
         var maskAllUserTouches: Bool = false
         var customMaskingRules: [MaskingRule] = [
-            .init(identifier: "tag",   type: "mask",   name: ["sensitiveField"]),
-            .init(identifier: "class", type: "mask",   name: ["UITextField"]),
-            .init(identifier: "class", type: "unmask", name: ["NRUnmaskedLabel"]),
+            // The real connect endpoint sends "accessibilityIdentifier" to iOS apps ("tag" is Android's).
+            .init(identifier: "accessibilityIdentifier", type: "mask",   name: ["sensitiveField"]),
+            .init(identifier: "class",                   type: "mask",   name: ["UITextField"]),
+            .init(identifier: "class",                   type: "unmask", name: ["NRUnmaskedLabel"]),
         ]
 
         enum CodingKeys: String, CodingKey {

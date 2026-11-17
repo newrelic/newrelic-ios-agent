@@ -115,7 +115,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 34BF4DD729108DE200E4D170 /* Build configuration list for PBXProject "JSON" */;
+			buildConfigurationList = 34BF4DD729108DE200E4D170 /* Build configuration list for PBXProject "json" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -305,7 +305,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2,3,4";
 				TVOS_DEPLOYMENT_TARGET = 15.0;
-				WATCHOS_DEPLOYMENT_TARGET = 8.7;
+				WATCHOS_DEPLOYMENT_TARGET = 9.0;
 			};
 			name = Debug;
 		};
@@ -347,14 +347,14 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2,3,4";
 				TVOS_DEPLOYMENT_TARGET = 15.0;
-				WATCHOS_DEPLOYMENT_TARGET = 8.7;
+				WATCHOS_DEPLOYMENT_TARGET = 9.0;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		34BF4DD729108DE200E4D170 /* Build configuration list for PBXProject "JSON" */ = {
+		34BF4DD729108DE200E4D170 /* Build configuration list for PBXProject "json" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				34BF4DE229108DE200E4D170 /* Debug */,

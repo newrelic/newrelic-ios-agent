@@ -80,10 +80,8 @@ EventAddResult EventManager::addEvent(std::shared_ptr<AnalyticEvent> event) {
         if (index < _events.size()) {
             //iterator the event to remove
             auto eventIterator = _events.begin() + index;
-            //remove it from the duplication store
-            std::stringstream deleteKey;
-            deleteKey << *eventIterator;
-            _eventDuplicationStore.remove(deleteKey.str());
+            //remove it from the duplication store, under the same key it was stored with
+            _eventDuplicationStore.remove(EventManager::createKey(*eventIterator));
             //remove it from the vector
             _events.erase(eventIterator);
             //add new event to the vector

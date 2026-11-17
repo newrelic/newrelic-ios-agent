@@ -31,15 +31,6 @@ static NSString* const kPayloadKey = @"Payload";
     return self;
 }
 
-- (id)JSONObject {
-    NSDictionary *event = [super JSONObject];
-
-    NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithDictionary:event];
-    dict[kNRMA_RA_payload] = [_payload JSONObject];
-
-    return [NSDictionary dictionaryWithDictionary:dict];
-}
-
 - (void)encodeWithCoder:(NSCoder *)coder {
     [super encodeWithCoder:coder];
     

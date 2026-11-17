@@ -264,7 +264,10 @@ static NSMutableArray * __NRMA__session_replay_unmaskedAccessibilityIdentifiers;
 
 + (BOOL)addLocalMaskedAccessibilityIdentifier:(NSString *)identifier {
     if (identifier.length > 0) {
-        [[NRMAAgentConfiguration local_session_replay_maskedAccessibilityIdentifiers] addObject:identifier];
+        NSMutableArray *list = [NRMAAgentConfiguration local_session_replay_maskedAccessibilityIdentifiers];
+        @synchronized(list) {
+            [list addObject:identifier];
+        }
         NRLOG_AGENT_VERBOSE(@"Added masked accessibility identifier: %@", identifier);
         return true;
     }
@@ -273,7 +276,10 @@ static NSMutableArray * __NRMA__session_replay_unmaskedAccessibilityIdentifiers;
 
 + (BOOL)addLocalUnmaskedAccessibilityIdentifier:(NSString *)identifier {
     if (identifier.length > 0) {
-        [[NRMAAgentConfiguration local_session_replay_unmaskedAccessibilityIdentifiers] addObject:identifier];
+        NSMutableArray *list = [NRMAAgentConfiguration local_session_replay_unmaskedAccessibilityIdentifiers];
+        @synchronized(list) {
+            [list addObject:identifier];
+        }
         NRLOG_AGENT_VERBOSE(@"Added unmasked accessibility identifier: %@", identifier);
         return true;
     }
@@ -282,7 +288,10 @@ static NSMutableArray * __NRMA__session_replay_unmaskedAccessibilityIdentifiers;
 
 + (BOOL)addLocalMaskedClassName:(NSString *)className {
     if (className.length > 0) {
-        [[NRMAAgentConfiguration local_session_replay_maskedClassNames] addObject:className];
+        NSMutableArray *list = [NRMAAgentConfiguration local_session_replay_maskedClassNames];
+        @synchronized(list) {
+            [list addObject:className];
+        }
         NRLOG_AGENT_VERBOSE(@"Added masked class name: %@", className);
         return true;
     }
@@ -291,7 +300,10 @@ static NSMutableArray * __NRMA__session_replay_unmaskedAccessibilityIdentifiers;
 
 + (BOOL)addLocalUnmaskedClassName:(NSString *)className {
     if (className.length > 0) {
-        [[NRMAAgentConfiguration local_session_replay_unmaskedClassNames] addObject:className];
+        NSMutableArray *list = [NRMAAgentConfiguration local_session_replay_unmaskedClassNames];
+        @synchronized(list) {
+            [list addObject:className];
+        }
         NRLOG_AGENT_VERBOSE(@"Added unmasked class name: %@", className);
         return true;
     }

@@ -140,6 +140,51 @@ TEST_F(AnalyticsControllerTest, testRequestEvent) {
     ASSERT_FALSE(controller.addRequestEvent(emptyRequestData, someBadHttpResponse, std::move(payload)));
 }
 
+// MobileRequest and MobileRequestError events carry distributed tracing as the guid/traceId
+// attributes. The payload itself must never be reported as a `payload` attribute.
+TEST_F(AnalyticsControllerTest, testRequestEventsDoNotIncludePayloadAttribute) {
+    AnalyticsController controller(epoch_time_ms, sessionDataPath, eventStore, attributeStore);
+    NetworkRequestData someRequestData = NetworkRequestData("http://newrelic.com/v1/mobile/",
+                                                            "newrelic.com",
+                                                            "/v1/mobile/",
+                                                            "GET",
+                                                            "3G",
+                                                            "application/txt",
+                                                            1);
+
+    NetworkResponseData someOkHttpResponse = NetworkResponseData(200, 20, 1.2);
+    NetworkResponseData someBadHttpResponse = NetworkResponseData(404, 20, 100.1, nullptr, nullptr, nullptr);
+    NetworkResponseData someBadNetworkResponse = NetworkResponseData(-1001, 0, 1.0, nullptr);
+
+    auto requestPayload = Connectivity::Facade::getInstance().startTrip();
+    auto httpErrorPayload = Connectivity::Facade::getInstance().startTrip();
+    auto networkErrorPayload = Connectivity::Facade::getInstance().startTrip();
+    ASSERT_TRUE(requestPayload != nullptr && httpErrorPayload != nullptr && networkErrorPayload != nullptr);
+    requestPayload->setDistributedTracing(true);
+    httpErrorPayload->setDistributedTracing(true);
+    networkErrorPayload->setDistributedTracing(true);
+
+    ASSERT_TRUE(controller.addRequestEvent(someRequestData, someOkHttpResponse, std::move(requestPayload)));
+    ASSERT_TRUE(controller.addHTTPErrorEvent(someRequestData, someBadHttpResponse, std::move(httpErrorPayload)));
+    ASSERT_TRUE(controller.addNetworkErrorEvent(someRequestData, someBadNetworkResponse, std::move(networkErrorPayload)));
+
+    auto json = controller.getEventsJSON(true);
+    ASSERT_TRUE(json != nullptr);
+    ASSERT_EQ(json->size(), 3u);
+
+    for (size_t i = 0; i < json->size(); i++) {
+        std::stringstream s;
+        s << (*json)[i];
+        std::string event = s.str();
+
+        // Distributed tracing is still attached...
+        ASSERT_NE(event.find("\"guid\""), std::string::npos) << event;
+        ASSERT_NE(event.find("\"traceId\""), std::string::npos) << event;
+        // ...but never as the payload.
+        ASSERT_EQ(event.find("\"payload\""), std::string::npos) << event;
+    }
+}
+
 
     TEST_F(AnalyticsControllerTest, testRetreiveJSON) {
         AnalyticsController controller(epoch_time_ms, sessionDataPath, eventStore, attributeStore);

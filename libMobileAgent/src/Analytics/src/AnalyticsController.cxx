@@ -202,7 +202,7 @@ namespace NewRelic {
             LLOG_VERBOSE("Unable to add \"session end\" attribute: %s", e.what());
             return false;
         } catch (std::logic_error &e) {
-            LLOG_VERBOSE(e.what());
+            LLOG_VERBOSE("%s", e.what());
             return false;
         } catch (...) {
             LLOG_VERBOSE("Unknown exception occurred.");
@@ -309,7 +309,7 @@ namespace NewRelic {
 
         } catch (std::logic_error &e) {
             //adding log under verbose as this is an internal agent method, and wont be called by customers.
-            LLOG_VERBOSE(e.what());
+            LLOG_VERBOSE("%s", e.what());
             return false;
         } catch (...) {
             LLOG_VERBOSE("Unknown exception occurred.");

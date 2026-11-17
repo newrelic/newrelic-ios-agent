@@ -24,6 +24,17 @@
 #import "NRMAMeasurements.h"
 #import "NRMATaskQueue.h"
 #import "NRMANamedValueMeasurement.h"
+#import "NewRelicAgentInternal.h"
+#import "NRMAAgentConfiguration.h"
+#import "NRMAConnectInformation.h"
+#import "NRMAApplicationInformation.h"
+#import "Constants.h"
+
+// Exposes the private method under test without going through a full
+// network-dependent agent enable/connect cycle.
+@interface NewRelicAgentInternal (UnitTests)
+- (void) initializeAnalytics;
+@end
 
 @interface NRMAAnalyticsTest : XCTestCase
 {
@@ -294,6 +305,50 @@
 
     XCTAssertNotNil(decode[@"lastInteraction"]);
     XCTAssertTrue([decode[@"lastInteraction"] isEqualToString:@"Display Banana"]);
+}
+
+// Private (NR) session attributes are written from many threads (memUsageMb, lastInteraction,
+// session start attributes) while the harvest thread serializes them. This used to race on
+// the private attribute map and crash in SessionAttributeManager::generateJSONObject.
+- (void) testConcurrentNRSessionAttributesAndHarvestJSON {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    __block volatile BOOL writersDone = NO;
+
+    // Read on a dedicated thread at the writers' QoS, not a utility global queue. GCD won't
+    // start a utility worker while about one thread per core is busy at that QoS or above,
+    // so on a 3-core CI runner the reader could go unscheduled past the wait below; and even
+    // when it did run, it started only once the higher-QoS writers had finished, so nothing
+    // raced. Wait for the reader to start so the writes overlap the reads.
+    dispatch_semaphore_t readerStarted = dispatch_semaphore_create(0);
+    dispatch_semaphore_t readerFinished = dispatch_semaphore_create(0);
+    NSThread* reader = [[NSThread alloc] initWithBlock:^{
+        dispatch_semaphore_signal(readerStarted);
+        while (!writersDone) {
+            @autoreleasepool {
+                XCTAssertNotNil([analytics sessionAttributeJSONString]);
+            }
+        }
+        dispatch_semaphore_signal(readerFinished);
+    }];
+    reader.qualityOfService = NSQualityOfServiceUserInitiated;
+    [reader start];
+    XCTAssertEqual(dispatch_semaphore_wait(readerStarted, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC)), 0);
+
+    dispatch_apply(2000, dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^(size_t i) {
+        [analytics setNRSessionAttribute:@"memUsageMb" value:@(i)];
+        [analytics setLastInteraction:[NSString stringWithFormat:@"Display %zu", i]];
+        [analytics setNRSessionAttribute:[NSString stringWithFormat:@"nrAttr%zu", i % 20] value:@"value"];
+    });
+    writersDone = YES;
+
+    XCTAssertEqual(dispatch_semaphore_wait(readerFinished, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC)), 0);
+
+    NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:[[analytics sessionAttributeJSONString] dataUsingEncoding:NSUTF8StringEncoding]
+                                                           options:0
+                                                             error:nil];
+    XCTAssertNotNil(decode[@"memUsageMb"]);
+    XCTAssertNotNil(decode[@"lastInteraction"]);
+    XCTAssertNotNil(decode[@"nrAttr0"]);
 }
 
 - (void) testRequestEventNetworkError {
@@ -939,6 +994,34 @@
 
     [NRMAMeasurements removeMeasurementConsumer:helper];
     [NRMAMeasurements shutdown];
+}
+
+#pragma mark - appVersion session attribute (NR-646041)
+
+// Regression coverage for -initializeAnalytics capturing appVersion as a session
+// attribute alongside appBuild, instead of leaving appVersion to be derived
+// solely from the X-NewRelic-App-Version header. Session attributes are baked
+// into a report at record time, while the header reflects whatever version is
+// running at upload time; if a report is persisted and uploaded by a later
+// session (e.g. after an app-store update), only a session attribute stays
+// consistent with appBuild.
+- (void) testInitializeAnalyticsSetsAppVersionSessionAttribute {
+    NewRelicAgentInternal* agent = [[NewRelicAgentInternal alloc] init];
+    [agent initializeAnalytics];
+
+    NSString* json = [agent.analyticsController sessionAttributeJSONString];
+    XCTAssertNotNil(json, @"initializeAnalytics should produce session attributes");
+
+    NSDictionary* attributes = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                                 options:0
+                                                                   error:nil];
+
+    NRMAConnectInformation* info = [NRMAAgentConfiguration connectionInformation];
+
+    XCTAssertEqualObjects(attributes[kNRMA_RA_appBuild], info.applicationInformation.appBuild,
+                          @"appBuild should be captured as a session attribute at session start");
+
+    [NRMAHarvestController removeHarvestListener:agent.analyticsController];
 }
 
 @end
@@ -1830,6 +1913,35 @@
 
    XCTAssertTrue([analytics addSessionEvent], @"failed to successfully add session event");
 
+}
+
+#pragma mark - Reserved event types
+
+- (void) testReservedEventTypesAreRejectedUnderBothEventSystems {
+    for (NSNumber* useNewSystem in @[@NO, @YES]) {
+        if (useNewSystem.boolValue) {
+            [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
+        } else {
+            [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
+        }
+
+        NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+        for (NSString* reserved in [NRMAAnalytics reservedEventTypes]) {
+            XCTAssertFalse([analytics addCustomEvent:reserved withAttributes:@{@"a": @"b"}],
+                           @"reserved event type \"%@\" must be rejected with NewEventSystem %@",
+                           reserved, useNewSystem.boolValue ? @"enabled" : @"disabled");
+        }
+
+        XCTAssertTrue([analytics addCustomEvent:@"MyCustomEvent" withAttributes:@{@"a": @"b"}],
+                      @"a non-reserved event type must still be accepted");
+    }
+}
+
+- (void) testReservedEventTypesMatchTheLegacyControllerList {
+    // A name in only one list succeeds under one event system and fails under the other.
+    XCTAssertEqualObjects([NRMAAnalytics reservedEventTypes],
+                          (@[@"Mobile", @"MobileCrash", @"MobileRequest", @"MobileRequestError",
+                             @"MobileSession", @"MobileBreadcrumb"]));
 }
 
 @end

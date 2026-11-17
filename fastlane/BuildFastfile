@@ -1,5 +1,14 @@
 import "ConstantsFastfile"
 
+# Swift 6.4 (Xcode 27) writes module selectors (`NewRelic::Foo`) into .swiftinterface files,
+# which Swift 6.2 (Xcode 26) can't parse. Turn them off when the toolchain has the flag so it
+# falls back to -alias-module-names-in-module-interface; older toolchains reject the flag.
+def interface_xcargs
+  flag = "-disable-module-selectors-in-module-interface"
+  supported = `xcrun swift-frontend -frontend -help-hidden 2>/dev/null`.include?(flag)
+  supported ? "OTHER_SWIFT_FLAGS='$(inherited) -Xfrontend #{flag}'" : ""
+end
+
 platform :ios do
 
   desc "Build iOS.xcarchive / iOS Sim framework"
@@ -15,7 +24,7 @@ platform :ios do
       scheme: "Agent-iOS",
       sdk: "iphoneos",
       derivedDataPath: Constants::DD,
-      xcargs: "SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES",
+      xcargs: "SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES #{interface_xcargs}",
       raw_buildlog: true
     )
     # Build Sim
@@ -28,6 +37,7 @@ platform :ios do
       scheme: "Agent-iOS",
       sdk: "iphonesimulator",
       derivedDataPath: Constants::DD,
+      xcargs: interface_xcargs,
       raw_buildlog: true
     )
   end
@@ -44,7 +54,7 @@ platform :ios do
       scheme: "Agent-tvOS",
       sdk: "appletvos",
       derivedDataPath: Constants::DD,
-      xcargs: "SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES",
+      xcargs: "SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES #{interface_xcargs}",
       raw_buildlog: true
     )
     # Build Sim
@@ -56,6 +66,7 @@ platform :ios do
       scheme: "Agent-tvOS",
       sdk: "appletvsimulator",
       derivedDataPath: Constants::DD,
+      xcargs: interface_xcargs,
       raw_buildlog: true
     )
   end 
@@ -72,7 +83,7 @@ platform :ios do
       scheme: "Agent-watchOS",
       sdk: "watchos",
       derivedDataPath: Constants::DD,
-      xcargs: "SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES",
+      xcargs: "SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES #{interface_xcargs}",
       raw_buildlog: true
     )
     # Build Sim
@@ -84,6 +95,7 @@ platform :ios do
       scheme: "Agent-watchOS",
       sdk: "watchsimulator",
       derivedDataPath: Constants::DD,
+      xcargs: interface_xcargs,
       raw_buildlog: true
     )
   end 
@@ -99,7 +111,7 @@ platform :ios do
       scheme: "Agent-iOS",
       sdk: "macosx",
       derivedDataPath: Constants::DD,
-      xcargs: "SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES SUPPORTS_MACCATALYST=YES",
+      xcargs: "SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES SUPPORTS_MACCATALYST=YES #{interface_xcargs}",
       raw_buildlog: true
     )
 

@@ -519,6 +519,7 @@ private struct MaskingRuleEditorView: View {
             Section {
                 Picker("Identifier", selection: $draft.identifier) {
                     Text("class").tag("class")
+                    Text("accessibilityIdentifier").tag("accessibilityIdentifier")
                     Text("tag").tag("tag")
                 }
                 Picker("Type", selection: $draft.type) {

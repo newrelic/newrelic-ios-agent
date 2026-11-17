@@ -343,9 +343,13 @@ withTimestamp:(NSNumber *) timestamp {
 
     NSString* sessionAttributes = [[NewRelicAgentInternal sharedInstance].analyticsController sessionAttributeJSONString];
     if (sessionAttributes != nil && [sessionAttributes length] > 0) {
-        NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[sessionAttributes dataUsingEncoding:NSUTF8StringEncoding]
-                                                                   options:0
-                                                                     error:nil];
+        // NRMAJSON, not NSJSONSerialization directly: this runs on every log
+        // message, and NSJSONSerialization is instrumented for app-interaction
+        // tracing -- going through it directly here would re-enter that
+        // tracing on every log line.
+        NSDictionary* dictionary = [NRMAJSON JSONObjectWithData:[sessionAttributes dataUsingEncoding:NSUTF8StringEncoding]
+                                                          options:0
+                                                            error:nil];
         for (NSString *key in dictionary) {
             id value = [dictionary objectForKey:key];
 
@@ -618,9 +622,9 @@ withTimestamp:(NSNumber *) timestamp {
         NSData *formattedData = [self->uploadQueue firstObject];
         
         if (self->debugLogs) {
-            NSArray* decode = [NSJSONSerialization JSONObjectWithData:formattedData
-                                                                   options:0
-                                                                     error:nil];
+            NSArray* decode = [NRMAJSON JSONObjectWithData:formattedData
+                                                     options:0
+                                                       error:nil];
             NSLog(@"Uploading log data:\n %@", decode);
         }
 
@@ -643,10 +647,13 @@ withTimestamp:(NSNumber *) timestamp {
             }
             if (!error && !errorCode) {
                 NRLOG_AGENT_VERBOSE(@"Logs uploaded successfully.");
+                if (self->failureCount > 0) {
+                    [NRMASupportMetricHelper enqueueRetrySuccessMetric:@"logs"];
+                }
                 // Remove the first element from the upload queue.
                 [self->uploadQueue removeObjectAtIndex:0];
                 self->failureCount = 0;
-                
+
                 [NRMASupportMetricHelper enqueueLogSuccessMetric: [formattedData length]];
             }
             else if (errorCode) {
@@ -664,6 +671,7 @@ withTimestamp:(NSNumber *) timestamp {
             }
             
             if (self->failureCount > kNRMAMaxLogUploadRetry) {
+                [NRMASupportMetricHelper enqueueRetryFailedMetric:@"logs"];
                 [self->uploadQueue removeObjectAtIndex:0];
                 self->failureCount = 0;
             }

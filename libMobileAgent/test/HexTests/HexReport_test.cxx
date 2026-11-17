@@ -7,6 +7,7 @@
 #include <fstream>
 #include <Analytics/AnalyticsController.hpp>
 #include <Hex/HexController.hpp>
+#include <Hex/hex-agent-data_generated.h>
 
 using ::testing::_;
 
@@ -152,6 +153,55 @@ TEST_F(HexContextTester, testSessionAttributeOverride) {
     ASSERT_TRUE(strMap["stringValue"] == std::string("newStringValue"));
     ASSERT_TRUE(lngMap["LongValue"] == (long long)5);
     ASSERT_TRUE(dblMap["DoubleValue"] == 5.0f);
+}
+
+class AppInfoVersionTester : public ::testing::Test {
+public:
+    PersistentStore<std::string, AnalyticEvent> eventStore;
+    PersistentStore<std::string, BaseValue> attributeStore;
+    Hex::HexPublisher* publisher;
+    std::shared_ptr<Hex::HexStore> store;
+    Hex::Report::ApplicationLicense applicationLicense;
+    std::shared_ptr<AnalyticsController> analyticsController;
+    std::shared_ptr<Hex::Report::AppInfo> appInfo;
+    Hex::HexController hexController;
+    AppInfoVersionTester() :
+            eventStore(AnalyticsController::getEventDupStoreName(),
+                       "",
+                       &EventManager::newEvent),
+            attributeStore(AnalyticsController::getAttributeDupStoreName(),
+                           "",
+                           (std::shared_ptr<BaseValue>(*)(std::istream&))&Value::createValue),
+            publisher(new Hex::HexPublisher(".")),
+            store(std::make_shared<Hex::HexStore>(".")),
+            applicationLicense("AAABBB123"),
+            analyticsController(std::make_shared<AnalyticsController>(0, "", eventStore, attributeStore)),
+            appInfo(std::make_shared<Hex::Report::AppInfo>(&applicationLicense, fbs::Platform_iOS,
+                                                            "9.9-origin")),
+            hexController(std::shared_ptr<AnalyticsController>(analyticsController),
+                          appInfo,
+                          publisher,
+                          store,
+                          "1")
+    {}
+    ~AppInfoVersionTester() {
+        delete publisher;
+    }
+};
+
+TEST_F(AppInfoVersionTester, serializesAppVersion) {
+    auto report = hexController.createReport(1, "the tea is too hot", "hot tea exception",
+                                              std::vector<std::shared_ptr<Hex::Report::Thread>>());
+
+    flatbuffers::FlatBufferBuilder builder;
+    auto offset = report->finalize(builder);
+    builder.Finish(offset);
+
+    auto agentData = com::newrelic::mobile::fbs::GetHexAgentData(builder.GetBufferPointer());
+    auto applicationInfo = agentData->applicationInfo();
+    ASSERT_NE(applicationInfo, nullptr);
+    ASSERT_NE(applicationInfo->appVersion(), nullptr);
+    ASSERT_EQ(applicationInfo->appVersion()->str(), std::string("9.9-origin"));
 }
 
 

@@ -1,0 +1,51 @@
+name: AgentSession
+
+# Starts a new Copilot coding agent session (shows up in the repo's Agents tab)
+# via `gh agent-task create`.
+#
+# Requires the COPILOT_AGENT_OAUTH_TOKEN secret: an OAuth token (gho_...) from a
+# user with a Copilot seat, e.g. the output of `gh auth token` after `gh auth login`.
+# `gh agent-task` rejects PATs and the workflow GITHUB_TOKEN.
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "Task description for the agent"
+        required: true
+        type: string
+      base:
+        description: "Base branch for the agent's PR (blank = default branch)"
+        required: false
+        type: string
+      custom_agent:
+        description: "Custom agent name from .github/agents/<name>.md (optional)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  create-session:
+    name: Create agent session
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create agent task
+        env:
+          GH_TOKEN: ${{ secrets.COPILOT_AGENT_OAUTH_TOKEN }}
+          TASK: ${{ inputs.task }}
+          BASE: ${{ inputs.base }}
+          CUSTOM_AGENT: ${{ inputs.custom_agent }}
+        run: |
+          gh --version
+          args=(--repo "$GITHUB_REPOSITORY")
+          if [ -n "$BASE" ]; then args+=(--base "$BASE"); fi
+          if [ -n "$CUSTOM_AGENT" ]; then args+=(--custom-agent "$CUSTOM_AGENT"); fi
+
+          printf '%s' "$TASK" | gh agent-task create -F - "${args[@]}" | tee out.txt
+
+          {
+            echo "### Agent session created"
+            echo
+            cat out.txt
+          } >> "$GITHUB_STEP_SUMMARY"
