@@ -75,6 +75,9 @@ static SessionReplayMaskingMode const SessionReplayMaskingModeCustom = @"custom"
 #define kNRCarrierNameDidUpdateNotification   @"com.newrelic.carrierName.changed"
 #define kNRMemoryUsageDidChangeNotification   @"com.newrelic.memoryusage.changed"
 
+// Posted on the main thread with +[NewRelic sessionReplayConfiguration] as userInfo
+#define kNRSessionReplayConfigurationDidChangeNotification @"com.newrelic.sessionReplay.configuration.changed"
+
 #define kNRMAAnalyticsInitializedNotification @"com.newrelic.analytics.initialized"
 #define kNRMAAnalyticsControllerKey           @"AnalyticsController"
 

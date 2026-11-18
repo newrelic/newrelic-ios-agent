@@ -32,9 +32,21 @@ public class SessionReplayManager: NSObject {
     
     
     // TWO SESSION REPLAY MODEs
-    public var sessionReplayMode: SessionReplayRecordingMode = .off {
-        didSet {
-            sessionReplay.recordingMode = sessionReplayMode
+    // Written on sessionReplayQueue, but readable from any thread: the public session
+    // replay configuration getter reads it without touching the queue.
+    private let modeLock = NSLock()
+    private var lockedSessionReplayMode: SessionReplayRecordingMode = .off
+    public var sessionReplayMode: SessionReplayRecordingMode {
+        get {
+            modeLock.lock()
+            defer { modeLock.unlock() }
+            return lockedSessionReplayMode
+        }
+        set {
+            modeLock.lock()
+            lockedSessionReplayMode = newValue
+            modeLock.unlock()
+            sessionReplay.recordingMode = newValue
         }
     }
     
@@ -57,20 +69,27 @@ public class SessionReplayManager: NSObject {
     // ERROR MODE
     
     // MARK: - Error Sampling Mode Management
-    
-    /// Sets the recording mode for session replay
-    /// - Parameter mode: The recording mode to use
-    @objc public func setRecordingMode(_ mode: SessionReplayRecordingMode) {
+
+    // Must run on sessionReplayQueue.
+    private func applyRecordingMode(_ mode: SessionReplayRecordingMode) {
+        sessionReplayMode = mode
+        sessionReplay.transistionToRecordingMode(mode)
+    }
+
+    /// Reports the mode as off once native capture has stopped (session end, replay disabled,
+    /// or a session sampled off). A capture that is still running keeps its mode.
+    @objc public func resetRecordingModeIfStopped() {
         sessionReplayQueue.async { [self] in
-            self.sessionReplayMode = mode
-            sessionReplay.transistionToRecordingMode(mode)
+            if !isRunning() {
+                sessionReplayMode = .off
+            }
         }
     }
     
     /// Gets the current recording mode
     /// - Returns: The current recording mode
     @objc public func getCurrentRecordingMode() -> SessionReplayRecordingMode {
-        return sessionReplay.recordingMode
+        return sessionReplayMode
     }
     
     /// Transitions from error mode to full mode, including the 15-second buffer
@@ -88,6 +107,7 @@ public class SessionReplayManager: NSObject {
                 
                 NRLOG_AGENT_DEBUG("Error detected - transitioning session replay to full mode")
                 sessionReplay.transitionToFullModeOnError()
+                self.publishConfiguration()
             }
         }
     }
@@ -99,20 +119,22 @@ public class SessionReplayManager: NSObject {
     
     public func start(fromManual: Bool = false, with newMode: SessionReplayRecordingMode) {
         sessionReplayQueue.async { [self] in
-            
-            
-            // SESSION REPLAY ERRORED SESSION SAMPLING HANDLING
-            
-            self.setRecordingMode(newMode)
-            
-            // END SESSION REPLAY ERRORED SESSION SAMPLING HANDLING
-            
-            
+
+            // A recorder that's still running keeps its mode, such as full after an error or
+            // recordReplay(), when a mid-session reconnect runs the config path again.
             guard !isRunning() else {
                 NRLOG_AGENT_DEBUG("Session replay harvest timer attempting to start while already running.")
                 return
             }
-            
+
+            // SESSION REPLAY ERRORED SESSION SAMPLING HANDLING
+
+            // Applied in this block rather than a second async one, so work queued after start
+            // (like publishing the configuration) sees the new mode.
+            self.applyRecordingMode(newMode)
+
+            // END SESSION REPLAY ERRORED SESSION SAMPLING HANDLING
+
             sessionReplay.start()
             self.harvestseconds = 0
             
@@ -156,15 +178,28 @@ public class SessionReplayManager: NSObject {
     
     // This function is to handle a session change created by a change in userId
     @objc public func endSession(harvest: Bool = true) {
-        stop()
-        if harvest {
-            self.harvest()
+        // One block on the replay queue, so an error queued during session end can't run between
+        // the stop and the mode reset and switch the ended session to full.
+        let endBlock = { [self] in
+            stop()
+            if harvest {
+                self.harvest()
+            }
+            // The ended session's mode no longer applies. Reset after the harvest, which skips in off mode.
+            sessionReplayMode = .off
+
+            // Reset isManuallyRecording for new session
+            isManuallyRecording = false
+
+            // Reset the isFirstChunk for new session
+            self.sessionReplay.isFirstChunk = true
         }
-        // Reset isManuallyRecording for new session
-        isManuallyRecording = false
-        
-        // Reset the isFirstChunk for new session
-        self.sessionReplay.isFirstChunk = true
+
+        if DispatchQueue.getSpecific(key: SessionReplayManager.queueKey) != nil {
+            endBlock()
+        } else {
+            sessionReplayQueue.sync(execute: endBlock)
+        }
     }
     
     @objc public func manualRecordReplay() -> Bool {
@@ -176,7 +211,8 @@ public class SessionReplayManager: NSObject {
             }
             
             start(fromManual: true, with: .full)
-            
+            publishConfiguration()
+
             NRLOG_AGENT_DEBUG("Session replay started via manual recordReplay() API")
             return true
         }
@@ -195,8 +231,26 @@ public class SessionReplayManager: NSObject {
             stop()
             harvest()
             sessionReplayMode = .off
+            publishConfiguration()
             NRLOG_AGENT_DEBUG("Session replay paused via manual pauseReplay() API")
             return true
+        }
+    }
+
+    /// Posts kNRSessionReplayConfigurationDidChangeNotification with the current configuration.
+    /// Always queued, even when already on sessionReplayQueue, so it runs after any mode change
+    /// queued before it (start's block included). Posted on main so observers run off the replay
+    /// queue and can call pauseReplay() / recordReplay() without deadlocking.
+    @objc public func publishConfiguration() {
+        sessionReplayQueue.async {
+            guard let configuration = NewRelicAgentInternal.sharedInstance()?.sessionReplayConfiguration() else {
+                return
+            }
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: NSNotification.Name(kNRSessionReplayConfigurationDidChangeNotification),
+                                                object: nil,
+                                                userInfo: configuration)
+            }
         }
     }
     
@@ -217,6 +271,10 @@ public class SessionReplayManager: NSObject {
         {
             NRLOG_AGENT_DEBUG("Session replay harvest timer stopping because New Relic agent is not started.")
             stop()
+            // Nothing else reports this stop. It happens while a reconnect has the default config
+            // in place, and the post after /connect reports the mode replay restarts in.
+            sessionReplayMode = .off
+            publishConfiguration()
             return
         }
         
