@@ -20,6 +20,7 @@ namespace NewRelic {
                                                                            AttributeValidator& validator);
         static std::shared_ptr<AnalyticEvent> deserializeMobileEvent(std::istream& is);
         static std::shared_ptr<AnalyticEvent> deserializeUserActionEvent(std::istream &is);
+        static std::shared_ptr<AnalyticEvent> deserializeViewEvent(const char* eventType, std::istream &is);
         static std::shared_ptr<AnalyticEvent> deserializeCustomEvent(std::string& eventType, std::istream& is);
     public:
         static std::shared_ptr<AnalyticEvent> deserialize(std::istream& is);
