@@ -560,8 +560,6 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     NRMAConnectInformation *info = [NRMAAgentConfiguration connectionInformation];
     [self.analyticsController setNRSessionAttribute:kNRMA_RA_appBuild
                                               value:info.applicationInformation.appBuild];
-    [self.analyticsController setNRSessionAttribute:kNRMA_RA_appVersion
-                                              value:info.applicationInformation.appVersion];
     [self.analyticsController setNRSessionAttribute:kNRMA_RA_platform
                                               value:[NewRelicInternalUtils stringFromNRMAApplicationPlatform:info.deviceInformation.platform]];
     [self.analyticsController setNRSessionAttribute:kNRMA_RA_platformVersion

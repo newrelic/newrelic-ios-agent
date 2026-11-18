@@ -27,6 +27,17 @@ namespace NewRelic {
                                  const std::string& reportId,
                                  std::function<void(bool shouldRemove)> onComplete);
 
+            // Same as above, but appVersion is the app version the report was originally
+            // recorded under (read back from the persisted report's own ApplicationInfo),
+            // not whatever the current session happens to be. A persisted report flushed
+            // after an app-version change must upload under the version that produced it,
+            // not the version currently running. Default implementation ignores appVersion
+            // and delegates to the 3-arg overload above.
+            virtual void publish(std::shared_ptr<HexContext> const& context,
+                                 const std::string& reportId,
+                                 const std::string& appVersion,
+                                 std::function<void(bool shouldRemove)> onComplete);
+
             std::string lastPublishedFile();
 
             explicit HexPublisher(const char* storePath);

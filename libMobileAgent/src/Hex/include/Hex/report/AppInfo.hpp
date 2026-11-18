@@ -23,13 +23,15 @@ namespace NewRelic {
             class AppInfo {
             public:
                 AppInfo(ApplicationLicense* appLicense,
-                        fbs::Platform platform);
+                        fbs::Platform platform,
+                        const char* appVersion = "");
 
                 Offset<fbs::ApplicationInfo> serialize(flatbuffers::FlatBufferBuilder& builder) const;
 
             private:
                 ApplicationLicense* _appLicense;
                 fbs::Platform _platform;
+                std::string _appVersion;
             };
         }
     }

@@ -64,6 +64,33 @@ namespace NewRelic {
             }
         }
 
+        void HexUploadPublisher::publish(std::shared_ptr<NewRelic::Hex::HexContext>const& context,
+                                         const std::string& reportId,
+                                         const std::string& appVersion,
+                                         std::function<void(bool shouldRemove)> onComplete) {
+
+            auto buf = context->getBuilder()->GetBufferPointer();
+            auto size = context->getBuilder()->GetSize();
+
+            @autoreleasepool {
+                NSData* report = [NSData dataWithBytes:buf
+                                                length:size];
+                NSString* nsReportId = [NSString stringWithUTF8String:reportId.c_str()];
+                NSString* nsAppVersion = appVersion.empty() ? nil : [NSString stringWithUTF8String:appVersion.c_str()];
+
+                __block std::function<void(bool)> cb = onComplete;
+                [uploader->wrapper sendData:report
+                                   reportId:nsReportId
+                                 appVersion:nsAppVersion
+                                 completion:^(BOOL shouldRemove) {
+                    if (cb) {
+                        cb(shouldRemove);
+                    }
+                    cb = nullptr;
+                }];
+            }
+        }
+
         void HexUploadPublisher::retry(){
             [uploader->wrapper retryFailedTasks];
         }

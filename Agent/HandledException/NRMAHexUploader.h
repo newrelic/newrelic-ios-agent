@@ -36,6 +36,11 @@
 // were exhausted), or shouldRemove=NO to keep it for a later attempt. `completion` may be nil.
 - (void) sendData:(NSData*)data reportId:(NSString*)reportId completion:(void(^)(BOOL shouldRemove))completion;
 
+// Same as above, but overrides the X-NewRelic-App-Version header for this upload with
+// appVersion (the version the report was originally recorded under) instead of this
+// uploader's own applicationVersion. Pass nil to fall back to applicationVersion.
+- (void) sendData:(NSData*)data reportId:(NSString*)reportId appVersion:(NSString* _Nullable)appVersion completion:(void(^)(BOOL shouldRemove))completion;
+
 - (void) retryFailedTasks;
 
 - (void) invalidate;
