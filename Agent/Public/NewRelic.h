@@ -1008,9 +1008,8 @@ extern "C" {
  * Safe to call from any thread. It only does cheap checks before returning; the events
  * are parsed and stored in the background.
  *
- * @param eventsJSON A JSON array of rrweb events, in play order.
- * @param rrwebVersion The rrweb version of the encoder that produced the events. Their
- *                     uploads report it as rrweb.version.
+ * @param eventsJSON A JSON array of rrweb events, in play order. Their uploads report the
+ *                   agent's own rrweb version.
  *
  * @return One of:
  * - kNRSessionReplayIngestAccepted: the events will be uploaded with this session's replay.
@@ -1020,15 +1019,15 @@ extern "C" {
  *   started. Also returned for "error" mode, and for every call unless
  *   setSessionReplayExternalCaptureSource:YES was called before the agent started.
  *   Don't retry.
- * - kNRSessionReplayIngestDroppedInvalid: eventsJSON or rrwebVersion is empty, or eventsJSON
- *   is over 1,000,000 bytes of UTF-8. Don't retry. Take a new Meta and FullSnapshot, so the
- *   events that follow have a base again.
+ * - kNRSessionReplayIngestDroppedInvalid: eventsJSON is empty or over 1,000,000 bytes of
+ *   UTF-8. Don't retry. Take a new Meta and FullSnapshot, so the events that follow have a
+ *   base again.
  */
-+ (NSString* _Nonnull) recordSessionReplayEvents:(NSString* _Nonnull) eventsJSON rrwebVersion:(NSString* _Nonnull) rrwebVersion;
++ (NSString* _Nonnull) recordSessionReplayEvents:(NSString* _Nonnull) eventsJSON;
 
 /*!
  * Turns off the agent's own session replay screen and touch capture, for a framework that
- * captures replay itself and sends it with recordSessionReplayEvents:rrwebVersion:.
+ * captures replay itself and sends it with recordSessionReplayEvents:.
  * Sampling, pauseReplay(), recordReplay() and uploads work as before.
  *
  * Call it before starting the agent. Calls after the agent starts are ignored, with a warning.

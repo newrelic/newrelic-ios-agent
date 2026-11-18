@@ -155,7 +155,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSDictionary<NSString*, id>* _Nonnull) sessionReplayOffConfiguration;
 
 // Takes rrweb events from an external replay source. Returns a kNRSessionReplayIngest status.
-- (NSString* _Nonnull) recordSessionReplayEvents:(NSString* _Nonnull)eventsJSON rrwebVersion:(NSString* _Nonnull)rrwebVersion;
+- (NSString* _Nonnull) recordSessionReplayEvents:(NSString* _Nonnull)eventsJSON;
 
 // Replaces native session replay capture with an external source. Ignored once the agent has started.
 + (void) setSessionReplayExternalCaptureSource:(BOOL)external;

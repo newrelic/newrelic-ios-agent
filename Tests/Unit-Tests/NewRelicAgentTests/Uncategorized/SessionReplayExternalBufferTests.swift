@@ -29,13 +29,13 @@ final class SessionReplayExternalBufferTests: XCTestCase {
     private func makeBuffer(maxUploadBytes: Int) -> SessionReplayExternalBuffer {
         return SessionReplayExternalBuffer(directory: directory, maxUploadBytes: maxUploadBytes) { [weak self] metadata in
             self?.provided.append(metadata)
-            return URL(string: "https://test.invalid/recovered?v=\(metadata.rrwebVersion)")
+            return URL(string: "https://test.invalid/recovered")
         }
     }
 
     @discardableResult
     private func append(_ events: String...) -> ExternalReplayAppendResult {
-        return buffer.append(Data(rrwebBatch(events).utf8), rrwebVersion: "2.0.0-test", sessionId: "s1", isFirstChunk: true)
+        return buffer.append(Data(rrwebBatch(events).utf8), sessionId: "s1", isFirstChunk: true)
     }
 
     private func file(_ path: String) -> String? {
@@ -63,7 +63,7 @@ final class SessionReplayExternalBufferTests: XCTestCase {
 
     func testInvalidBatchesAreRejected() {
         for batch in ["not json", "{}", "[1,2]", #"[{"type":4}]"#, #"[{"timestamp":1}]"#] {
-            XCTAssertEqual(buffer.append(Data(batch.utf8), rrwebVersion: "v", sessionId: "s1", isFirstChunk: true), .invalid, batch)
+            XCTAssertEqual(buffer.append(Data(batch.utf8), sessionId: "s1", isFirstChunk: true), .invalid, batch)
         }
         XCTAssertFalse(buffer.hasOpenSegment)
     }
@@ -72,7 +72,7 @@ final class SessionReplayExternalBufferTests: XCTestCase {
     func testTimestampsOutsideTheMillisecondRangeAreInvalid() {
         for timestamp in ["1e19", "-1e19", "99999999999999999999", "1e15", "-1"] {
             let batch = #"[{"type":4,"timestamp":\#(timestamp),"data":{}}]"#
-            XCTAssertEqual(buffer.append(Data(batch.utf8), rrwebVersion: "v", sessionId: "s1", isFirstChunk: true), .invalid, timestamp)
+            XCTAssertEqual(buffer.append(Data(batch.utf8), sessionId: "s1", isFirstChunk: true), .invalid, timestamp)
         }
         XCTAssertEqual(append(rrwebEvent(4, 1_731_783_600_000)), .appended(kept: 1, droppedBeforeMeta: 0))
     }
@@ -94,10 +94,10 @@ final class SessionReplayExternalBufferTests: XCTestCase {
     func testURLFileDescribesEverythingOnDisk() {
         append(rrwebEvent(4, 1), rrwebEvent(2, 1))
         append(rrwebEvent(4, 4), rrwebEvent(2, 4), rrwebEvent(3, 5))
-        XCTAssertEqual(file("s1_upload_url.txt"), "https://test.invalid/recovered?v=2.0.0-test")
+        XCTAssertEqual(file("s1_upload_url.txt"), "https://test.invalid/recovered")
         let onDisk = ["s1/frame_0.json", "s1/frame_1.json"].map { file($0)!.utf8.count }.reduce(0, +)
         XCTAssertEqual(provided.last, ExternalReplayUploadMetadata(uncompressedSize: onDisk, firstTimestamp: 1, lastTimestamp: 5,
-                                                                   isFirstChunk: true, isGZipped: true, rrwebVersion: "2.0.0-test"))
+                                                                   isFirstChunk: true, isGZipped: true))
     }
 
     func testResetRequiresANewMeta() {
@@ -189,8 +189,8 @@ final class SessionReplayExternalBufferTests: XCTestCase {
         let url = "https://test.invalid/recovered/\(session)"
         let crashed = SessionReplayExternalBuffer(directory: frames, maxUploadBytes: 1_000_000) { _ in URL(string: url) }
         _ = crashed.append(Data(rrwebBatch([rrwebEvent(4, 1), rrwebEvent(2, 1), rrwebEvent(3, 2), rrwebEvent(4, 3)]).utf8),
-                           rrwebVersion: "2.0.0-test", sessionId: session, isFirstChunk: true)
-        _ = crashed.append(Data(rrwebBatch([rrwebEvent(2, 3)]).utf8), rrwebVersion: "2.0.0-test", sessionId: session, isFirstChunk: true)
+                           sessionId: session, isFirstChunk: true)
+        _ = crashed.append(Data(rrwebBatch([rrwebEvent(2, 3)]).utf8), sessionId: session, isFirstChunk: true)
 
         let reporter = CapturingSessionReplayReporter(applicationToken: "test-token", url: "mobile-collector.newrelic.com" as NSString)
         let manager = SessionReplayManager(reporter: reporter, url: "mobile-collector.newrelic.com" as NSString)

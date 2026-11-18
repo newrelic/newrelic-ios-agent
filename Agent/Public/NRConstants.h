@@ -78,7 +78,7 @@ static SessionReplayMaskingMode const SessionReplayMaskingModeCustom = @"custom"
 // Posted on the main thread with +[NewRelic sessionReplayConfiguration] as userInfo
 #define kNRSessionReplayConfigurationDidChangeNotification @"com.newrelic.sessionReplay.configuration.changed"
 
-// Returned by +[NewRelic recordSessionReplayEvents:rrwebVersion:]
+// Returned by +[NewRelic recordSessionReplayEvents:]
 #define kNRSessionReplayIngestAccepted        @"accepted"
 #define kNRSessionReplayIngestDroppedDisabled @"dropped_disabled"
 #define kNRSessionReplayIngestDroppedInvalid  @"dropped_invalid"

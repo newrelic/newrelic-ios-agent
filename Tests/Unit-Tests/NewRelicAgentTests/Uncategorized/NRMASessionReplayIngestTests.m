@@ -23,12 +23,6 @@
 + (void) clear;
 @end
 
-@interface SessionReplayReporter (ingestTests)
-- (NSURL *) uploadURLWithUncompressedDataSize:(NSInteger)size firstTimestamp:(NSTimeInterval)first
-                                 lastTimestamp:(NSTimeInterval)last isFirstChunk:(BOOL)isFirstChunk
-                                     isGZipped:(BOOL)isGZipped rrwebVersion:(NSString *)rrwebVersion;
-@end
-
 @interface NRMASessionReplayIngestTests : XCTestCase
 @property id mockHarvestController;
 @property id mockAgentInternal;
@@ -154,7 +148,7 @@ static NSString *uploadAttributes(NSURL *url)
 
 - (NSString *) ingest:(NSString *)json
 {
-    return [self.agent recordSessionReplayEvents:json rrwebVersion:@"2.0.0-test"];
+    return [self.agent recordSessionReplayEvents:json];
 }
 
 // Replaces the sharedInstance stub, so a test can act before the agent starts (nil) or after.
@@ -167,12 +161,20 @@ static NSString *uploadAttributes(NSURL *url)
 
 #pragma mark - Upload URL
 
-- (void) testUploadURLStampsTheGivenRRWebVersion
+- (void) testExternalUploadsCarryTheAgentRRWebVersion
 {
     [self useFullSampling];
-    NSURL *url = [self.reporter uploadURLWithUncompressedDataSize:10 firstTimestamp:1000 lastTimestamp:2000
-                                                     isFirstChunk:YES isGZipped:YES rrwebVersion:@"2.1.0-flutter"];
-    XCTAssertTrue([uploadAttributes(url) containsString:@"rrweb.version=2.1.0-flutter"]);
+    [self startSession];
+    XCTAssertEqualObjects([self ingest:batch], kNRSessionReplayIngestAccepted);
+    NRMADrainReplayQueue(self.manager);
+    // Storing the events writes the crash-recovery URL file, built by the same call as the harvest's
+    // upload URL. A plain-init agent has no session id, so they're filed under the manager's fallback.
+    NSString *documents = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
+    NSString *urlFile = [[documents stringByAppendingPathComponent:kNRMA_SessionReplayFrames_folder]
+                         stringByAppendingPathComponent:@"unknown_session_upload_url.txt"];
+    NSString *url = [NSString stringWithContentsOfFile:urlFile encoding:NSUTF8StringEncoding error:nil];
+    XCTAssertNotNil(url);
+    XCTAssertTrue([uploadAttributes([NSURL URLWithString:url]) containsString:@"rrweb.version=^2.0.0-alpha.17"]);
 }
 
 // Guard: passes before and after the change.
@@ -246,12 +248,11 @@ static NSString *uploadAttributes(NSURL *url)
     XCTAssertEqualObjects([self ingest:batch], kNRSessionReplayIngestAccepted);
 }
 
-- (void) testDroppedInvalidForEmptyEventsOrVersion
+- (void) testDroppedInvalidForEmptyEvents
 {
     [self useFullSampling];
     [self startSession];
     XCTAssertEqualObjects([self ingest:@""], kNRSessionReplayIngestDroppedInvalid);
-    XCTAssertEqualObjects([self.agent recordSessionReplayEvents:batch rrwebVersion:@""], kNRSessionReplayIngestDroppedInvalid);
 }
 
 - (void) testUTF8LimitIsMeasuredInBytes
@@ -267,7 +268,7 @@ static NSString *uploadAttributes(NSURL *url)
 - (void) testPublicEntryBeforeTheAgentStartsIsDroppedDisabled
 {
     [self stubSharedInstance:nil];
-    XCTAssertEqualObjects([NewRelic recordSessionReplayEvents:batch rrwebVersion:@"2.0.0-test"], kNRSessionReplayIngestDroppedDisabled);
+    XCTAssertEqualObjects([NewRelic recordSessionReplayEvents:batch], kNRSessionReplayIngestDroppedDisabled);
 }
 
 - (void) testExternalCaptureSourceIsOnlySetBeforeStart

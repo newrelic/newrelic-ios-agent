@@ -46,7 +46,7 @@ final class SessionReplayExternalIngestTests: XCTestCase {
     }
 
     private func record(_ events: String...) {
-        manager.recordExternalEvents(rrwebBatch(events), rrwebVersion: "2.0.0-test")
+        manager.recordExternalEvents(rrwebBatch(events))
         drain()
     }
 
@@ -82,13 +82,9 @@ final class SessionReplayExternalIngestTests: XCTestCase {
         XCTAssertEqual(reporter.uploads.count, 1)
         XCTAssertEqual(try uploadedTimestamps(0), [1, 1, 2])
         let request = try XCTUnwrap(request(for: reporter.uploads[0]))
-        XCTAssertEqual(request.rrwebVersion, "2.0.0-test")
         XCTAssertTrue(request.isFirstChunk)
         XCTAssertEqual(request.firstTimestamp, 1)
         XCTAssertEqual(request.lastTimestamp, 2)
-        // The URL file that crash recovery reads is built through the same call, so it carries the version too.
-        XCTAssertGreaterThan(reporter.requests.count, 1)
-        XCTAssertTrue(reporter.requests.values.allSatisfy { $0.rrwebVersion == "2.0.0-test" })
     }
 
     func testLaterUploadsAreNotFirstChunk() throws {
@@ -135,14 +131,14 @@ final class SessionReplayExternalIngestTests: XCTestCase {
         let switching = SessionSwitchingManager(reporter: reporter, url: "mobile-collector.newrelic.com" as NSString)
         switching.externalCaptureSource = true
         switching.start(with: .full)
-        switching.recordExternalEvents(rrwebBatch([rrwebEvent(4, 1), rrwebEvent(2, 1)]), rrwebVersion: "2.0.0-test")
-        switching.recordExternalEvents(rrwebBatch([rrwebEvent(4, 2), rrwebEvent(2, 2)]), rrwebVersion: "2.0.0-test")
+        switching.recordExternalEvents(rrwebBatch([rrwebEvent(4, 1), rrwebEvent(2, 1)]))
+        switching.recordExternalEvents(rrwebBatch([rrwebEvent(4, 2), rrwebEvent(2, 2)]))
         switching.stop()
         let earlierSession = switching.sessionId
         switching.sessionId = "session-b-\(UUID().uuidString)"
         switching.start(with: .full)
-        switching.recordExternalEvents(rrwebBatch([rrwebEvent(4, 5), rrwebEvent(2, 5)]), rrwebVersion: "2.0.0-test")
-        switching.recordExternalEvents(rrwebBatch([rrwebEvent(4, 6), rrwebEvent(2, 6)]), rrwebVersion: "2.0.0-test")
+        switching.recordExternalEvents(rrwebBatch([rrwebEvent(4, 5), rrwebEvent(2, 5)]))
+        switching.recordExternalEvents(rrwebBatch([rrwebEvent(4, 6), rrwebEvent(2, 6)]))
         switching.harvest()
         switching.stop()
         XCTAssertEqual(try uploadedTimestamps(0), [5, 5])
@@ -164,7 +160,7 @@ final class SessionReplayExternalIngestTests: XCTestCase {
     func testWithoutSuppressionExternalEventsAreIgnored() {
         let native = SessionReplayManager(reporter: reporter, url: "mobile-collector.newrelic.com" as NSString)
         native.start(with: .full); _ = native.isManuallyActive()
-        native.recordExternalEvents(rrwebBatch([rrwebEvent(4, 1), rrwebEvent(2, 1)]), rrwebVersion: "2.0.0-test")
+        native.recordExternalEvents(rrwebBatch([rrwebEvent(4, 1), rrwebEvent(2, 1)]))
         _ = native.isManuallyActive()
         // Storing a batch builds its crash-recovery URL file, which asks the reporter for a URL.
         XCTAssertTrue(reporter.requests.isEmpty, "nothing was stored")
@@ -174,7 +170,7 @@ final class SessionReplayExternalIngestTests: XCTestCase {
     }
 
     func testInvalidBatchWritesNothing() {
-        manager.recordExternalEvents("not json", rrwebVersion: "2.0.0-test"); drain()
+        manager.recordExternalEvents("not json"); drain()
         manager.harvest(final: true); drain()
         XCTAssertTrue(reporter.uploads.isEmpty)
     }

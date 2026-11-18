@@ -126,7 +126,7 @@ static BOOL _sessionReplayExternalCaptureSource;
 static NSString* kNRMASessionReplayExternalCaptureSourceLock = @"SessionReplayExternalCaptureSourceLock";
 
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
-// The most UTF-8 bytes one recordSessionReplayEvents:rrwebVersion: call takes.
+// The most UTF-8 bytes one recordSessionReplayEvents: call takes.
 static const NSUInteger kNRMAMaxSessionReplayIngestBytes = 1000000;
 #endif
 
@@ -851,7 +851,7 @@ static NSString* NRMASessionReplayRecordingModeName(SessionReplayRecordingMode m
 }
 
 // Only cheap checks run on the calling thread. The events are parsed and stored on the replay queue.
-- (NSString*) recordSessionReplayEvents:(NSString*)eventsJSON rrwebVersion:(NSString*)rrwebVersion {
+- (NSString*) recordSessionReplayEvents:(NSString*)eventsJSON {
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     // With native capture on, its harvest clears the folder the events are stored in.
     if (_sessionReplay == nil || !_sessionReplay.externalCaptureSource) {
@@ -862,7 +862,7 @@ static NSString* NRMASessionReplayRecordingModeName(SessionReplayRecordingMode m
         || [_sessionReplay sessionReplayMode] != SessionReplayRecordingModeFull) {
         return kNRSessionReplayIngestDroppedDisabled;
     }
-    if (eventsJSON.length == 0 || rrwebVersion.length == 0) {
+    if (eventsJSON.length == 0) {
         return kNRSessionReplayIngestDroppedInvalid;
     }
     // Zero for a non-empty string means it can't be encoded as UTF-8.
@@ -870,7 +870,7 @@ static NSString* NRMASessionReplayRecordingModeName(SessionReplayRecordingMode m
     if (utf8Length == 0 || utf8Length > kNRMAMaxSessionReplayIngestBytes) {
         return kNRSessionReplayIngestDroppedInvalid;
     }
-    [_sessionReplay recordExternalEvents:eventsJSON rrwebVersion:rrwebVersion];
+    [_sessionReplay recordExternalEvents:eventsJSON];
     return kNRSessionReplayIngestAccepted;
 #else
     return kNRSessionReplayIngestDroppedDisabled;

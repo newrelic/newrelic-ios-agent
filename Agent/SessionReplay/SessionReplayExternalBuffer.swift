@@ -18,7 +18,6 @@ struct ExternalReplayUploadMetadata: Equatable {
     let lastTimestamp: TimeInterval
     let isFirstChunk: Bool
     let isGZipped: Bool
-    let rrwebVersion: String
 }
 
 @available(iOS 13.0, *)
@@ -80,7 +79,6 @@ final class SessionReplayExternalBuffer {
     private var segments: [Segment] = []
     private var folderSessionId: String?
     private var nextFileIndex = 0
-    private var rrwebVersion = ""
 
     /// Whether events that don't start a segment are kept. False until the first Meta,
     /// and again after a final take, a reset, or a failed write.
@@ -100,7 +98,7 @@ final class SessionReplayExternalBuffer {
     /// Stores a JSON array of rrweb events. Events that arrive while no segment is open are dropped
     /// until the next Meta. A batch that isn't an array of objects with a numeric `type` and
     /// `timestamp` changes nothing.
-    func append(_ batch: Data, rrwebVersion: String, sessionId: String, isFirstChunk: Bool) -> ExternalReplayAppendResult {
+    func append(_ batch: Data, sessionId: String, isFirstChunk: Bool) -> ExternalReplayAppendResult {
         guard let events = Self.parse(batch) else {
             return .invalid
         }
@@ -131,7 +129,6 @@ final class SessionReplayExternalBuffer {
         }
 
         if kept > 0 {
-            self.rrwebVersion = rrwebVersion
             writeURLFile(isFirstChunk: isFirstChunk)
         }
         return .appended(kept: kept, droppedBeforeMeta: droppedBeforeMeta)
@@ -174,8 +171,7 @@ final class SessionReplayExternalBuffer {
                                                                        firstTimestamp: packed.firstTimestamp,
                                                                        lastTimestamp: packed.lastTimestamp,
                                                                        isFirstChunk: isFirstChunk && index == 0,
-                                                                       isGZipped: packed.payload.isGzipped,
-                                                                       rrwebVersion: rrwebVersion))
+                                                                       isGZipped: packed.payload.isGzipped))
         }
 
         for segment in taken {
@@ -202,7 +198,6 @@ final class SessionReplayExternalBuffer {
         segments.removeAll()
         folderSessionId = nil
         nextFileIndex = 0
-        rrwebVersion = ""
         hasOpenSegment = false
     }
 
@@ -387,8 +382,7 @@ final class SessionReplayExternalBuffer {
                                                     firstTimestamp: first.firstTimestamp,
                                                     lastTimestamp: last.lastTimestamp,
                                                     isFirstChunk: isFirstChunk,
-                                                    isGZipped: true,
-                                                    rrwebVersion: rrwebVersion)
+                                                    isGZipped: true)
         guard let uploadURL = urlProvider(metadata) else {
             NRLOG_AGENT_DEBUG("Failed to construct an upload URL for external session replay events.")
             return

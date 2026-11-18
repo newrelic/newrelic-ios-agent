@@ -499,13 +499,13 @@ public class SessionReplayManager: NSObject {
     /// Stores rrweb events from the external capture source, to upload with the next harvest.
     /// Safe to call from any thread: the work runs on the replay queue. Events are dropped when
     /// native capture isn't suppressed, or when the mode is no longer full by the time they're stored.
-    @objc public func recordExternalEvents(_ eventsJSON: String, rrwebVersion: String) {
+    @objc public func recordExternalEvents(_ eventsJSON: String) {
         sessionReplayQueue.async { [self] in
             guard externalCaptureSource, sessionReplayMode == .full else {
                 NRLOG_AGENT_DEBUG("Dropping external session replay events: native capture isn't suppressed, or replay isn't recording in full mode.")
                 return
             }
-            switch externalBuffer.append(Data(eventsJSON.utf8), rrwebVersion: rrwebVersion, sessionId: currentSessionId(),
+            switch externalBuffer.append(Data(eventsJSON.utf8), sessionId: currentSessionId(),
                                          isFirstChunk: sessionReplay.isFirstChunk) {
             case .invalid:
                 NRLOG_AGENT_DEBUG("Dropping external session replay events that aren't a JSON array of rrweb events.")
@@ -543,8 +543,7 @@ public class SessionReplayManager: NSObject {
                                   firstTimestamp: metadata.firstTimestamp,
                                   lastTimestamp: metadata.lastTimestamp,
                                   isFirstChunk: metadata.isFirstChunk,
-                                  isGZipped: metadata.isGZipped,
-                                  rrwebVersion: metadata.rrwebVersion)
+                                  isGZipped: metadata.isGZipped)
     }
 
     // The folder crash recovery reads. Static, because the buffer is created before super.init().

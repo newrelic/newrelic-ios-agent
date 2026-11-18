@@ -36,9 +36,6 @@ public class SessionReplayReporter: NSObject {
     private static let kGzipEncoding = "gzip"
     private static let kPostMethod = "POST"
 
-    /// The rrweb version the agent's own encoder emits. Events from an external source carry theirs.
-    static let nativeRRWebVersion = "^2.0.0-alpha.17"
-
     @objc public init(applicationToken: String, url: NSString) {
         self.applicationToken = applicationToken
         self.url = url
@@ -291,7 +288,7 @@ public class SessionReplayReporter: NSObject {
        }
    }
     
-    func uploadURL(uncompressedDataSize: Int, firstTimestamp: TimeInterval, lastTimestamp: TimeInterval, isFirstChunk: Bool, isGZipped: Bool, rrwebVersion: String = SessionReplayReporter.nativeRRWebVersion) -> URL? {
+    func uploadURL(uncompressedDataSize: Int, firstTimestamp: TimeInterval, lastTimestamp: TimeInterval, isFirstChunk: Bool, isGZipped: Bool) -> URL? {
         guard let config = NRMAHarvestController.configuration() else {
             NRLOG_AGENT_DEBUG("Error accessing harvester configuration information")
             return nil
@@ -303,7 +300,7 @@ public class SessionReplayReporter: NSObject {
         var attributes: [String: String] = [
             "entityGuid": config.entity_guid,
             "isFirstChunk": String(isFirstChunk),
-            "rrweb.version": rrwebVersion,
+            "rrweb.version": "^2.0.0-alpha.17",
             "payload.type": "standard",
             "hasMeta": String(true),
             "hasReplay": String(true),
