@@ -157,8 +157,7 @@ NS_ASSUME_NONNULL_BEGIN
 // Takes rrweb events from an external replay source. Returns a kNRSessionReplayIngest status.
 - (NSString* _Nonnull) recordSessionReplayEvents:(NSString* _Nonnull)eventsJSON;
 
-// Replaces native session replay capture with an external source. Ignored once the agent has started.
-+ (void) setSessionReplayExternalCaptureSource:(BOOL)external;
+// Whether the Flutter agent's events replace native session replay capture: when the platform is Flutter.
 + (BOOL) sessionReplayExternalCaptureSource;
 
 // END SESSION REPLAY SECTION Methods to start and pause SessionReplay

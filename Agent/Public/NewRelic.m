@@ -956,14 +956,6 @@
     return [agent recordSessionReplayEvents:eventsJSON];
 }
 
-/*
- * Replaces native session replay capture with an external source. Only takes effect
- * before the agent starts.
- */
-+ (void) setSessionReplayExternalCaptureSource:(BOOL)external {
-    [NewRelicAgentInternal setSessionReplayExternalCaptureSource:external];
-}
-
 
 #pragma mark - Hidden APIs
 

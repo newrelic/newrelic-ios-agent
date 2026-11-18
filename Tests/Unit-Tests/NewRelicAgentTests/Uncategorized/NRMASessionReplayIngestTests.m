@@ -86,9 +86,8 @@ static NSString *uploadAttributes(NSURL *url)
     [self.manager stop];
     [self.manager clearAllData];
     [[NSFileManager defaultManager] removeItemAtPath:errorModeMarkerPath() error:nil];
-    // Leave native capture unsuppressed for later tests, even when a test stops early.
-    [self stubSharedInstance:nil];
-    [NewRelic setSessionReplayExternalCaptureSource:NO];
+    // Leave the platform native for later tests, even when a test stops early.
+    [NewRelic setPlatform:NRMAPlatform_Native];
     [self.mockAgentInternal stopMocking];
     [self.mockHarvestController stopMocking];
 
@@ -271,16 +270,13 @@ static NSString *uploadAttributes(NSURL *url)
     XCTAssertEqualObjects([NewRelic recordSessionReplayEvents:batch], kNRSessionReplayIngestDroppedDisabled);
 }
 
-- (void) testExternalCaptureSourceIsOnlySetBeforeStart
+- (void) testOnlyTheFlutterPlatformSuppressesNativeCapture
 {
-    [self stubSharedInstance:nil];
-    [NewRelic setSessionReplayExternalCaptureSource:YES];
-    XCTAssertTrue([NewRelicAgentInternal sessionReplayExternalCaptureSource]);
-    [self stubSharedInstance:self.agent];
-    [NewRelic setSessionReplayExternalCaptureSource:NO];
-    XCTAssertTrue([NewRelicAgentInternal sessionReplayExternalCaptureSource], @"ignored after start");
-    [self stubSharedInstance:nil];
-    [NewRelic setSessionReplayExternalCaptureSource:NO];                                             // leave it off for other tests
+    for (NRMAApplicationPlatform platform = NRMAPlatform_Native; platform <= NRMAPlatform_Unreal; platform++) {
+        [NewRelic setPlatform:platform];
+        XCTAssertEqual([NewRelicAgentInternal sessionReplayExternalCaptureSource], (BOOL)(platform == NRMAPlatform_Flutter),
+                       @"platform %lu", (unsigned long)platform);
+    }
 }
 
 @end

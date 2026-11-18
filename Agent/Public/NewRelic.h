@@ -122,6 +122,8 @@ extern "C" {
  *  set the application platform with which the app was built.
  *  Default is 'Native'.
  *  Some supported platforms may automatically be detected.
+ *  Setting NRMAPlatform_Flutter before the agent starts also replaces the agent's session
+ *  replay capture with the events sent to recordSessionReplayEvents:.
  */
 
 + (void) setPlatform:(NRMAApplicationPlatform)platform;
@@ -1001,9 +1003,14 @@ extern "C" {
 + (NSDictionary<NSString*, id>* _Nonnull) sessionReplayConfiguration;
 
 /*!
- * Takes rrweb events from a framework that captures its own replay (e.g. the New Relic
- * Flutter agent). The agent uploads them with its own session replay: about once a
- * minute, and when replay is paused or the session ends.
+ * Takes rrweb events from the New Relic Flutter agent, which captures its own replay. The
+ * agent uploads them with its own session replay: about once a minute, and when replay is
+ * paused or the session ends.
+ *
+ * When the platform is NRMAPlatform_Flutter as the agent starts (see setPlatform:), the
+ * agent's own screen and touch capture is off, and these events take its place. Sampling,
+ * pauseReplay(), recordReplay() and uploads work as before. It applies to the whole app,
+ * so screens the Flutter agent doesn't capture get no replay.
  *
  * Safe to call from any thread. It only does cheap checks before returning; the events
  * are parsed and stored in the background.
@@ -1016,26 +1023,14 @@ extern "C" {
  * - kNRSessionReplayIngestDroppedDisabled: the agent isn't recording replay in "full" mode,
  *   the recordingMode that sessionReplayConfiguration reports. For example, the session
  *   wasn't sampled, replay is paused or disabled, the session ended, or the agent hasn't
- *   started. Also returned for "error" mode, and for every call unless
- *   setSessionReplayExternalCaptureSource:YES was called before the agent started.
+ *   started. Also returned for "error" mode, and for every call unless the platform was
+ *   NRMAPlatform_Flutter when the agent started.
  *   Don't retry.
  * - kNRSessionReplayIngestDroppedInvalid: eventsJSON is empty or over 1,000,000 bytes of
  *   UTF-8. Don't retry. Take a new Meta and FullSnapshot, so the events that follow have a
  *   base again.
  */
 + (NSString* _Nonnull) recordSessionReplayEvents:(NSString* _Nonnull) eventsJSON;
-
-/*!
- * Turns off the agent's own session replay screen and touch capture, for a framework that
- * captures replay itself and sends it with recordSessionReplayEvents:.
- * Sampling, pauseReplay(), recordReplay() and uploads work as before.
- *
- * Call it before starting the agent. Calls after the agent starts are ignored, with a warning.
- * It applies to the whole app, so screens the framework doesn't capture get no replay.
- *
- * @param external YES to replace native capture with the external source.
- */
-+ (void) setSessionReplayExternalCaptureSource:(BOOL) external;
 
 @end
 

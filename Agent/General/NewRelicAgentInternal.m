@@ -121,10 +121,6 @@ static NRMAURLTransformer* urlTransformer;
 // The agent singleton
 static NewRelicAgentInternal* _sharedInstance;
 
-// Set before the agent starts, by +setSessionReplayExternalCaptureSource:.
-static BOOL _sessionReplayExternalCaptureSource;
-static NSString* kNRMASessionReplayExternalCaptureSourceLock = @"SessionReplayExternalCaptureSourceLock";
-
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
 // The most UTF-8 bytes one recordSessionReplayEvents: call takes.
 static const NSUInteger kNRMAMaxSessionReplayIngestBytes = 1000000;
@@ -877,20 +873,8 @@ static NSString* NRMASessionReplayRecordingModeName(SessionReplayRecordingMode m
 #endif
 }
 
-+ (void) setSessionReplayExternalCaptureSource:(BOOL)external {
-    if ([NewRelicAgentInternal sharedInstance] != nil) {
-        NRLOG_AGENT_WARNING(@"setSessionReplayExternalCaptureSource: is ignored after the agent starts. Call it before starting the agent.");
-        return;
-    }
-    @synchronized(kNRMASessionReplayExternalCaptureSourceLock) {
-        _sessionReplayExternalCaptureSource = external;
-    }
-}
-
 + (BOOL) sessionReplayExternalCaptureSource {
-    @synchronized(kNRMASessionReplayExternalCaptureSourceLock) {
-        return _sessionReplayExternalCaptureSource;
-    }
+    return [NRMAAgentConfiguration getPlatform] == NRMAPlatform_Flutter;
 }
 
 - (void)sessionReplayOnError:(NSError *_Nullable)error {

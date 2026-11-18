@@ -39,6 +39,9 @@ static NSUInteger __NRMA__maxOfflineStorageSizeBytes = 100000000; // 100 MB in b
 +(void) setPlatform:(NRMAApplicationPlatform)platform {
     __NRMA__applicationPlatform = platform;
 }
++ (NRMAApplicationPlatform) getPlatform {
+    return __NRMA__applicationPlatform;
+}
 + (void) setPlatformVersion:(NSString*)platformVersion
 {
     __NRMA__applicationPlatformVersion = platformVersion;
