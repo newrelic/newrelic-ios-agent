@@ -122,6 +122,8 @@ extern "C" {
  *  set the application platform with which the app was built.
  *  Default is 'Native'.
  *  Some supported platforms may automatically be detected.
+ *  Setting NRMAPlatform_Flutter before the agent starts also replaces the agent's session
+ *  replay capture with the events sent to recordSessionReplayEvents:.
  */
 
 + (void) setPlatform:(NRMAApplicationPlatform)platform;
@@ -999,6 +1001,40 @@ extern "C" {
  * @return The current session replay configuration.
  */
 + (NSDictionary<NSString*, id>* _Nonnull) sessionReplayConfiguration;
+
+/*!
+ * Takes rrweb events from the New Relic Flutter agent, which captures its own replay. The
+ * agent uploads them with its own session replay: about once a minute, and when replay is
+ * paused or the session ends.
+ *
+ * When the platform is NRMAPlatform_Flutter as the agent starts (see setPlatform:), the
+ * agent's own screen and touch capture is off, and these events take its place. Sampling,
+ * pauseReplay(), recordReplay() and uploads work as before. It applies to the whole app,
+ * so screens the Flutter agent doesn't capture get no replay.
+ *
+ * Safe to call from any thread. It only does cheap checks before returning; the events
+ * are parsed and stored in the background.
+ *
+ * Each session's replay starts at the first batch that holds a Meta event. Batches
+ * before it are dropped, and so are batches after a pause until one holds a Meta again.
+ *
+ * @param eventsJSON A JSON array of rrweb events, in play order. Their uploads report the
+ *                   agent's own rrweb version.
+ *
+ * @return One of:
+ * - kNRSessionReplayIngestAccepted: the events passed the checks that run before this
+ *   returns. They can still be dropped later: if they aren't a JSON array of rrweb events,
+ *   if they arrive before a Meta (see above), or if replay stops before they're stored.
+ * - kNRSessionReplayIngestDroppedDisabled: the agent isn't recording replay in "full" mode,
+ *   the recordingMode that sessionReplayConfiguration reports. For example, the session
+ *   wasn't sampled, replay is paused or disabled, the session ended, or the agent hasn't
+ *   started. Also returned for "error" mode, and for every call unless the platform was
+ *   NRMAPlatform_Flutter when the agent started.
+ *   Don't retry.
+ * - kNRSessionReplayIngestDroppedInvalid: eventsJSON is empty or can't be encoded as
+ *   UTF-8. Don't retry.
+ */
++ (NSString* _Nonnull) recordSessionReplayEvents:(NSString* _Nonnull) eventsJSON;
 
 @end
 

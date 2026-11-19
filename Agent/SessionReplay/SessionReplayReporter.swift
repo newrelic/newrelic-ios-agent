@@ -288,7 +288,8 @@ public class SessionReplayReporter: NSObject {
        }
    }
     
-    func uploadURL(uncompressedDataSize: Int, firstTimestamp: TimeInterval, lastTimestamp: TimeInterval, isFirstChunk: Bool, isGZipped: Bool) -> URL? {
+    func uploadURL(uncompressedDataSize: Int, firstTimestamp: TimeInterval, lastTimestamp: TimeInterval, isFirstChunk: Bool, isGZipped: Bool,
+                   hasMeta: Bool = true) -> URL? {
         guard let config = NRMAHarvestController.configuration() else {
             NRLOG_AGENT_DEBUG("Error accessing harvester configuration information")
             return nil
@@ -302,7 +303,7 @@ public class SessionReplayReporter: NSObject {
             "isFirstChunk": String(isFirstChunk),
             "rrweb.version": "^2.0.0-alpha.17",
             "payload.type": "standard",
-            "hasMeta": String(true),
+            "hasMeta": String(hasMeta),
             "hasReplay": String(true),
             "decompressedBytes": String(uncompressedDataSize),
             "replay.firstTimestamp": String(Int(firstTimestamp)),

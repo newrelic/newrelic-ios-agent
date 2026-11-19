@@ -140,7 +140,9 @@ static NewRelicAgentInternal* _sharedInstance;
     config = [NRMAAgentConfiguration connectionInformation];
     currentPlatform = config.deviceInformation.platform;
     XCTAssertEqual(currentPlatform, NRMAPlatform_Flutter);
-    
+
+    // Later tests start the agent, and a Flutter platform turns off its session replay capture.
+    [NewRelic setPlatform:NRMAPlatform_Native];
 }
 
 - (void) testNoticeNetworkFailureForURLWithTimer {

@@ -46,6 +46,7 @@
 + (void)setApplicationVersion:(NSString *)versionString;
 + (void)setApplicationBuild:(NSString *)buildString;
 + (void) setPlatform:(NRMAApplicationPlatform)platform;
++ (NRMAApplicationPlatform) getPlatform;
 + (void) setPlatformVersion:(NSString*)platformVersion;
 
 + (void) setMaxEventBufferTime:(NSUInteger)seconds;
