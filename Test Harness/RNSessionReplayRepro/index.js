@@ -13,6 +13,21 @@ import { Navigation } from 'react-native-navigation';
 import { gestureHandlerRootHOC } from 'react-native-gesture-handler';
 import NewRelic from 'newrelic-react-native-agent';
 import { HomeScreen, PlaceholderScreen, ProductScreen, SCREENS, SnippetScreen } from './src/screens';
+import {
+  ClippedListScreen,
+  FadeInScreen,
+  FontsScreen,
+  LinkScreen,
+  LiveTextScreen,
+  MaskingScreen,
+  NestedTextScreen,
+  OverlaysScreen,
+  PermutationsScreen,
+  SkeletonScreen,
+  ToastOverlay,
+  TransformsScreen,
+} from './src/permutations';
+import { CustomerPdpScreen } from './src/customerPdp';
 import { NR_CONFIG } from './nr-config';
 
 // Dev warnings would otherwise draw over the screens under test.
@@ -31,6 +46,19 @@ Navigation.registerComponent(SCREENS.Home, () => gestureHandlerRootHOC(HomeScree
 Navigation.registerComponent(SCREENS.Product, () => gestureHandlerRootHOC(ProductScreen));
 Navigation.registerComponent(SCREENS.Snippet, () => gestureHandlerRootHOC(SnippetScreen));
 Navigation.registerComponent(SCREENS.Placeholder, () => gestureHandlerRootHOC(PlaceholderScreen));
+Navigation.registerComponent(SCREENS.Permutations, () => gestureHandlerRootHOC(PermutationsScreen));
+Navigation.registerComponent(SCREENS.PermLink, () => gestureHandlerRootHOC(LinkScreen));
+Navigation.registerComponent(SCREENS.PermNestedText, () => gestureHandlerRootHOC(NestedTextScreen));
+Navigation.registerComponent(SCREENS.PermFadeIn, () => gestureHandlerRootHOC(FadeInScreen));
+Navigation.registerComponent(SCREENS.PermSkeleton, () => gestureHandlerRootHOC(SkeletonScreen));
+Navigation.registerComponent(SCREENS.PermLiveText, () => gestureHandlerRootHOC(LiveTextScreen));
+Navigation.registerComponent(SCREENS.PermClippedList, () => gestureHandlerRootHOC(ClippedListScreen));
+Navigation.registerComponent(SCREENS.PermFonts, () => gestureHandlerRootHOC(FontsScreen));
+Navigation.registerComponent(SCREENS.PermOverlays, () => gestureHandlerRootHOC(OverlaysScreen));
+Navigation.registerComponent(SCREENS.PermTransforms, () => gestureHandlerRootHOC(TransformsScreen));
+Navigation.registerComponent(SCREENS.PermMasking, () => gestureHandlerRootHOC(MaskingScreen));
+Navigation.registerComponent(SCREENS.CustomerPdp, () => gestureHandlerRootHOC(CustomerPdpScreen));
+Navigation.registerComponent(SCREENS.Toast, () => ToastOverlay);
 
 const TABS = [
   { id: 'discover', title: 'Discover', icon: require('./src/assets/tab-discover.png') },

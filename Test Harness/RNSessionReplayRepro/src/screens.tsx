@@ -23,11 +23,24 @@ export const SCREENS = {
   Product: 'repro.Product',
   Snippet: 'repro.Snippet',
   Placeholder: 'repro.Placeholder',
+  Permutations: 'repro.Permutations',
+  CustomerPdp: 'repro.CustomerPdp',
+  PermLink: 'repro.Perm.Link',
+  PermNestedText: 'repro.Perm.NestedText',
+  PermFadeIn: 'repro.Perm.FadeIn',
+  PermSkeleton: 'repro.Perm.Skeleton',
+  PermLiveText: 'repro.Perm.LiveText',
+  PermClippedList: 'repro.Perm.ClippedList',
+  PermFonts: 'repro.Perm.Fonts',
+  PermOverlays: 'repro.Perm.Overlays',
+  PermTransforms: 'repro.Perm.Transforms',
+  PermMasking: 'repro.Perm.Masking',
+  Toast: 'repro.Toast',
 };
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const push = (componentId: string, name: string, passProps: object = {}) =>
+export const push = (componentId: string, name: string, passProps: object = {}) =>
   Navigation.push(componentId, { component: { name, passProps } });
 
 export function HomeScreen({ componentId }: NavigationProps) {
@@ -83,6 +96,15 @@ export function HomeScreen({ componentId }: NavigationProps) {
         ))}
         <Pressable testID="open-snippet" onPress={() => push(componentId, SCREENS.Snippet)} style={styles.row}>
           <Text style={styles.rowName}>Ticket code snippet →</Text>
+        </Pressable>
+        <Pressable testID="open-permutations" onPress={() => push(componentId, SCREENS.Permutations)} style={styles.row}>
+          <Text style={styles.rowName}>UI permutations →</Text>
+        </Pressable>
+        <Pressable
+          testID="open-customer-pdp"
+          onPress={() => push(componentId, SCREENS.CustomerPdp, { productId: 'jeans', title: PRODUCTS[1].name })}
+          style={styles.row}>
+          <Text style={styles.rowName}>Customer PDP (ScrollViewport) →</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
@@ -178,10 +200,14 @@ export function ProductScreen({ componentId, productId }: NavigationProps & { pr
   );
 }
 
-export function SnippetScreen({ componentId }: NavigationProps) {
+// Also shown as a react-native-navigation modal from the Overlays permutation (`modal`).
+export function SnippetScreen({ componentId, modal }: NavigationProps & { modal?: boolean }) {
   return (
     <SafeAreaView style={styles.screen}>
-      <Header title="Ticket snippet" onBack={() => Navigation.pop(componentId)} />
+      <Header
+        title="Ticket snippet"
+        onBack={() => (modal ? Navigation.dismissModal(componentId) : Navigation.pop(componentId))}
+      />
       <TicketSnippet automationId="snippet-link" title="Snippet link" style={styles.snippetLink} />
     </SafeAreaView>
   );
