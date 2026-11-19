@@ -97,6 +97,14 @@ final class SessionReplayExternalIngestTests: XCTestCase {
         XCTAssertEqual(request(for: reporter.uploads[1])?.isFirstChunk, false)
     }
 
+    func testUploadsSayWhetherTheyHoldAMeta() {
+        record(rrwebEvent(4, 1), rrwebEvent(2, 1))
+        manager.harvest(); drain()
+        record(rrwebEvent(3, 2))
+        manager.harvest(); drain()
+        XCTAssertEqual(reporter.uploads.map { request(for: $0)?.hasMeta }, [true, false])
+    }
+
     func testEventsAfterAHarvestAreKeptWithoutANewMeta() throws {
         record(rrwebEvent(4, 1), rrwebEvent(2, 1))
         manager.harvest(); drain()

@@ -543,7 +543,8 @@ public class SessionReplayManager: NSObject {
                                   firstTimestamp: metadata.firstTimestamp,
                                   lastTimestamp: metadata.lastTimestamp,
                                   isFirstChunk: metadata.isFirstChunk,
-                                  isGZipped: metadata.isGZipped)
+                                  isGZipped: metadata.isGZipped,
+                                  hasMeta: metadata.hasMeta)
     }
 
     // The folder crash recovery reads. Static, because the buffer is created before super.init().

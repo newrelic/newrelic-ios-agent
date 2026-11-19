@@ -160,20 +160,42 @@ static NSString *uploadAttributes(NSURL *url)
 
 #pragma mark - Upload URL
 
+// Storing events writes the crash-recovery URL file, built by the same call as the harvest's upload URL.
+// A plain-init agent has no session id, so the events are filed under the manager's fallback.
+- (NSString *) externalURLFileAttributes
+{
+    NSString *documents = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
+    NSString *urlFile = [[documents stringByAppendingPathComponent:kNRMA_SessionReplayFrames_folder]
+                         stringByAppendingPathComponent:@"unknown_session_upload_url.txt"];
+    NSString *url = [NSString stringWithContentsOfFile:urlFile encoding:NSUTF8StringEncoding error:nil];
+    return url == nil ? nil : uploadAttributes([NSURL URLWithString:url]);
+}
+
 - (void) testExternalUploadsCarryTheAgentRRWebVersion
 {
     [self useFullSampling];
     [self startSession];
     XCTAssertEqualObjects([self ingest:batch], kNRSessionReplayIngestAccepted);
     NRMADrainReplayQueue(self.manager);
-    // Storing the events writes the crash-recovery URL file, built by the same call as the harvest's
-    // upload URL. A plain-init agent has no session id, so they're filed under the manager's fallback.
-    NSString *documents = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
-    NSString *urlFile = [[documents stringByAppendingPathComponent:kNRMA_SessionReplayFrames_folder]
-                         stringByAppendingPathComponent:@"unknown_session_upload_url.txt"];
-    NSString *url = [NSString stringWithContentsOfFile:urlFile encoding:NSUTF8StringEncoding error:nil];
-    XCTAssertNotNil(url);
-    XCTAssertTrue([uploadAttributes([NSURL URLWithString:url]) containsString:@"rrweb.version=^2.0.0-alpha.17"]);
+    XCTAssertTrue([[self externalURLFileAttributes] containsString:@"rrweb.version=^2.0.0-alpha.17"]);
+}
+
+- (void) testExternalUploadURLSaysWhenItHoldsNoMeta
+{
+    // This test harvests, so its uploads go to a host that never resolves.
+    self.reporter = [[SessionReplayReporter alloc] initWithApplicationToken:@"test-token" url:@"test.invalid"];
+    self.manager = [[SessionReplayManager alloc] initWithReporter:self.reporter url:@"test.invalid"];
+    self.manager.externalCaptureSource = YES;
+    [self.agent setValue:self.manager forKey:@"sessionReplay"];
+    [self useFullSampling];
+    [self startSession];
+    XCTAssertEqualObjects([self ingest:batch], kNRSessionReplayIngestAccepted);
+    NRMADrainReplayQueue(self.manager);
+    XCTAssertTrue([[self externalURLFileAttributes] containsString:@"hasMeta=true"]);
+    [self.manager harvest];
+    XCTAssertEqualObjects([self ingest:@"[{\"type\":3,\"timestamp\":2,\"data\":{}}]"], kNRSessionReplayIngestAccepted);
+    NRMADrainReplayQueue(self.manager);
+    XCTAssertTrue([[self externalURLFileAttributes] containsString:@"hasMeta=false"]);
 }
 
 // Guard: passes before and after the change.
@@ -183,6 +205,7 @@ static NSString *uploadAttributes(NSURL *url)
     NSURL *url = [self.manager generateUploadURLWithUncompressedDataSize:10 firstTimestamp:1000 lastTimestamp:2000
                                                             isFirstChunk:YES isGZipped:YES];
     XCTAssertTrue([uploadAttributes(url) containsString:@"rrweb.version=^2.0.0-alpha.17"]);
+    XCTAssertTrue([uploadAttributes(url) containsString:@"hasMeta=true"]);
 }
 
 #pragma mark - Ingest gate

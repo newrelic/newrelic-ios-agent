@@ -69,6 +69,7 @@ final class CapturingSessionReplayReporter: SessionReplayReporter {
         let lastTimestamp: TimeInterval
         let isFirstChunk: Bool
         let isGZipped: Bool
+        let hasMeta: Bool
     }
 
     // Written on the replay queue, read by the tests after draining it.
@@ -89,13 +90,13 @@ final class CapturingSessionReplayReporter: SessionReplayReporter {
     }
 
     override func uploadURL(uncompressedDataSize: Int, firstTimestamp: TimeInterval, lastTimestamp: TimeInterval,
-                            isFirstChunk: Bool, isGZipped: Bool) -> URL? {
+                            isFirstChunk: Bool, isGZipped: Bool, hasMeta: Bool = true) -> URL? {
         lock.lock()
         defer { lock.unlock() }
         let url = URL(string: "https://test.invalid/upload/\(recordedRequests.count)")!
         recordedRequests[url] = Request(uncompressedDataSize: uncompressedDataSize, firstTimestamp: firstTimestamp,
                                         lastTimestamp: lastTimestamp, isFirstChunk: isFirstChunk,
-                                        isGZipped: isGZipped)
+                                        isGZipped: isGZipped, hasMeta: hasMeta)
         return url
     }
 

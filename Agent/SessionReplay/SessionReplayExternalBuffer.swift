@@ -18,6 +18,8 @@ struct ExternalReplayUploadMetadata: Equatable {
     let lastTimestamp: TimeInterval
     let isFirstChunk: Bool
     let isGZipped: Bool
+    /// Whether the upload holds a Meta event anywhere.
+    let hasMeta: Bool
 }
 
 @available(iOS 13.0, *)
@@ -161,7 +163,8 @@ final class SessionReplayExternalBuffer {
                                                                        firstTimestamp: packed.firstTimestamp,
                                                                        lastTimestamp: packed.lastTimestamp,
                                                                        isFirstChunk: isFirstChunk && index == 0,
-                                                                       isGZipped: packed.payload.isGzipped))
+                                                                       isGZipped: packed.payload.isGzipped,
+                                                                       hasMeta: packed.hasMeta))
         }
 
         // Nothing is left, so the folder and its URL file go too.
@@ -225,7 +228,8 @@ final class SessionReplayExternalBuffer {
 
     // MARK: - Uploads
 
-    private typealias PackedPayload = (payload: Data, uncompressedSize: Int, firstTimestamp: TimeInterval, lastTimestamp: TimeInterval)
+    private typealias PackedPayload = (payload: Data, uncompressedSize: Int, firstTimestamp: TimeInterval, lastTimestamp: TimeInterval,
+                                       hasMeta: Bool)
 
     /// Reads a batch's file and gzips it, to estimate its share of an upload.
     private func load(_ batch: Batch) -> TakenBatch? {
@@ -267,7 +271,7 @@ final class SessionReplayExternalBuffer {
             let middle = pack.startIndex + pack.count / 2
             return packPayloads(pack[..<middle]) + packPayloads(pack[middle...])
         }
-        return [(payload, raw.count, first.batch.firstTimestamp, last.batch.lastTimestamp)]
+        return [(payload, raw.count, first.batch.firstTimestamp, last.batch.lastTimestamp, pack.contains { $0.batch.holdsMeta })]
     }
 
     /// Joins JSON arrays into one, keeping their elements' bytes.
@@ -318,7 +322,8 @@ final class SessionReplayExternalBuffer {
                                                     firstTimestamp: first.firstTimestamp,
                                                     lastTimestamp: last.lastTimestamp,
                                                     isFirstChunk: isFirstChunk,
-                                                    isGZipped: true)
+                                                    isGZipped: true,
+                                                    hasMeta: batches.contains { $0.holdsMeta })
         guard let uploadURL = urlProvider(metadata) else {
             NRLOG_AGENT_DEBUG("Failed to construct an upload URL for external session replay events.")
             return

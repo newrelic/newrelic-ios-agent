@@ -116,7 +116,15 @@ final class SessionReplayExternalBufferTests: XCTestCase {
         XCTAssertEqual(file("s1_upload_url.txt"), "https://test.invalid/recovered")
         let onDisk = ["s1/frame_0.json", "s1/frame_1.json"].map { file($0)!.utf8.count }.reduce(0, +)
         XCTAssertEqual(provided.last, ExternalReplayUploadMetadata(uncompressedSize: onDisk, firstTimestamp: 1, lastTimestamp: 5,
-                                                                   isFirstChunk: true, isGZipped: true))
+                                                                   isFirstChunk: true, isGZipped: true, hasMeta: true))
+    }
+
+    func testURLFileSaysWhetherTheBufferHoldsAMeta() {
+        append(rrwebEvent(4, 1), rrwebEvent(2, 1))
+        XCTAssertEqual(provided.last?.hasMeta, true)
+        _ = buffer.takeChunks(final: false, isFirstChunk: true)
+        append(rrwebEvent(3, 2))
+        XCTAssertEqual(provided.last?.hasMeta, false)
     }
 
     func testResetRequiresANewMeta() {
@@ -182,6 +190,13 @@ final class SessionReplayExternalBufferTests: XCTestCase {
         XCTAssertNil(file("s1_upload_url.txt"))
         XCTAssertFalse(FileManager.default.fileExists(atPath: directory.appendingPathComponent("s1").path))
         XCTAssertEqual(append(rrwebEvent(3, 3)), .appended(kept: 0, droppedBeforeMeta: 1))
+    }
+
+    func testChunksSayWhetherTheyHoldAMeta() {
+        append(rrwebEvent(4, 1), rrwebEvent(2, 1))
+        XCTAssertEqual(buffer.takeChunks(final: false, isFirstChunk: true).map(\.metadata.hasMeta), [true])
+        append(rrwebEvent(3, 2))
+        XCTAssertEqual(buffer.takeChunks(final: false, isFirstChunk: false).map(\.metadata.hasMeta), [false])
     }
 
     func testOnlyTheFirstChunkIsMarkedFirst() {
