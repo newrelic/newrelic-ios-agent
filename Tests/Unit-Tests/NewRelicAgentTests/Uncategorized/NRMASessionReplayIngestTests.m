@@ -18,6 +18,7 @@
 #import "NRMATaskQueue.h"
 #import "Constants.h"
 #import <NewRelic/NewRelic-Swift.h>
+#import "Agent_Tests-Swift.h"
 
 @interface NRMATaskQueue (ingestTests)
 + (void) clear;
@@ -182,8 +183,11 @@ static NSString *uploadAttributes(NSURL *url)
 
 - (void) testExternalUploadURLSaysWhenItHoldsNoMeta
 {
-    // This test harvests, so its uploads go to a host that never resolves.
-    self.reporter = [[SessionReplayReporter alloc] initWithApplicationToken:@"test-token" url:@"test.invalid"];
+    // This test harvests. Its reporter builds real upload URLs but counts uploads instead of sending
+    // them, so no network retries or failure metrics outlive the test.
+    NRMAUnsentSessionReplayReporter *unsent = [[NRMAUnsentSessionReplayReporter alloc] initWithApplicationToken:@"test-token"
+                                                                                                             url:@"test.invalid"];
+    self.reporter = unsent;
     self.manager = [[SessionReplayManager alloc] initWithReporter:self.reporter url:@"test.invalid"];
     self.manager.externalCaptureSource = YES;
     [self.agent setValue:self.manager forKey:@"sessionReplay"];
@@ -193,6 +197,7 @@ static NSString *uploadAttributes(NSURL *url)
     NRMADrainReplayQueue(self.manager);
     XCTAssertTrue([[self externalURLFileAttributes] containsString:@"hasMeta=true"]);
     [self.manager harvest];
+    XCTAssertEqual(unsent.uploadCount, 1);   // counted, not sent
     XCTAssertEqualObjects([self ingest:@"[{\"type\":3,\"timestamp\":2,\"data\":{}}]"], kNRSessionReplayIngestAccepted);
     NRMADrainReplayQueue(self.manager);
     XCTAssertTrue([[self externalURLFileAttributes] containsString:@"hasMeta=false"]);

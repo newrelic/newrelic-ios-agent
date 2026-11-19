@@ -61,6 +61,27 @@ func gunzipForTests(_ data: Data) throws -> Data {
     return output
 }
 
+/// Builds real upload URLs but counts the uploads it's given instead of sending them, so a test that
+/// harvests leaves no network retries or failure metrics behind. Objective-C tests reach it through
+/// Agent_Tests-Swift.h: its superclass is resilient, so it isn't registered until first used.
+@objc(NRMAUnsentSessionReplayReporter)
+final class UnsentSessionReplayReporter: SessionReplayReporter {
+    private let lock = NSLock()
+    private var recordedUploads = 0
+
+    @objc var uploadCount: Int {
+        lock.lock()
+        defer { lock.unlock() }
+        return recordedUploads
+    }
+
+    override func enqueueSessionReplayUpload(upload: SessionReplayData) {
+        lock.lock()
+        defer { lock.unlock() }
+        recordedUploads += 1
+    }
+}
+
 /// Records the upload URLs it's asked for and the uploads it's given, instead of sending them.
 final class CapturingSessionReplayReporter: SessionReplayReporter {
     struct Request: Equatable {
