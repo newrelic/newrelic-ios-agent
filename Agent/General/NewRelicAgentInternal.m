@@ -742,6 +742,12 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 // start did land, since SessionReplayManager ignores a second start.
 - (void) sessionReplayStartIfMissed {
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
+    // -init doesn't start the harvester on a background launch (silent push, background fetch),
+    // so there was no start to miss. The harvester starts replay when the app comes to the
+    // foreground; recording now would put a background frame at the start of that replay.
+    if ([UIApplication sharedApplication].applicationState == UIApplicationStateBackground) {
+        return;
+    }
     NRMAHarvesterConfiguration* configuration = [NRMAHarvestController configuration];
     // Same check as the harvester's stored-configuration shortcut. Otherwise /connect is
     // still in flight and the harvester applies the collector's config when it returns.

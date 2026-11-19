@@ -1422,6 +1422,25 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
     [mockSessionReplay stopMocking];
     [mockHarvestController stopMocking];
 }
+
+- (void) testSessionReplayStartIfMissedWaitsForForegroundOnABackgroundLaunch
+{
+    id mockHarvestController = [OCMockObject mockForClass:[NRMAHarvestController class]];
+    [[[[mockHarvestController stub] classMethod] andReturn:[self makeSessionReplayEnabledConfig]] configuration];
+    UIApplicationState background = UIApplicationStateBackground;
+    id mockApplication = [OCMockObject partialMockForObject:[UIApplication sharedApplication]];
+    [[[mockApplication stub] andReturnValue:OCMOCK_VALUE(background)] applicationState];
+
+    // Strict: the harvester starts replay once the app comes to the foreground.
+    id mockSessionReplay = [OCMockObject mockForClass:[SessionReplayManager class]];
+    [[[mockSessionReplay stub] andReturnValue:@NO] isRunning];
+
+    XCTAssertNoThrow([[self makeAgentWithSessionReplay:mockSessionReplay] sessionReplayStartIfMissed]);
+
+    [mockSessionReplay stopMocking];
+    [mockApplication stopMocking];
+    [mockHarvestController stopMocking];
+}
 #endif
 
 @end
