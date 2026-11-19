@@ -638,9 +638,11 @@ public class SessionReplayManager: NSObject {
                 return
             }
             
-            // Read and combine all frame files, starting from the first full frame
+            // Read and combine all frame files, starting from the first full frame. The external
+            // buffer's files can start with diffs, because an earlier upload took what came before
+            // them, so all of them go out, from the first.
             var frameContents: [String] = []
-            var foundFirstFullFrame = false
+            var foundFirstFullFrame = externalCaptureSource
 
             for frameFile in frameFiles {
                 do {

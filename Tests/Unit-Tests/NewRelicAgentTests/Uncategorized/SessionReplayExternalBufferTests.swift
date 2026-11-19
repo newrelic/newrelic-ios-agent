@@ -251,4 +251,47 @@ final class SessionReplayExternalBufferTests: XCTestCase {
         XCTAssertEqual(events.map { $0["type"] as? Int }, [4, 2, 3, 4, 2])
         XCTAssertFalse(FileManager.default.fileExists(atPath: frames.appendingPathComponent(session).path))
     }
+
+    /// A buffer in the real frames folder, left as a crash would leave it after an upload: its files start with diffs.
+    private func crashedBufferAfterAnUpload() -> (session: String, url: String, metadata: [ExternalReplayUploadMetadata], frames: URL) {
+        let frames = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("SessionReplayFrames")
+        let session = "recovery-\(UUID().uuidString)"
+        let url = "https://test.invalid/recovered/\(session)"
+        var metadata: [ExternalReplayUploadMetadata] = []
+        let crashed = SessionReplayExternalBuffer(directory: frames, maxUploadBytes: 1_000_000) { provided in
+            metadata.append(provided)
+            return URL(string: url)
+        }
+        _ = crashed.append(Data(rrwebBatch([rrwebEvent(4, 1), rrwebEvent(2, 1)]).utf8), sessionId: session, isFirstChunk: true)
+        _ = crashed.takeChunks(final: false, isFirstChunk: true)
+        _ = crashed.append(Data(rrwebBatch([rrwebEvent(3, 2)]).utf8), sessionId: session, isFirstChunk: false)
+        _ = crashed.append(Data(rrwebBatch([rrwebEvent(3, 3)]).utf8), sessionId: session, isFirstChunk: false)
+        return (session, url, metadata, frames)
+    }
+
+    func testCrashRecoveryUploadsTheExternalBufferFromItsFirstEvent() throws {
+        let crashed = crashedBufferAfterAnUpload()
+        let reporter = CapturingSessionReplayReporter(applicationToken: "test-token", url: "mobile-collector.newrelic.com" as NSString)
+        let manager = SessionReplayManager(reporter: reporter, url: "mobile-collector.newrelic.com" as NSString)
+        manager.externalCaptureSource = true
+        manager.checkForPreviousSessionFiles()
+        _ = manager.isManuallyActive()
+        let recovered = try XCTUnwrap(reporter.uploads.first { $0.url.absoluteString == crashed.url })
+        let events = try XCTUnwrap(JSONSerialization.jsonObject(with: gunzipForTests(recovered.sessionReplayFramesData)) as? [[String: Any]])
+        XCTAssertEqual(events.map { $0["timestamp"] as? Int }, [2, 3])
+        XCTAssertEqual(crashed.metadata.last?.hasMeta, false)
+        XCTAssertEqual(crashed.metadata.last?.isFirstChunk, false)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: crashed.frames.appendingPathComponent(crashed.session).path))
+    }
+
+    // Guard: native recovery still starts at a FullSnapshot. Passes before and after the change.
+    func testNativeCrashRecoveryStillStartsAtAFullSnapshot() {
+        let crashed = crashedBufferAfterAnUpload()
+        let reporter = CapturingSessionReplayReporter(applicationToken: "test-token", url: "mobile-collector.newrelic.com" as NSString)
+        let manager = SessionReplayManager(reporter: reporter, url: "mobile-collector.newrelic.com" as NSString)
+        manager.checkForPreviousSessionFiles()
+        _ = manager.isManuallyActive()
+        XCTAssertNil(reporter.uploads.first { $0.url.absoluteString == crashed.url })
+    }
 }
