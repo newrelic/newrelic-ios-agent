@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C8FE73466C5D36E87195B590 /* RRWebFullSnapshotEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 341E851E2DA0503400968D7D /* RRWebFullSnapshotEvent.swift */; };
+		0A9064BF5A52421997496A81 /* SessionReplayFrameProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 344E494C2D934CF8008174A1 /* SessionReplayFrameProcessor.swift */; };
+		17DD987426A0FF6964FF980A /* SessionReplayFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DF472D4C4BEE00BF5BED /* SessionReplayFrame.swift */; };
 		621D671ADD3ACEBC0B6266AF /* SessionReplayClippingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30A3D63511873CC0DE19997B /* SessionReplayClippingTests.swift */; };
 		5E1E6B26A418EF301EF45177 /* ReactNativeStyleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0507771D00107A52E925DA /* ReactNativeStyleTests.swift */; };
 		72F78B8151FDF7CBB89F35E8 /* IncrementalDiffGeneratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 871C12BAE9249E1084E7A385 /* IncrementalDiffGeneratorTests.swift */; };
@@ -5440,6 +5443,9 @@
 				5E1E6B26A418EF301EF45177 /* ReactNativeStyleTests.swift in Sources */,
 				621D671ADD3ACEBC0B6266AF /* SessionReplayClippingTests.swift in Sources */,
 				5DCF5CE8135909A7EC546192 /* IncrementalDiffGenerator.swift in Sources */,
+				C8FE73466C5D36E87195B590 /* RRWebFullSnapshotEvent.swift in Sources */,
+				0A9064BF5A52421997496A81 /* SessionReplayFrameProcessor.swift in Sources */,
+				17DD987426A0FF6964FF980A /* SessionReplayFrame.swift in Sources */,
 				0209AC9224E7393300E45C90 /* NRMAExceptionMetaDataTest.m in Sources */,
 				F8FBFA592A77FA3000CDC8C5 /* TestRequestEvents.m in Sources */,
 				2BFFB1EB28CA683F00392E3B /* NRMASupportMetricHelperTests.m in Sources */,

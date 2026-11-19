@@ -28,6 +28,7 @@ import {
   TransformsScreen,
 } from './src/permutations';
 import { CustomerPdpScreen } from './src/customerPdp';
+import { ReviewFixesScreen } from './src/reviewFixes';
 import { NR_CONFIG } from './nr-config';
 
 // Dev warnings would otherwise draw over the screens under test.
@@ -58,6 +59,7 @@ Navigation.registerComponent(SCREENS.PermOverlays, () => gestureHandlerRootHOC(O
 Navigation.registerComponent(SCREENS.PermTransforms, () => gestureHandlerRootHOC(TransformsScreen));
 Navigation.registerComponent(SCREENS.PermMasking, () => gestureHandlerRootHOC(MaskingScreen));
 Navigation.registerComponent(SCREENS.CustomerPdp, () => gestureHandlerRootHOC(CustomerPdpScreen));
+Navigation.registerComponent(SCREENS.PermReviewFixes, () => gestureHandlerRootHOC(ReviewFixesScreen));
 Navigation.registerComponent(SCREENS.Toast, () => ToastOverlay);
 
 const TABS = [

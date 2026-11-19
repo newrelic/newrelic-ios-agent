@@ -44,6 +44,20 @@ struct ViewDetails {
     // Borders and corner radii a React Native view draws itself (NR-652282).
     var reactNativeBorder: ReactNativeBorderStyle?
 
+    /// Width of each border edge the replay draws, top, right, bottom, left.
+    var cssBorderWidths: [CGFloat] {
+        var widths = Array(repeating: borderColor != nil ? borderWidth : 0, count: 4)
+        if let edges = reactNativeBorder?.edges {
+            for (index, edge) in edges.enumerated() where edge.width > 0 {
+                widths[index] = edge.width
+            }
+        }
+        if let borderImage = reactNativeBorder?.borderImage, borderImage.isResizable {
+            widths = borderImage.widths
+        }
+        return widths
+    }
+
     var cssSelector: String {
         return "\(self.viewName)-\(self.viewId)"
     }
@@ -449,22 +463,43 @@ struct ViewDetails {
     private static func getClippingRect(for view: UIView, in window: UIWindow) -> CGRect {
         // Check if this view has skipAggressiveClipping flag
         if view.skipAggressiveClipping == true {
-            return window.frame
+            return window.bounds
         }
 
-        // Intersect every clipping ancestor, not just the nearest: content in a scroll view
-        // nested in another (e.g. a horizontal carousel inside a vertical page) is clipped by
-        // both, and stopping at the inner one draws it over whatever sits outside the outer.
-        var clippingRect = window.frame
-        var clippingView: UIView? = view.superview
-        while let ancestor = clippingView, ancestor !== window {
-            if ancestor is UIScrollView || ancestor.clipsToBounds {
-                clippingRect = clippingRect.intersection(ancestor.convert(ancestor.bounds, to: window))
-            }
-            clippingView = ancestor.superview
-        }
-
+        let clippingRect = contentClip(of: view.superview, in: window)
         return clippingRect.isNull ? .zero : clippingRect
+    }
+
+    /// Clip, in window coordinates, of everything inside `ancestor`: every clipping view from it
+    /// up, not just the nearest. Content in a scroll view nested in another (e.g. a horizontal
+    /// carousel inside a vertical page) is clipped by both, and stopping at the inner one draws
+    /// it over whatever sits outside the outer.
+    private static func contentClip(of ancestor: UIView?, in window: UIWindow) -> CGRect {
+        guard let ancestor, ancestor !== window else {
+            return window.bounds
+        }
+        let key = ObjectIdentifier(ancestor)
+        if let cached = ancestorClipCache?[key] {
+            return cached
+        }
+        var clip = contentClip(of: ancestor.superview, in: window)
+        if ancestor is UIScrollView || ancestor.clipsToBounds {
+            clip = clip.intersection(ancestor.convert(ancestor.bounds, to: window))
+        }
+        ancestorClipCache?[key] = clip
+        return clip
+    }
+
+    // Every view under an ancestor shares its clip; during a capture it's worked out once per
+    // ancestor rather than once per descendant. Nil outside a capture, where the hierarchy may
+    // change between calls.
+    private static var ancestorClipCache: [ObjectIdentifier: CGRect]?
+
+    /// Runs one capture of the view hierarchy, which mustn't change while it runs.
+    static func withAncestorClipCache<T>(_ capture: () -> T) -> T {
+        ancestorClipCache = [:]
+        defer { ancestorClipCache = nil }
+        return capture()
     }
     
     // Helper method to find scrollview ancestor

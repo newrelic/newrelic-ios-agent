@@ -35,6 +35,7 @@ export const SCREENS = {
   PermOverlays: 'repro.Perm.Overlays',
   PermTransforms: 'repro.Perm.Transforms',
   PermMasking: 'repro.Perm.Masking',
+  PermReviewFixes: 'repro.Perm.ReviewFixes',
   Toast: 'repro.Toast',
 };
 

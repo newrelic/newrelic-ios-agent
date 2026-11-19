@@ -160,4 +160,39 @@ struct IncrementalDiffGeneratorTests {
         #expect(addition.id == 3)
         #expect(addition.parentId == 8)
     }
+
+    // MARK: Stylesheet-only CSS
+
+    func borderedThingy(x: CGFloat, bitmap: Int) -> UIViewThingy {
+        var details = viewThingy(id: 2, parentId: 1).viewDetails
+        details.frame.origin.x = x
+        let image = ReactNativeBorderStyle.BorderImage(dataURL: "data:image/png;base64,bitmap\(bitmap)", fingerprint: bitmap,
+                                                       slice: [3, 3, 3, 3], widths: [1, 1, 1, 1], isResizable: true)
+        details.reactNativeBorder = ReactNativeBorderStyle(borderImage: image)
+        return UIViewThingy(viewDetails: details)
+    }
+
+    @Test func `Border bitmap is sent in a stylesheet rule only when it changes`() throws {
+        let processor = SessionReplayFrameProcessor()
+        func json(x: CGFloat, bitmap: Int, at seconds: TimeInterval) throws -> String {
+            let root = viewThingy(id: 1, parentId: nil)
+            root.subviews = [borderedThingy(x: x, bitmap: bitmap)]
+            let frame = SessionReplayFrame(date: Date(timeIntervalSince1970: seconds), views: root, rootViewControllerId: nil,
+                                           rootSwiftUIViewId: nil, size: CGSize(width: 400, height: 800),
+                                           layoutContainerViewCount: 0, navigationStackDepth: 0)
+            let event = try #require(processor.processFrame(frame))
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .withoutEscapingSlashes
+            return String(decoding: try encoder.encode(event), as: UTF8.self)
+        }
+
+        let fullSnapshot = try json(x: 0, bitmap: 1, at: 1)
+        let moved = try json(x: 10, bitmap: 1, at: 2)
+        let redrawn = try json(x: 10, bitmap: 2, at: 3)
+
+        #expect(fullSnapshot.contains("#UIView-2 { border-image: url('data:image/png;base64,bitmap1')"))
+        #expect(moved.contains("left: 10.00px"))
+        #expect(!moved.contains("bitmap1"))
+        #expect(redrawn.contains("#UIView-2 { border-image: url('data:image/png;base64,bitmap2')"))
+    }
 }

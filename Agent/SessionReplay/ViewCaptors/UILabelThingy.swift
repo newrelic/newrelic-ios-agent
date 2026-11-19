@@ -38,6 +38,9 @@ class UILabelThingy: SessionReplayViewThingy {
     let isItalic: Bool
     let letterSpacing: CGFloat?
     let textDecoration: String?
+    /// Inset of the text from the box, top, right, bottom, left: React Native draws a Text's
+    /// text inside its padding and border.
+    private(set) var textPadding: [CGFloat]? = nil
 
     let widthOffset = 1.0
 
@@ -163,12 +166,13 @@ class UILabelThingy: SessionReplayViewThingy {
     init(view: UIView, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
         var frame = self.viewDetails.frame
-        // React Native draws the text inset by the Text's padding; without this the text
-        // lands at the padded box's corner. NR-652282.
+        // Without this the text lands at the padded box's corner. Only the text moves: the
+        // box keeps its frame for its background and border. NR-652282.
         if let contentFrame = ReactNativeStyle.textContentFrame(of: view), let window = view.window {
-            let textFrame = view.convert(contentFrame, to: window).intersection(self.viewDetails.clip)
+            let textFrame = view.convert(contentFrame, to: window).intersection(frame)
             if !textFrame.isNull {
-                frame = textFrame
+                self.textPadding = [textFrame.minY - frame.minY, frame.maxX - textFrame.maxX,
+                                    frame.maxY - textFrame.maxY, textFrame.minX - frame.minX]
             }
         }
         frame.size.width = frame.size.width + widthOffset
@@ -324,6 +328,13 @@ class UILabelThingy: SessionReplayViewThingy {
         if let textDecoration = self.textDecoration {
             textDecorationCSS = " text-decoration-line: \(textDecoration);"
         }
+        var textPaddingCSS = ""
+        if let textPadding = self.textPadding {
+            // React Native's insets include the border, which the border box draws inside the
+            // padding here.
+            let padding = zip(textPadding, viewDetails.cssBorderWidths).map { String(format: "%.2fpx", max(0, $0 - $1)) }
+            textPaddingCSS = " box-sizing: border-box; padding: \(padding.joined(separator: " "));"
+        }
 
         return """
                 \(generateBaseCSSStyle())\
@@ -332,7 +343,7 @@ class UILabelThingy: SessionReplayViewThingy {
                 font: \(fontStyleCSS) \(fontWeightCSS) \(String(format: "%.2f", self.fontSize))px \(self.fontFamily); \
                 color: \(textColor.toHexString(includingAlpha: true));\
                 text-align: \(textAlignment); \
-                overflow: hidden; \(letterSpacingCSS)\(textDecorationCSS)
+                overflow: hidden; \(letterSpacingCSS)\(textDecorationCSS)\(textPaddingCSS)
                 """
     }
 
@@ -403,7 +414,8 @@ extension UILabelThingy: Equatable {
             lhs.fontWeight == rhs.fontWeight &&
             lhs.isItalic == rhs.isItalic &&
             lhs.letterSpacing == rhs.letterSpacing &&
-            lhs.textDecoration == rhs.textDecoration
+            lhs.textDecoration == rhs.textDecoration &&
+            lhs.textPadding == rhs.textPadding
     }
 }
 
@@ -421,6 +433,7 @@ extension UILabelThingy: Hashable {
         hasher.combine(isItalic)
         hasher.combine(letterSpacing)
         hasher.combine(textDecoration)
+        hasher.combine(textPadding)
     }
 }
 

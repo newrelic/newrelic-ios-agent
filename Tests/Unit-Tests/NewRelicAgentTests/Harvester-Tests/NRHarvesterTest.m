@@ -1382,8 +1382,7 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
     [[[[mockHarvestController stub] classMethod] andReturn:[self makeSessionReplayEnabledConfig]] configuration];
 
     id mockSessionReplay = [OCMockObject mockForClass:[SessionReplayManager class]];
-    [[[mockSessionReplay stub] andReturnValue:@NO] isRunning];
-    [[mockSessionReplay expect] startFromManual:NO with:SessionReplayRecordingModeFull];
+    [[mockSessionReplay expect] startIfNotRunningWith:SessionReplayRecordingModeFull];
 
     [[self makeAgentWithSessionReplay:mockSessionReplay] sessionReplayStartIfMissed];
 
@@ -1392,19 +1391,31 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
     [mockHarvestController stopMocking];
 }
 
-- (void) testSessionReplayStartIfMissedLeavesARunningReplayAlone
+- (void) waitForRecordingMode:(SessionReplayRecordingMode)mode of:(SessionReplayManager*)manager
 {
-    id mockHarvestController = [OCMockObject mockForClass:[NRMAHarvestController class]];
-    [[[[mockHarvestController stub] classMethod] andReturn:[self makeSessionReplayEnabledConfig]] configuration];
+    NSPredicate* reached = [NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary* bindings) {
+        return [manager getCurrentRecordingMode] == mode;
+    }];
+    [self waitForExpectations:@[[[XCTNSPredicateExpectation alloc] initWithPredicate:reached object:nil]] timeout:5];
+}
 
-    // Strict: starting again would reset the recording mode of a replay that's already running.
-    id mockSessionReplay = [OCMockObject mockForClass:[SessionReplayManager class]];
-    [[[mockSessionReplay stub] andReturnValue:@YES] isRunning];
+// At launch the harvester's start and the catch-up can both land. Whichever runs second must
+// not reset a replay that has meanwhile moved from error to full mode.
+- (void) testSessionReplayStartIfNotRunningKeepsTheModeOfARunningReplay
+{
+    SessionReplayReporter* reporter = [[SessionReplayReporter alloc] initWithApplicationToken:@"token" url:@"mobile-collector.newrelic.com"];
+    SessionReplayManager* manager = [[SessionReplayManager alloc] initWithReporter:reporter url:@"mobile-collector.newrelic.com"];
+    [manager startFromManual:NO with:SessionReplayRecordingModeError];
+    [self waitForRecordingMode:SessionReplayRecordingModeError of:manager];
+    [manager onError:nil];
+    [self waitForRecordingMode:SessionReplayRecordingModeFull of:manager];
 
-    XCTAssertNoThrow([[self makeAgentWithSessionReplay:mockSessionReplay] sessionReplayStartIfMissed]);
+    [manager startIfNotRunningWith:SessionReplayRecordingModeError];
+    // Each drains the queue once: first the start, then any mode change it queued.
+    [manager stop];
+    [manager stop];
 
-    [mockSessionReplay stopMocking];
-    [mockHarvestController stopMocking];
+    XCTAssertEqual([manager getCurrentRecordingMode], SessionReplayRecordingModeFull);
 }
 
 - (void) testSessionReplayStartIfMissedWaitsForConnectWhenTheStoredConfigIsForAnotherToken
@@ -1427,13 +1438,15 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
 {
     id mockHarvestController = [OCMockObject mockForClass:[NRMAHarvestController class]];
     [[[[mockHarvestController stub] classMethod] andReturn:[self makeSessionReplayEnabledConfig]] configuration];
+    // The test bundle has no host app, so there's no shared application to partially mock.
     UIApplicationState background = UIApplicationStateBackground;
-    id mockApplication = [OCMockObject partialMockForObject:[UIApplication sharedApplication]];
-    [[[mockApplication stub] andReturnValue:OCMOCK_VALUE(background)] applicationState];
+    id application = [OCMockObject niceMockForClass:[UIApplication class]];
+    [[[application stub] andReturnValue:OCMOCK_VALUE(background)] applicationState];
+    id mockApplication = [OCMockObject mockForClass:[UIApplication class]];
+    [[[[mockApplication stub] classMethod] andReturn:application] sharedApplication];
 
     // Strict: the harvester starts replay once the app comes to the foreground.
     id mockSessionReplay = [OCMockObject mockForClass:[SessionReplayManager class]];
-    [[[mockSessionReplay stub] andReturnValue:@NO] isRunning];
 
     XCTAssertNoThrow([[self makeAgentWithSessionReplay:mockSessionReplay] sessionReplayStartIfMissed]);
 

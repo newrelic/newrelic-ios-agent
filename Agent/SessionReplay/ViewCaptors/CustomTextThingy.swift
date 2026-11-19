@@ -44,9 +44,6 @@ class CustomTextThingy: SessionReplayViewThingy {
             self.viewDetails.viewId = IDGenerator.shared.getId()
             view.sessionReplayCustomTextIDKey = self.viewDetails.viewId
         }
-        // The overlay is recorded as a child of the text field, so incremental adds must
-        // name the field as its parent too, matching full snapshots.
-        self.viewDetails.parentId = view.sessionReplayIdentifier ?? viewDetails.parentId
         
         if view.isSecureTextEntry {
             // Secure entry is always masked, regardless of masking mode or overrides.

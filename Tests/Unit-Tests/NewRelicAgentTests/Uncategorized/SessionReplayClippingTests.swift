@@ -40,4 +40,30 @@ struct SessionReplayClippingTests {
         #expect(!ViewDetails(view: image).isVisible)
         _ = window
     }
+
+    // A window placed below the top of the screen: its frame is in screen coordinates, the
+    // views' frames and clips in its own.
+    @Test func `Clip is in window coordinates in a window that isn't at the origin`() {
+        let window = UIWindow(frame: CGRect(x: 0, y: 300, width: 400, height: 500))
+        let list = UIScrollView(frame: CGRect(x: 0, y: 0, width: 400, height: 200))
+        let row = UIView(frame: CGRect(x: 0, y: 150, width: 400, height: 100))
+        window.addSubview(list)
+        list.addSubview(row)
+
+        let details = ViewDetails(view: row)
+
+        #expect(details.clip == CGRect(x: 0, y: 0, width: 400, height: 200))
+        #expect(details.frame == CGRect(x: 0, y: 150, width: 400, height: 50))
+    }
+
+    @Test func `Clips match with and without the capture's cache`() {
+        let (window, image) = makeScrolledCarousel()
+        let uncached = ViewDetails(view: image)
+
+        let cached = ViewDetails.withAncestorClipCache { (ViewDetails(view: image), ViewDetails(view: image)) }
+
+        #expect(cached.0.clip == uncached.clip)
+        #expect(cached.1.clip == uncached.clip)
+        _ = window
+    }
 }
