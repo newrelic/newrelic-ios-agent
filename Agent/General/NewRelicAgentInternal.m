@@ -721,7 +721,9 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         
         if (m != SessionReplayRecordingModeOff) {
             
-            [_sessionReplay startFromManual:FALSE with:m];
+            // Every caller either stopped replay first or may race another start (the harvester's
+            // and -sessionReplayStartIfMissed at launch); a running replay keeps its mode.
+            [_sessionReplay startIfNotRunningWith:m];
 
             // Only add hasReplay attribute if starting in full mode
             // For error mode, the attribute will be added when an error occurs
@@ -739,7 +741,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 // replay config without a network round trip, often before +startWithApplicationToken: has
 // assigned _sharedInstance. Its -sessionReplayStart then goes to nil and nothing retries it
 // until the next foreground. Called once the agent is reachable; harmless if the harvester's
-// start did land, since SessionReplayManager ignores a second start.
+// start did land or is still queued, since -sessionReplayStart doesn't restart a running replay.
 - (void) sessionReplayStartIfMissed {
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     // -init doesn't start the harvester on a background launch (silent push, background fetch),
@@ -755,8 +757,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         || ![configuration.application_token isEqualToString:_agentConfiguration.applicationToken.value]) {
         return;
     }
-    // A running replay may have moved from error to full mode; starting again would reset it.
-    if (configuration.has_session_replay_config && !_sessionReplay.isRunning) {
+    if (configuration.has_session_replay_config) {
         [self sessionReplayStart];
     }
 #endif
