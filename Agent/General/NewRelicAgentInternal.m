@@ -121,11 +121,6 @@ static NRMAURLTransformer* urlTransformer;
 // The agent singleton
 static NewRelicAgentInternal* _sharedInstance;
 
-#if !TARGET_OS_TV && !TARGET_OS_WATCH
-// The most UTF-8 bytes one recordSessionReplayEvents: call takes.
-static const NSUInteger kNRMAMaxSessionReplayIngestBytes = 1000000;
-#endif
-
 @implementation NewRelicAgentInternal
 
 @synthesize enabled = _enabled;
@@ -863,7 +858,7 @@ static NSString* NRMASessionReplayRecordingModeName(SessionReplayRecordingMode m
     }
     // Zero for a non-empty string means it can't be encoded as UTF-8.
     NSUInteger utf8Length = [eventsJSON lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
-    if (utf8Length == 0 || utf8Length > kNRMAMaxSessionReplayIngestBytes) {
+    if (utf8Length == 0) {
         return kNRSessionReplayIngestDroppedInvalid;
     }
     [_sessionReplay recordExternalEvents:eventsJSON];

@@ -1026,9 +1026,8 @@ extern "C" {
  *   started. Also returned for "error" mode, and for every call unless the platform was
  *   NRMAPlatform_Flutter when the agent started.
  *   Don't retry.
- * - kNRSessionReplayIngestDroppedInvalid: eventsJSON is empty or over 1,000,000 bytes of
- *   UTF-8. Don't retry. Take a new Meta and FullSnapshot, so the events that follow have a
- *   base again.
+ * - kNRSessionReplayIngestDroppedInvalid: eventsJSON is empty or can't be encoded as
+ *   UTF-8. Don't retry.
  */
 + (NSString* _Nonnull) recordSessionReplayEvents:(NSString* _Nonnull) eventsJSON;
 

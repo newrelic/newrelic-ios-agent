@@ -254,14 +254,21 @@ static NSString *uploadAttributes(NSURL *url)
     XCTAssertEqualObjects([self ingest:@""], kNRSessionReplayIngestDroppedInvalid);
 }
 
-- (void) testUTF8LimitIsMeasuredInBytes
+- (void) testLargeBatchesAreAccepted
 {
     [self useFullSampling];
     [self startSession];
-    NSString *euros = [@"" stringByPaddingToLength:333334 withString:@"€" startingAtIndex:0];        // 1,000,002 bytes
-    XCTAssertEqualObjects([self ingest:euros], kNRSessionReplayIngestDroppedInvalid);
-    NSString *exact = [NSString stringWithFormat:@"[%@]", [@"" stringByPaddingToLength:999998 withString:@" " startingAtIndex:0]];
-    XCTAssertEqualObjects([self ingest:exact], kNRSessionReplayIngestAccepted);                    // exactly 1,000,000
+    NSString *euros = [@"" stringByPaddingToLength:333334 withString:@"€" startingAtIndex:0];   // 1,000,002 bytes of UTF-8
+    XCTAssertEqualObjects([self ingest:euros], kNRSessionReplayIngestAccepted);
+}
+
+// Guard: passes before and after the change.
+- (void) testDroppedInvalidWhenNotEncodableAsUTF8
+{
+    [self useFullSampling];
+    [self startSession];
+    unichar lone = 0xD800;   // an unpaired surrogate
+    XCTAssertEqualObjects([self ingest:[NSString stringWithCharacters:&lone length:1]], kNRSessionReplayIngestDroppedInvalid);
 }
 
 - (void) testPublicEntryBeforeTheAgentStartsIsDroppedDisabled
