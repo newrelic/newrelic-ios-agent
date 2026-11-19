@@ -1596,13 +1596,9 @@
 		CD11FE0006000000000000B2 /* NRMASessionReplayCustomMaskingRulesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0005000000000000B1 /* NRMASessionReplayCustomMaskingRulesTests.m */; };
 		CD11FE0007000000000000B3 /* NRMASessionReplayCustomMaskingRulesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0005000000000000B1 /* NRMASessionReplayCustomMaskingRulesTests.m */; };
 		CD11FE0008000000000000B4 /* NRMASessionReplayCustomMaskingRulesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0005000000000000B1 /* NRMASessionReplayCustomMaskingRulesTests.m */; };
-		CD11FE002000000000000111 /* RRWebJSONArraySlicer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE002000000000000110 /* RRWebJSONArraySlicer.swift */; };
-		CD11FE002000000000000112 /* RRWebJSONArraySlicer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE002000000000000110 /* RRWebJSONArraySlicer.swift */; };
-		CD11FE002000000000000113 /* RRWebJSONArraySlicer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE002000000000000110 /* RRWebJSONArraySlicer.swift */; };
 		CD11FE002000000000000121 /* SessionReplayExternalBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE002000000000000120 /* SessionReplayExternalBuffer.swift */; };
 		CD11FE002000000000000122 /* SessionReplayExternalBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE002000000000000120 /* SessionReplayExternalBuffer.swift */; };
 		CD11FE002000000000000123 /* SessionReplayExternalBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE002000000000000120 /* SessionReplayExternalBuffer.swift */; };
-		CD11FE002000000000000131 /* RRWebJSONArraySlicerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE002000000000000130 /* RRWebJSONArraySlicerTests.swift */; };
 		CD11FE002000000000000141 /* NRMASessionReplayIngestTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE002000000000000140 /* NRMASessionReplayIngestTests.m */; };
 		CD11FE002000000000000151 /* SessionReplayExternalTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE002000000000000150 /* SessionReplayExternalTestSupport.swift */; };
 		CD11FE002000000000000161 /* SessionReplayExternalBufferTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE002000000000000160 /* SessionReplayExternalBufferTests.swift */; };
@@ -2646,9 +2642,7 @@
 		C9C28B9E284A6AF70097B433 /* NRMAKeyAttributesTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAKeyAttributesTest.m; sourceTree = "<group>"; };
 		CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAHarvesterConfigurationLifetimeTests.m; sourceTree = "<group>"; };
 		CD11FE0005000000000000B1 /* NRMASessionReplayCustomMaskingRulesTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMASessionReplayCustomMaskingRulesTests.m; sourceTree = "<group>"; };
-		CD11FE002000000000000110 /* RRWebJSONArraySlicer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RRWebJSONArraySlicer.swift; sourceTree = "<group>"; };
 		CD11FE002000000000000120 /* SessionReplayExternalBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayExternalBuffer.swift; sourceTree = "<group>"; };
-		CD11FE002000000000000130 /* RRWebJSONArraySlicerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RRWebJSONArraySlicerTests.swift; sourceTree = "<group>"; };
 		CD11FE002000000000000140 /* NRMASessionReplayIngestTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMASessionReplayIngestTests.m; sourceTree = "<group>"; };
 		CD11FE002000000000000150 /* SessionReplayExternalTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayExternalTestSupport.swift; sourceTree = "<group>"; };
 		CD11FE002000000000000160 /* SessionReplayExternalBufferTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayExternalBufferTests.swift; sourceTree = "<group>"; };
@@ -3172,7 +3166,6 @@
 				F8AC3EA72938FDDB002B4AA8 /* NRMAFakeDataHelper.h */,
 				2B4226E529DB99740068BB8A /* NRMAHTTPUtilitiesTests.m */,
 				F83A77AF2B48810900B3D180 /* NRMAOfflineStorageTests.m */,
-				CD11FE002000000000000130 /* RRWebJSONArraySlicerTests.swift */,
 				CD11FE002000000000000140 /* NRMASessionReplayIngestTests.m */,
 				CD11FE002000000000000150 /* SessionReplayExternalTestSupport.swift */,
 				CD11FE002000000000000160 /* SessionReplayExternalBufferTests.swift */,
@@ -4144,7 +4137,6 @@
 				344E494C2D934CF8008174A1 /* SessionReplayFrameProcessor.swift */,
 				341E84D32D9DDB1B00968D7D /* SessionReplayTouchEventProcessor.swift */,
 				340A8CE32DAD8EAB00BC2B01 /* IncrementalDiffGenerator.swift */,
-				CD11FE002000000000000110 /* RRWebJSONArraySlicer.swift */,
 				CD11FE002000000000000120 /* SessionReplayExternalBuffer.swift */,
 			);
 			path = SessionReplay;
@@ -5609,7 +5601,6 @@
 				0209AC2124E7071F00E45C90 /* MachineMeasurementsTest.m in Sources */,
 				0209ABF424E706FA00E45C90 /* NRThreadInfoTests.m in Sources */,
 				8B498242383AF7020CD36D72 /* NRMANetworkFacadeTraceHeaderTests.mm in Sources */,
-				CD11FE002000000000000131 /* RRWebJSONArraySlicerTests.swift in Sources */,
 				CD11FE002000000000000141 /* NRMASessionReplayIngestTests.m in Sources */,
 				CD11FE002000000000000151 /* SessionReplayExternalTestSupport.swift in Sources */,
 				CD11FE002000000000000161 /* SessionReplayExternalBufferTests.swift in Sources */,
@@ -5881,7 +5872,6 @@
 				02FF48BB24DC61F600115469 /* NRMAClassNode.m in Sources */,
 				F6E79C7925A65347006277FB /* W3CTraceParent.mm in Sources */,
 				2BDCA8AA2A8C41160005740D /* NRMASAM.mm in Sources */,
-				CD11FE002000000000000111 /* RRWebJSONArraySlicer.swift in Sources */,
 				CD11FE002000000000000121 /* SessionReplayExternalBuffer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -6268,7 +6258,6 @@
 				02FF4C9824E3201400115469 /* NRMATraceSegment.m in Sources */,
 				02FF4C9924E3201400115469 /* NRMAClassNode.m in Sources */,
 				F6E79C7A25A65347006277FB /* W3CTraceParent.mm in Sources */,
-				CD11FE002000000000000112 /* RRWebJSONArraySlicer.swift in Sources */,
 				CD11FE002000000000000122 /* SessionReplayExternalBuffer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -6550,7 +6539,6 @@
 				3482327D2BC5F1AE0070FAC3 /* NRMAMeasurementConsumer.m in Sources */,
 				348232C02BC5F1FE0070FAC3 /* NRMAHarvestableArray.m in Sources */,
 				348233382BC5F2490070FAC3 /* NRMAMethodProfiler.m in Sources */,
-				CD11FE002000000000000113 /* RRWebJSONArraySlicer.swift in Sources */,
 				CD11FE002000000000000123 /* SessionReplayExternalBuffer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

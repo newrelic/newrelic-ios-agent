@@ -38,6 +38,11 @@ final class SessionReplayExternalBufferTests: XCTestCase {
         return buffer.append(Data(rrwebBatch(events).utf8), sessionId: "s1", isFirstChunk: true)
     }
 
+    @discardableResult
+    private func append(session: String, _ events: String...) -> ExternalReplayAppendResult {
+        return buffer.append(Data(rrwebBatch(events).utf8), sessionId: session, isFirstChunk: true)
+    }
+
     private func file(_ path: String) -> String? {
         guard let data = FileManager.default.contents(atPath: directory.appendingPathComponent(path).path) else { return nil }
         return String(decoding: data, as: UTF8.self)
@@ -50,22 +55,23 @@ final class SessionReplayExternalBufferTests: XCTestCase {
 
     // MARK: - Appending
 
-    func testEventsBeforeTheFirstMetaAreDropped() {
-        XCTAssertEqual(append(rrwebEvent(3, 1), rrwebEvent(4, 2), rrwebEvent(2, 2), rrwebEvent(3, 3)),
-                       .appended(kept: 3, droppedBeforeMeta: 1))
-        XCTAssertTrue(buffer.hasOpenSegment)
-    }
-
-    func testABatchBeforeAnySegmentWritesNothing() {
-        XCTAssertEqual(append(rrwebEvent(3, 1)), .appended(kept: 0, droppedBeforeMeta: 1))
+    func testBatchesBeforeTheFirstMetaAreDropped() {
+        XCTAssertEqual(append(rrwebEvent(3, 1), rrwebEvent(3, 2)), .appended(kept: 0, droppedBeforeMeta: 2))
+        XCTAssertNil(buffer.openSessionId)
         XCTAssertFalse(FileManager.default.fileExists(atPath: directory.appendingPathComponent("s1").path))
     }
 
+    func testABatchThatHoldsAMetaIsKeptWhole() {
+        XCTAssertEqual(append(rrwebEvent(3, 1), rrwebEvent(4, 2), rrwebEvent(2, 2)), .appended(kept: 3, droppedBeforeMeta: 0))
+        XCTAssertEqual(buffer.openSessionId, "s1")
+        XCTAssertEqual(file("s1/frame_0.json"), rrwebBatch([rrwebEvent(3, 1), rrwebEvent(4, 2), rrwebEvent(2, 2)]))
+    }
+
     func testInvalidBatchesAreRejected() {
-        for batch in ["not json", "{}", "[1,2]", #"[{"type":4}]"#, #"[{"timestamp":1}]"#] {
+        for batch in ["not json", "{}", "[1,2]", #"[{"type":4}]"#, #"[{"timestamp":1}]"#, "\u{FEFF}" + rrwebBatch([rrwebEvent(4, 1)])] {
             XCTAssertEqual(buffer.append(Data(batch.utf8), sessionId: "s1", isFirstChunk: true), .invalid, batch)
         }
-        XCTAssertFalse(buffer.hasOpenSegment)
+        XCTAssertNil(buffer.openSessionId)
     }
 
     // The upload URL converts timestamps to Int, which stops the app for a value outside Int's range.
@@ -77,18 +83,31 @@ final class SessionReplayExternalBufferTests: XCTestCase {
         XCTAssertEqual(append(rrwebEvent(4, 1_731_783_600_000)), .appended(kept: 1, droppedBeforeMeta: 0))
     }
 
-    func testEachSegmentIsOneFileThatStartsWithItsMeta() {
-        append(rrwebEvent(4, 1), rrwebEvent(2, 1), rrwebEvent(3, 2))
-        append(rrwebEvent(3, 3), rrwebEvent(4, 4))   // the second segment's Meta ends this batch
-        append(rrwebEvent(2, 4), rrwebEvent(3, 5))   // and its FullSnapshot starts the next
-        XCTAssertEqual(file("s1/frame_0.json"), rrwebBatch([rrwebEvent(4, 1), rrwebEvent(2, 1), rrwebEvent(3, 2), rrwebEvent(3, 3)]))
-        XCTAssertEqual(file("s1/frame_1.json"), rrwebBatch([rrwebEvent(4, 4), rrwebEvent(2, 4), rrwebEvent(3, 5)]))
+    func testEachBatchIsOneFile() {
+        append(rrwebEvent(4, 1), rrwebEvent(2, 1))
+        append(rrwebEvent(3, 2))
+        append(rrwebEvent(3, 3), rrwebEvent(4, 4), rrwebEvent(2, 4))
+        XCTAssertEqual(file("s1/frame_0.json"), rrwebBatch([rrwebEvent(4, 1), rrwebEvent(2, 1)]))
+        XCTAssertEqual(file("s1/frame_1.json"), rrwebBatch([rrwebEvent(3, 2)]))
+        XCTAssertEqual(file("s1/frame_2.json"), rrwebBatch([rrwebEvent(3, 3), rrwebEvent(4, 4), rrwebEvent(2, 4)]))
     }
 
     func testEventBytesAreKeptAsSent() {
         let odd = #"{"timestamp":1,"type":4,"data":{"href":"http:\/\/x","w":1.0,"t":"€"}}"#
         append(odd)
         XCTAssertEqual(file("s1/frame_0.json"), "[" + odd + "]")
+    }
+
+    func testWhitespaceAroundTheArrayIsTrimmed() {
+        let padded = " \n" + rrwebBatch([rrwebEvent(4, 1)]) + "\t\r\n"
+        XCTAssertEqual(buffer.append(Data(padded.utf8), sessionId: "s1", isFirstChunk: true), .appended(kept: 1, droppedBeforeMeta: 0))
+        XCTAssertEqual(file("s1/frame_0.json"), rrwebBatch([rrwebEvent(4, 1)]))
+    }
+
+    func testAnEmptyBatchWritesNothing() {
+        append(rrwebEvent(4, 1), rrwebEvent(2, 1))
+        XCTAssertEqual(buffer.append(Data("[]".utf8), sessionId: "s1", isFirstChunk: true), .appended(kept: 0, droppedBeforeMeta: 0))
+        XCTAssertNil(file("s1/frame_1.json"))
     }
 
     func testURLFileDescribesEverythingOnDisk() {
@@ -103,42 +122,66 @@ final class SessionReplayExternalBufferTests: XCTestCase {
     func testResetRequiresANewMeta() {
         append(rrwebEvent(4, 1), rrwebEvent(2, 1))
         buffer.reset()
-        XCTAssertFalse(buffer.hasOpenSegment)
+        XCTAssertNil(buffer.openSessionId)
         XCTAssertEqual(append(rrwebEvent(3, 2)), .appended(kept: 0, droppedBeforeMeta: 1))
+    }
+
+    func testANewSessionNeedsItsOwnMeta() {
+        append(rrwebEvent(4, 1), rrwebEvent(2, 1))
+        XCTAssertEqual(append(session: "s2", rrwebEvent(3, 2)), .appended(kept: 0, droppedBeforeMeta: 1))
+        XCTAssertNotNil(file("s1/frame_0.json"))      // left for recovery
+        XCTAssertNotNil(file("s1_upload_url.txt"))
+        XCTAssertEqual(append(session: "s2", rrwebEvent(4, 3), rrwebEvent(2, 3)), .appended(kept: 2, droppedBeforeMeta: 0))
+        XCTAssertEqual(buffer.sessionId, "s2")
+        XCTAssertNotNil(file("s2/frame_0.json"))
+    }
+
+    func testAFailedWriteClosesTheStream() throws {
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let blocker = directory.appendingPathComponent("s1")
+        XCTAssertTrue(FileManager.default.createFile(atPath: blocker.path, contents: Data()))   // a file where the folder goes
+        XCTAssertEqual(append(rrwebEvent(4, 1), rrwebEvent(2, 1)), .appended(kept: 0, droppedBeforeMeta: 0))
+        XCTAssertNil(buffer.openSessionId)
+        XCTAssertNil(buffer.sessionId)
+        try FileManager.default.removeItem(at: blocker)
+        XCTAssertEqual(append(rrwebEvent(3, 2)), .appended(kept: 0, droppedBeforeMeta: 1))
+        XCTAssertEqual(append(rrwebEvent(4, 3), rrwebEvent(2, 3)), .appended(kept: 2, droppedBeforeMeta: 0))
     }
 
     // MARK: - Taking chunks
 
-    func testRegularTakeKeepsTheSegmentInProgress() throws {
+    func testRegularTakeSendsEverythingAndKeepsTheStreamOpen() throws {
         append(rrwebEvent(4, 1), rrwebEvent(2, 1), rrwebEvent(3, 2))
-        append(rrwebEvent(4, 3), rrwebEvent(2, 3))
+        append(rrwebEvent(3, 3))
         let chunks = buffer.takeChunks(final: false, isFirstChunk: true)
-        XCTAssertEqual(try chunks.map(payloadTimestamps), [[1, 1, 2]])
+        XCTAssertEqual(try chunks.map(payloadTimestamps), [[1, 1, 2, 3]])
         XCTAssertEqual(chunks[0].metadata.firstTimestamp, 1)
-        XCTAssertEqual(chunks[0].metadata.lastTimestamp, 2)
+        XCTAssertEqual(chunks[0].metadata.lastTimestamp, 3)
         XCTAssertNil(file("s1/frame_0.json"))
-        XCTAssertNotNil(file("s1/frame_1.json"))
-        XCTAssertTrue(buffer.hasOpenSegment)
+        XCTAssertNil(file("s1_upload_url.txt"))
+        XCTAssertEqual(buffer.openSessionId, "s1")
+        XCTAssertEqual(append(rrwebEvent(3, 4)), .appended(kept: 1, droppedBeforeMeta: 0))
+        XCTAssertEqual(file("s1/frame_0.json"), rrwebBatch([rrwebEvent(3, 4)]))
     }
 
-    func testRegularTakeWithOnlyTheOpenSegmentSendsNothing() {
+    func testAfterATakeANewSessionStillNeedsItsOwnMeta() {
         append(rrwebEvent(4, 1), rrwebEvent(2, 1))
+        _ = buffer.takeChunks(final: false, isFirstChunk: true)
+        XCTAssertEqual(append(session: "s2", rrwebEvent(3, 2)), .appended(kept: 0, droppedBeforeMeta: 1))
+    }
+
+    func testATakeOfAnEmptyBufferSendsNothing() {
         XCTAssertTrue(buffer.takeChunks(final: false, isFirstChunk: true).isEmpty)
-        XCTAssertNotNil(file("s1/frame_0.json"))
     }
 
-    func testFinalTakeSendsEverythingAndClosesTheBuffer() throws {
+    func testFinalTakeSendsEverythingAndClosesTheStream() throws {
         append(rrwebEvent(4, 1), rrwebEvent(2, 1))
-        append(rrwebEvent(4, 3), rrwebEvent(2, 3))
-        XCTAssertEqual(try buffer.takeChunks(final: true, isFirstChunk: true).map(payloadTimestamps), [[1, 1, 3, 3]])
-        XCTAssertFalse(buffer.hasOpenSegment)
+        append(rrwebEvent(3, 2))
+        XCTAssertEqual(try buffer.takeChunks(final: true, isFirstChunk: true).map(payloadTimestamps), [[1, 1, 2]])
+        XCTAssertNil(buffer.openSessionId)
         XCTAssertNil(file("s1_upload_url.txt"))
         XCTAssertFalse(FileManager.default.fileExists(atPath: directory.appendingPathComponent("s1").path))
-    }
-
-    func testFinalTakeDropsATrailingSegmentWithoutItsFullSnapshot() throws {
-        append(rrwebEvent(4, 1), rrwebEvent(2, 1), rrwebEvent(4, 9))
-        XCTAssertEqual(try buffer.takeChunks(final: true, isFirstChunk: true).map(payloadTimestamps), [[1, 1]])
+        XCTAssertEqual(append(rrwebEvent(3, 3)), .appended(kept: 0, droppedBeforeMeta: 1))
     }
 
     func testOnlyTheFirstChunkIsMarkedFirst() {
@@ -154,31 +197,22 @@ final class SessionReplayExternalBufferTests: XCTestCase {
         XCTAssertEqual(chunk.metadata.lastTimestamp, 5)
     }
 
-    func testWholeSegmentsArePackedUnderTheLimit() throws {
+    func testWholeBatchesArePackedUnderTheLimit() throws {
         buffer = makeBuffer(maxUploadBytes: 5_000)
         for t in 1...6 { append(rrwebEvent(4, t), rrwebEvent(2, t, #"{"t":"\#(randomText(1_500))"}"#)) }
         let chunks = buffer.takeChunks(final: true, isFirstChunk: true)
         XCTAssertGreaterThan(chunks.count, 1)
         XCTAssertTrue(chunks.allSatisfy { $0.payload.count <= 5_000 })
-        XCTAssertEqual(try chunks.flatMap(payloadTimestamps), (1...6).flatMap { [$0, $0] })   // whole segments, in order
+        XCTAssertEqual(try chunks.flatMap(payloadTimestamps), (1...6).flatMap { [$0, $0] })   // whole batches, in order
     }
 
-    func testASegmentOverTheLimitGoesOutAlone() throws {
+    func testABatchOverTheLimitGoesOutAlone() throws {
         buffer = makeBuffer(maxUploadBytes: 1_000)
         append(rrwebEvent(4, 1), rrwebEvent(2, 1, #"{"t":"\#(randomText(3_000))"}"#))
         append(rrwebEvent(4, 2), rrwebEvent(2, 2))
         let chunks = buffer.takeChunks(final: true, isFirstChunk: true)
         XCTAssertEqual(try chunks.map(payloadTimestamps), [[1, 1], [2, 2]])
         XCTAssertGreaterThan(chunks[0].payload.count, 1_000)   // the reporter drops it and counts the max-payload metric
-    }
-
-    func testURLFileIsRewrittenForWhatRemains() {
-        append(rrwebEvent(4, 1), rrwebEvent(2, 1))
-        append(rrwebEvent(4, 3), rrwebEvent(2, 3), rrwebEvent(3, 4))
-        _ = buffer.takeChunks(final: false, isFirstChunk: true)
-        XCTAssertEqual(provided.last?.firstTimestamp, 3)
-        XCTAssertEqual(provided.last?.lastTimestamp, 4)
-        XCTAssertEqual(provided.last?.isFirstChunk, false)
     }
 
     // Runs the real recovery path over files the buffer wrote, as after a crash.

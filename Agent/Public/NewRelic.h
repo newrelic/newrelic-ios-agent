@@ -1015,6 +1015,9 @@ extern "C" {
  * Safe to call from any thread. It only does cheap checks before returning; the events
  * are parsed and stored in the background.
  *
+ * Each session's replay starts at the first batch that holds a Meta event. Batches
+ * before it are dropped, and so are batches after a pause until one holds a Meta again.
+ *
  * @param eventsJSON A JSON array of rrweb events, in play order. Their uploads report the
  *                   agent's own rrweb version.
  *

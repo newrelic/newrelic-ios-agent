@@ -61,7 +61,7 @@ final class SessionReplayExternalIngestTests: XCTestCase {
     }
 
     /// Looks through Documents/SessionReplayFrames/*/frame_*.json for a file that starts with the event.
-    private func segmentFileExists(startingWith event: String) throws -> Bool {
+    private func batchFileExists(startingWith event: String) throws -> Bool {
         let frames = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("SessionReplayFrames")
         for folder in try FileManager.default.contentsOfDirectory(at: frames, includingPropertiesForKeys: nil) {
@@ -75,32 +75,33 @@ final class SessionReplayExternalIngestTests: XCTestCase {
         return false
     }
 
-    func testRegularHarvestUploadsFinishedSegments() throws {
+    func testRegularHarvestUploadsEverything() throws {
         record(rrwebEvent(4, 1), rrwebEvent(2, 1), rrwebEvent(3, 2))
         record(rrwebEvent(4, 3), rrwebEvent(2, 3))
         manager.harvest(); drain()
         XCTAssertEqual(reporter.uploads.count, 1)
-        XCTAssertEqual(try uploadedTimestamps(0), [1, 1, 2])
+        XCTAssertEqual(try uploadedTimestamps(0), [1, 1, 2, 3, 3])
         let request = try XCTUnwrap(request(for: reporter.uploads[0]))
         XCTAssertTrue(request.isFirstChunk)
         XCTAssertEqual(request.firstTimestamp, 1)
-        XCTAssertEqual(request.lastTimestamp, 2)
+        XCTAssertEqual(request.lastTimestamp, 3)
     }
 
     func testLaterUploadsAreNotFirstChunk() throws {
         record(rrwebEvent(4, 1), rrwebEvent(2, 1)); record(rrwebEvent(4, 3), rrwebEvent(2, 3))
         manager.harvest(); drain()
-        record(rrwebEvent(4, 5), rrwebEvent(2, 5))
+        record(rrwebEvent(3, 5))
         manager.harvest(); drain()
-        XCTAssertEqual(try uploadedTimestamps(1), [3, 3])
+        XCTAssertEqual(try uploadedTimestamps(0), [1, 1, 3, 3])
+        XCTAssertEqual(try uploadedTimestamps(1), [5])
         XCTAssertEqual(request(for: reporter.uploads[1])?.isFirstChunk, false)
     }
 
-    // Native's frame path would wipe the whole frames folder here.
-    func testHarvestWhileSuppressedKeepsTheOpenSegmentOnDisk() throws {
-        record(rrwebEvent(4, 1), rrwebEvent(2, 1)); record(rrwebEvent(4, 3), rrwebEvent(2, 3))
+    func testEventsAfterAHarvestAreKeptWithoutANewMeta() throws {
+        record(rrwebEvent(4, 1), rrwebEvent(2, 1))
         manager.harvest(); drain()
-        XCTAssertTrue(try segmentFileExists(startingWith: rrwebEvent(4, 3)))
+        record(rrwebEvent(3, 2))
+        XCTAssertTrue(try batchFileExists(startingWith: rrwebEvent(3, 2)))
     }
 
     func testPauseFlushesEverythingAndRecordNeedsANewMeta() throws {
@@ -121,7 +122,7 @@ final class SessionReplayExternalIngestTests: XCTestCase {
         record(rrwebEvent(3, 6))                                     // a late diff from the old screen
         record(rrwebEvent(4, 7), rrwebEvent(2, 7)); record(rrwebEvent(4, 8), rrwebEvent(2, 8))
         manager.harvest(); drain()
-        XCTAssertEqual(try uploadedTimestamps(1), [7, 7])            // the new session starts at its own Meta
+        XCTAssertEqual(try uploadedTimestamps(1), [7, 7, 8, 8])      // the new session starts at its own Meta
         XCTAssertEqual(request(for: reporter.uploads[1])?.isFirstChunk, true)
     }
 
@@ -141,7 +142,7 @@ final class SessionReplayExternalIngestTests: XCTestCase {
         switching.recordExternalEvents(rrwebBatch([rrwebEvent(4, 6), rrwebEvent(2, 6)]))
         switching.harvest()
         switching.stop()
-        XCTAssertEqual(try uploadedTimestamps(0), [5, 5])
+        XCTAssertEqual(try uploadedTimestamps(0), [5, 5, 6, 6])
         // The earlier session's events stay on disk, for the next launch's recovery under their own URL file.
         let frames = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("SessionReplayFrames")
