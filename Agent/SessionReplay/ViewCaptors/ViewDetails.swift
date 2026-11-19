@@ -20,7 +20,7 @@ struct ViewDetails {
     let borderWidth: CGFloat
     let borderColor: UIColor?
     let viewName: String
-    let parentId: Int?
+    var parentId: Int?
     var nextId: Int?
     let clip: CGRect
 
@@ -40,6 +40,9 @@ struct ViewDetails {
     // True when the view is a map (MKMapView, including the MKMapView that backs a
     // SwiftUI Map). Surfaced to the replay player as data-nr-component="map".
     var isMapView: Bool = false
+
+    // Borders and corner radii a React Native view draws itself (NR-652282).
+    var reactNativeBorder: ReactNativeBorderStyle?
 
     var cssSelector: String {
         return "\(self.viewName)-\(self.viewId)"
@@ -136,6 +139,7 @@ struct ViewDetails {
         viewName = sanitizedViewName
 
         self.isMapView = ViewDetails.checkIsMapView(view: view)
+        self.reactNativeBorder = ReactNativeStyle.borderStyle(for: view)
 
         if let identifier = view.sessionReplayIdentifier {
             viewId = identifier
@@ -448,20 +452,19 @@ struct ViewDetails {
             return window.frame
         }
 
-        // Original clipping logic
+        // Intersect every clipping ancestor, not just the nearest: content in a scroll view
+        // nested in another (e.g. a horizontal carousel inside a vertical page) is clipped by
+        // both, and stopping at the inner one draws it over whatever sits outside the outer.
+        var clippingRect = window.frame
         var clippingView: UIView? = view.superview
-        while clippingView != nil {
-            if clippingView is UIScrollView || clippingView?.clipsToBounds == true {
-                break
+        while let ancestor = clippingView, ancestor !== window {
+            if ancestor is UIScrollView || ancestor.clipsToBounds {
+                clippingRect = clippingRect.intersection(ancestor.convert(ancestor.bounds, to: window))
             }
-            clippingView = clippingView?.superview
+            clippingView = ancestor.superview
         }
-        
-        if let clippingView = clippingView {
-            return clippingView.convert(clippingView.bounds, to: window)
-        }
-        
-        return window.frame // Default to window bounds if no clipping view is found
+
+        return clippingRect.isNull ? .zero : clippingRect
     }
     
     // Helper method to find scrollview ancestor
@@ -503,6 +506,7 @@ extension ViewDetails: Hashable {
         hasher.combine(blockView)
         hasher.combine(viewIdentifier)
         hasher.combine(isMapView)
+        hasher.combine(reactNativeBorder)
 
         // Convert UIColors to hex strings before hashing to ensure thread safety
         if let bgColor = backgroundColor {

@@ -37,6 +37,7 @@ class UILabelThingy: SessionReplayViewThingy {
     let fontWeight: UIFont.Weight
     let isItalic: Bool
     let letterSpacing: CGFloat?
+    let textDecoration: String?
 
     let widthOffset = 1.0
 
@@ -117,10 +118,12 @@ class UILabelThingy: SessionReplayViewThingy {
         let textAlignment: String
         let lineBreakMode: NSLineBreakMode
         let letterSpacing: CGFloat?
+        var textDecoration: String? = nil
 
         if let attributedText = view.attributedText, attributedText.length > 0 {
             // Extract from attributed text
             let extracted = TextHelper.extractLabelAttributes(from: attributedText)
+            textDecoration = TextHelper.textDecorationLine(from: attributedText)
             font = extracted.font
             textColor = extracted.textColor
             textAlignment = extracted.textAlignment
@@ -154,15 +157,25 @@ class UILabelThingy: SessionReplayViewThingy {
         self.fontWeight = fontTraits.weight
         self.isItalic = fontTraits.isItalic
         self.letterSpacing = letterSpacing
+        self.textDecoration = textDecoration
     }
 
     init(view: UIView, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
         var frame = self.viewDetails.frame
+        // React Native draws the text inset by the Text's padding; without this the text
+        // lands at the padded box's corner. NR-652282.
+        if let contentFrame = ReactNativeStyle.textContentFrame(of: view), let window = view.window {
+            let textFrame = view.convert(contentFrame, to: window).intersection(self.viewDetails.clip)
+            if !textFrame.isNull {
+                frame = textFrame
+            }
+        }
         frame.size.width = frame.size.width + widthOffset
         self.viewDetails.frame = frame
         
         var text: String?
+        var textDecoration: String? = nil
         var textAlignment = "left"
         var font: UIFont = UIFont.systemFont(ofSize: 17.0)
         var textColor: UIColor = .black
@@ -174,6 +187,7 @@ class UILabelThingy: SessionReplayViewThingy {
             if view.responds(to: Selector(("attributedText"))) {
                 if let attributedText = view.value(forKey: "attributedText") as? NSAttributedString {
                     let extracted = TextHelper.extractLabelAttributes(from: attributedText)
+                    textDecoration = TextHelper.textDecorationLine(from: attributedText)
                     text = extracted.text
                     font = extracted.font
                     textColor = extracted.textColor
@@ -186,6 +200,7 @@ class UILabelThingy: SessionReplayViewThingy {
                   view.isKind(of: rctTextViewClass) {
             if let textStorage = view.value(forKey: "textStorage") as? NSAttributedString {
                 let extracted = TextHelper.extractLabelAttributes(from: textStorage)
+                textDecoration = TextHelper.textDecorationLine(from: textStorage)
                 text = extracted.text
                 font = extracted.font
                 textColor = extracted.textColor
@@ -231,7 +246,7 @@ class UILabelThingy: SessionReplayViewThingy {
         self.isItalic = fontTraits.isItalic
 
         self.letterSpacing = kern
-
+        self.textDecoration = textDecoration
     }
 
     init(viewDetails: ViewDetails, attributedText: NSAttributedString, iOS15Override: Bool = false) {
@@ -248,6 +263,7 @@ class UILabelThingy: SessionReplayViewThingy {
         let textAlignment = extracted.textAlignment
         let lineBreakMode = extracted.lineBreakMode
         let kern = extracted.kern
+        self.textDecoration = TextHelper.textDecorationLine(from: attributedText)
         
         self.isMasked = UILabelThingy.resolveIsMasked(viewDetails)
 
@@ -304,6 +320,10 @@ class UILabelThingy: SessionReplayViewThingy {
         if let letterSpacing = self.letterSpacing {
             letterSpacingCSS = " letter-spacing: \(String(format: "%.2f", letterSpacing))px;"
         }
+        var textDecorationCSS = ""
+        if let textDecoration = self.textDecoration {
+            textDecorationCSS = " text-decoration-line: \(textDecoration);"
+        }
 
         return """
                 \(generateBaseCSSStyle())\
@@ -312,7 +332,7 @@ class UILabelThingy: SessionReplayViewThingy {
                 font: \(fontStyleCSS) \(fontWeightCSS) \(String(format: "%.2f", self.fontSize))px \(self.fontFamily); \
                 color: \(textColor.toHexString(includingAlpha: true));\
                 text-align: \(textAlignment); \
-                overflow: hidden; \(letterSpacingCSS)
+                overflow: hidden; \(letterSpacingCSS)\(textDecorationCSS)
                 """
     }
 
@@ -382,7 +402,8 @@ extension UILabelThingy: Equatable {
             lhs.lineBreakMode == rhs.lineBreakMode &&
             lhs.fontWeight == rhs.fontWeight &&
             lhs.isItalic == rhs.isItalic &&
-            lhs.letterSpacing == rhs.letterSpacing
+            lhs.letterSpacing == rhs.letterSpacing &&
+            lhs.textDecoration == rhs.textDecoration
     }
 }
 
@@ -399,6 +420,7 @@ extension UILabelThingy: Hashable {
         hasher.combine(fontWeight.rawValue)
         hasher.combine(isItalic)
         hasher.combine(letterSpacing)
+        hasher.combine(textDecoration)
     }
 }
 

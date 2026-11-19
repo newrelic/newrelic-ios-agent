@@ -227,6 +227,8 @@ class SessionReplayCapture {
             } else if let rctTextViewClass = NSClassFromString(RCTTextViewLegacy),
                       originalView.isKind(of: rctTextViewClass) {
                 return UILabelThingy(view: originalView, viewDetails: viewDetails)
+            } else if ReactNativeStyle.isSVGView(originalView) {
+                return UIImageViewThingy(svgView: originalView, viewDetails: viewDetails)
             } else {
                 return UIViewThingy(view: originalView, viewDetails: viewDetails)
             }

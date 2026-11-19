@@ -96,6 +96,21 @@ class TextHelper {
         return (text, font, textColor, textAlignment, lineBreakMode, kern)
     }
 
+    /// CSS `text-decoration-line` for the strikethrough / underline on the start of the
+    /// text, matching how the other attributes are read; nil when there's neither.
+    static func textDecorationLine(from attributedText: NSAttributedString) -> String? {
+        guard attributedText.length > 0 else { return nil }
+        let attributes = attributedText.attributes(at: 0, effectiveRange: nil)
+        var lines = [String]()
+        if let underline = attributes[.underlineStyle] as? Int, underline != 0 {
+            lines.append("underline")
+        }
+        if let strikethrough = attributes[.strikethroughStyle] as? Int, strikethrough != 0 {
+            lines.append("line-through")
+        }
+        return lines.isEmpty ? nil : lines.joined(separator: " ")
+    }
+
     /// Converts UIFont.Weight to CSS font-weight value (100-900)
     /// - Parameter weight: The UIFont.Weight to convert
     /// - Returns: CSS font-weight string value

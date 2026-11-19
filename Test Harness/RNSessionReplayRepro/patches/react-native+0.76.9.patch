@@ -1,0 +1,24 @@
+diff --git a/node_modules/react-native/scripts/react_native_pods_utils/script_phases.rb b/node_modules/react-native/scripts/react_native_pods_utils/script_phases.rb
+index f5dd2ed..a2b438d 100644
+--- a/node_modules/react-native/scripts/react_native_pods_utils/script_phases.rb
++++ b/node_modules/react-native/scripts/react_native_pods_utils/script_phases.rb
+@@ -44,7 +44,7 @@ def get_script_template(react_native_path, export_vars={})
+ 
+         SCRIPT_PHASES_SCRIPT="$RCT_SCRIPT_RN_DIR/scripts/react_native_pods_utils/script_phases.sh"
+         WITH_ENVIRONMENT="$RCT_SCRIPT_RN_DIR/scripts/xcode/with-environment.sh"
+-        /bin/sh -c "$WITH_ENVIRONMENT $SCRIPT_PHASES_SCRIPT"
++        /bin/sh "$WITH_ENVIRONMENT" "$SCRIPT_PHASES_SCRIPT"
+         EOS
+     result = ERB.new(template, trim_mode: '->').result(binding)
+     return result
+diff --git a/node_modules/react-native/scripts/xcode/with-environment.sh b/node_modules/react-native/scripts/xcode/with-environment.sh
+index c6bd62c..d2ddf3c 100755
+--- a/node_modules/react-native/scripts/xcode/with-environment.sh
++++ b/node_modules/react-native/scripts/xcode/with-environment.sh
+@@ -43,5 +43,5 @@ fi
+ 
+ # Execute argument, if present
+ if [ -n "$1" ]; then
+-  $1
++  "$1"
+ fi

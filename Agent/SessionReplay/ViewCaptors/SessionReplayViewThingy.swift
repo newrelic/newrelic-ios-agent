@@ -64,6 +64,10 @@ extension SessionReplayViewThingy {
             cssStyle.append(borderString)
         }
 
+        if let reactNativeBorder = self.viewDetails.reactNativeBorder {
+            cssStyle.append(reactNativeBorder.cssDescription())
+        }
+
         return cssStyle
     }
     
