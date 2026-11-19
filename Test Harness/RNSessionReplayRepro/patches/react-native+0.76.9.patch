@@ -1,3 +1,16 @@
+diff --git a/node_modules/react-native/scripts/react-native-xcode.sh b/node_modules/react-native/scripts/react-native-xcode.sh
+index 001b6cb..8b7cf77 100755
+--- a/node_modules/react-native/scripts/react-native-xcode.sh
++++ b/node_modules/react-native/scripts/react-native-xcode.sh
+@@ -145,7 +145,7 @@ if [[ -n "$CONFIG_JSON" ]]; then
+ elif [[ -n "$CONFIG_CMD" ]]; then
+   EXTRA_ARGS+=("--config-cmd" "$CONFIG_CMD")
+ else
+-  EXTRA_ARGS+=("--config-cmd" "$NODE_BINARY $NODE_ARGS $REACT_NATIVE_DIR/cli.js config")
++  EXTRA_ARGS+=("--config-cmd" "$NODE_BINARY $NODE_ARGS \"$REACT_NATIVE_DIR/cli.js\" config")
+ fi
+ 
+ # shellcheck disable=SC2086
 diff --git a/node_modules/react-native/scripts/react_native_pods_utils/script_phases.rb b/node_modules/react-native/scripts/react_native_pods_utils/script_phases.rb
 index f5dd2ed..a2b438d 100644
 --- a/node_modules/react-native/scripts/react_native_pods_utils/script_phases.rb
@@ -22,3 +35,16 @@ index c6bd62c..d2ddf3c 100755
 -  $1
 +  "$1"
  fi
+diff --git a/node_modules/react-native/sdks/hermes-engine/utils/replace_hermes_version.js b/node_modules/react-native/sdks/hermes-engine/utils/replace_hermes_version.js
+index f727aeb..49bceae 100644
+--- a/node_modules/react-native/sdks/hermes-engine/utils/replace_hermes_version.js
++++ b/node_modules/react-native/sdks/hermes-engine/utils/replace_hermes_version.js
+@@ -61,7 +61,7 @@ function replaceHermesConfiguration(configuration, version, podsRoot) {
+   fs.mkdirSync(finalLocation, {recursive: true});
+ 
+   console.log('Extracting the tarball');
+-  execSync(`tar -xf ${tarballURLPath} -C ${finalLocation}`);
++  execSync(`tar -xf "${tarballURLPath}" -C "${finalLocation}"`);
+ }
+ 
+ function updateLastBuildConfiguration(configuration) {
