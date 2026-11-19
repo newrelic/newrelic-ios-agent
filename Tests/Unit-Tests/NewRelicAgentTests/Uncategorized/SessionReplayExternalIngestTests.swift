@@ -135,7 +135,7 @@ final class SessionReplayExternalIngestTests: XCTestCase {
     }
 
     // A reconnect can stop capture, and the session can then change without endSession, so replay
-    // starts again with the earlier session's segments still buffered.
+    // starts again with the earlier session's batches still buffered.
     func testAnEarlierSessionsEventsArentUploadedWithTheNextSession() throws {
         let switching = SessionSwitchingManager(reporter: reporter, url: "mobile-collector.newrelic.com" as NSString)
         switching.externalCaptureSource = true

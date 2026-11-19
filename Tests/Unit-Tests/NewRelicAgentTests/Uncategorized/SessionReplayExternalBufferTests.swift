@@ -285,7 +285,8 @@ final class SessionReplayExternalBufferTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: crashed.frames.appendingPathComponent(crashed.session).path))
     }
 
-    // Guard: native recovery still starts at a FullSnapshot. Passes before and after the change.
+    // Without an external capture source, recovery skips files until one holds a FullSnapshot.
+    // This buffer has none, so none of it is uploaded.
     func testNativeCrashRecoveryStillStartsAtAFullSnapshot() {
         let crashed = crashedBufferAfterAnUpload()
         let reporter = CapturingSessionReplayReporter(applicationToken: "test-token", url: "mobile-collector.newrelic.com" as NSString)

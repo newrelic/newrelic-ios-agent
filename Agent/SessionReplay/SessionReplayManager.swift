@@ -32,7 +32,7 @@ public class SessionReplayManager: NSObject {
 
     /// Set when another source, such as the Flutter agent, captures the replay. Native screen and
     /// touch capture are skipped, and the events from recordExternalEvents() are uploaded instead.
-    /// Set it before the first start().
+    /// Set it before checkForPreviousSessionFiles() and the first start(), which both read it.
     @objc public var externalCaptureSource = false
 
     // Used only on sessionReplayQueue.
@@ -317,7 +317,8 @@ public class SessionReplayManager: NSObject {
         harvest(final: false)
     }
 
-    /// A final harvest, at pause or session end, also uploads the external events still in progress.
+    /// A final harvest, at pause or session end, also closes the external stream: batches after it
+    /// are dropped until one holds a Meta.
     func harvest(final: Bool) {
         // sync is required here or session replay upload fails.
         // When called from sessionReplayTick (already on the queue), run inline to avoid deadlock.

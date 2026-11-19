@@ -401,7 +401,8 @@ static NewRelicAgentInternal* _sharedInstance;
     if (@available(iOS 13.0, *)) {
         SessionReplayReporter *reporter = [[SessionReplayReporter alloc] initWithApplicationToken:_agentConfiguration.applicationToken.value url: [self->_agentConfiguration sessionReplayURL]];
         _sessionReplay = [[SessionReplayManager alloc] initWithReporter:reporter url: [self->_agentConfiguration sessionReplayURL]];
-        // Nothing can start replay yet: the harvester reaches the manager through sharedInstance, which is nil until init returns.
+        // Set before checkForPreviousSessionFiles below, which reads it. Nothing can start replay yet: the
+        // harvester reaches the manager through sharedInstance, which is nil until init returns.
         _sessionReplay.externalCaptureSource = [NewRelicAgentInternal sessionReplayExternalCaptureSource];
 
         if ([self isSessionReplayEnabled]) {

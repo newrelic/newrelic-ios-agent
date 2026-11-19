@@ -203,7 +203,7 @@ static NSString *uploadAttributes(NSURL *url)
     XCTAssertTrue([[self externalURLFileAttributes] containsString:@"hasMeta=false"]);
 }
 
-// Guard: passes before and after the change.
+// Native uploads keep their own rrweb version, and always say hasMeta=true.
 - (void) testNativeUploadURLKeepsTheNativeRRWebVersion
 {
     [self useFullSampling];
@@ -290,7 +290,6 @@ static NSString *uploadAttributes(NSURL *url)
     XCTAssertEqualObjects([self ingest:euros], kNRSessionReplayIngestAccepted);
 }
 
-// Guard: passes before and after the change.
 - (void) testDroppedInvalidWhenNotEncodableAsUTF8
 {
     [self useFullSampling];

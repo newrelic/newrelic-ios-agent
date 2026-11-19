@@ -1022,7 +1022,9 @@ extern "C" {
  *                   agent's own rrweb version.
  *
  * @return One of:
- * - kNRSessionReplayIngestAccepted: the events will be uploaded with this session's replay.
+ * - kNRSessionReplayIngestAccepted: the events passed the checks that run before this
+ *   returns. They can still be dropped later: if they aren't a JSON array of rrweb events,
+ *   if they arrive before a Meta (see above), or if replay stops before they're stored.
  * - kNRSessionReplayIngestDroppedDisabled: the agent isn't recording replay in "full" mode,
  *   the recordingMode that sessionReplayConfiguration reports. For example, the session
  *   wasn't sampled, replay is paused or disabled, the session ended, or the agent hasn't
