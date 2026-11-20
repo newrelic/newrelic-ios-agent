@@ -64,7 +64,17 @@ extension SessionReplayViewThingy {
             cssStyle.append(borderString)
         }
 
+        if let reactNativeBorder = self.viewDetails.reactNativeBorder {
+            cssStyle.append(reactNativeBorder.cssDescription())
+        }
+
         return cssStyle
+    }
+
+    /// Declarations for the view's stylesheet rule rather than its inline style, which is sent
+    /// again whenever any of it changes.
+    var stylesheetOnlyCSS: String? {
+        isBlocked ? nil : viewDetails.reactNativeBorder?.bitmapCSS
     }
     
     func generateBaseDifferences(from other: Self) -> [String:String] {

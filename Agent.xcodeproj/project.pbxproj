@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C8FE73466C5D36E87195B590 /* RRWebFullSnapshotEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 341E851E2DA0503400968D7D /* RRWebFullSnapshotEvent.swift */; };
+		0A9064BF5A52421997496A81 /* SessionReplayFrameProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 344E494C2D934CF8008174A1 /* SessionReplayFrameProcessor.swift */; };
+		17DD987426A0FF6964FF980A /* SessionReplayFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DF472D4C4BEE00BF5BED /* SessionReplayFrame.swift */; };
+		621D671ADD3ACEBC0B6266AF /* SessionReplayClippingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30A3D63511873CC0DE19997B /* SessionReplayClippingTests.swift */; };
+		5E1E6B26A418EF301EF45177 /* ReactNativeStyleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0507771D00107A52E925DA /* ReactNativeStyleTests.swift */; };
 		72F78B8151FDF7CBB89F35E8 /* IncrementalDiffGeneratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 871C12BAE9249E1084E7A385 /* IncrementalDiffGeneratorTests.swift */; };
 		5DCF5CE8135909A7EC546192 /* IncrementalDiffGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 340A8CE32DAD8EAB00BC2B01 /* IncrementalDiffGenerator.swift */; };
 		0209ABBD24E7054900E45C90 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 021A15BA24C9EEE700E8DFD5 /* NewRelic.framework */; };
@@ -943,6 +948,7 @@
 		2B570A592EF0C28B007D9E39 /* SessionReplayFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DF472D4C4BEE00BF5BED /* SessionReplayFrame.swift */; };
 		2B570A5A2EF0C29D007D9E39 /* SessionReplayCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DEFF2D3844C400BF5BED /* SessionReplayCapture.swift */; };
 		2B570A5B2EF0C2AB007D9E39 /* SessionReplayViewThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DF492D4C4E6000BF5BED /* SessionReplayViewThingy.swift */; };
+		9912A35880F798256AB0556C /* ReactNativeStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7843D9099B79EB4F17F2C8B /* ReactNativeStyle.swift */; };
 		2B570A5C2EF0C2BD007D9E39 /* ViewDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80C1D692DA07691007C0F52 /* ViewDetails.swift */; };
 		2B570A5D2EF0C2CC007D9E39 /* SerializedNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 341E85052D9F4B5600968D7D /* SerializedNode.swift */; };
 		2B570A5E2EF0C2DA007D9E39 /* RRWebIncrementalSnapshotEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 341E851C2DA0500E00968D7D /* RRWebIncrementalSnapshotEvent.swift */; };
@@ -1628,6 +1634,7 @@
 		F6E79D4225A78B4A006277FB /* TestW3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */; };
 		F806E4132D9C7D150003B9D6 /* SessionReplayReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F806E4122D9C7D150003B9D6 /* SessionReplayReporter.swift */; };
 		F806E4282D9C7E3F0003B9D6 /* SessionReplayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F806E4272D9C7E3F0003B9D6 /* SessionReplayManager.swift */; };
+		B8F542B3E1456A52060FD802 /* ReactNativeStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7843D9099B79EB4F17F2C8B /* ReactNativeStyle.swift */; };
 		F80C1D6A2DA07691007C0F52 /* ViewDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80C1D692DA07691007C0F52 /* ViewDetails.swift */; };
 		F810620E2E16D02D00B8CC81 /* UIVisualEffectViewThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81061FA2E16D01D00B8CC81 /* UIVisualEffectViewThingy.swift */; };
 		F81C3D223049FD410063C9C0 /* NRMAWebViewSupportability.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BD0738B2EB038AB00E3556B /* NRMAWebViewSupportability.m */; };
@@ -1652,6 +1659,7 @@
 		F85ABB4E2F15571500A0B1C1 /* NRMAMaskingTestConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = F85ABB4C2F15571500A0B1C1 /* NRMAMaskingTestConfiguration.m */; };
 		F85ABB4B2F15571500A0B1C1 /* MaskingResolutionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85ABB4A2F15571500A0B1C1 /* MaskingResolutionTests.swift */; };
 		F85ABB5D2F15575B0098A2CF /* UILabelThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DF4D2D54310900BF5BED /* UILabelThingy.swift */; };
+		15B561FD2900EE0FB36C6CC3 /* ReactNativeStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7843D9099B79EB4F17F2C8B /* ReactNativeStyle.swift */; };
 		F85ABB5E2F1557B40098A2CF /* ViewDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80C1D692DA07691007C0F52 /* ViewDetails.swift */; };
 		F85ABB5F2F1557DD0098A2CF /* SessionReplayViewThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DF492D4C4E6000BF5BED /* SessionReplayViewThingy.swift */; };
 		F85ABB602F1557EA0098A2CF /* SerializedNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 341E85052D9F4B5600968D7D /* SerializedNode.swift */; };
@@ -1999,6 +2007,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		30A3D63511873CC0DE19997B /* SessionReplayClippingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayClippingTests.swift; sourceTree = "<group>"; };
+		4E0507771D00107A52E925DA /* ReactNativeStyleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactNativeStyleTests.swift; sourceTree = "<group>"; };
 		871C12BAE9249E1084E7A385 /* IncrementalDiffGeneratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncrementalDiffGeneratorTests.swift; sourceTree = "<group>"; };
 		0209ABA924E7042B00E45C90 /* NRMeasurementConsumerHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMeasurementConsumerHelper.h; sourceTree = "<group>"; };
 		0209ABAA24E7042B00E45C90 /* libOCMock.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libOCMock.a; sourceTree = "<group>"; };
@@ -2657,6 +2667,7 @@
 		F7B230ED67A6A98DA7DB0F8E /* NRMAEventDuplicationStoreTests.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = NRMAEventDuplicationStoreTests.mm; sourceTree = "<group>"; };
 		F806E4122D9C7D150003B9D6 /* SessionReplayReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayReporter.swift; sourceTree = "<group>"; };
 		F806E4272D9C7E3F0003B9D6 /* SessionReplayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayManager.swift; sourceTree = "<group>"; };
+		D7843D9099B79EB4F17F2C8B /* ReactNativeStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactNativeStyle.swift; sourceTree = "<group>"; };
 		F80C1D692DA07691007C0F52 /* ViewDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewDetails.swift; sourceTree = "<group>"; };
 		F81061FA2E16D01D00B8CC81 /* UIVisualEffectViewThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIVisualEffectViewThingy.swift; sourceTree = "<group>"; };
 		F81E70672EC7A75C00698BF8 /* UIColorHexStringTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIColorHexStringTests.swift; sourceTree = "<group>"; };
@@ -3095,6 +3106,8 @@
 				F85ABB4D2F15571500A0B1C1 /* NRMAMaskingTestConfiguration.h */,
 				F85ABB4A2F15571500A0B1C1 /* MaskingResolutionTests.swift */,
 				871C12BAE9249E1084E7A385 /* IncrementalDiffGeneratorTests.swift */,
+				4E0507771D00107A52E925DA /* ReactNativeStyleTests.swift */,
+				30A3D63511873CC0DE19997B /* SessionReplayClippingTests.swift */,
 				F88801D12FC5FB780051DC67 /* SessionReplayReporterOfflineStorageTests.swift */,
 				F88801E62FC734C90051DC67 /* SessionReplayReporterNetworkTests.swift */,
 				C15109B42FC49AA5B0AE1D31 /* SessionReplayHarvestEndToEndTests.swift */,
@@ -4079,6 +4092,7 @@
 				F8EACA892F6867ED00385075 /* UIDatePickerThingy.swift */,
 				2B0B6BAC2DEA349D0080C3D6 /* UITextViewThingy.swift */,
 				F80C1D692DA07691007C0F52 /* ViewDetails.swift */,
+				D7843D9099B79EB4F17F2C8B /* ReactNativeStyle.swift */,
 				3493DF4B2D542D9900BF5BED /* UIViewThingy.swift */,
 				F81061FA2E16D01D00B8CC81 /* UIVisualEffectViewThingy.swift */,
 				3493DF4D2D54310900BF5BED /* UILabelThingy.swift */,
@@ -5436,7 +5450,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				72F78B8151FDF7CBB89F35E8 /* IncrementalDiffGeneratorTests.swift in Sources */,
+				5E1E6B26A418EF301EF45177 /* ReactNativeStyleTests.swift in Sources */,
+				621D671ADD3ACEBC0B6266AF /* SessionReplayClippingTests.swift in Sources */,
 				5DCF5CE8135909A7EC546192 /* IncrementalDiffGenerator.swift in Sources */,
+				C8FE73466C5D36E87195B590 /* RRWebFullSnapshotEvent.swift in Sources */,
+				0A9064BF5A52421997496A81 /* SessionReplayFrameProcessor.swift in Sources */,
+				17DD987426A0FF6964FF980A /* SessionReplayFrame.swift in Sources */,
 				0209AC9224E7393300E45C90 /* NRMAExceptionMetaDataTest.m in Sources */,
 				F8FBFA592A77FA3000CDC8C5 /* TestRequestEvents.m in Sources */,
 				2BFFB1EB28CA683F00392E3B /* NRMASupportMetricHelperTests.m in Sources */,
@@ -5477,6 +5496,7 @@
 				F8BF15572F3A3A8F00EF5628 /* XRayDecoderError.swift in Sources */,
 				0209ACAF24E7394500E45C90 /* NRMAInstallMetricGeneratorTest.m in Sources */,
 				F85ABB5E2F1557B40098A2CF /* ViewDetails.swift in Sources */,
+				15B561FD2900EE0FB36C6CC3 /* ReactNativeStyle.swift in Sources */,
 				0209AC0124E7070900E45C90 /* NRURLSessionTaskOverrideTests.m in Sources */,
 				0209AC1024E7071500E45C90 /* NRMAAppTokenTest.m in Sources */,
 				C94590EE289AC0EC0062A4DE /* SwiftTestHelper.swift in Sources */,
@@ -5708,6 +5728,7 @@
 				02FF480C24DB573E00115469 /* NRMAUserAction.m in Sources */,
 				02FF489D24DC61D200115469 /* NRMAURLSessionTaskOverride.m in Sources */,
 				F80C1D6A2DA07691007C0F52 /* ViewDetails.swift in Sources */,
+				B8F542B3E1456A52060FD802 /* ReactNativeStyle.swift in Sources */,
 				02FF491C24DC624400115469 /* NRMACrashReport_Library.m in Sources */,
 				2BF42C6628B80B82006E9C27 /* NRMASysctlBinding.c in Sources */,
 				02FF49D924DC636100115469 /* NRMAHarvestable.m in Sources */,
@@ -6161,6 +6182,7 @@
 				2B570A672EF0C348007D9E39 /* IDGenerator.swift in Sources */,
 				02FF4C5F24E3201400115469 /* NRMATimestampContainer.m in Sources */,
 				2B570A5C2EF0C2BD007D9E39 /* ViewDetails.swift in Sources */,
+				9912A35880F798256AB0556C /* ReactNativeStyle.swift in Sources */,
 				F8BF14D22F36770A00EF5628 /* TextHelper.swift in Sources */,
 				02FF4C6024E3201400115469 /* NRMAHarvestableMethodMetric.m in Sources */,
 				02FF4C6124E3201400115469 /* NRMAURLSessionOverride.m in Sources */,
