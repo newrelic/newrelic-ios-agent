@@ -99,32 +99,47 @@ public class SessionReplayManager: NSObject {
     
     public func start(fromManual: Bool = false, with newMode: SessionReplayRecordingMode) {
         sessionReplayQueue.async { [self] in
-            
-            
-            // SESSION REPLAY ERRORED SESSION SAMPLING HANDLING
-            
-            self.setRecordingMode(newMode)
-            
-            // END SESSION REPLAY ERRORED SESSION SAMPLING HANDLING
-            
-            
+            startOnQueue(fromManual: fromManual, with: newMode)
+        }
+    }
+
+    /// Starts like start(fromManual:with:), but leaves a replay that's already running, and its
+    /// mode, alone: it may have moved from error to full mode since it started. The check runs
+    /// on the queue, so it also covers a start that's queued but hasn't run yet.
+    public func startIfNotRunning(with newMode: SessionReplayRecordingMode) {
+        sessionReplayQueue.async { [self] in
             guard !isRunning() else {
-                NRLOG_AGENT_DEBUG("Session replay harvest timer attempting to start while already running.")
+                NRLOG_AGENT_DEBUG("Session replay already running; keeping its recording mode.")
                 return
             }
-            
-            sessionReplay.start()
-            self.harvestseconds = 0
-            
-            self.isManuallyRecording = fromManual
-            
-            NRLOG_AGENT_DEBUG("Session replay harvest timer starting with a period of \(harvestPeriod) s")
-            let timer = DispatchSource.makeTimerSource(flags: [], queue: sessionReplayQueue)
-            timer.schedule(deadline: .now() + 1.0, repeating: 1.0)
-            timer.setEventHandler { [weak self] in self?.sessionReplayTick() }
-            timer.resume()
-            self.sessionReplayTimer = timer
+            startOnQueue(fromManual: false, with: newMode)
         }
+    }
+
+    private func startOnQueue(fromManual: Bool, with newMode: SessionReplayRecordingMode) {
+        // SESSION REPLAY ERRORED SESSION SAMPLING HANDLING
+
+        self.setRecordingMode(newMode)
+
+        // END SESSION REPLAY ERRORED SESSION SAMPLING HANDLING
+
+
+        guard !isRunning() else {
+            NRLOG_AGENT_DEBUG("Session replay harvest timer attempting to start while already running.")
+            return
+        }
+
+        sessionReplay.start()
+        self.harvestseconds = 0
+
+        self.isManuallyRecording = fromManual
+
+        NRLOG_AGENT_DEBUG("Session replay harvest timer starting with a period of \(harvestPeriod) s")
+        let timer = DispatchSource.makeTimerSource(flags: [], queue: sessionReplayQueue)
+        timer.schedule(deadline: .now() + 1.0, repeating: 1.0)
+        timer.setEventHandler { [weak self] in self?.sessionReplayTick() }
+        timer.resume()
+        self.sessionReplayTimer = timer
     }
     
     public func stop() {

@@ -19,6 +19,7 @@
 #import "Constants.h"
 #import "NewRelicAgentInternal.h"
 #import "NRMAHandledExceptions.h"
+#import <NewRelic/NewRelic-Swift.h>
 
 @interface NSBundle (AHHHH)
 + (NSBundle*) NRMA__mainBundle;
@@ -1354,5 +1355,105 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
     [mockHarvester stopMocking];
     [mockConnection stopMocking];
 }
+
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+// On a cold launch the cached-config shortcut applies the session replay config before
+// +startWithApplicationToken: has assigned the shared agent, so the harvester's
+// -sessionReplayStart is lost. These drive the agent's catch-up directly.
+- (NewRelicAgentInternal*) makeAgentWithSessionReplay:(id)sessionReplay
+{
+    NewRelicAgentInternal* agent = [[NewRelicAgentInternal alloc] init];
+    [agent setValue:agentConfig forKey:@"agentConfiguration"];
+    [agent setValue:sessionReplay forKey:@"sessionReplay"];
+    agent.sessionReplaySampleSeed = 1.0;
+    return agent;
+}
+
+- (NRMAHarvesterConfiguration*) makeSessionReplayEnabledConfig
+{
+    NRMAHarvesterConfiguration* config = [self makeHarvestConfig];
+    config.session_replay_enabled = YES;
+    return config;
+}
+
+- (void) testSessionReplayStartIfMissedStartsReplayTheHarvesterCouldNotReach
+{
+    id mockHarvestController = [OCMockObject mockForClass:[NRMAHarvestController class]];
+    [[[[mockHarvestController stub] classMethod] andReturn:[self makeSessionReplayEnabledConfig]] configuration];
+
+    id mockSessionReplay = [OCMockObject mockForClass:[SessionReplayManager class]];
+    [[mockSessionReplay expect] startIfNotRunningWith:SessionReplayRecordingModeFull];
+
+    [[self makeAgentWithSessionReplay:mockSessionReplay] sessionReplayStartIfMissed];
+
+    [mockSessionReplay verify];
+    [mockSessionReplay stopMocking];
+    [mockHarvestController stopMocking];
+}
+
+- (void) waitForRecordingMode:(SessionReplayRecordingMode)mode of:(SessionReplayManager*)manager
+{
+    NSPredicate* reached = [NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary* bindings) {
+        return [manager getCurrentRecordingMode] == mode;
+    }];
+    [self waitForExpectations:@[[[XCTNSPredicateExpectation alloc] initWithPredicate:reached object:nil]] timeout:5];
+}
+
+// At launch the harvester's start and the catch-up can both land. Whichever runs second must
+// not reset a replay that has meanwhile moved from error to full mode.
+- (void) testSessionReplayStartIfNotRunningKeepsTheModeOfARunningReplay
+{
+    SessionReplayReporter* reporter = [[SessionReplayReporter alloc] initWithApplicationToken:@"token" url:@"mobile-collector.newrelic.com"];
+    SessionReplayManager* manager = [[SessionReplayManager alloc] initWithReporter:reporter url:@"mobile-collector.newrelic.com"];
+    [manager startFromManual:NO with:SessionReplayRecordingModeError];
+    [self waitForRecordingMode:SessionReplayRecordingModeError of:manager];
+    [manager onError:nil];
+    [self waitForRecordingMode:SessionReplayRecordingModeFull of:manager];
+
+    [manager startIfNotRunningWith:SessionReplayRecordingModeError];
+    // Each drains the queue once: first the start, then any mode change it queued.
+    [manager stop];
+    [manager stop];
+
+    XCTAssertEqual([manager getCurrentRecordingMode], SessionReplayRecordingModeFull);
+}
+
+- (void) testSessionReplayStartIfMissedWaitsForConnectWhenTheStoredConfigIsForAnotherToken
+{
+    NRMAHarvesterConfiguration* config = [self makeSessionReplayEnabledConfig];
+    config.application_token = @"another-app-token";
+    id mockHarvestController = [OCMockObject mockForClass:[NRMAHarvestController class]];
+    [[[[mockHarvestController stub] classMethod] andReturn:config] configuration];
+
+    // Strict: the harvester is still connecting and will apply the collector's config itself.
+    id mockSessionReplay = [OCMockObject mockForClass:[SessionReplayManager class]];
+
+    XCTAssertNoThrow([[self makeAgentWithSessionReplay:mockSessionReplay] sessionReplayStartIfMissed]);
+
+    [mockSessionReplay stopMocking];
+    [mockHarvestController stopMocking];
+}
+
+- (void) testSessionReplayStartIfMissedWaitsForForegroundOnABackgroundLaunch
+{
+    id mockHarvestController = [OCMockObject mockForClass:[NRMAHarvestController class]];
+    [[[[mockHarvestController stub] classMethod] andReturn:[self makeSessionReplayEnabledConfig]] configuration];
+    // The test bundle has no host app, so there's no shared application to partially mock.
+    UIApplicationState background = UIApplicationStateBackground;
+    id application = [OCMockObject niceMockForClass:[UIApplication class]];
+    [[[application stub] andReturnValue:OCMOCK_VALUE(background)] applicationState];
+    id mockApplication = [OCMockObject mockForClass:[UIApplication class]];
+    [[[[mockApplication stub] classMethod] andReturn:application] sharedApplication];
+
+    // Strict: the harvester starts replay once the app comes to the foreground.
+    id mockSessionReplay = [OCMockObject mockForClass:[SessionReplayManager class]];
+
+    XCTAssertNoThrow([[self makeAgentWithSessionReplay:mockSessionReplay] sessionReplayStartIfMissed]);
+
+    [mockSessionReplay stopMocking];
+    [mockApplication stopMocking];
+    [mockHarvestController stopMocking];
+}
+#endif
 
 @end
