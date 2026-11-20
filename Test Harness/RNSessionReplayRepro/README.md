@@ -74,6 +74,11 @@ the top of each screen says what to do and what the code predicts:
 10. `NewRelicMask` / `NewRelicUnmask` alone and nested both ways, plus testID targets
     (`snippet-link`, `mask-by-testid`, `mask-by-testid-view`) for custom masking rules. Switch
     the app's masking mode in the New Relic UI to try Default and each Custom toggle.
+11. The fixes from the PR #1001 review that show on the old architecture
+12. Navigation full snapshots (`src/navigationSnapshots.tsx`): pushes between screens of the
+    same class with the default, a 2.5 s, and no animation; a held and cancelled interactive
+    pop; a modal stack; an RN `<Modal>` closed in the same tap as a push; and tab switches.
+    Each case says which frames should be full snapshots (`type: 2` in the collected frames).
 
 ## Customer product page
 

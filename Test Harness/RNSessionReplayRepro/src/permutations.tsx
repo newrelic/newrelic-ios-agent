@@ -35,6 +35,7 @@ const PERMUTATIONS = [
   { screen: SCREENS.PermTransforms, title: '9. Transforms' },
   { screen: SCREENS.PermMasking, title: '10. Masking' },
   { screen: SCREENS.PermReviewFixes, title: '11. PR #1001 review fixes' },
+  { screen: SCREENS.PermNavSnapshots, title: '12. Navigation full snapshots' },
 ];
 
 function PermutationScreen(props: {

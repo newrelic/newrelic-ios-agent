@@ -36,6 +36,8 @@ export const SCREENS = {
   PermTransforms: 'repro.Perm.Transforms',
   PermMasking: 'repro.Perm.Masking',
   PermReviewFixes: 'repro.Perm.ReviewFixes',
+  PermNavSnapshots: 'repro.Perm.NavSnapshots',
+  PermNavStep: 'repro.Perm.NavStep',
   Toast: 'repro.Toast',
 };
 
