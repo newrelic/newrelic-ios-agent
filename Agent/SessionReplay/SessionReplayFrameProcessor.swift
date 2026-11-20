@@ -14,6 +14,10 @@ class SessionReplayFrameProcessor {
 
     var takeFullSnapshotNext = true
 
+    // Set when a navigation controller's top view controller changes, and cleared by the next
+    // full snapshot of a frame with no navigation transition in progress.
+    private var fullSnapshotAfterNavigation = false
+
     // The last full snapshot's <style> element, and the stylesheet-only CSS (see
     // stylesheetOnlyCSS) in effect for each view since, so a change is added as a rule once.
     private var styleNodeId: Int?
@@ -36,23 +40,35 @@ class SessionReplayFrameProcessor {
             return processFullSnapshot(frame)
         }
         
+        // A UINavigationController push or pop. The full snapshot waits for a frame with no
+        // navigation transition in progress, so it shows the new screen in place rather than
+        // both screens mid-animation (or mid interactive pop, which can be cancelled).
+        if frame.navigationTopViewIds != lastFullFrame.navigationTopViewIds {
+            fullSnapshotAfterNavigation = true
+        }
+        let navigationSettled = fullSnapshotAfterNavigation && !frame.isNavigationTransitionInProgress
+
         var rrwebCommon: (any RRWebEventCommon)?
         // If a full snapshot is needed, frame size changed, UILayoutContainerView count increased,
-        // or the NavigationStack depth changed.
-        if takeFullSnapshotNext || frame.size != lastFullFrame.size ||
+        // the NavigationStack depth changed, or a navigation controller push or pop has settled.
+        if takeFullSnapshotNext || navigationSettled || frame.size != lastFullFrame.size ||
             (frame.layoutContainerViewCount > 1 && frame.layoutContainerViewCount > lastFullFrame.layoutContainerViewCount) ||
             frame.navigationStackDepth != lastFullFrame.navigationStackDepth {
             rrwebCommon = processFullSnapshot(frame)
             takeFullSnapshotNext = false
+            if !frame.isNavigationTransitionInProgress {
+                fullSnapshotAfterNavigation = false
+            }
         } else {
             rrwebCommon = processIncrementalSnapshot(newFrame: frame, oldFrame: lastFullFrame)
             takeFullSnapshotNext = false
         }
         // If we have a full snapshot, compare the rootViewControllerIDs. If they match, continue with partial snapshots
-        // If they don't, then do a full snapshot next time.
-        if frame.rootViewControllerId != lastFullFrame.rootViewControllerId ||
+        // If they don't, then do a full snapshot next time. A push that has settled already got
+        // its full snapshot of the new screen in this frame.
+        if !navigationSettled && (frame.rootViewControllerId != lastFullFrame.rootViewControllerId ||
             frame.views.viewDetails.viewId != lastFullFrame.views.viewDetails.viewId ||
-            frame.rootSwiftUIViewId != lastFullFrame.rootSwiftUIViewId {
+            frame.rootSwiftUIViewId != lastFullFrame.rootSwiftUIViewId) {
 
             takeFullSnapshotNext = true // When the viewController transitions there is a frame where they are combined so take the full snapshot after things have settled.
         }

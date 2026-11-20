@@ -195,4 +195,61 @@ struct IncrementalDiffGeneratorTests {
         #expect(!moved.contains("bitmap1"))
         #expect(redrawn.contains("#UIView-2 { border-image: url('data:image/png;base64,bitmap2')"))
     }
+
+    // MARK: Navigation controller full snapshots
+
+    /// Processes a frame whose navigation controller shows the screen with replay id `topViewId`,
+    /// and returns whether it came out as a full snapshot.
+    func isFullSnapshot(_ processor: SessionReplayFrameProcessor, at seconds: TimeInterval, topViewId: Int,
+                        transitioning: Bool = false, rootViewControllerId: String? = "RNNComponentViewController") -> Bool {
+        let root = viewThingy(id: 1, parentId: nil)
+        root.subviews = [viewThingy(id: topViewId, parentId: 1)]
+        let frame = SessionReplayFrame(date: Date(timeIntervalSince1970: seconds), views: root,
+                                       rootViewControllerId: rootViewControllerId, rootSwiftUIViewId: nil,
+                                       size: CGSize(width: 400, height: 800), layoutContainerViewCount: 0,
+                                       navigationStackDepth: 0, navigationTopViewIds: [topViewId],
+                                       isNavigationTransitionInProgress: transitioning)
+        return processor.processFrame(frame) is FullSnapshotEvent
+    }
+
+    // React Native Navigation shows every screen in an RNNComponentViewController, so
+    // rootViewControllerId doesn't change on a push.
+    @Test func `Push between screens of the same class takes a full snapshot`() {
+        let processor = SessionReplayFrameProcessor()
+        _ = isFullSnapshot(processor, at: 1, topViewId: 10)
+
+        #expect(!isFullSnapshot(processor, at: 2, topViewId: 10))
+        #expect(isFullSnapshot(processor, at: 3, topViewId: 20))
+        #expect(!isFullSnapshot(processor, at: 4, topViewId: 20))
+    }
+
+    @Test func `Full snapshot for a push waits for the transition to end`() {
+        let processor = SessionReplayFrameProcessor()
+        _ = isFullSnapshot(processor, at: 1, topViewId: 10)
+
+        #expect(!isFullSnapshot(processor, at: 2, topViewId: 20, transitioning: true))
+        // An interactive pop held across frames.
+        #expect(!isFullSnapshot(processor, at: 3, topViewId: 20, transitioning: true))
+        #expect(isFullSnapshot(processor, at: 4, topViewId: 20))
+        #expect(!isFullSnapshot(processor, at: 5, topViewId: 20))
+    }
+
+    @Test func `Cancelled interactive pop still takes a full snapshot once it ends`() {
+        let processor = SessionReplayFrameProcessor()
+        _ = isFullSnapshot(processor, at: 1, topViewId: 20)
+
+        // The pop makes the screen below the top for the length of the gesture.
+        #expect(!isFullSnapshot(processor, at: 2, topViewId: 10, transitioning: true))
+        #expect(isFullSnapshot(processor, at: 3, topViewId: 20))
+    }
+
+    // A push to a screen of another class also changes rootViewControllerId, which on its own
+    // asks for a full snapshot on the following frame.
+    @Test func `Push that also changes the root view controller takes one full snapshot`() {
+        let processor = SessionReplayFrameProcessor()
+        _ = isFullSnapshot(processor, at: 1, topViewId: 10, rootViewControllerId: "ListViewController")
+
+        #expect(isFullSnapshot(processor, at: 2, topViewId: 20, rootViewControllerId: "DetailViewController"))
+        #expect(!isFullSnapshot(processor, at: 3, topViewId: 20, rootViewControllerId: "DetailViewController"))
+    }
 }

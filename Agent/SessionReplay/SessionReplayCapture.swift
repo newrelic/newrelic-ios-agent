@@ -15,7 +15,9 @@ import SwiftUI
 class SessionReplayCapture {
     private var layoutContainerViewCount: Int = 0
     private var navigationStackDepth: Int = 0
-    
+    private var navigationTopViewIds: [Int] = []
+    private var isNavigationTransitionInProgress = false
+
     @MainActor
     public func recordFrom(rootView:UIView) -> SessionReplayFrame {
         // Bound the lifetime of every autoreleased UIKit / CF object touched
@@ -34,6 +36,8 @@ class SessionReplayCapture {
             // Reset counters for this frame capture
             layoutContainerViewCount = 0
             navigationStackDepth = 0
+            navigationTopViewIds = []
+            isNavigationTransitionInProgress = false
 
             // Build tree using recursive approach to properly handle value semantics
             buildViewTree(for: rootView, into: &rootThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
@@ -41,11 +45,16 @@ class SessionReplayCapture {
             // Set nextId for all views after tree is built
             setNextIdRecursively(for: &rootThingy)
 
-            return SessionReplayFrame(date: Date(), views: rootThingy, rootViewControllerId: rootViewControllerID, rootSwiftUIViewId: rootSwiftUIViewID, size: rootView.frame.size, layoutContainerViewCount: layoutContainerViewCount, navigationStackDepth: navigationStackDepth)
+            return SessionReplayFrame(date: Date(), views: rootThingy, rootViewControllerId: rootViewControllerID, rootSwiftUIViewId: rootSwiftUIViewID, size: rootView.frame.size, layoutContainerViewCount: layoutContainerViewCount, navigationStackDepth: navigationStackDepth, navigationTopViewIds: navigationTopViewIds, isNavigationTransitionInProgress: isNavigationTransitionInProgress)
         } }
     }
     
     private func buildViewTree(for currentView: UIView, into parentThingy: inout any SessionReplayViewThingy, rootSwiftUIViewID: inout Int?) {
+
+        // A view controller's root view has the controller as its next responder.
+        if let navigationController = currentView.next as? UINavigationController {
+            recordNavigationState(of: navigationController)
+        }
 
         // Process UIKit subviews only if current view should record subviews
         if parentThingy.shouldRecordSubviewsComputed {
@@ -148,6 +157,20 @@ class SessionReplayCapture {
         }
     }
     
+    // rootViewControllerId only names the visible controller's class and doesn't descend into
+    // child controllers, so it misses pushes between screens of the same class (every React
+    // Native Navigation screen is an RNNComponentViewController) and navigation controllers
+    // nested in a child controller (react-native-screens). The top view's replay id catches both.
+    private func recordNavigationState(of navigationController: UINavigationController) {
+        if navigationController.transitionCoordinator != nil {
+            isNavigationTransitionInProgress = true
+        }
+        guard let topView = navigationController.topViewController?.viewIfLoaded else { return }
+        let id = topView.sessionReplayIdentifier ?? IDGenerator.shared.getId()
+        topView.sessionReplayIdentifier = id
+        navigationTopViewIds.append(id)
+    }
+
     private func findRootViewController(rootView: UIView) -> UIViewController? {
         var initialViewController: UIViewController? = nil
         if let foundViewController = rootView.parentViewController {

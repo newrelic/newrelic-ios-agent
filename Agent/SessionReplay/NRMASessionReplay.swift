@@ -429,8 +429,10 @@ public class NRMASessionReplay: NSObject {
         
         // Fetch processed frame and only unpersisted touches
         let lastFrameSize = sessionReplayFrameProcessor.lastFullFrame?.size ?? .zero
-        let isFullSnapshot = sessionReplayFrameProcessor.takeFullSnapshotNext
         let processedFrame = self.sessionReplayFrameProcessor.processFrame(frame)
+        // From the result: processFrame also takes full snapshots that takeFullSnapshotNext
+        // didn't ask for (size change, navigation push or pop).
+        let isFullSnapshot = processedFrame is FullSnapshotEvent
         let processedTouches = self.getUnpersistedTouches()
         
         //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Frame type: \(isFullSnapshot ? "FULL SNAPSHOT" : "Incremental")")
