@@ -1,47 +1,47 @@
 /**
- * SwiftUI Text Fields Screen Tests
- * Tests text field inputs and interactions in SwiftUI
+ * SwiftUI Text Fields: TextFieldsView's Form with a TextField, a TextEditor and a SecureField, and a Validate
+ * button that raises an alert while either required field is empty.
  */
 
+const h = require("./helpers");
+
 describe("SwiftUI Text Fields Screen", () => {
-  it("Should navigate to SwiftUI Text Fields screen", async () => {
-    // Wait for the app to load on MainScreen
-    await driver.setTimeouts(5000);
-
-    // Navigate to SwiftUI screen
-    const swiftUIButton = await $("~SwiftUI");
-    await swiftUIButton.waitForExist({ timeout: 30000 });
-    await swiftUIButton.click();
-    await driver.setTimeouts(3000);
-
-    // Navigate to Text Fields screen
-    const textFieldsButton = await $("~Text Fields");
-    await textFieldsButton.waitForExist({ timeout: 30000 });
-    await textFieldsButton.click();
-    await driver.setTimeouts(3000);
-
-    // TODO: Add verification for Text Fields screen elements
-    await driver.setTimeouts(2000);
+  before(async () => {
+    await h.waitForHome();
   });
 
-  it("Should input text into text fields", async () => {
-    // TODO: Test text input functionality
-    await driver.setTimeouts(2000);
+  it("opens Text Fields from the SwiftUI list", async () => {
+    await h.openSwiftUIScreen("Text Fields");
+    await h.expectVisible(h.sel.text("Single Line Text Field"));
   });
 
-  it("Should test secure text fields", async () => {
-    // TODO: Test password/secure text field functionality
-    await driver.setTimeouts(2000);
+  it("rejects validation while the fields are empty", async () => {
+    await h.scrollAndTap(h.sel.button("Validate Input"));
+    await h.expectVisible(h.sel.text("Validation Error"));
+    await h.tap(h.sel.button("OK"));
+    await h.expectGone(h.sel.text("Validation Error"));
   });
 
-  it("Should navigate back to SwiftUI screen", async () => {
-    // Navigate back
-    await driver.back();
+  it("types into every field and validates", async () => {
+    // Found by placeholder until it has text, then by the text.
+    await h.typeInto(h.sel.field("Enter single line text"), "single line input");
+    await (await $(h.sel.field("single line input"))).waitForExist({ timeout: 5000 });
 
-    await driver.setTimeouts(2000);
-    await driver.activateApp('com.apple.Preferences');
+    const editor = await h.scrollTo('-ios class chain:**/XCUIElementTypeTextView');
+    await editor.click();
+    await editor.addValue("multi-line input");
 
-    await driver.setTimeouts(5000);
+    await h.typeInto(h.sel.field("Enter secure text"), "secret");
 
-    });
+    await h.scrollAndTap(h.sel.button("Validate Input"));
+    await h.expectGone(h.sel.text("Validation Error"), 3000);
+  });
+
+  it("returns to the home screen", async () => {
+    await h.goHome();
+  });
+
+  it("flushes the harvest", async () => {
+    await h.flushHarvest();
+  });
 });
