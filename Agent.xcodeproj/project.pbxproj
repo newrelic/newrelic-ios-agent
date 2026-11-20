@@ -1647,6 +1647,10 @@
 		F858F3602AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F858F35F2AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m */; };
 		F858F3612AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F858F35F2AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m */; };
 		F85ABB492F1557150098A2CF /* UILabelThingyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85ABB482F1557150098A2CF /* UILabelThingyTests.swift */; };
+		F85ABB532F15571500A0B1C1 /* UIDatePickerThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8EACA892F6867ED00385075 /* UIDatePickerThingy.swift */; };
+		F85ABB4F2F15571500A0B1C1 /* UITextFieldThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0B6BAB2DEA349D0080C3D6 /* UITextFieldThingy.swift */; };
+		F85ABB4E2F15571500A0B1C1 /* NRMAMaskingTestConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = F85ABB4C2F15571500A0B1C1 /* NRMAMaskingTestConfiguration.m */; };
+		F85ABB4B2F15571500A0B1C1 /* MaskingResolutionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85ABB4A2F15571500A0B1C1 /* MaskingResolutionTests.swift */; };
 		F85ABB5D2F15575B0098A2CF /* UILabelThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DF4D2D54310900BF5BED /* UILabelThingy.swift */; };
 		F85ABB5E2F1557B40098A2CF /* ViewDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80C1D692DA07691007C0F52 /* ViewDetails.swift */; };
 		F85ABB5F2F1557DD0098A2CF /* SessionReplayViewThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DF492D4C4E6000BF5BED /* SessionReplayViewThingy.swift */; };
@@ -2665,6 +2669,9 @@
 		F85558522DE7C4F6008B6EDD /* SessionReplayData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayData.swift; sourceTree = "<group>"; };
 		F858F35F2AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAURLSessionHeaderTrackingTests.m; sourceTree = "<group>"; };
 		F85ABB482F1557150098A2CF /* UILabelThingyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UILabelThingyTests.swift; sourceTree = "<group>"; };
+		F85ABB4C2F15571500A0B1C1 /* NRMAMaskingTestConfiguration.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAMaskingTestConfiguration.m; sourceTree = "<group>"; };
+		F85ABB4D2F15571500A0B1C1 /* NRMAMaskingTestConfiguration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAMaskingTestConfiguration.h; sourceTree = "<group>"; };
+		F85ABB4A2F15571500A0B1C1 /* MaskingResolutionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaskingResolutionTests.swift; sourceTree = "<group>"; };
 		F8672AB42EB11B2C0055FA51 /* UIFont+CSSConversion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIFont+CSSConversion.swift"; sourceTree = "<group>"; };
 		F8678AAC2CDBC62B008FD2A2 /* NRAutoCollectLogStressTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRAutoCollectLogStressTest.m; sourceTree = "<group>"; };
 		F8728E402ACC9D5A0056F641 /* NRMANetworkMonitor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMANetworkMonitor.m; sourceTree = "<group>"; };
@@ -3084,6 +3091,9 @@
 				2BBC1A532DEDF61A00F5C584 /* SessionReplayTest.m */,
 				0209ACB524E747FA00E45C90 /* NewRelicAgentTests.h */,
 				F85ABB482F1557150098A2CF /* UILabelThingyTests.swift */,
+				F85ABB4C2F15571500A0B1C1 /* NRMAMaskingTestConfiguration.m */,
+				F85ABB4D2F15571500A0B1C1 /* NRMAMaskingTestConfiguration.h */,
+				F85ABB4A2F15571500A0B1C1 /* MaskingResolutionTests.swift */,
 				871C12BAE9249E1084E7A385 /* IncrementalDiffGeneratorTests.swift */,
 				F88801D12FC5FB780051DC67 /* SessionReplayReporterOfflineStorageTests.swift */,
 				F88801E62FC734C90051DC67 /* SessionReplayReporterNetworkTests.swift */,
@@ -5438,6 +5448,8 @@
 				0209AC4424E7078000E45C90 /* NRMAInteractionTraceFeatureFlag.m in Sources */,
 				0209AC0024E7070900E45C90 /* NSURLSessionOverrideTest.m in Sources */,
 				F85ABB5D2F15575B0098A2CF /* UILabelThingy.swift in Sources */,
+				F85ABB532F15571500A0B1C1 /* UIDatePickerThingy.swift in Sources */,
+				F85ABB4F2F15571500A0B1C1 /* UITextFieldThingy.swift in Sources */,
 				0209ABF224E706FA00E45C90 /* NRActivityTracesTest.m in Sources */,
 				F6E79D1B25A78689006277FB /* TestW3CTraceParent.mm in Sources */,
 				0209AC2224E7071F00E45C90 /* NRMeasurementTest.m in Sources */,
@@ -5454,6 +5466,8 @@
 				0209ACA024E7393300E45C90 /* NRMemoryVitalsTest.m in Sources */,
 				0209ABFF24E7070900E45C90 /* NRMASessionExclusivityWithoutDelegateTests.m in Sources */,
 				F85ABB492F1557150098A2CF /* UILabelThingyTests.swift in Sources */,
+				F85ABB4E2F15571500A0B1C1 /* NRMAMaskingTestConfiguration.m in Sources */,
+				F85ABB4B2F15571500A0B1C1 /* MaskingResolutionTests.swift in Sources */,
 				F8BF154D2F3A37FB00EF5628 /* SwiftUIShapeThingyTests.swift in Sources */,
 				D4DCC24030192068008B5C59 /* UIHostingViewRecordOrchestratorWidthOffsetTests.swift in Sources */,
 				0209ACB024E7394500E45C90 /* NRMAUDIDManagerTest.m in Sources */,

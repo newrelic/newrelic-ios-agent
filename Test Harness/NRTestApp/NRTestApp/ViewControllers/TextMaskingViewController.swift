@@ -32,11 +32,15 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         let customUnmaskedStack = createSectionStack(title: "Custom Unmasked Fields", isMasked: false, isCustom: true)
         
         let parentChildStack = createParentChildSection()
+        let inheritanceStack = createInheritanceMatrixSection()
+        let perPropertyStack = createPerPropertySection()
+        let multiLevelStack = createMultiLevelSection()
+        let blockCombinationsStack = createBlockCombinationsSection()
 
         let tableViewStack = createTableViewSection()
 
         let scrollView = UIScrollView()
-        let mainStack = UIStackView(arrangedSubviews: [blockedStack, searchAndCredentialsStack, maskedStack, unmaskedStack, customMaskedStack, customUnmaskedStack, parentChildStack, tableViewStack])
+        let mainStack = UIStackView(arrangedSubviews: [blockedStack, searchAndCredentialsStack, maskedStack, unmaskedStack, customMaskedStack, customUnmaskedStack, parentChildStack, inheritanceStack, perPropertyStack, multiLevelStack, blockCombinationsStack, tableViewStack])
 //        let mainStack = UIStackView(arrangedSubviews: [maskedStack, parentChildStack])
 //        let mainStack = UIStackView(arrangedSubviews: [maskedStack])//, parentChildStack])
 
@@ -236,6 +240,238 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         return containerView
     }
 
+
+    // MARK: - Inheritance combinations
+    //
+    // Rule under test: a masked ancestor always wins, a child can add masking inside an
+    // unmasked parent, and unset children inherit. Expectations assume the Custom strategy;
+    // under Default everything is masked. "list" uses the "private" / "public" identifiers,
+    // which are only honored when they are in the masked / unmasked lists.
+
+    private enum MaskMechanism: String, CaseIterable {
+        case tag       // nr-mask / nr-unmask accessibility identifiers
+        case list      // "private" / "public" identifiers from the local lists
+        case property  // maskApplicationText / maskUserInputText direct sets
+
+        func apply(to view: UIView, masked: Bool) {
+            switch self {
+            case .tag:
+                view.accessibilityIdentifier = masked ? "nr-mask" : "nr-unmask"
+            case .list:
+                view.accessibilityIdentifier = masked ? "private" : "public"
+            case .property:
+                view.maskApplicationText = masked
+                view.maskUserInputText = masked
+            }
+        }
+    }
+
+    private func sectionHeader(_ title: String, description: String) -> [UIView] {
+        let sectionLabel = UILabel()
+        sectionLabel.text = title
+        sectionLabel.font = .boldSystemFont(ofSize: 18)
+        sectionLabel.numberOfLines = 0
+
+        let descriptionLabel = UILabel()
+        descriptionLabel.text = description
+        descriptionLabel.numberOfLines = 0
+        descriptionLabel.font = .systemFont(ofSize: 14)
+        descriptionLabel.textColor = .secondaryLabel
+        return [sectionLabel, descriptionLabel]
+    }
+
+    private func sectionStack(_ arranged: [UIView]) -> UIStackView {
+        let stack = UIStackView(arrangedSubviews: arranged)
+        stack.axis = .vertical
+        stack.spacing = 8
+        return stack
+    }
+
+    private func makeContainer(color: UIColor) -> UIView {
+        let container = UIView()
+        container.backgroundColor = color.withAlphaComponent(0.1)
+        container.layer.cornerRadius = 6
+        container.layer.borderWidth = 1
+        container.layer.borderColor = color.cgColor
+        return container
+    }
+
+    // Masked rows are blue, unmasked rows are green.
+    private func expectationColor(masked: Bool) -> UIColor {
+        return masked ? .systemBlue : .systemGreen
+    }
+
+    private func makeLabel(_ text: String, expectMasked: Bool? = nil) -> UILabel {
+        let label = UILabel()
+        label.text = text
+        label.font = .systemFont(ofSize: 13)
+        label.numberOfLines = 0
+        if let expectMasked = expectMasked {
+            label.textColor = expectationColor(masked: expectMasked)
+        }
+        return label
+    }
+
+    // Pins `child` inside `parent` with a uniform inset.
+    private func embed(_ child: UIView, in parent: UIView, inset: CGFloat = 8) {
+        child.translatesAutoresizingMaskIntoConstraints = false
+        parent.addSubview(child)
+        NSLayoutConstraint.activate([
+            child.topAnchor.constraint(equalTo: parent.topAnchor, constant: inset),
+            child.leadingAnchor.constraint(equalTo: parent.leadingAnchor, constant: inset),
+            child.trailingAnchor.constraint(equalTo: parent.trailingAnchor, constant: -inset),
+            child.bottomAnchor.constraint(equalTo: parent.bottomAnchor, constant: -inset)
+        ])
+    }
+
+    // Every pairing of parent/child mechanism and state. A label is masked when either the
+    // parent or the child masks it.
+    private func createInheritanceMatrixSection() -> UIStackView {
+        var rows = sectionHeader("Inheritance Matrix",
+                                 description: "Parent mechanism/state x child mechanism/state. Expect masked if parent OR child is masked.")
+        for parentMechanism in MaskMechanism.allCases {
+            for childMechanism in MaskMechanism.allCases {
+                for parentMasked in [true, false] {
+                    for childMasked in [true, false] {
+                        let expectMasked = parentMasked || childMasked
+                        let container = makeContainer(color: expectationColor(masked: expectMasked))
+                        parentMechanism.apply(to: container, masked: parentMasked)
+
+                        let expected = expectMasked ? "masked" : "unmasked"
+                        let label = makeLabel("P:\(parentMechanism.rawValue)-\(parentMasked ? "M" : "U") > C:\(childMechanism.rawValue)-\(childMasked ? "M" : "U") (expect \(expected))", expectMasked: expectMasked)
+                        childMechanism.apply(to: label, masked: childMasked)
+                        embed(label, in: container)
+                        rows.append(container)
+                    }
+                }
+            }
+        }
+        // Parent set, child untagged: the child inherits.
+        for mechanism in MaskMechanism.allCases {
+            for masked in [true, false] {
+                let container = makeContainer(color: expectationColor(masked: masked))
+                mechanism.apply(to: container, masked: masked)
+                let label = makeLabel("P:\(mechanism.rawValue)-\(masked ? "M" : "U") > C:unset (expect \(masked ? "masked" : "unmasked"))", expectMasked: masked)
+                embed(label, in: container)
+                rows.append(container)
+            }
+        }
+        return sectionStack(rows)
+    }
+
+    // Parent masks every property; the child unmasks one (or the reverse). Only the
+    // properties that end up masked should be hidden.
+    private func createPerPropertySection() -> UIStackView {
+        var rows = sectionHeader("Per-Property Inheritance",
+                                 description: "Direct maskApplicationText / maskUserInputText / maskAllImages / maskAllUserTouches sets.")
+
+        for parentMasked in [true, false] {
+            // Every child property ends up masked: the parent wins when masked, and the
+            // child's own mask applies when the parent is unmasked.
+            let container = makeContainer(color: expectationColor(masked: true))
+            container.maskApplicationText = parentMasked
+            container.maskUserInputText = parentMasked
+            container.maskAllImages = parentMasked
+            container.maskAllUserTouches = parentMasked
+
+            let stack = UIStackView()
+            stack.axis = .vertical
+            stack.spacing = 6
+
+            let title = makeLabel(parentMasked ? "Parent masks all four; child flips ONE (expect all masked)"
+                                               : "Parent unmasks all four; child masks ONE (expect only that one masked)")
+            title.font = .boldSystemFont(ofSize: 13)
+            title.textColor = expectationColor(masked: true)
+            stack.addArrangedSubview(title)
+
+            let childValue = !parentMasked
+
+            let textLabel = makeLabel("Child maskApplicationText = \(childValue)", expectMasked: true)
+            textLabel.maskApplicationText = childValue
+            stack.addArrangedSubview(textLabel)
+
+            let field = UITextField()
+            field.borderStyle = .roundedRect
+            field.text = "Child maskUserInputText = \(childValue)"
+            field.textColor = expectationColor(masked: true)
+            field.maskUserInputText = childValue
+            stack.addArrangedSubview(field)
+
+            let imageView = UIImageView(image: UIImage(systemName: "star.fill"))
+            imageView.contentMode = .scaleAspectFit
+            imageView.tintColor = expectationColor(masked: true)
+            imageView.heightAnchor.constraint(equalToConstant: 28).isActive = true
+            imageView.maskAllImages = childValue
+            stack.addArrangedSubview(imageView)
+
+            let button = UIButton(type: .system)
+            button.setTitle("Child maskAllUserTouches = \(childValue)", for: .normal)
+            button.setTitleColor(expectationColor(masked: true), for: .normal)
+            button.maskAllUserTouches = childValue
+            stack.addArrangedSubview(button)
+
+            embed(stack, in: container)
+            rows.append(container)
+        }
+        return sectionStack(rows)
+    }
+
+    // Three-deep nesting for every masked/unmasked sequence of the three levels, using tags.
+    private func createMultiLevelSection() -> UIStackView {
+        var rows = sectionHeader("Three-Level Nesting",
+                                 description: "L1 > L2 > L3 with nr-mask / nr-unmask tags. L3 is masked if any level is masked.")
+        for l1 in [true, false] {
+            for l2 in [true, false] {
+                for l3 in [true, false] {
+                    let expectMasked = l1 || l2 || l3
+                    let outer = makeContainer(color: expectationColor(masked: expectMasked))
+                    MaskMechanism.tag.apply(to: outer, masked: l1)
+                    let middle = makeContainer(color: expectationColor(masked: expectMasked))
+                    MaskMechanism.tag.apply(to: middle, masked: l2)
+                    let label = makeLabel("L1-\(l1 ? "M" : "U") > L2-\(l2 ? "M" : "U") > L3-\(l3 ? "M" : "U") (expect \(expectMasked ? "masked" : "unmasked"))", expectMasked: expectMasked)
+                    MaskMechanism.tag.apply(to: label, masked: l3)
+                    embed(label, in: middle)
+                    embed(middle, in: outer)
+                    rows.append(outer)
+                }
+            }
+        }
+
+        // An untagged middle view must not break inheritance from the grandparent.
+        for masked in [true, false] {
+            let outer = makeContainer(color: expectationColor(masked: masked))
+            MaskMechanism.tag.apply(to: outer, masked: masked)
+            let middle = makeContainer(color: expectationColor(masked: masked))
+            let label = makeLabel("L1-\(masked ? "M" : "U") > L2 untagged > L3-U (expect \(masked ? "masked" : "unmasked"))", expectMasked: masked)
+            MaskMechanism.tag.apply(to: label, masked: false)
+            embed(label, in: middle)
+            embed(middle, in: outer)
+            rows.append(outer)
+        }
+        return sectionStack(rows)
+    }
+
+    // Block always wins over mask/unmask on either side of the relationship.
+    private func createBlockCombinationsSection() -> UIStackView {
+        var rows = sectionHeader("Block Combinations",
+                                 description: "nr-block on a parent blocks the whole subtree regardless of child mask/unmask tags.")
+        let cases: [(parent: String, child: String?, text: String)] = [
+            ("nr-block", "nr-unmask", "nr-block parent > nr-unmask child (expect blocked)"),
+            ("nr-block", "nr-mask", "nr-block parent > nr-mask child (expect blocked)"),
+            ("nr-block", nil, "nr-block parent > unset child (expect blocked)"),
+            ("nr-mask", "nr-block", "nr-mask parent > nr-block child (expect blocked)"),
+            ("nr-unmask", "nr-block", "nr-unmask parent > nr-block child (expect blocked)")
+        ]
+        for testCase in cases {
+            let container = makeContainer(color: .systemRed)
+            container.accessibilityIdentifier = testCase.parent
+            let label = makeLabel(testCase.text)
+            label.accessibilityIdentifier = testCase.child
+            embed(label, in: container)
+            rows.append(container)
+        }
+        return sectionStack(rows)
+    }
 
     private func createTableViewSection() -> UIStackView {
         let sectionLabel = UILabel()

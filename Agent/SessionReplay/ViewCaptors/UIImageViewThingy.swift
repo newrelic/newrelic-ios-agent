@@ -30,15 +30,7 @@ class UIImageViewThingy: SessionReplayViewThingy {
     init(view: UIImageView, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
 
-        if let isMasked = viewDetails.isMasked {
-            self.isMasked = isMasked
-        }
-        else if let maskAllImages = viewDetails.maskAllImages {
-            self.isMasked = maskAllImages
-        }
-        else {
-            self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskAllImages ?? true
-        }
+        self.isMasked = ViewDetails.resolveImageIsMasked(viewDetails)
 
         self.isBlocked = viewDetails.blockView ?? false
 
@@ -60,15 +52,7 @@ class UIImageViewThingy: SessionReplayViewThingy {
     init(viewDetails: ViewDetails, cgImage: CGImage?, swiftUIImage: SwiftUIGraphicsImage, contentMode: UIView.ContentMode) {
         self.viewDetails = viewDetails
 
-        if let isMasked = viewDetails.isMasked {
-            self.isMasked = isMasked
-        }
-        else if let maskAllImages = viewDetails.maskAllImages {
-            self.isMasked = maskAllImages
-        }
-        else {
-            self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskAllImages ?? true
-        }
+        self.isMasked = ViewDetails.resolveImageIsMasked(viewDetails)
 
         self.isBlocked = viewDetails.blockView ?? false
 

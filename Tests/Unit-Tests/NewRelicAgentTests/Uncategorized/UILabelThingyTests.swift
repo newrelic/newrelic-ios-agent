@@ -214,6 +214,69 @@ struct UILabelThingyTests {
         #expect(overrides.maskAllImages == nil)
     }
 
+    // MARK: - Parent masking takes priority over child unmask
+
+    @Test func `Masked parent wins over own unmask override`() {
+        #expect(ViewDetails.resolveMaskOverride(own: false, parent: true) == true)
+        #expect(ViewDetails.resolveMaskOverride(own: nil, parent: true) == true)
+        #expect(ViewDetails.resolveMaskOverride(own: true, parent: true) == true)
+    }
+
+    @Test func `Child mask still applies inside unmasked parent`() {
+        #expect(ViewDetails.resolveMaskOverride(own: true, parent: false) == true)
+        #expect(ViewDetails.resolveMaskOverride(own: false, parent: false) == false)
+        #expect(ViewDetails.resolveMaskOverride(own: nil, parent: false) == false)
+        #expect(ViewDetails.resolveMaskOverride(own: false, parent: nil) == false)
+        #expect(ViewDetails.resolveMaskOverride(own: nil, parent: nil) == nil)
+    }
+
+    // Local-list / direct-set path: a child that sets its own unmask under a masked
+    // parent resolves to masked for every override, in Custom mode.
+    @Test func `UIKit child unmask under masked parent stays masked`() {
+        let parent = UIView()
+        parent.maskApplicationText = true
+        parent.maskUserInputText = true
+        parent.maskAllImages = true
+        parent.maskAllUserTouches = true
+        let child = UILabel()
+        child.maskApplicationText = false
+        child.maskUserInputText = false
+        child.maskAllImages = false
+        child.maskAllUserTouches = false
+        parent.addSubview(child)
+        let overrides = ViewDetails.directSetMaskingOverrides(view: child, isDefaultMode: false)
+        #expect(overrides.maskApplicationText == true)
+        #expect(overrides.maskUserInputText == true)
+        #expect(overrides.maskAllImages == true)
+        #expect(overrides.maskAllUserTouches == true)
+    }
+
+    // SwiftUI NRConditionalMaskView sets the same properties on its hosting view, so a
+    // nested unmask beneath a masked ancestor (several levels up the chain, with the
+    // mask state propagated down) is still masked.
+    @Test func `Nested SwiftUI-style unmask under masked ancestor stays masked`() {
+        let root = UIView()
+        root.maskApplicationText = true
+        let middle = UIView()
+        middle.maskApplicationText = true // propagated from root during capture
+        let leaf = UIView()
+        leaf.maskApplicationText = false
+        root.addSubview(middle)
+        middle.addSubview(leaf)
+        let overrides = ViewDetails.directSetMaskingOverrides(view: leaf, isDefaultMode: false)
+        #expect(overrides.maskApplicationText == true)
+    }
+
+    @Test func `UIKit child mask under unmasked parent is honored`() {
+        let parent = UIView()
+        parent.maskApplicationText = false
+        let child = UIView()
+        child.maskApplicationText = true
+        parent.addSubview(child)
+        let overrides = ViewDetails.directSetMaskingOverrides(view: child, isDefaultMode: false)
+        #expect(overrides.maskApplicationText == true)
+    }
+
     // End-to-end: a masked ViewDetails (as produced when the guard forces masking)
     // renders a UILabel's text as asterisks.
     @Test func `Masked view details renders label as asterisks`() {

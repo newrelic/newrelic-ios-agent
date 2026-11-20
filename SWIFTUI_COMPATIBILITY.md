@@ -134,12 +134,12 @@ MyView()
 
 ### Masking Inheritance Rules
 
-Masking settings propagate **down** the view hierarchy unless explicitly overridden by a child `NRConditionalMaskView`:
+Masking settings propagate **down** the view hierarchy. A masked parent takes priority over its subtree: a child cannot unmask content inside a masked parent. A child can add masking inside an unmasked parent:
 
 | Scenario | Behavior |
 |---|---|
 | Parent `maskApplicationText: true`, no child override | All descendant `Text` nodes masked |
-| Parent `maskApplicationText: true`, child `maskApplicationText: false` | Child subtree unmasked |
+| Parent `maskApplicationText: true`, child `maskApplicationText: false` | Child subtree stays masked (parent wins) |
 | Child masked inside unmasked parent | Child subtree masked; siblings unmasked |
 | `blockView: true` on parent | Entire subtree replaced with opaque black block |
 | `sessionReplayIdentifier` set | Provides a stable node ID across sessions for that element |
@@ -150,7 +150,7 @@ The `MaskingView` test file verifies all permutations:
 
 1. **Direct elements** — single Text/TextField masked or unmasked
 2. **Parent-to-child inheritance** — children adopt parent masking
-3. **Child override in masked parent** — child `NRConditionalMaskView` with `maskApplicationText: false` clears masking for that subtree
+3. **Child override in masked parent** — child `NRConditionalMaskView` with `maskApplicationText: false` does not clear the parent's masking
 4. **Child masked in unmasked parent** — child `NRConditionalMaskView` with `maskApplicationText: true` masks only that subtree
 5. **Deep nesting (4+ levels)** — mixed masking across hierarchy levels
 6. **Sibling mixing** — sibling views with different masking, each with explicit `sessionReplayIdentifier`
