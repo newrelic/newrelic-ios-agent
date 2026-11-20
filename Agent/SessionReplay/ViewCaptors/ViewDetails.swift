@@ -309,119 +309,158 @@ struct ViewDetails {
         return view.isKind(of: mapViewClass)
     }
 
+    // How an accessibility identifier tags a view for masking.
+    enum MaskTag: Equatable {
+        case none, mask, unmask
+    }
+
+    // Everything checkIsMasked needs to decide, gathered from the view and the agent
+    // configuration so the decision itself is a pure, unit-testable function.
+    struct MaskInputs: Equatable {
+        var isDefaultMode = false
+        var tag = MaskTag.none
+        var identifierInMaskedList = false
+        var identifierInUnmaskedList = false
+        var classInMaskedList = false
+        var classInUnmaskedList = false
+        // The parent's resolved mask state (sessionReplayMaskState).
+        var parentState: Bool?
+        // The view's direct mask properties, including values inherited from ancestors.
+        var maskApplicationText: Bool?
+        var maskUserInputText: Bool?
+        var maskAllImages: Bool?
+    }
+
+    static func maskTag(for accessibilityIdentifier: String?) -> MaskTag {
+        guard let id = accessibilityIdentifier, id.count > 0 else { return .none }
+        if id == "nr-mask" || id.hasSuffix(".nr-mask") { return .mask }
+        if id == "nr-unmask" || id.hasSuffix(".nr-unmask") { return .unmask }
+        return .none
+    }
+
+    // Returns the explicit mask decision for a view, or nil when the global default for
+    // its type should decide. Precedence: the view's own mask rules, then a masked parent
+    // (state or direct properties), then the view's own unmask rules, then the inherited
+    // parent state.
+    static func resolveIsMasked(_ inputs: MaskInputs) -> Bool? {
+        // If masking is in default mode we want to use the default value which is determined by the global for it's type.
+        if inputs.isDefaultMode {
+            return nil
+        }
+
+        // The view is explicitly marked to be masked.
+        if inputs.tag == .mask || inputs.identifierInMaskedList || inputs.classInMaskedList {
+            return true
+        }
+
+        // A masked parent takes priority over any unmask rule on its subtree. The mask
+        // state is propagated down, so this covers every masked ancestor.
+        if inputs.parentState == true {
+            return true
+        }
+
+        // The same holds for a parent masked through the direct maskApplicationText /
+        // maskUserInputText properties. Inherited values were already assigned to the
+        // view before this runs, so a true value here means a mask applies.
+        if inputs.maskApplicationText == true || inputs.maskUserInputText == true {
+            return true
+        }
+
+        // The view is explicitly marked to not be masked.
+        if inputs.tag == .unmask || inputs.identifierInUnmaskedList || inputs.classInUnmaskedList {
+            return false
+        }
+
+        // Check if parent is marked as unmasked (propagate unmasking status to children)
+        if let parentMasked = inputs.parentState {
+            // An inherited unmask must not override a mask the view requests directly via
+            // its own properties; leave the decision to the per-property masking rules.
+            if inputs.maskAllImages == true {
+                return nil
+            }
+            return parentMasked
+        }
+
+        // Return nil if no custom masked setting is found
+        return nil
+    }
+
     // This function checks if there are any specfic masking rules assigned to a view. If it returns nils, the masking value will be assigned based on the value of the global based on it's type later.
     private static func checkIsMasked(view: UIView, viewName: String) -> Bool? {
         // Determine if this view should be masked
         guard let agent = NewRelicAgentInternal.sharedInstance() else { return true }
         guard let config = NRMAHarvestController.configuration() else { return true }
 
-        // If masking is in default mode we want to use the default value which is determined by the global for it's type.
-        if config.session_replay_mode as SessionReplayMaskingMode == SessionReplayMaskingMode.default {
-            return nil
-        }
-        
-        // Handle decision for masking based on accessibility identifier in this section.
-        if let accessibilityId = view.accessibilityIdentifier,
-           accessibilityId.count > 0,
-           accessibilityId == "nr-mask" || accessibilityId.hasSuffix(".nr-mask") {
-            //This view is explicitly marked to be masked.
-            return true
-        }
-
-        // Check for accessibility identifier in the masking list
-        if let accessibilityId = view.accessibilityIdentifier,
-           agent.isAccessibilityIdentifierMasked(accessibilityId) {
-            return true
-        }
-        
-        // Check for class name in the masking list if not already masked
-        if agent.isClassNameMasked(viewName) {
-            return true
-        }
-
-        // Handle decision for masking based on accessibility identifier in this section.
-        if let accessibilityId = view.accessibilityIdentifier,
-           accessibilityId.count > 0,
-           accessibilityId == "nr-unmask" || accessibilityId.hasSuffix(".nr-unmask") {
-            //This view is explicitly marked to not be masked.
-            return false
-        }
-        
-        // Check for accessibility identifier in the masking list
-        if let accessibilityId = view.accessibilityIdentifier,
-           agent.isAccessibilityIdentifierUnmasked(accessibilityId) {
-            return false
-        }
-        
-        // Check for class name in the unmasking list
-        if agent.isClassNameUnmasked(viewName) {
-            return false
-        }
-        
-        // Check if parent is marked as masked or unmasked (propagate masking status to children)
-        if let parentView = view.superview,
-           let parentMasked = parentView.sessionReplayMaskState {
-            return parentMasked
-        }
-        
-        // Return nil if no custom masked setting is found
-        return nil
+        let accessibilityId = view.accessibilityIdentifier
+        let inputs = MaskInputs(
+            isDefaultMode: config.session_replay_mode as SessionReplayMaskingMode == SessionReplayMaskingMode.default,
+            tag: maskTag(for: accessibilityId),
+            identifierInMaskedList: accessibilityId.map { agent.isAccessibilityIdentifierMasked($0) } ?? false,
+            identifierInUnmaskedList: accessibilityId.map { agent.isAccessibilityIdentifierUnmasked($0) } ?? false,
+            classInMaskedList: agent.isClassNameMasked(viewName),
+            classInUnmaskedList: agent.isClassNameUnmasked(viewName),
+            parentState: view.superview?.sessionReplayMaskState,
+            maskApplicationText: view.maskApplicationText,
+            maskUserInputText: view.maskUserInputText,
+            maskAllImages: view.maskAllImages)
+        return resolveIsMasked(inputs)
     }
-    
+
+    // Whether an image-like element is masked: the resolved mask decision wins, then the
+    // view's maskAllImages override, then the session_replay_maskAllImages config (default on).
+    static func resolveImageIsMasked(_ viewDetails: ViewDetails) -> Bool {
+        if let isMasked = viewDetails.isMasked {
+            return isMasked
+        }
+        if let maskAllImages = viewDetails.maskAllImages {
+            return maskAllImages
+        }
+        return NRMAHarvestController.configuration()?.session_replay_maskAllImages ?? true
+    }
+
+    // Whether a text input control (text field, text view, custom text) is masked. Secure
+    // entry is always masked. Otherwise the resolved mask decision wins, then the view's
+    // maskUserInputText override, then session_replay_maskUserInputText. A per-view
+    // UNMASK override is only honored in Custom masking mode: under the Default
+    // strategy the agent masks everything and unmask overrides are dropped.
+    static func resolveTextInputIsMasked(_ viewDetails: ViewDetails, isSecureTextEntry: Bool) -> Bool {
+        if isSecureTextEntry {
+            return true
+        }
+        if let isMasked = viewDetails.isMasked {
+            return isMasked
+        }
+        if let maskUserInputText = honoringDefaultStrategy(viewDetails.maskUserInputText,
+                                                           isDefaultMode: currentMaskingModeIsDefault()) {
+            return maskUserInputText
+        }
+        return NRMAHarvestController.configuration()?.session_replay_maskUserInputText ?? true
+    }
+
+    // A masked (`true`) parent takes priority over the view's own override, so a child
+    // cannot unmask content inside a masked parent. Otherwise the view's own value
+    // wins, falling back to the parent's.
+    static func resolveMaskOverride(own: Bool?, parent: Bool?) -> Bool? {
+        if parent == true {
+            return true
+        }
+        return own ?? parent
+    }
+
     private static func checkMaskApplicationText(view: UIView) -> Bool? {
-        
-        if let maskApplicationText = view.maskApplicationText {
-            return maskApplicationText
-        }
-        
-        if let parentView = view.superview,
-           let parentMasked = parentView.maskApplicationText {
-            return parentMasked
-        }
-        
-        return nil
+        return resolveMaskOverride(own: view.maskApplicationText, parent: view.superview?.maskApplicationText)
     }
     
     private static func checkMaskUserInputText(view: UIView) -> Bool? {
-        
-        if let maskUserInputText = view.maskUserInputText {
-            return maskUserInputText
-        }
-        
-        if let parentView = view.superview,
-           let parentMasked = parentView.maskUserInputText {
-            return parentMasked
-        }
-        
-        return nil
+        return resolveMaskOverride(own: view.maskUserInputText, parent: view.superview?.maskUserInputText)
     }
     
     private static func checkMaskAllImages(view: UIView) -> Bool? {
-        
-        if let maskAllImages = view.maskAllImages {
-            return maskAllImages
-        }
-        
-        if let parentView = view.superview,
-           let parentMasked = parentView.maskAllImages {
-            return parentMasked
-        }
-        
-        return nil
+        return resolveMaskOverride(own: view.maskAllImages, parent: view.superview?.maskAllImages)
     }
     
     private static func checkMaskAllUserTouches(view: UIView) -> Bool? {
-
-        if let maskAllUserTouches = view.maskAllUserTouches{
-            return maskAllUserTouches
-        }
-
-        if let parentView = view.superview,
-           let parentMasked = parentView.maskAllUserTouches {
-            return parentMasked
-        }
-
-        return nil
+        return resolveMaskOverride(own: view.maskAllUserTouches, parent: view.superview?.maskAllUserTouches)
     }
 
     private static func checkBlockView(view: UIView) -> Bool? {
