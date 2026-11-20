@@ -19,7 +19,7 @@ This tool automatically uploads React Native JavaScript source maps to New Relic
 
 ### Step 1: Copy dsym-upload-tools folder (if not already done)
 
-If you haven't already set up dSYM uploads, copy the `dsym-upload-tools` folder from the [New Relic iOS Agent repository](https://github.com/newrelic/newrelic-ios-agent-spm) to your project's SRCROOT folder (typically your `ios` folder in React Native projects).
+If you haven't already set up dSYM uploads, copy the `dsym-upload-tools` folder from the [New Relic iOS Agent repository](https://github.com/newrelic/newrelic-ios-agent/tree/main/dsym-upload-tools) to your project's SRCROOT folder (typically your `ios` folder in React Native projects).
 
 ### Step 2: Add Run Script Build Phase
 

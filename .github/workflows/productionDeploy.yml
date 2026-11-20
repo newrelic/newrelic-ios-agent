@@ -120,8 +120,12 @@ jobs:
           rm Package.swiftbak
 
           rm $XCFRAMEWORK_NAME
-                   
-          git add Package.swift
+
+          # This repo's dsym-upload-tools is canonical; keep the SPM repo's copy identical.
+          rm -rf dsym-upload-tools
+          cp -R ../main/dsym-upload-tools dsym-upload-tools
+
+          git add Package.swift dsym-upload-tools
           git commit -m "Added build ${{ env.version }}"
           git tag ${{ env.version }}
           git push origin main --tags

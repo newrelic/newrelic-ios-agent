@@ -84,7 +84,7 @@ fi
 ```
 
 #### Note for Cocoapods or manual XCFramework integration:
-With the 7.4.6 release the dsym-upload-tools are no longer included inside the XCFramework. The dsym-upload-tools are available in the dsym-upload-tools folder of the https://github.com/newrelic/newrelic-ios-agent-spm Swift Package Manager repository. Please copy this dsym-upload-tools directory to your applications source code directory if you are integrating the New Relic iOS Agent by copying XCFramework into project or using cocoapods.
+With the 7.4.6 release the dsym-upload-tools are no longer included inside the XCFramework. The dsym-upload-tools are available in the [dsym-upload-tools](https://github.com/newrelic/newrelic-ios-agent/tree/main/dsym-upload-tools) folder of this repository. Please copy this dsym-upload-tools directory to your applications source code directory if you are integrating the New Relic iOS Agent by copying XCFramework into project or using cocoapods.
 
 The run-symbol-tool Run script must be added to your app's Xcode project build phases.
 
@@ -109,7 +109,7 @@ The run-symbol-tool Run script must be added to your app's Xcode project build p
             - run `brew install lcov` to add lcov for code coverage.
 
 ## Links
-- [newrelic-ios-agent-spm](https://github.com/newrelic/newrelic-ios-agent-spm) Released Swift packages are published here. 
+- [newrelic-ios-agent-spm](https://github.com/newrelic/newrelic-ios-agent-spm) Older Swift package URL. It gets the same release tags as this repository; use this repository's URL for new installs.
 - [modular-crash-reporter-ios (aka PLCrashReporter)](https://github.com/microsoft/plcrashreporter) Crash reporting library, vendored in `modular-crash-reporter-ios/` from release 1.12.2. Only the `CrashReporter iOS` and `CrashReporter tvOS` static library targets and their sources are kept, with the deployment targets raised to 15.0.
 
 ## Support
