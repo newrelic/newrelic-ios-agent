@@ -99,6 +99,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void) sessionReplayEndSession;
 
+// Sets the session's hasReplay attribute, once a batch from the external capture source opens a replay stream
+- (void) sessionReplayStoredExternalEvents;
+
 // Logging Collection - handles sampling check and log upload
 - (void) uploadLogsIfSampled;
 

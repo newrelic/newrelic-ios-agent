@@ -32,7 +32,7 @@ public class SessionReplayManager: NSObject {
 
     /// Set when another source, such as the Flutter agent, captures the replay. Native screen and
     /// touch capture are skipped, and the events from recordExternalEvents() are uploaded instead.
-    /// Set it before checkForPreviousSessionFiles() and the first start(), which both read it.
+    /// Set it before the first start(), which reads it.
     @objc public var externalCaptureSource = false
 
     // Used only on sessionReplayQueue.
@@ -63,7 +63,9 @@ public class SessionReplayManager: NSObject {
         self.sessionReplay = NRMASessionReplay(url: self.url)
         self.sessionReplayReporter = reporter
         self.externalBuffer = SessionReplayExternalBuffer(directory: SessionReplayManager.externalBufferDirectory(),
-                                                          maxUploadBytes: Int(kNRMAMaxPayloadSizeLimit)) { [reporter] metadata in
+                                                          onStorageFailure: {
+            NRMASupportMetricHelper.enqueueSessionReplayExternalEventsStorageFailedMetric()
+        }) { [reporter] metadata in
             SessionReplayManager.uploadURL(from: reporter, for: metadata)
         }
         sessionReplayQueue.setSpecific(key: SessionReplayManager.queueKey, value: "com.newrelic.sessionReplayQueue")
@@ -506,7 +508,9 @@ public class SessionReplayManager: NSObject {
                 NRLOG_AGENT_DEBUG("Dropping external session replay events: native capture isn't suppressed, or replay isn't recording in full mode.")
                 return
             }
-            switch externalBuffer.append(Data(eventsJSON.utf8), sessionId: currentSessionId(),
+            let sessionId = currentSessionId()
+            let wasOpen = externalBuffer.openSessionId == sessionId
+            switch externalBuffer.append(Data(eventsJSON.utf8), sessionId: sessionId,
                                          isFirstChunk: sessionReplay.isFirstChunk) {
             case .invalid:
                 NRLOG_AGENT_DEBUG("Dropping external session replay events that aren't a JSON array of rrweb events.")
@@ -515,6 +519,11 @@ public class SessionReplayManager: NSObject {
                 NRLOG_AGENT_DEBUG("Dropped \(droppedBeforeMeta) external session replay events that arrived before a Meta event.")
             case .appended:
                 break
+            }
+            // Native capture sets hasReplay as it starts. The external source may never send
+            // anything, so here it waits for a batch that opens the stream.
+            if !wasOpen && externalBuffer.openSessionId == sessionId {
+                NewRelicAgentInternal.sharedInstance()?.sessionReplayStoredExternalEvents()
             }
         }
     }
@@ -526,17 +535,15 @@ public class SessionReplayManager: NSObject {
 
     // Must run on sessionReplayQueue.
     private func harvestExternalEvents(final: Bool) {
-        let chunks = externalBuffer.takeChunks(final: final, isFirstChunk: sessionReplay.isFirstChunk)
-        for chunk in chunks {
-            guard let url = SessionReplayManager.uploadURL(from: sessionReplayReporter, for: chunk.metadata) else {
-                NRLOG_AGENT_DEBUG("Failed to construct upload URL for session replay.")
-                continue
-            }
-            sessionReplayReporter.enqueueSessionReplayUpload(upload: SessionReplayData(sessionReplayFramesData: chunk.payload, url: url))
+        guard let chunk = externalBuffer.takeChunk(final: final, isFirstChunk: sessionReplay.isFirstChunk) else {
+            return
         }
-        if !chunks.isEmpty {
-            self.sessionReplay.isFirstChunk = false
+        self.sessionReplay.isFirstChunk = false
+        guard let url = SessionReplayManager.uploadURL(from: sessionReplayReporter, for: chunk.metadata) else {
+            NRLOG_AGENT_DEBUG("Failed to construct upload URL for session replay.")
+            return
         }
+        sessionReplayReporter.enqueueSessionReplayUpload(upload: SessionReplayData(sessionReplayFramesData: chunk.payload, url: url))
     }
 
     private static func uploadURL(from reporter: SessionReplayReporter, for metadata: ExternalReplayUploadMetadata) -> URL? {
@@ -641,9 +648,10 @@ public class SessionReplayManager: NSObject {
             
             // Read and combine all frame files, starting from the first full frame. The external
             // buffer's files can start with diffs, because an earlier upload took what came before
-            // them, so all of them go out, from the first.
+            // them, so all of them go out, from the first. The buffer marks the folders it writes, so
+            // this goes by what wrote the folder, not by this launch's platform.
             var frameContents: [String] = []
-            var foundFirstFullFrame = externalCaptureSource
+            var foundFirstFullFrame = SessionReplayExternalBuffer.wrote(sessionFolder: sessionDirectory)
 
             for frameFile in frameFiles {
                 do {

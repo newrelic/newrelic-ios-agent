@@ -14,6 +14,7 @@
 #import "NewRelicAgentInternal.h"
 #import "NRMAHarvestController.h"
 #import "NRMAHarvesterConfiguration.h"
+#import "NRMAAnalytics.h"
 #import "NRMASupportMetricHelper.h"
 #import "NRMATaskQueue.h"
 #import "Constants.h"
@@ -84,6 +85,8 @@ static NSString *uploadAttributes(NSURL *url)
 
 - (void) tearDown
 {
+    [self.agent.analyticsController removeNRSessionAttributeNamed:kNRMA_RA_hasReplay];
+    self.agent.analyticsController = nil;
     [self.manager stop];
     [self.manager clearAllData];
     [[NSFileManager defaultManager] removeItemAtPath:errorModeMarkerPath() error:nil];
@@ -311,6 +314,72 @@ static NSString *uploadAttributes(NSURL *url)
         XCTAssertEqual([NewRelicAgentInternal sessionReplayExternalCaptureSource], (BOOL)(platform == NRMAPlatform_Flutter),
                        @"platform %lu", (unsigned long)platform);
     }
+}
+
+#pragma mark - hasReplay
+
+// Gives the agent a real analytics controller, so a test can read the session's attributes.
+- (void) useAnalytics
+{
+    self.agent.analyticsController = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+}
+
+- (BOOL) sessionHasReplay
+{
+    NSString *json = [self.agent.analyticsController sessionAttributeJSONString];
+    if (json == nil) { return NO; }
+    NSDictionary *attributes = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
+    return [attributes[kNRMA_RA_hasReplay] boolValue];
+}
+
+// With an external capture source, the session has a replay once the source's events are stored.
+- (void) testHasReplayWaitsForTheFirstStoredEvents
+{
+    [self useAnalytics];
+    [self useFullSampling];
+    [self startSession];
+    XCTAssertFalse([self sessionHasReplay]);
+    XCTAssertEqualObjects([self ingest:@"[{\"type\":3,\"timestamp\":1,\"data\":{}}]"], kNRSessionReplayIngestAccepted);   // no Meta yet, so dropped
+    NRMADrainReplayQueue(self.manager);
+    XCTAssertFalse([self sessionHasReplay]);
+    XCTAssertEqualObjects([self ingest:batch], kNRSessionReplayIngestAccepted);
+    NRMADrainReplayQueue(self.manager);
+    XCTAssertTrue([self sessionHasReplay]);
+}
+
+- (void) testRecordReplayWaitsForTheFirstStoredEvents
+{
+    [self useAnalytics];
+    [self useOffSampling];
+    [self startSession];
+    XCTAssertTrue([self.agent recordReplay]);
+    NRMADrainReplayQueue(self.manager);
+    XCTAssertFalse([self sessionHasReplay]);
+    XCTAssertEqualObjects([self ingest:batch], kNRSessionReplayIngestAccepted);
+    NRMADrainReplayQueue(self.manager);
+    XCTAssertTrue([self sessionHasReplay]);
+}
+
+- (void) testAnErrorWaitsForTheFirstStoredEvents
+{
+    [self useAnalytics];
+    [self useErrorSampling];
+    [self startSession];
+    [self.agent sessionReplayOnError:nil];
+    NRMADrainReplayQueue(self.manager);
+    XCTAssertFalse([self sessionHasReplay]);
+    XCTAssertEqualObjects([self ingest:batch], kNRSessionReplayIngestAccepted);
+    NRMADrainReplayQueue(self.manager);
+    XCTAssertTrue([self sessionHasReplay]);
+}
+
+- (void) testNativeCaptureSetsHasReplayAsItStarts
+{
+    [self useAnalytics];
+    self.manager.externalCaptureSource = NO;
+    [self useFullSampling];
+    [self startSession];
+    XCTAssertTrue([self sessionHasReplay]);
 }
 
 @end

@@ -28,7 +28,7 @@ enum ExternalReplayAppendResult: Equatable {
     case invalid
 }
 
-/// One upload's worth of whole batches, in the order they arrived: a JSON array, gzipped when possible.
+/// Everything one take sends: its batches, whole and in the order they arrived, as one JSON array, gzipped when possible.
 @available(iOS 13.0, *)
 struct ExternalReplayChunk {
     let payload: Data
@@ -41,7 +41,8 @@ struct ExternalReplayChunk {
 /// (`checkForPreviousSessionFiles`): one JSON array file per batch,
 /// `<directory>/<sessionId>/frame_<n>.json`, plus `<directory>/<sessionId>_upload_url.txt`, which
 /// describes everything on disk. A session's events are kept from its first batch that holds a
-/// Meta on, and every upload takes all of them, so a file can start with any event.
+/// Meta on, and every upload takes all of them, so a file can start with any event. A hidden marker
+/// in the folder tells recovery to upload it from its first file.
 ///
 /// Not thread safe: use it from one serial queue.
 @available(iOS 13.0, *)
@@ -62,19 +63,20 @@ final class SessionReplayExternalBuffer {
     private struct TakenBatch {
         let batch: Batch
         let contents: Data
-        let gzipped: Data?
-
-        var estimatedUploadSize: Int { return gzipped?.count ?? contents.count }
     }
 
     private static let metaType = 4
+
+    /// Hidden, like the error-mode marker, so native's listings of a folder skip it.
+    private static let folderMarker = ".externalCaptureSource"
 
     /// rrweb timestamps are milliseconds since 1970. A value outside this range is an encoder bug,
     /// and outside Int's range it would stop the app when the upload URL converts it.
     private static let timestampRange = 0.0..<1e15
 
     private let directory: URL
-    private let maxUploadBytes: Int
+    /// Runs when a batch is dropped because its file can't be written or read back.
+    private let onStorageFailure: () -> Void
     private let urlProvider: (ExternalReplayUploadMetadata) -> URL?
 
     private var batches: [Batch] = []
@@ -90,10 +92,17 @@ final class SessionReplayExternalBuffer {
         return folderSessionId
     }
 
-    init(directory: URL, maxUploadBytes: Int, urlProvider: @escaping (ExternalReplayUploadMetadata) -> URL?) {
+    init(directory: URL, onStorageFailure: @escaping () -> Void,
+         urlProvider: @escaping (ExternalReplayUploadMetadata) -> URL?) {
         self.directory = directory
-        self.maxUploadBytes = maxUploadBytes
+        self.onStorageFailure = onStorageFailure
         self.urlProvider = urlProvider
+    }
+
+    /// Whether the buffer wrote this session folder, on this launch or an earlier one. Recovery
+    /// uploads such a folder from its first file, whatever the platform is now.
+    static func wrote(sessionFolder: URL) -> Bool {
+        return FileManager.default.fileExists(atPath: sessionFolder.appendingPathComponent(folderMarker).path)
     }
 
     /// Stores a JSON array of rrweb events as one file. Batches are dropped until one that holds a
@@ -119,6 +128,7 @@ final class SessionReplayExternalBuffer {
         }
         guard write(parsed.contents, sessionId: sessionId) else {
             openSessionId = nil
+            onStorageFailure()
             return .appended(kept: 0, droppedBeforeMeta: 0)
         }
 
@@ -133,39 +143,20 @@ final class SessionReplayExternalBuffer {
         return .appended(kept: events.count, droppedBeforeMeta: 0)
     }
 
-    /// Takes every batch for upload, packed into chunks of at most `maxUploadBytes` after gzip.
-    /// A regular take leaves the stream open, so the next batch continues it without a Meta.
-    /// A final take closes it. A single batch over the limit still goes out, alone.
-    func takeChunks(final: Bool, isFirstChunk: Bool) -> [ExternalReplayChunk] {
+    /// Takes every batch as one upload, gzipped once, as native sends each harvest. The reporter drops
+    /// an upload over its limit. A regular take leaves the stream open, so the next batch continues it
+    /// without a Meta. A final take closes it. Nil when there's no batch to send.
+    func takeChunk(final: Bool, isFirstChunk: Bool) -> ExternalReplayChunk? {
         let taken = batches
         batches.removeAll()
         if final {
             openSessionId = nil
         }
         guard !taken.isEmpty else {
-            return []
+            return nil
         }
 
-        // Greedy, by each batch's own gzipped size. packPayloads checks the real combined size.
-        var packs: [[TakenBatch]] = []
-        var packSize = 0
-        for batch in taken.compactMap(load) {
-            if packs.isEmpty || packSize + batch.estimatedUploadSize > maxUploadBytes {
-                packs.append([])
-                packSize = 0
-            }
-            packs[packs.count - 1].append(batch)
-            packSize += batch.estimatedUploadSize
-        }
-        let chunks = packs.flatMap { packPayloads($0[...]) }.enumerated().map { index, packed in
-            ExternalReplayChunk(payload: packed.payload,
-                                metadata: ExternalReplayUploadMetadata(uncompressedSize: packed.uncompressedSize,
-                                                                       firstTimestamp: packed.firstTimestamp,
-                                                                       lastTimestamp: packed.lastTimestamp,
-                                                                       isFirstChunk: isFirstChunk && index == 0,
-                                                                       isGZipped: packed.payload.isGzipped,
-                                                                       hasMeta: packed.hasMeta))
-        }
+        let chunk = Self.chunk(of: taken.compactMap(load), isFirstChunk: isFirstChunk)
 
         // Nothing is left, so the folder and its URL file go too.
         if let folder = folderURL() {
@@ -176,7 +167,7 @@ final class SessionReplayExternalBuffer {
         }
         folderSessionId = nil
         nextFileIndex = 0
-        return chunks
+        return chunk
     }
 
     /// Forgets the buffered batches and leaves their files on disk. Batches are dropped until one holds a Meta.
@@ -228,18 +219,16 @@ final class SessionReplayExternalBuffer {
 
     // MARK: - Uploads
 
-    private typealias PackedPayload = (payload: Data, uncompressedSize: Int, firstTimestamp: TimeInterval, lastTimestamp: TimeInterval,
-                                       hasMeta: Bool)
-
-    /// Reads a batch's file and gzips it, to estimate its share of an upload.
+    /// Reads a batch's file. A batch that can't be read is dropped and reported.
     private func load(_ batch: Batch) -> TakenBatch? {
         guard let fileURL = batchFileURL(batch.fileIndex),
               let contents = try? Data(contentsOf: fileURL),
               contents.count > 2, contents.first == UInt8(ascii: "["), contents.last == UInt8(ascii: "]") else {
             NRLOG_AGENT_DEBUG("Failed to read an external session replay batch.")
+            onStorageFailure()
             return nil
         }
-        return TakenBatch(batch: batch, contents: contents, gzipped: Self.gzip(contents))
+        return TakenBatch(batch: batch, contents: contents)
     }
 
     /// Nil if gzip fails; the upload then goes out uncompressed, as the agent's own replay does.
@@ -252,26 +241,20 @@ final class SessionReplayExternalBuffer {
         }
     }
 
-    /// One payload for the pack, halved until each part fits or holds a single batch.
-    private func packPayloads(_ pack: ArraySlice<TakenBatch>) -> [PackedPayload] {
-        guard let first = pack.first, let last = pack.last else {
-            return []
+    /// The batches as one JSON array, gzipped when possible. Nil when there are none.
+    private static func chunk(of taken: [TakenBatch], isFirstChunk: Bool) -> ExternalReplayChunk? {
+        guard let first = taken.first, let last = taken.last else {
+            return nil
         }
-        let raw: Data
-        let gzipped: Data?
-        if pack.count == 1 {
-            raw = first.contents
-            gzipped = first.gzipped
-        } else {
-            raw = Self.joinArrays(pack.map(\.contents))
-            gzipped = Self.gzip(raw)
-        }
-        let payload = gzipped ?? raw
-        if payload.count > maxUploadBytes && pack.count > 1 {
-            let middle = pack.startIndex + pack.count / 2
-            return packPayloads(pack[..<middle]) + packPayloads(pack[middle...])
-        }
-        return [(payload, raw.count, first.batch.firstTimestamp, last.batch.lastTimestamp, pack.contains { $0.batch.holdsMeta })]
+        let raw = taken.count == 1 ? first.contents : joinArrays(taken.map(\.contents))
+        let payload = gzip(raw) ?? raw
+        return ExternalReplayChunk(payload: payload,
+                                   metadata: ExternalReplayUploadMetadata(uncompressedSize: raw.count,
+                                                                          firstTimestamp: first.batch.firstTimestamp,
+                                                                          lastTimestamp: last.batch.lastTimestamp,
+                                                                          isFirstChunk: isFirstChunk,
+                                                                          isGZipped: payload.isGzipped,
+                                                                          hasMeta: taken.contains { $0.batch.holdsMeta }))
     }
 
     /// Joins JSON arrays into one, keeping their elements' bytes.
@@ -289,9 +272,11 @@ final class SessionReplayExternalBuffer {
 
     // MARK: - Files
 
-    /// Writes a batch's file. A failed write leaves no folder recorded when nothing else is buffered.
+    /// Writes a batch's file, and the folder's marker with its first batch. A failed write leaves no
+    /// folder recorded when nothing else is buffered.
     private func write(_ contents: Data, sessionId: String) -> Bool {
-        if batches.isEmpty {
+        let startsFolder = batches.isEmpty
+        if startsFolder {
             folderSessionId = sessionId
             nextFileIndex = 0
         }
@@ -302,6 +287,9 @@ final class SessionReplayExternalBuffer {
             try FileManager.default.createDirectory(at: folder,
                                                     withIntermediateDirectories: true,
                                                     attributes: [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication])
+            if startsFolder {
+                try Data().write(to: folder.appendingPathComponent(Self.folderMarker), options: .atomic)
+            }
             try contents.write(to: fileURL, options: .atomic)
         } catch {
             NRLOG_AGENT_DEBUG("Failed to write external session replay events: \(error)")

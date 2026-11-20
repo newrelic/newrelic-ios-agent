@@ -12,13 +12,15 @@ final class SessionReplayExternalBufferTests: XCTestCase {
     private var directory: URL!
     private var buffer: SessionReplayExternalBuffer!
     private var provided: [ExternalReplayUploadMetadata] = []
+    private var storageFailures = 0
 
     override func setUp() {
         super.setUp()
         directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("SessionReplayExternalBufferTests-\(UUID().uuidString)")
         provided = []
-        buffer = makeBuffer(maxUploadBytes: 1_000_000)
+        storageFailures = 0
+        buffer = makeBuffer()
     }
 
     override func tearDown() {
@@ -26,8 +28,9 @@ final class SessionReplayExternalBufferTests: XCTestCase {
         super.tearDown()
     }
 
-    private func makeBuffer(maxUploadBytes: Int) -> SessionReplayExternalBuffer {
-        return SessionReplayExternalBuffer(directory: directory, maxUploadBytes: maxUploadBytes) { [weak self] metadata in
+    private func makeBuffer() -> SessionReplayExternalBuffer {
+        return SessionReplayExternalBuffer(directory: directory,
+                                           onStorageFailure: { [weak self] in self?.storageFailures += 1 }) { [weak self] metadata in
             self?.provided.append(metadata)
             return URL(string: "https://test.invalid/recovered")
         }
@@ -122,7 +125,7 @@ final class SessionReplayExternalBufferTests: XCTestCase {
     func testURLFileSaysWhetherTheBufferHoldsAMeta() {
         append(rrwebEvent(4, 1), rrwebEvent(2, 1))
         XCTAssertEqual(provided.last?.hasMeta, true)
-        _ = buffer.takeChunks(final: false, isFirstChunk: true)
+        _ = buffer.takeChunk(final: false, isFirstChunk: true)
         append(rrwebEvent(3, 2))
         XCTAssertEqual(provided.last?.hasMeta, false)
     }
@@ -149,6 +152,7 @@ final class SessionReplayExternalBufferTests: XCTestCase {
         let blocker = directory.appendingPathComponent("s1")
         XCTAssertTrue(FileManager.default.createFile(atPath: blocker.path, contents: Data()))   // a file where the folder goes
         XCTAssertEqual(append(rrwebEvent(4, 1), rrwebEvent(2, 1)), .appended(kept: 0, droppedBeforeMeta: 0))
+        XCTAssertEqual(storageFailures, 1)
         XCTAssertNil(buffer.openSessionId)
         XCTAssertNil(buffer.sessionId)
         try FileManager.default.removeItem(at: blocker)
@@ -161,10 +165,10 @@ final class SessionReplayExternalBufferTests: XCTestCase {
     func testRegularTakeSendsEverythingAndKeepsTheStreamOpen() throws {
         append(rrwebEvent(4, 1), rrwebEvent(2, 1), rrwebEvent(3, 2))
         append(rrwebEvent(3, 3))
-        let chunks = buffer.takeChunks(final: false, isFirstChunk: true)
-        XCTAssertEqual(try chunks.map(payloadTimestamps), [[1, 1, 2, 3]])
-        XCTAssertEqual(chunks[0].metadata.firstTimestamp, 1)
-        XCTAssertEqual(chunks[0].metadata.lastTimestamp, 3)
+        let chunk = try XCTUnwrap(buffer.takeChunk(final: false, isFirstChunk: true))
+        XCTAssertEqual(try payloadTimestamps(chunk), [1, 1, 2, 3])
+        XCTAssertEqual(chunk.metadata.firstTimestamp, 1)
+        XCTAssertEqual(chunk.metadata.lastTimestamp, 3)
         XCTAssertNil(file("s1/frame_0.json"))
         XCTAssertNil(file("s1_upload_url.txt"))
         XCTAssertEqual(buffer.openSessionId, "s1")
@@ -174,18 +178,26 @@ final class SessionReplayExternalBufferTests: XCTestCase {
 
     func testAfterATakeANewSessionStillNeedsItsOwnMeta() {
         append(rrwebEvent(4, 1), rrwebEvent(2, 1))
-        _ = buffer.takeChunks(final: false, isFirstChunk: true)
+        _ = buffer.takeChunk(final: false, isFirstChunk: true)
         XCTAssertEqual(append(session: "s2", rrwebEvent(3, 2)), .appended(kept: 0, droppedBeforeMeta: 1))
     }
 
     func testATakeOfAnEmptyBufferSendsNothing() {
-        XCTAssertTrue(buffer.takeChunks(final: false, isFirstChunk: true).isEmpty)
+        XCTAssertNil(buffer.takeChunk(final: false, isFirstChunk: true))
+    }
+
+    func testABatchThatCantBeReadIsDroppedAndReported() throws {
+        append(rrwebEvent(4, 1), rrwebEvent(2, 1))
+        append(rrwebEvent(3, 2))
+        try FileManager.default.removeItem(at: directory.appendingPathComponent("s1/frame_0.json"))
+        XCTAssertEqual(try payloadTimestamps(XCTUnwrap(buffer.takeChunk(final: false, isFirstChunk: true))), [2])
+        XCTAssertEqual(storageFailures, 1)
     }
 
     func testFinalTakeSendsEverythingAndClosesTheStream() throws {
         append(rrwebEvent(4, 1), rrwebEvent(2, 1))
         append(rrwebEvent(3, 2))
-        XCTAssertEqual(try buffer.takeChunks(final: true, isFirstChunk: true).map(payloadTimestamps), [[1, 1, 2]])
+        XCTAssertEqual(try payloadTimestamps(XCTUnwrap(buffer.takeChunk(final: true, isFirstChunk: true))), [1, 1, 2])
         XCTAssertNil(buffer.openSessionId)
         XCTAssertNil(file("s1_upload_url.txt"))
         XCTAssertFalse(FileManager.default.fileExists(atPath: directory.appendingPathComponent("s1").path))
@@ -194,40 +206,24 @@ final class SessionReplayExternalBufferTests: XCTestCase {
 
     func testChunksSayWhetherTheyHoldAMeta() {
         append(rrwebEvent(4, 1), rrwebEvent(2, 1))
-        XCTAssertEqual(buffer.takeChunks(final: false, isFirstChunk: true).map(\.metadata.hasMeta), [true])
+        XCTAssertEqual(buffer.takeChunk(final: false, isFirstChunk: true)?.metadata.hasMeta, true)
         append(rrwebEvent(3, 2))
-        XCTAssertEqual(buffer.takeChunks(final: false, isFirstChunk: false).map(\.metadata.hasMeta), [false])
-    }
-
-    func testOnlyTheFirstChunkIsMarkedFirst() {
-        buffer = makeBuffer(maxUploadBytes: 3_000)
-        for t in 1...3 { append(rrwebEvent(4, t), rrwebEvent(2, t, #"{"t":"\#(randomText(2_000))"}"#)) }
-        XCTAssertEqual(buffer.takeChunks(final: true, isFirstChunk: true).map(\.metadata.isFirstChunk), [true, false, false])
+        XCTAssertEqual(buffer.takeChunk(final: false, isFirstChunk: false)?.metadata.hasMeta, false)
     }
 
     func testEventsAreNotReordered() throws {
         append(rrwebEvent(4, 10), rrwebEvent(2, 10), rrwebEvent(3, 5))
-        let chunk = try XCTUnwrap(buffer.takeChunks(final: true, isFirstChunk: false).first)
+        let chunk = try XCTUnwrap(buffer.takeChunk(final: true, isFirstChunk: false))
         XCTAssertEqual(try payloadTimestamps(chunk), [10, 10, 5])
         XCTAssertEqual(chunk.metadata.lastTimestamp, 5)
     }
 
-    func testWholeBatchesArePackedUnderTheLimit() throws {
-        buffer = makeBuffer(maxUploadBytes: 5_000)
-        for t in 1...6 { append(rrwebEvent(4, t), rrwebEvent(2, t, #"{"t":"\#(randomText(1_500))"}"#)) }
-        let chunks = buffer.takeChunks(final: true, isFirstChunk: true)
-        XCTAssertGreaterThan(chunks.count, 1)
-        XCTAssertTrue(chunks.allSatisfy { $0.payload.count <= 5_000 })
-        XCTAssertEqual(try chunks.flatMap(payloadTimestamps), (1...6).flatMap { [$0, $0] })   // whole batches, in order
-    }
-
-    func testABatchOverTheLimitGoesOutAlone() throws {
-        buffer = makeBuffer(maxUploadBytes: 1_000)
-        append(rrwebEvent(4, 1), rrwebEvent(2, 1, #"{"t":"\#(randomText(3_000))"}"#))
-        append(rrwebEvent(4, 2), rrwebEvent(2, 2))
-        let chunks = buffer.takeChunks(final: true, isFirstChunk: true)
-        XCTAssertEqual(try chunks.map(payloadTimestamps), [[1, 1], [2, 2]])
-        XCTAssertGreaterThan(chunks[0].payload.count, 1_000)   // the reporter drops it and counts the max-payload metric
+    // As native sends each harvest: one upload, even over the reporter's 1,000,000 bytes after gzip.
+    func testATakeOverTheLimitStillGoesOutAsOneUpload() throws {
+        for t in 1...4 { append(rrwebEvent(4, t), rrwebEvent(2, t, #"{"t":"\#(randomText(400_000))"}"#)) }
+        let chunk = try XCTUnwrap(buffer.takeChunk(final: true, isFirstChunk: true))
+        XCTAssertEqual(try payloadTimestamps(chunk), (1...4).flatMap { [$0, $0] })
+        XCTAssertGreaterThan(chunk.payload.count, 1_000_000)   // the reporter drops it and counts the max-payload metric
     }
 
     // Runs the real recovery path over files the buffer wrote, as after a crash.
@@ -236,7 +232,7 @@ final class SessionReplayExternalBufferTests: XCTestCase {
             .appendingPathComponent("SessionReplayFrames")
         let session = "recovery-\(UUID().uuidString)"
         let url = "https://test.invalid/recovered/\(session)"
-        let crashed = SessionReplayExternalBuffer(directory: frames, maxUploadBytes: 1_000_000) { _ in URL(string: url) }
+        let crashed = SessionReplayExternalBuffer(directory: frames, onStorageFailure: {}) { _ in URL(string: url) }
         _ = crashed.append(Data(rrwebBatch([rrwebEvent(4, 1), rrwebEvent(2, 1), rrwebEvent(3, 2), rrwebEvent(4, 3)]).utf8),
                            sessionId: session, isFirstChunk: true)
         _ = crashed.append(Data(rrwebBatch([rrwebEvent(2, 3)]).utf8), sessionId: session, isFirstChunk: true)
@@ -259,40 +255,63 @@ final class SessionReplayExternalBufferTests: XCTestCase {
         let session = "recovery-\(UUID().uuidString)"
         let url = "https://test.invalid/recovered/\(session)"
         var metadata: [ExternalReplayUploadMetadata] = []
-        let crashed = SessionReplayExternalBuffer(directory: frames, maxUploadBytes: 1_000_000) { provided in
+        let crashed = SessionReplayExternalBuffer(directory: frames, onStorageFailure: {}) { provided in
             metadata.append(provided)
             return URL(string: url)
         }
         _ = crashed.append(Data(rrwebBatch([rrwebEvent(4, 1), rrwebEvent(2, 1)]).utf8), sessionId: session, isFirstChunk: true)
-        _ = crashed.takeChunks(final: false, isFirstChunk: true)
+        _ = crashed.takeChunk(final: false, isFirstChunk: true)
         _ = crashed.append(Data(rrwebBatch([rrwebEvent(3, 2)]).utf8), sessionId: session, isFirstChunk: false)
         _ = crashed.append(Data(rrwebBatch([rrwebEvent(3, 3)]).utf8), sessionId: session, isFirstChunk: false)
         return (session, url, metadata, frames)
     }
 
+    // The folder decides, not the launch: the next launch may not use an external capture source.
     func testCrashRecoveryUploadsTheExternalBufferFromItsFirstEvent() throws {
-        let crashed = crashedBufferAfterAnUpload()
+        for externalCaptureSource in [true, false] {
+            let crashed = crashedBufferAfterAnUpload()
+            let reporter = CapturingSessionReplayReporter(applicationToken: "test-token", url: "mobile-collector.newrelic.com" as NSString)
+            let manager = SessionReplayManager(reporter: reporter, url: "mobile-collector.newrelic.com" as NSString)
+            manager.externalCaptureSource = externalCaptureSource
+            manager.checkForPreviousSessionFiles()
+            _ = manager.isManuallyActive()
+            let recovered = try XCTUnwrap(reporter.uploads.first { $0.url.absoluteString == crashed.url },
+                                          "externalCaptureSource \(externalCaptureSource)")
+            let events = try XCTUnwrap(JSONSerialization.jsonObject(with: gunzipForTests(recovered.sessionReplayFramesData)) as? [[String: Any]])
+            XCTAssertEqual(events.map { $0["timestamp"] as? Int }, [2, 3], "externalCaptureSource \(externalCaptureSource)")
+            XCTAssertEqual(crashed.metadata.last?.hasMeta, false)
+            XCTAssertEqual(crashed.metadata.last?.isFirstChunk, false)
+            XCTAssertFalse(FileManager.default.fileExists(atPath: crashed.frames.appendingPathComponent(crashed.session).path))
+        }
+    }
+
+    // A folder native capture wrote, as a crash on a version of the app that captured natively leaves it.
+    // Recovery still skips its files until one holds a FullSnapshot, even with an external capture source.
+    func testNativeFoldersStillStartAtAFullSnapshot() throws {
+        let frames = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("SessionReplayFrames")
+        let session = "recovery-\(UUID().uuidString)"
+        let url = "https://test.invalid/recovered/\(session)"
+        let folder = frames.appendingPathComponent(session)
+        let urlFile = frames.appendingPathComponent("\(session)_upload_url.txt")
+        addTeardownBlock {
+            try? FileManager.default.removeItem(at: folder)
+            try? FileManager.default.removeItem(at: urlFile)
+        }
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let files = [rrwebBatch([rrwebEvent(3, 1)]), rrwebBatch([rrwebEvent(4, 2), rrwebEvent(2, 2)]), rrwebBatch([rrwebEvent(3, 3)])]
+        for (index, contents) in files.enumerated() {
+            try contents.write(to: folder.appendingPathComponent("frame_\(index).json"), atomically: true, encoding: .utf8)
+        }
+        try url.write(to: urlFile, atomically: true, encoding: .utf8)
+
         let reporter = CapturingSessionReplayReporter(applicationToken: "test-token", url: "mobile-collector.newrelic.com" as NSString)
         let manager = SessionReplayManager(reporter: reporter, url: "mobile-collector.newrelic.com" as NSString)
         manager.externalCaptureSource = true
         manager.checkForPreviousSessionFiles()
         _ = manager.isManuallyActive()
-        let recovered = try XCTUnwrap(reporter.uploads.first { $0.url.absoluteString == crashed.url })
+        let recovered = try XCTUnwrap(reporter.uploads.first { $0.url.absoluteString == url })
         let events = try XCTUnwrap(JSONSerialization.jsonObject(with: gunzipForTests(recovered.sessionReplayFramesData)) as? [[String: Any]])
-        XCTAssertEqual(events.map { $0["timestamp"] as? Int }, [2, 3])
-        XCTAssertEqual(crashed.metadata.last?.hasMeta, false)
-        XCTAssertEqual(crashed.metadata.last?.isFirstChunk, false)
-        XCTAssertFalse(FileManager.default.fileExists(atPath: crashed.frames.appendingPathComponent(crashed.session).path))
-    }
-
-    // Without an external capture source, recovery skips files until one holds a FullSnapshot.
-    // This buffer has none, so none of it is uploaded.
-    func testNativeCrashRecoveryStillStartsAtAFullSnapshot() {
-        let crashed = crashedBufferAfterAnUpload()
-        let reporter = CapturingSessionReplayReporter(applicationToken: "test-token", url: "mobile-collector.newrelic.com" as NSString)
-        let manager = SessionReplayManager(reporter: reporter, url: "mobile-collector.newrelic.com" as NSString)
-        manager.checkForPreviousSessionFiles()
-        _ = manager.isManuallyActive()
-        XCTAssertNil(reporter.uploads.first { $0.url.absoluteString == crashed.url })
+        XCTAssertEqual(events.map { $0["timestamp"] as? Int }, [2, 2, 3])
     }
 }

@@ -195,6 +195,7 @@ typedef NSString NRMetricUnit;
 #define kNRMASessionReplayMetricFailedUpload    kNRMASessionReplay @"/FailedUpload"
 #define kNRMASessionReplayMetricURLTooLarge       kNRMASessionReplay @"/UrlTooLarge"
 #define kNRMASessionReplayMetricExternalEventsInvalid kNRMASessionReplay @"/ExternalEvents/Invalid"
+#define kNRMASessionReplayMetricExternalEventsStorageFailed kNRMASessionReplay @"/ExternalEvents/StorageFailed"
 #define kNRMASessionReplayMetricSuccessfulSize    kNRMASessionReplay @"/Size/Uncompressed"
 
 // Session Replay Configuration

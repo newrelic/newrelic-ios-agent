@@ -232,6 +232,17 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
     }
 }
 
++ (void) enqueueSessionReplayExternalEventsStorageFailedMetric {
+    NSString* nativePlatform = [NewRelicInternalUtils osName];
+    NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
+
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat: kNRMASessionReplayMetricExternalEventsStorageFailed, nativePlatform, platform]
+                                                              value:@1
+                                                              scope:nil]];
+    }
+}
+
 + (void) enqueueSessionReplayConfigEnabledMetric:(BOOL)enabled {
     @synchronized (deferredMetrics) {
         [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMASessionReplayConfigEnabled

@@ -401,8 +401,8 @@ static NewRelicAgentInternal* _sharedInstance;
     if (@available(iOS 13.0, *)) {
         SessionReplayReporter *reporter = [[SessionReplayReporter alloc] initWithApplicationToken:_agentConfiguration.applicationToken.value url: [self->_agentConfiguration sessionReplayURL]];
         _sessionReplay = [[SessionReplayManager alloc] initWithReporter:reporter url: [self->_agentConfiguration sessionReplayURL]];
-        // Set before checkForPreviousSessionFiles below, which reads it. Nothing can start replay yet: the
-        // harvester reaches the manager through sharedInstance, which is nil until init returns.
+        // Starting replay reads it, and nothing can start replay yet: the harvester reaches the manager
+        // through sharedInstance, which is nil until init returns.
         _sessionReplay.externalCaptureSource = [NewRelicAgentInternal sessionReplayExternalCaptureSource];
 
         if ([self isSessionReplayEnabled]) {
@@ -725,7 +725,8 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
             // Only add hasReplay attribute if starting in full mode
             // For error mode, the attribute will be added when an error occurs
-            if (m == SessionReplayRecordingModeFull) {
+            // With an external capture source, it's added once the source's events are stored
+            if (m == SessionReplayRecordingModeFull && !_sessionReplay.externalCaptureSource) {
                 @synchronized(kNRMAAnalyticsInitializationLock) {
                     [self.analyticsController setNRSessionAttribute:kNRMA_RA_hasReplay value:[[NRMABool alloc] initWithBOOL:YES]];
                 }
@@ -767,7 +768,8 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     }
     if(_sessionReplay != nil){
         BOOL success = [_sessionReplay manualRecordReplay];
-        if(success){
+        // With an external capture source, hasReplay waits for the source's events.
+        if(success && !_sessionReplay.externalCaptureSource){
             @synchronized(kNRMAAnalyticsInitializationLock) {
                 [self.analyticsController setNRSessionAttribute:kNRMA_RA_hasReplay value:[[NRMABool alloc] initWithBOOL:YES]];
             }
@@ -873,12 +875,23 @@ static NSString* NRMASessionReplayRecordingModeName(SessionReplayRecordingMode m
     return [NRMAAgentConfiguration getPlatform] == NRMAPlatform_Flutter;
 }
 
+- (void) sessionReplayStoredExternalEvents {
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+    @synchronized(kNRMAAnalyticsInitializationLock) {
+        [self.analyticsController setNRSessionAttribute:kNRMA_RA_hasReplay value:[[NRMABool alloc] initWithBOOL:YES]];
+    }
+#endif
+}
+
 - (void)sessionReplayOnError:(NSError *_Nullable)error {
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     if (_sessionReplay != nil) {
         [_sessionReplay onError:error];
-        @synchronized(kNRMAAnalyticsInitializationLock) {
-            [self.analyticsController setNRSessionAttribute:kNRMA_RA_hasReplay value:[[NRMABool alloc] initWithBOOL:YES]];
+        // With an external capture source, hasReplay waits for the source's events.
+        if (!_sessionReplay.externalCaptureSource) {
+            @synchronized(kNRMAAnalyticsInitializationLock) {
+                [self.analyticsController setNRSessionAttribute:kNRMA_RA_hasReplay value:[[NRMABool alloc] initWithBOOL:YES]];
+            }
         }
     }
 #endif
