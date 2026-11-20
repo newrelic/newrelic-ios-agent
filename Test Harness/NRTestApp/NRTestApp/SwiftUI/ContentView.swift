@@ -3,10 +3,12 @@ import SwiftUI
 struct SwiftUIContentView: View {
     var body: some View {
         NRConditionalMaskView(sessionReplayIdentifier: "my-secret-id") {
-            
+
             NavigationView {
                 List {
-                    NavigationLink(destination: MaskingView()) {
+                    NavigationLink {
+                        MaskingView()
+                    } label: {
                         NRConditionalMaskView(maskApplicationText: false) {
                             Text("Masking")
                         }
@@ -19,63 +21,48 @@ struct SwiftUIContentView: View {
                     }
                     NavigationLink(destination: TextFieldsView()) {
                         Text("Text Fields")
-
                     }
                     NavigationLink(destination: SimpleScrollView()) {
                         Text("Diff Scroll View")
-
                     }
                     NavigationLink(destination: PickersView()) {
                         Text("Pickers")
-
                     }
                     NavigationLink(destination: TogglesView()) {
                         Text("Toggles")
-
                     }
                     NavigationLink(destination: SlidersView()) {
                         Text("Sliders")
-
                     }
                     NavigationLink(destination: SteppersView()) {
                         Text("Steppers")
-
                     }
                     NavigationLink(destination: DatePickersView()) {
                         Text("Date Pickers")
-
                     }
                     NavigationLink(destination: ProgressViewsView()) {
                         Text("Progress Views")
-
                     }
                     NavigationLink(destination: SegmentedControlsView()) {
                         Text("Segmented Controls")
-
                     }
                     NavigationLink(destination: ListsView()) {
                         Text("Lists")
-
                     }
                     NavigationLink(destination: ScrollViewsView()) {
                         Text("Scroll Views")
-
                     }
                     NavigationLink(destination: StacksView()) {
                         Text("Stacks")
-
                     }
                     NavigationLink(destination: GridsView()) {
                         Text("Grids")
-
                     }
                     NavigationLink(destination: ShapesView()) {
                         Text("Shapes")
-
                     }
                     NavigationLink(destination: DrawingsView()) {
                         Text("Canvas Drawings")
-
                     }
                     NavigationLink(destination: InfiniteImageCollectionView()) {
                         Text("Infinite Images")
@@ -89,8 +76,22 @@ struct SwiftUIContentView: View {
                     NavigationLink(destination: TintedSymbolsView()) {
                         Text("Tinted SF Symbols")
                     }
+                    NavigationLink(destination: ModalsDemoView()) {
+                        Text("Modals (Sheet / FullScreenCover / Popover)")
+                    }
+                    NavigationLink(destination: SwiftUITabBar()) {
+                        Text("Tab Bar (NRMobileTabTracking)")
+                    }
+                    NavigationLink(destination: MobileViewAttributesDemoView()) {
+                        Text("MobileView · Custom Attributes")
+                    }
+                    NavigationLink(destination: ManualViewsDemoView()) {
+                        Text("MobileView · Manual (setCurrentView + referrer)")
+                    }
+                    NavigationLink(destination: ViewsAndInteractionsDemoView()) {
+                        Text("MobileView · Views × Interactions (startsInteraction)")
+                    }
                     if #available(iOS 16.0, *) {
-
                         NavigationLink(destination: NavigationStackView()) {
                             Text("NavigationStack")
                         }
@@ -103,16 +104,19 @@ struct SwiftUIContentView: View {
                     NavigationLink(destination: NavigationLinkLabelLayoutTestCase()) {
                         Text("NavigationLink Labels")
                     }
+                    // Automatic SwiftUI collection: nothing under this row uses any New Relic
+                    // API, so any MobileView events from it came from the resolver.
+                    NavigationLink(destination: AutoInstrumentedDemoView()) {
+                        Text("MobileView · Automatic (no modifier)")
+                    }
                 }
                 .navigationBarTitle("SwiftUI Elements")
-
             }
             .navigationViewStyle(.stack)
             .NRTrackView(name: "SwiftUIContentView")
         }
     }
 }
-
 //#Preview {
 //    SwiftUIContentView()
 //}
