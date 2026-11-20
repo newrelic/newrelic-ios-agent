@@ -1,0 +1,46 @@
+name: spmReleaseParity
+
+# While both newrelic-ios-agent and newrelic-ios-agent-spm are SPM sources (NR-653723), keeps
+# them publishing the same release. productionDeploy pushes the SPM tag; the GitHub Release on
+# this repo is created by hand. This mirrors that Release to the SPM repo and checks that
+# Package.swift at the tag matches the released zip in both repos.
+# See scripts/check_spm_release_parity.sh for the checks.
+#
+# A Release created with GITHUB_TOKEN does not trigger `release` workflows. If productionDeploy's
+# createGithubRelease job is re-enabled, the weekly schedule is what mirrors its Releases.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to check and mirror (ex 7.7.11). Leave empty to check the newest tags.
+        required: false
+  schedule:
+    # Mondays 15:00 UTC.
+    - cron: '0 15 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  spmReleaseParity:
+    name: spmReleaseParity
+    runs-on: ubuntu-latest
+    if: github.event_name != 'release' || !github.event.release.prerelease
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: scripts/check_spm_release_parity.sh
+          sparse-checkout-cone-mode: false
+
+      - name: Check SPM release parity and mirror missing Releases
+        run: bash scripts/check_spm_release_parity.sh ${VERSION:+"$VERSION"}
+        env:
+          VERSION: ${{ github.event.release.tag_name || github.event.inputs.version }}
+          MAIN_GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SPM_GH_TOKEN: ${{ secrets.SPM_PAT }}
+          # This repo's 7.7.4 tag has the staging rc zip in Package.swift. Released tags are not
+          # moved; customers pinned to 7.7.4 should resolve it from the SPM repo.
+          KNOWN_BAD_MAIN_TAGS: "7.7.4"
+          RECENT_TAG_COUNT: "5"
