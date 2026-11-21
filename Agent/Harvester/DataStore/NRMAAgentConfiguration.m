@@ -19,6 +19,67 @@ static NSString* __NRMA__customAppVersionString = nil;
 static NSString* __NRMA__customAppBuildString = nil;
 static NRMAApplicationPlatform __NRMA__applicationPlatform = NRMAPlatform_Native;
 static NSString* __NRMA__applicationPlatformVersion = nil;
+// An explicit setPlatform:/setPlatformVersion: call always wins over the framework plist.
+static BOOL __NRMA__applicationPlatformExplicit = NO;
+static BOOL __NRMA__applicationPlatformVersionExplicit = NO;
+
+// Every hybrid plugin (Flutter, React Native, ...) ships a NewRelicHybrid.plist in its resources so the agent
+// can learn the framework even when the app starts the agent natively before any plugin code runs.
+// Keys: ApplicationFramework (an NRMAApplicationPlatform name, e.g. "Flutter") and
+// ApplicationFrameworkVersion (the plugin version).
+static NSString* const kNRMAHybridPlistName = @"NewRelicHybrid";
+static NSString* const kNRMAHybridPlistFrameworkKey = @"ApplicationFramework";
+static NSString* const kNRMAHybridPlistVersionKey = @"ApplicationFrameworkVersion";
+
+static NSDictionary<NSString*, NSNumber*>* NRMAPlatformsByName(void) {
+    return @{kNRMAPlatformString_Cordova:      @(NRMAPlatform_Cordova),
+             kNRMAPlatformString_PhoneGap:     @(NRMAPlatform_PhoneGap),
+             kNRMAPlatformString_Xamarin:      @(NRMAPlatform_Xamarin),
+             kNRMAPlatformString_Unity:        @(NRMAPlatform_Unity),
+             kNRMAPlatformString_Appcelerator: @(NRMAPlatform_Appcelerator),
+             kNRMAPlatformString_ReactNative:  @(NRMAPlatform_ReactNative),
+             kNRMAPlatformString_Flutter:      @(NRMAPlatform_Flutter),
+             kNRMAPlatformString_Capacitor:    @(NRMAPlatform_Capacitor),
+             kNRMAPlatformString_MAUI:         @(NRMAPlatform_MAUI),
+             kNRMAPlatformString_Unreal:       @(NRMAPlatform_Unreal)};
+}
+
+// Bundles a plugin's resources can land in: the main bundle, CocoaPods frameworks (use_frameworks!),
+// and SwiftPM/CocoaPods resource bundles, which are nested in the app but not loaded until requested.
+static NSArray<NSBundle*>* NRMACandidateResourceBundles(void) {
+    NSMutableArray<NSBundle*>* bundles = [NSMutableArray arrayWithObject:[NSBundle mainBundle]];
+    [bundles addObjectsFromArray:[NSBundle allBundles]];
+    [bundles addObjectsFromArray:[NSBundle allFrameworks]];
+
+    NSBundle* main = [NSBundle mainBundle];
+    NSFileManager* fm = [NSFileManager defaultManager];
+    for (NSURL* dir in [NSArray arrayWithObjects:main.bundleURL, main.privateFrameworksURL, nil]) {
+        for (NSURL* item in [fm contentsOfDirectoryAtURL:dir includingPropertiesForKeys:nil options:0 error:nil]) {
+            if ([item.pathExtension isEqualToString:@"bundle"] || [item.pathExtension isEqualToString:@"framework"]) {
+                NSBundle* nested = [NSBundle bundleWithURL:item];
+                if (nested) [bundles addObject:nested];
+            }
+        }
+    }
+    return bundles;
+}
+
+// Returns the contents of NewRelicHybrid.plist, or nil for a purely native app. Read once.
+static NSDictionary* NRMAHybridPlist(void) {
+    static NSDictionary* plist = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        for (NSBundle* bundle in NRMACandidateResourceBundles()) {
+            NSURL* url = [bundle URLForResource:kNRMAHybridPlistName withExtension:@"plist"];
+            NSDictionary* candidate = url ? [NSDictionary dictionaryWithContentsOfURL:url] : nil;
+            if (candidate) {
+                plist = candidate;
+                return;
+            }
+        }
+    });
+    return plist;
+}
 
 // Default max event buffer time is 1 minute (60 seconds).
 static NSUInteger __NRMA__maxEventBufferTime = 60;
@@ -38,10 +99,33 @@ static NSUInteger __NRMA__maxOfflineStorageSizeBytes = 100000000; // 100 MB in b
 
 +(void) setPlatform:(NRMAApplicationPlatform)platform {
     __NRMA__applicationPlatform = platform;
+    __NRMA__applicationPlatformExplicit = YES;
 }
 + (void) setPlatformVersion:(NSString*)platformVersion
 {
     __NRMA__applicationPlatformVersion = platformVersion;
+    __NRMA__applicationPlatformVersionExplicit = YES;
+}
+
++ (NRMAApplicationPlatform) effectivePlatform {
+    if (!__NRMA__applicationPlatformExplicit) {
+        NSString* name = NRMAHybridPlist()[kNRMAHybridPlistFrameworkKey];
+        NSNumber* platform = [name isKindOfClass:[NSString class]] ? NRMAPlatformsByName()[name] : nil;
+        if (platform) {
+            return (NRMAApplicationPlatform)platform.unsignedIntegerValue;
+        }
+    }
+    return __NRMA__applicationPlatform;
+}
+
++ (NSString*) effectivePlatformVersion {
+    if (!__NRMA__applicationPlatformVersionExplicit) {
+        NSString* version = NRMAHybridPlist()[kNRMAHybridPlistVersionKey];
+        if ([version isKindOfClass:[NSString class]] && version.length) {
+            return version;
+        }
+    }
+    return __NRMA__applicationPlatformVersion;
 }
 
 + (void) setMaxEventBufferTime:(NSUInteger)seconds {
@@ -253,8 +337,8 @@ static NSMutableArray * __NRMA__session_replay_unmaskedAccessibilityIdentifiers;
     devInfo.agentName = [NewRelicInternalUtils agentName];
     devInfo.agentVersion = [NewRelicInternalUtils agentVersion];
     devInfo.deviceId = [NewRelicInternalUtils deviceId];
-    devInfo.platform = __NRMA__applicationPlatform;
-    devInfo.platformVersion = __NRMA__applicationPlatformVersion;
+    devInfo.platform = [NRMAAgentConfiguration effectivePlatform];
+    devInfo.platformVersion = [NRMAAgentConfiguration effectivePlatformVersion];
     NRMAConnectInformation* connectionInformation = [[NRMAConnectInformation alloc] init];
     connectionInformation.applicationInformation = appInfo;
     connectionInformation.deviceInformation = devInfo;
