@@ -117,6 +117,43 @@ struct MaskingResolutionTests {
         #expect(ViewDetails.maskTag(for: "nr-masked") == .none)
     }
 
+    // MARK: - SwiftUI identifier override
+
+    @Test func `An unmask identifier does not beat a masked ancestor`() {
+        for tri in [true, false, nil] as [Bool?] {
+            // maskApplicationText / maskUserInputText are inherited from ancestors: true means masked.
+            let masked = tri == true
+            for (app, input) in [(tri, nil), (nil, tri)] as [(Bool?, Bool?)] {
+                let result = ViewDetails.resolveIdentifierOverride(
+                    inMaskedList: false, inUnmaskedList: true, isDefaultMode: false,
+                    maskApplicationText: app, maskUserInputText: input)
+                #expect(result == (masked ? nil : false))
+            }
+        }
+    }
+
+    @Test func `Identifier override precedence`() {
+        func resolve(masked: Bool, unmasked: Bool, isDefault: Bool = false,
+                     app: Bool? = nil, input: Bool? = nil) -> Bool? {
+            ViewDetails.resolveIdentifierOverride(inMaskedList: masked, inUnmaskedList: unmasked,
+                                                  isDefaultMode: isDefault,
+                                                  maskApplicationText: app, maskUserInputText: input)
+        }
+        #expect(resolve(masked: false, unmasked: false) == nil)
+        #expect(resolve(masked: true, unmasked: false) == true)
+        #expect(resolve(masked: false, unmasked: true) == false)
+        // A mask rule beats an unmask rule on the same identifier, in any mode or ancestry.
+        #expect(resolve(masked: true, unmasked: true) == true)
+        #expect(resolve(masked: true, unmasked: true, app: true) == true)
+        // Default mode ignores unmask but still honors mask.
+        #expect(resolve(masked: false, unmasked: true, isDefault: true) == nil)
+        #expect(resolve(masked: true, unmasked: false, isDefault: true) == true)
+        // An unmask beneath a masked ancestor is dropped; an unmasked ancestor does not block it.
+        #expect(resolve(masked: false, unmasked: true, app: true) == nil)
+        #expect(resolve(masked: false, unmasked: true, input: true) == nil)
+        #expect(resolve(masked: false, unmasked: true, app: false, input: false) == false)
+    }
+
     // MARK: - Hierarchy composition (parent > child > grandchild)
 
     private enum Mechanism: CaseIterable {

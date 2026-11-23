@@ -252,15 +252,31 @@ struct ViewDetails {
 
         if let sessionReplayIdentifier = sessionReplayIdentifier {
             guard let agent = NewRelicAgentInternal.sharedInstance() else { return }
-            // Identifier-based UNMASK overrides are ignored under the Default strategy.
-            if !isDefaultMaskingMode, agent.isAccessibilityIdentifierUnmasked(sessionReplayIdentifier) {
-                self.isMasked = false
-            }
-            // Identifier-based MASK overrides are always honored (they only add masking).
-            if agent.isAccessibilityIdentifierMasked(sessionReplayIdentifier) {
-                self.isMasked = true
-            }
+            self.isMasked = ViewDetails.resolveIdentifierOverride(
+                inMaskedList: agent.isAccessibilityIdentifierMasked(sessionReplayIdentifier),
+                inUnmaskedList: agent.isAccessibilityIdentifierUnmasked(sessionReplayIdentifier),
+                isDefaultMode: isDefaultMaskingMode,
+                maskApplicationText: self.maskApplicationText,
+                maskUserInputText: self.maskUserInputText)
         }
+    }
+
+    // The mask decision for a SwiftUI view's sessionReplayIdentifier, or nil when it has no rule.
+    // A masked identifier always masks. An unmasked identifier is ignored under the Default strategy
+    // and when an ancestor masks the subtree (maskApplicationText / maskUserInputText are inherited
+    // from ancestors, so true means a mask applies), matching the UIKit precedence.
+    static func resolveIdentifierOverride(inMaskedList: Bool,
+                                          inUnmaskedList: Bool,
+                                          isDefaultMode: Bool,
+                                          maskApplicationText: Bool?,
+                                          maskUserInputText: Bool?) -> Bool? {
+        if inMaskedList {
+            return true
+        }
+        if inUnmaskedList, !isDefaultMode, maskApplicationText != true, maskUserInputText != true {
+            return false
+        }
+        return nil
     }
 
     // True when the active session replay masking strategy is "Default". Under the

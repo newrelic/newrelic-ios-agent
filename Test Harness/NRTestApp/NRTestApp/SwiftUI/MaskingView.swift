@@ -353,6 +353,31 @@ struct MaskingView: View {
                             Text("Unmasked parent, mask id (expect masked)").foregroundColor(.maskedColor)
                         }
                     }
+                    NRConditionalMaskView(maskApplicationText: true) {
+                        NRConditionalMaskView(sessionReplayIdentifier: "unmasked-1") {
+                            Text("SSN 123-45-6789 (masked parent, unmask id, expect masked)").foregroundColor(.maskedColor)
+                        }
+                    }
+                    NRConditionalMaskView(maskUserInputText: true) {
+                        NRConditionalMaskView(sessionReplayIdentifier: "unmasked-1") {
+                            Text("User input masked parent, unmask id (expect masked)").foregroundColor(.maskedColor)
+                        }
+                    }
+                    NRConditionalMaskView(maskApplicationText: true) {
+                        NRConditionalMaskView {
+                            NRConditionalMaskView(sessionReplayIdentifier: "unmasked-1") {
+                                Text("Masked grandparent, unmask id (expect masked)").foregroundColor(.maskedColor)
+                            }
+                        }
+                    }
+                    NRConditionalMaskView(maskApplicationText: false) {
+                        NRConditionalMaskView(sessionReplayIdentifier: "unmasked-1") {
+                            Text("Unmasked parent, unmask id (expect unmasked)").foregroundColor(.unmaskedColor)
+                        }
+                    }
+                    NRConditionalMaskView(sessionReplayIdentifier: "unmasked-1") {
+                        Text("No parent, unmask id (expect unmasked)").foregroundColor(.unmaskedColor)
+                    }
                 }
 
                 sectionTitle("blockView Combinations")
