@@ -72,6 +72,22 @@
     XCTAssertEqualObjects(measurement.name, fullMetricName, @"Name is not generated properly.");
 }
 
+-(void)testSessionReplayExternalEventsStorageFailedMetric {
+
+    [NRMASupportMetricHelper enqueueSessionReplayExternalEventsStorageFailedMetric];
+
+    [NRMASupportMetricHelper processDeferredMetrics];
+
+    [NRMATaskQueue synchronousDequeue];
+
+    XCTAssertTrue([helper.result isKindOfClass:[NRMANamedValueMeasurement class]], @"The result is not a named value.");
+
+    NRMANamedValueMeasurement* measurement = ((NRMANamedValueMeasurement*)helper.result);
+
+    NSString* fullMetricName = [NSString stringWithFormat:@"Supportability/AgentHealth/%@/Native/SessionReplay/ExternalEvents/StorageFailed", [NewRelicInternalUtils osName]];
+    XCTAssertEqualObjects(measurement.name, fullMetricName, @"Name is not generated properly.");
+}
+
 -(void)testOfflinePayloadSupportMetric {
 
     [NRMASupportMetricHelper enqueueOfflinePayloadMetric:1];

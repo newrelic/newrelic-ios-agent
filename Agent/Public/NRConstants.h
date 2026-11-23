@@ -78,6 +78,11 @@ static SessionReplayMaskingMode const SessionReplayMaskingModeCustom = @"custom"
 // Posted on the main thread with +[NewRelic sessionReplayConfiguration] as userInfo
 #define kNRSessionReplayConfigurationDidChangeNotification @"com.newrelic.sessionReplay.configuration.changed"
 
+// Returned by +[NewRelic recordSessionReplayEvents:]
+#define kNRSessionReplayIngestAccepted        @"accepted"
+#define kNRSessionReplayIngestDroppedDisabled @"dropped_disabled"
+#define kNRSessionReplayIngestDroppedInvalid  @"dropped_invalid"
+
 #define kNRMAAnalyticsInitializedNotification @"com.newrelic.analytics.initialized"
 #define kNRMAAnalyticsControllerKey           @"AnalyticsController"
 
@@ -189,6 +194,8 @@ typedef NSString NRMetricUnit;
 #define kNRMASessionReplay kNRAgentHealthPrefix @"/%@/%@/SessionReplay"
 #define kNRMASessionReplayMetricFailedUpload    kNRMASessionReplay @"/FailedUpload"
 #define kNRMASessionReplayMetricURLTooLarge       kNRMASessionReplay @"/UrlTooLarge"
+#define kNRMASessionReplayMetricExternalEventsInvalid kNRMASessionReplay @"/ExternalEvents/Invalid"
+#define kNRMASessionReplayMetricExternalEventsStorageFailed kNRMASessionReplay @"/ExternalEvents/StorageFailed"
 #define kNRMASessionReplayMetricSuccessfulSize    kNRMASessionReplay @"/Size/Uncompressed"
 
 // Session Replay Configuration

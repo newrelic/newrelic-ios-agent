@@ -33,6 +33,8 @@ static NSMutableArray *deferredMetrics;
 + (void) enqueueSessionReplaySuccessMetric:(long)size;
 + (void) enqueueSessionReplayFailedMetric;
 + (void) enqueueSessionReplayURLTooLargeMetric;
++ (void) enqueueSessionReplayExternalEventsInvalidMetric;
++ (void) enqueueSessionReplayExternalEventsStorageFailedMetric;
 + (void) enqueueSessionReplayConfigEnabledMetric:(BOOL)enabled;
 + (void) enqueueSessionReplayConfigSamplingRateMetric:(double)samplingRate;
 + (void) enqueueSessionReplayConfigErrorSamplingRateMetric:(double)errorSamplingRate;

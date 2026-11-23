@@ -944,6 +944,18 @@
     }
 }
 
+/*
+ * Takes rrweb events from an external replay source. Drops them as disabled until the
+ * agent has started.
+ */
++ (NSString*) recordSessionReplayEvents:(NSString*)eventsJSON {
+    NewRelicAgentInternal* agent = [NewRelicAgentInternal sharedInstance];
+    if (agent == nil) {
+        return kNRSessionReplayIngestDroppedDisabled;
+    }
+    return [agent recordSessionReplayEvents:eventsJSON];
+}
+
 
 #pragma mark - Hidden APIs
 

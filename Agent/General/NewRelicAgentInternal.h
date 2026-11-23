@@ -99,6 +99,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void) sessionReplayEndSession;
 
+// Sets the session's hasReplay attribute, once a batch from the external capture source opens a replay stream
+- (void) sessionReplayStoredExternalEvents;
+
 // Logging Collection - handles sampling check and log upload
 - (void) uploadLogsIfSampled;
 
@@ -153,6 +156,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 // What sessionReplayConfiguration reports until session replay is resolved and enabled
 + (NSDictionary<NSString*, id>* _Nonnull) sessionReplayOffConfiguration;
+
+// Takes rrweb events from an external replay source. Returns a kNRSessionReplayIngest status.
+- (NSString* _Nonnull) recordSessionReplayEvents:(NSString* _Nonnull)eventsJSON;
+
+// Whether the Flutter agent's events replace native session replay capture: when the platform is Flutter.
++ (BOOL) sessionReplayExternalCaptureSource;
 
 // END SESSION REPLAY SECTION Methods to start and pause SessionReplay
 
