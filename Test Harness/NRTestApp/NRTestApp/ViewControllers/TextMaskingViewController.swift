@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SwiftUI
 import NewRelic
 
 #if os(iOS)
@@ -36,11 +37,13 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         let perPropertyStack = createPerPropertySection()
         let multiLevelStack = createMultiLevelSection()
         let blockCombinationsStack = createBlockCombinationsSection()
+        let swiftUIInUIKitStack = createSwiftUIInUIKitSection()
+        let textVsInputStack = createTextVersusInputSection()
 
         let tableViewStack = createTableViewSection()
 
         let scrollView = UIScrollView()
-        let mainStack = UIStackView(arrangedSubviews: [blockedStack, searchAndCredentialsStack, maskedStack, unmaskedStack, customMaskedStack, customUnmaskedStack, parentChildStack, inheritanceStack, perPropertyStack, multiLevelStack, blockCombinationsStack, tableViewStack])
+        let mainStack = UIStackView(arrangedSubviews: [blockedStack, searchAndCredentialsStack, maskedStack, unmaskedStack, customMaskedStack, customUnmaskedStack, parentChildStack, inheritanceStack, perPropertyStack, multiLevelStack, blockCombinationsStack, swiftUIInUIKitStack, textVsInputStack, tableViewStack])
 //        let mainStack = UIStackView(arrangedSubviews: [maskedStack, parentChildStack])
 //        let mainStack = UIStackView(arrangedSubviews: [maskedStack])//, parentChildStack])
 
@@ -381,7 +384,7 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
             let title = makeLabel(parentMasked ? "Parent masks all four; child flips ONE (expect all masked)"
                                                : "Parent unmasks all four; child masks ONE (expect only that one masked)")
             title.font = .boldSystemFont(ofSize: 13)
-            title.textColor = expectationColor(masked: true)
+            title.textColor = .label // A heading, not part of the test: no expected outcome.
             stack.addArrangedSubview(title)
 
             let childValue = !parentMasked
@@ -406,7 +409,9 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
 
             let button = UIButton(type: .system)
             button.setTitle("Child maskAllUserTouches = \(childValue)", for: .normal)
-            button.setTitleColor(expectationColor(masked: true), for: .normal)
+            // Under a masked parent the title is masked text. Under an unmasked parent only touches
+            // are masked, so the title text stays visible: purple marks touch-only masking.
+            button.setTitleColor(parentMasked ? expectationColor(masked: true) : .systemPurple, for: .normal)
             button.maskAllUserTouches = childValue
             stack.addArrangedSubview(button)
 
@@ -468,6 +473,80 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
             let label = makeLabel(testCase.text)
             label.accessibilityIdentifier = testCase.child
             embed(label, in: container)
+            rows.append(container)
+        }
+        return sectionStack(rows)
+    }
+
+    // A UIHostingController's SwiftUI Text next to a UILabel, both inside a UIKit container that is
+    // masked or unmasked by tag, by identifier list, or by a direct property.
+    private func createSwiftUIInUIKitSection() -> UIStackView {
+        var rows = sectionHeader("SwiftUI Inside a UIKit Parent",
+                                 description: "The SwiftUI Text should follow the same masked UIKit ancestor as the UILabel beside it.")
+
+        func hostedText(_ text: String, masked: Bool) -> UIView {
+            let host = UIHostingController(rootView: Text(text)
+                .font(.footnote)
+                .foregroundColor(Color(expectationColor(masked: masked))))
+            addChild(host)
+            host.view.backgroundColor = .clear
+            host.didMove(toParent: self)
+            return host.view
+        }
+
+        let cases: [(title: String, masked: Bool, configure: (UIView) -> Void)] = [
+            ("nr-mask container", true, { $0.accessibilityIdentifier = "nr-mask" }),
+            ("masked identifier list container (my-masked-id)", true, { $0.accessibilityIdentifier = "my-masked-id" }),
+            ("maskApplicationText = true container", true, { $0.maskApplicationText = true }),
+            ("nr-unmask container", false, { $0.accessibilityIdentifier = "nr-unmask" }),
+            ("unmasked identifier list container (unmasked-1)", false, { $0.accessibilityIdentifier = "unmasked-1" })
+        ]
+        for testCase in cases {
+            let container = makeContainer(color: expectationColor(masked: testCase.masked))
+            testCase.configure(container)
+            let stack = UIStackView()
+            stack.axis = .vertical
+            stack.spacing = 4
+            stack.addArrangedSubview(makeLabel("UILabel in \(testCase.title) (expect \(testCase.masked ? "masked" : "unmasked"))",
+                                               expectMasked: testCase.masked))
+            let hosted = hostedText("SwiftUI Text in \(testCase.title) (expect \(testCase.masked ? "masked" : "unmasked"))",
+                                    masked: testCase.masked)
+            stack.addArrangedSubview(hosted)
+            embed(stack, in: container)
+            rows.append(container)
+        }
+        return sectionStack(rows)
+    }
+
+    // maskApplicationText covers static text and maskUserInputText covers text inputs; each
+    // should only affect its own kind.
+    private func createTextVersusInputSection() -> UIStackView {
+        var rows = sectionHeader("Application Text vs User Input",
+                                 description: "maskApplicationText masks labels, maskUserInputText masks text inputs. Setting one must not mask the other kind.")
+        let cases: [(text: Bool, input: Bool)] = [(true, false), (false, true)]
+        for testCase in cases {
+            let container = makeContainer(color: .systemGray)
+            container.maskApplicationText = testCase.text
+            container.maskUserInputText = testCase.input
+            let stack = UIStackView()
+            stack.axis = .vertical
+            stack.spacing = 6
+            let title = makeLabel("Parent maskApplicationText = \(testCase.text), maskUserInputText = \(testCase.input)")
+            title.font = .boldSystemFont(ofSize: 13)
+            stack.addArrangedSubview(title)
+            stack.addArrangedSubview(makeLabel("UILabel (expect \(testCase.text ? "masked" : "unmasked"))", expectMasked: testCase.text))
+            let field = UITextField()
+            field.borderStyle = .roundedRect
+            field.text = "UITextField (expect \(testCase.input ? "masked" : "unmasked"))"
+            field.textColor = expectationColor(masked: testCase.input)
+            stack.addArrangedSubview(field)
+            let textView = UITextView()
+            textView.text = "UITextView (expect \(testCase.input ? "masked" : "unmasked"))"
+            textView.textColor = expectationColor(masked: testCase.input)
+            textView.isScrollEnabled = false
+            textView.backgroundColor = .clear
+            stack.addArrangedSubview(textView)
+            embed(stack, in: container)
             rows.append(container)
         }
         return sectionStack(rows)
@@ -581,7 +660,7 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
 
         let textView = UITextView()
         textView.text = "blocked-textview-text"
-        textView.textColor = .systemBlue
+        textView.textColor = .systemRed
         textView.layer.borderWidth = 1
         textView.layer.borderColor = UIColor.systemGray4.cgColor
         textView.accessibilityIdentifier = "nr-block"
@@ -612,6 +691,7 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         fieldsStack.addArrangedSubview(toggleLabel)
 
         let toggleButton = UIButton(type: .system)
+        toggleButton.tintColor = .purple
         toggleButton.setTitle("Toggle block on label above", for: .normal)
         toggleButton.addAction(UIAction { _ in
             let isBlocked = toggleLabel.accessibilityIdentifier != "nr-block"

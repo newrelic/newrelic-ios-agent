@@ -62,27 +62,32 @@ class UILabelThingy: SessionReplayViewThingy {
     /// and applying it would force-mask every ordinary label and defeat the
     /// "show application text" configuration. Only an explicit `true` adds masking,
     /// so this can never expose text that was masked before. NR-566XXX.
+    /// - Parameter userInputRequestMasks: whether an explicit user-input mask request also masks this
+    ///   element. True for SwiftUI text, where an input can't be told from static text. False for a
+    ///   real `UILabel`, which is known to be static text, so maskUserInputText doesn't mask it.
     /// - Parameter isInputControlLabel: true when this label belongs to a text
     ///   input control (e.g. a `UITextFieldLabel` rendering a `TextField`'s
     ///   placeholder or unfocused value). For such labels an UNMASK override is
     ///   only honored in Custom masking mode — under the Default strategy the
     ///   override is dropped so the placeholder/value stays masked, matching how
     ///   the control's text content is treated. NR-566XXX.
-    static func resolveIsMasked(_ viewDetails: ViewDetails, isInputControlLabel: Bool = false) -> Bool {
+    static func resolveIsMasked(_ viewDetails: ViewDetails,
+                                isInputControlLabel: Bool = false,
+                                userInputRequestMasks: Bool = true) -> Bool {
         if let isMasked = viewDetails.isMasked {
             return isMasked
         }
 
-        var applicationTextOverride = viewDetails.maskApplicationText
+        // A TextField's own label is a text input: the user-input rule governs it, not
+        // maskApplicationText.
         if isInputControlLabel {
-            applicationTextOverride = ViewDetails.honoringDefaultStrategy(applicationTextOverride,
-                                                                          isDefaultMode: ViewDetails.currentMaskingModeIsDefault())
+            return ViewDetails.resolveTextInputIsMasked(viewDetails, isSecureTextEntry: false)
         }
 
-        let applicationTextMasked = applicationTextOverride
+        let applicationTextMasked = viewDetails.maskApplicationText
             ?? (NRMAHarvestController.configuration()?.session_replay_maskApplicationText ?? true)
 
-        let userInputMaskRequested = (viewDetails.maskUserInputText == true)
+        let userInputMaskRequested = userInputRequestMasks && (viewDetails.maskUserInputText == true)
 
         return applicationTextMasked || userInputMaskRequested
     }
@@ -102,7 +107,8 @@ class UILabelThingy: SessionReplayViewThingy {
         self.viewDetails.frame = frame
 
         self.isMasked = UILabelThingy.resolveIsMasked(viewDetails,
-                                                       isInputControlLabel: UILabelThingy.isTextInputLabel(view))
+                                                       isInputControlLabel: UILabelThingy.isTextInputLabel(view),
+                                                       userInputRequestMasks: false)
 
         self.isBlocked = viewDetails.blockView ?? false
 
