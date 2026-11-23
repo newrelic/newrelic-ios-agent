@@ -405,6 +405,24 @@ struct MaskingView: View {
                     }
                 }
 
+                sectionTitle("Text Mask vs Images")
+                VStack(alignment: .leading, spacing: 8) {
+                    caption("maskApplicationText true, maskAllImages false, maskUserInputText false: Text masked (blue); Image stays visible (green)")
+                    NRConditionalMaskView(maskApplicationText: true, maskUserInputText: false, maskAllImages: false) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Static Text (expect masked)").foregroundColor(.maskedColor)
+                            Image(systemName: "star.fill").foregroundColor(.unmaskedColor)
+                        }
+                    }
+                    caption("maskAllImages true only: Image masked (blue); Text visible (green)")
+                    NRConditionalMaskView(maskApplicationText: false, maskUserInputText: false, maskAllImages: true) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Static Text (expect unmasked)").foregroundColor(.unmaskedColor)
+                            Image(systemName: "star.fill").foregroundColor(.maskedColor)
+                        }
+                    }
+                }
+
                 sectionTitle("blockView Combinations")
                 VStack(alignment: .leading, spacing: 8) {
                     NRConditionalMaskView(blockView: true) {

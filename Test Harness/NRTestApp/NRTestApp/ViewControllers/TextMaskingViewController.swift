@@ -39,11 +39,12 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         let blockCombinationsStack = createBlockCombinationsSection()
         let swiftUIInUIKitStack = createSwiftUIInUIKitSection()
         let textVsInputStack = createTextVersusInputSection()
+        let textVsOtherStack = createTextVersusImagesSection()
 
         let tableViewStack = createTableViewSection()
 
         let scrollView = UIScrollView()
-        let mainStack = UIStackView(arrangedSubviews: [blockedStack, searchAndCredentialsStack, maskedStack, unmaskedStack, customMaskedStack, customUnmaskedStack, parentChildStack, inheritanceStack, perPropertyStack, multiLevelStack, blockCombinationsStack, swiftUIInUIKitStack, textVsInputStack, tableViewStack])
+        let mainStack = UIStackView(arrangedSubviews: [blockedStack, searchAndCredentialsStack, maskedStack, unmaskedStack, customMaskedStack, customUnmaskedStack, parentChildStack, inheritanceStack, perPropertyStack, multiLevelStack, blockCombinationsStack, swiftUIInUIKitStack, textVsInputStack, textVsOtherStack, tableViewStack])
 //        let mainStack = UIStackView(arrangedSubviews: [maskedStack, parentChildStack])
 //        let mainStack = UIStackView(arrangedSubviews: [maskedStack])//, parentChildStack])
 
@@ -546,6 +547,69 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
             textView.isScrollEnabled = false
             textView.backgroundColor = .clear
             stack.addArrangedSubview(textView)
+            embed(stack, in: container)
+            rows.append(container)
+        }
+        return sectionStack(rows)
+    }
+
+    // A mask set for one kind of content must not mask the others: a text-only mask leaves images
+    // alone, and an images-only mask leaves text alone.
+    private func createTextVersusImagesSection() -> UIStackView {
+        var rows = sectionHeader("Text Mask vs Images",
+                                 description: "Each parent masks one kind of content. Only that kind should be masked (blue); the rest stays visible (green).")
+
+        struct Case {
+            let title: String
+            let text: Bool?
+            let input: Bool?
+            let images: Bool?
+        }
+        let cases = [
+            Case(title: "maskApplicationText true, maskAllImages false, maskUserInputText false", text: true, input: false, images: false),
+            Case(title: "maskApplicationText true only (images and input unset)", text: true, input: nil, images: nil),
+            Case(title: "maskAllImages true, maskApplicationText false, maskUserInputText false", text: false, input: false, images: true),
+            Case(title: "maskUserInputText true, maskApplicationText false, maskAllImages false", text: false, input: true, images: false)
+        ]
+        for testCase in cases {
+            // An unset property falls to the config default, so only an explicit value has an expectation.
+            let container = makeContainer(color: .systemGray)
+            container.maskApplicationText = testCase.text
+            container.maskUserInputText = testCase.input
+            container.maskAllImages = testCase.images
+
+            let stack = UIStackView()
+            stack.axis = .vertical
+            stack.spacing = 6
+            let title = makeLabel(testCase.title)
+            title.font = .boldSystemFont(ofSize: 13)
+            title.textColor = .label
+            title.maskApplicationText = false // keep the heading readable
+            stack.addArrangedSubview(title)
+
+            func tag(_ kind: String, _ masked: Bool?) -> String {
+                guard let masked = masked else { return "\(kind) (config default)" }
+                return "\(kind) (expect \(masked ? "masked" : "unmasked"))"
+            }
+            stack.addArrangedSubview(makeLabel(tag("UILabel", testCase.text), expectMasked: testCase.text))
+
+            let imageRow = UIStackView()
+            imageRow.spacing = 8
+            let imageView = UIImageView(image: UIImage(systemName: "star.fill"))
+            imageView.contentMode = .scaleAspectFit
+            imageView.tintColor = testCase.images.map { expectationColor(masked: $0) } ?? .systemGray
+            imageView.widthAnchor.constraint(equalToConstant: 28).isActive = true
+            imageView.heightAnchor.constraint(equalToConstant: 28).isActive = true
+            imageRow.addArrangedSubview(imageView)
+            imageRow.addArrangedSubview(makeLabel(tag("UIImageView", testCase.images), expectMasked: nil))
+            stack.addArrangedSubview(imageRow)
+
+            let field = UITextField()
+            field.borderStyle = .roundedRect
+            field.text = tag("UITextField", testCase.input)
+            field.textColor = testCase.input.map { expectationColor(masked: $0) } ?? .label
+            stack.addArrangedSubview(field)
+
             embed(stack, in: container)
             rows.append(container)
         }
