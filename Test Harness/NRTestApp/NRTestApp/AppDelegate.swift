@@ -50,6 +50,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         NewRelic.addSessionReplayMaskViewClass("SecureLabel")
         NewRelic.addSessionReplayUnmaskViewClass("UnsecureLabel")
+        NewRelic.addSessionReplayMaskViewClass("NRTestApp.ModuleMaskedLabel")
+        NewRelic.addSessionReplayUnmaskViewClass("NRTestApp.ModuleUnmaskedLabel")
 
         NewRelic.setMaxEventPoolSize(5000)
         NewRelic.setMaxEventBufferTime(60)

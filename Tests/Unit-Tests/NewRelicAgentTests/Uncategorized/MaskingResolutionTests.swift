@@ -117,6 +117,148 @@ struct MaskingResolutionTests {
         #expect(ViewDetails.maskTag(for: "nr-masked") == .none)
     }
 
+    // MARK: - Class-name rule matching
+
+    @Test func `Class rules match plain, module-prefixed and sanitized names`() {
+        #expect(ViewDetails.classNameMatches("UILabel", in: ["UILabel"]))
+        #expect(!ViewDetails.classNameMatches("UILabel", in: ["UITextField"]))
+        #expect(!ViewDetails.classNameMatches("", in: [""]))
+        #expect(!ViewDetails.classNameMatches("UILabel", in: nil))
+        // Module prefix is accepted because String(describing:) never includes it.
+        #expect(ViewDetails.classNameMatches("CardView", in: ["MyApp.CardView"]))
+        // Generics are sanitized exactly like the view name: Box<Item> -> Box_Item.
+        #expect(ViewDetails.classNameMatches("Box_Item", in: ["Box<Item>"]))
+        #expect(ViewDetails.classNameMatches("Box_Item", in: ["MyApp.Box<Item>"]))
+        // The module inside a generic argument list is not treated as the class's own prefix.
+        #expect(ViewDetails.classNameMatches("Box_MyApp_Item", in: ["Box<MyApp.Item>"]))
+        // Nested types keep their outer type.
+        #expect(ViewDetails.classNameMatches("Outer_Inner", in: ["Outer.Inner"]))
+        // Prefix rewrites match the sanitizer: NewRelic. -> NR, SwiftUI. removed.
+        #expect(ViewDetails.classNameMatches("NRFoo", in: ["NewRelic.Foo"]))
+        #expect(ViewDetails.classNameMatches("Text", in: ["SwiftUI.Text"]))
+    }
+
+    @Test func `Class rules do not match subclasses or partial names`() {
+        #expect(!ViewDetails.classNameMatches("MyLabel", in: ["UILabel"]))
+        #expect(!ViewDetails.classNameMatches("UILabelSubclass", in: ["UILabel"]))
+        #expect(!ViewDetails.classNameMatches("Label", in: ["UILabel"]))
+    }
+
+    @Test func `Class rules longer than the view name cap still match`() {
+        let long = "ThisIsAnExtremelyLongViewClassNameThatGoesWellBeyondFiftyCharacters"
+        let viewName = String(long.prefix(50))
+        #expect(ViewDetails.classNameMatches(viewName, in: [long]))
+    }
+
+    // MARK: - Mask rule sets (cached lookup built from the harvest configuration)
+
+    private func withConfiguration(_ body: (NRMAHarvesterConfiguration) -> Void) {
+        let config = NRMAMaskingTestConfiguration.install()
+        defer { NRMAMaskingTestConfiguration.uninstall() }
+        body(config)
+    }
+
+    @Test func `Rule sets are built from the configuration lists`() {
+        withConfiguration { config in
+            config.session_replay_maskedAccessibilityIdentifiers = ["secret", "private"]
+            config.session_replay_unmaskedAccessibilityIdentifiers = ["public"]
+            config.session_replay_maskedClassNames = ["SecureLabel", "MyApp.Card<Item>"]
+            config.session_replay_unmaskedClassNames = ["UnsecureLabel"]
+
+            let rules = ViewDetails.maskRules(for: config)
+            #expect(rules.identifiersMasked == ["secret", "private"])
+            #expect(rules.identifiersUnmasked == ["public"])
+            // Class names are stored sanitized, with and without the module prefix.
+            #expect(rules.classesMasked == ["SecureLabel", "MyApp_Card_Item", "Card_Item"])
+            #expect(rules.classesUnmasked == ["UnsecureLabel"])
+        }
+    }
+
+    @Test func `Rule sets are empty for empty or missing lists`() {
+        withConfiguration { config in
+            config.session_replay_maskedAccessibilityIdentifiers = NSMutableArray()
+            config.session_replay_unmaskedAccessibilityIdentifiers = nil
+            config.session_replay_maskedClassNames = nil
+            config.session_replay_unmaskedClassNames = NSMutableArray()
+
+            let rules = ViewDetails.maskRules(for: config)
+            #expect(rules.identifiersMasked.isEmpty)
+            #expect(rules.identifiersUnmasked.isEmpty)
+            #expect(rules.classesMasked.isEmpty)
+            #expect(rules.classesUnmasked.isEmpty)
+        }
+    }
+
+    @Test func `Rule sets ignore non-string entries and empty class names`() {
+        withConfiguration { config in
+            config.session_replay_maskedAccessibilityIdentifiers = ["id", 5, NSNull()]
+            config.session_replay_maskedClassNames = ["", 7, "UILabel"]
+
+            let rules = ViewDetails.maskRules(for: config)
+            #expect(rules.identifiersMasked == ["id"])
+            #expect(rules.classesMasked == ["UILabel"])
+            #expect(!rules.classesMasked.contains(""))
+        }
+    }
+
+    @Test func `Rule sets are built once per configuration`() {
+        withConfiguration { config in
+            config.session_replay_maskedAccessibilityIdentifiers = ["first"]
+            config.session_replay_maskedClassNames = ["First"]
+            #expect(ViewDetails.maskRules(for: config).identifiersMasked == ["first"])
+
+            // The lists are fixed while replay runs: a later change to the same configuration
+            // object is not picked up, which is what makes the per-view lookup cheap.
+            config.session_replay_maskedAccessibilityIdentifiers?.add("second")
+            config.session_replay_maskedClassNames?.add("Second")
+            let cached = ViewDetails.maskRules(for: config)
+            #expect(cached.identifiersMasked == ["first"])
+            #expect(cached.classesMasked == ["First"])
+        }
+    }
+
+    @Test func `Rule sets are rebuilt when the configuration object changes`() {
+        withConfiguration { first in
+            first.session_replay_maskedAccessibilityIdentifiers = ["one"]
+            #expect(ViewDetails.maskRules(for: first).identifiersMasked == ["one"])
+
+            withConfiguration { second in
+                second.session_replay_maskedAccessibilityIdentifiers = ["two"]
+                #expect(ViewDetails.maskRules(for: second).identifiersMasked == ["two"])
+            }
+            // Going back to the first configuration rebuilds from its own lists.
+            #expect(ViewDetails.maskRules(for: first).identifiersMasked == ["one"])
+        }
+    }
+
+    @Test func `Rule sets drive the mask decision for a view`() {
+        withConfiguration { config in
+            config.session_replay_mode = SessionReplayMaskingMode.custom
+            config.session_replay_maskedAccessibilityIdentifiers = ["secret"]
+            config.session_replay_unmaskedAccessibilityIdentifiers = ["public"]
+            config.session_replay_maskedClassNames = ["UILabel"]
+
+            let rules = ViewDetails.maskRules(for: config)
+            let masked = ViewDetails.MaskInputs(
+                isDefaultMode: false, tag: .none,
+                identifierInMaskedList: rules.identifiersMasked.contains("secret"),
+                identifierInUnmaskedList: rules.identifiersUnmasked.contains("secret"),
+                classInMaskedList: rules.classesMasked.contains("UILabel"),
+                classInUnmaskedList: false,
+                parentState: nil, maskApplicationText: nil, maskUserInputText: nil, maskAllImages: nil)
+            #expect(ViewDetails.resolveIsMasked(masked) == true)
+
+            let unmasked = ViewDetails.MaskInputs(
+                isDefaultMode: false, tag: .none,
+                identifierInMaskedList: rules.identifiersMasked.contains("public"),
+                identifierInUnmaskedList: rules.identifiersUnmasked.contains("public"),
+                classInMaskedList: rules.classesMasked.contains("UITextField"),
+                classInUnmaskedList: false,
+                parentState: nil, maskApplicationText: nil, maskUserInputText: nil, maskAllImages: nil)
+            #expect(ViewDetails.resolveIsMasked(unmasked) == false)
+        }
+    }
+
     // MARK: - Hierarchy composition (parent > child > grandchild)
 
     private enum Mechanism: CaseIterable {

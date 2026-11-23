@@ -36,11 +36,12 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         let perPropertyStack = createPerPropertySection()
         let multiLevelStack = createMultiLevelSection()
         let blockCombinationsStack = createBlockCombinationsSection()
+        let classRulesStack = createClassRulesSection()
 
         let tableViewStack = createTableViewSection()
 
         let scrollView = UIScrollView()
-        let mainStack = UIStackView(arrangedSubviews: [blockedStack, searchAndCredentialsStack, maskedStack, unmaskedStack, customMaskedStack, customUnmaskedStack, parentChildStack, inheritanceStack, perPropertyStack, multiLevelStack, blockCombinationsStack, tableViewStack])
+        let mainStack = UIStackView(arrangedSubviews: [blockedStack, searchAndCredentialsStack, maskedStack, unmaskedStack, customMaskedStack, customUnmaskedStack, parentChildStack, inheritanceStack, perPropertyStack, multiLevelStack, blockCombinationsStack, classRulesStack, tableViewStack])
 //        let mainStack = UIStackView(arrangedSubviews: [maskedStack, parentChildStack])
 //        let mainStack = UIStackView(arrangedSubviews: [maskedStack])//, parentChildStack])
 
@@ -470,6 +471,35 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
             embed(label, in: container)
             rows.append(container)
         }
+        return sectionStack(rows)
+    }
+
+    // Class rules registered in AppDelegate. They match the view's class name exactly (a module
+    // prefix is accepted); subclasses are not matched. A masked parent still wins over an unmask rule.
+    private func createClassRulesSection() -> UIStackView {
+        var rows = sectionHeader("Class Name Rules",
+                                 description: "addSessionReplayMaskViewClass / addSessionReplayUnmaskViewClass match the exact class name. Subclasses are not matched.")
+
+        func addRow(_ label: UILabel, text: String, expectMasked: Bool?, parentTag: String? = nil) {
+            label.text = text
+            label.font = .systemFont(ofSize: 13)
+            label.numberOfLines = 0
+            if let expectMasked = expectMasked {
+                label.textColor = expectationColor(masked: expectMasked)
+            }
+            let container = makeContainer(color: expectMasked.map { expectationColor(masked: $0) } ?? .systemGray)
+            container.accessibilityIdentifier = parentTag
+            embed(label, in: container)
+            rows.append(container)
+        }
+
+        addRow(SecureLabel(), text: "SecureLabel, registered \"SecureLabel\" (expect masked)", expectMasked: true)
+        addRow(UnsecureLabel(), text: "UnsecureLabel, registered \"UnsecureLabel\" (expect unmasked)", expectMasked: false)
+        addRow(ModuleMaskedLabel(), text: "ModuleMaskedLabel, registered \"NRTestApp.ModuleMaskedLabel\" (expect masked)", expectMasked: true)
+        addRow(ModuleUnmaskedLabel(), text: "ModuleUnmaskedLabel, registered \"NRTestApp.ModuleUnmaskedLabel\" (expect unmasked)", expectMasked: false)
+        addRow(SubSecureLabel(), text: "SubSecureLabel, subclass of SecureLabel, not registered (follows the default, not the SecureLabel rule)", expectMasked: nil)
+        addRow(UnsecureLabel(), text: "UnsecureLabel in an nr-mask parent (expect masked)", expectMasked: true, parentTag: "nr-mask")
+        addRow(SecureLabel(), text: "SecureLabel in an nr-unmask parent (expect masked)", expectMasked: true, parentTag: "nr-unmask")
         return sectionStack(rows)
     }
 
