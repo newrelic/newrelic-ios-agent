@@ -380,6 +380,10 @@ public class SessionReplayManager: NSObject {
             NRLOG_AGENT_DEBUG("Failed to encode session replay events to JSON: \(error)")
             return nil
         }
+        
+//        if let jsonString = String(data: jsonData, encoding: .utf8) {
+//            print(jsonString)
+//        }
 
         let uncompressedDataSize = jsonData.count
 

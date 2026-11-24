@@ -4,6 +4,8 @@ import UIKit
 
 // A plain top-level class, so its qualified runtime name is predictable (Module.RuleTestLabel).
 class RuleTestLabel: UILabel {}
+class SubRuleTestLabel: RuleTestLabel {}
+class GenericRuleTestLabel<T>: UILabel {}
 
 // Exhaustive tests for the masking decision (ViewDetails.resolveIsMasked) and for how it
 // composes down a view hierarchy. The decision is a pure function of MaskInputs, so no
@@ -221,6 +223,82 @@ struct MaskingResolutionTests {
         #expect(!candidates.contains("UILabel"))
     }
 
+    // The view's class names feed the mask decision through the cached rule sets.
+    @Test func `A view's class rules come from the configured lists`() {
+        let config = NRMAMaskingTestConfiguration.install()
+        defer { NRMAMaskingTestConfiguration.uninstall() }
+        config.session_replay_maskedClassNames = ["RuleTestLabel", "GenericRuleTestLabel<Int>"]
+        config.session_replay_unmaskedClassNames = [NSStringFromClass(UILabel.self)]
+        let rules = ViewDetails.maskRules(for: config)
+
+        let plain = ViewDetails.classRuleMatches(for: RuleTestLabel(), rules: rules)
+        #expect(plain.masked && !plain.unmasked)
+        let unmasked = ViewDetails.classRuleMatches(for: UILabel(), rules: rules)
+        #expect(!unmasked.masked && unmasked.unmasked)
+        // A subclass does not inherit its parent's rule, in either direction.
+        let sub = ViewDetails.classRuleMatches(for: SubRuleTestLabel(), rules: rules)
+        #expect(!sub.masked && !sub.unmasked)
+        // Generic classes match on their specialization.
+        #expect(ViewDetails.classRuleMatches(for: GenericRuleTestLabel<Int>(), rules: rules).masked)
+        #expect(!ViewDetails.classRuleMatches(for: GenericRuleTestLabel<String>(), rules: rules).masked)
+    }
+
+    @Test func `A module-qualified registration matches the view's class`() {
+        let config = NRMAMaskingTestConfiguration.install()
+        defer { NRMAMaskingTestConfiguration.uninstall() }
+        config.session_replay_maskedClassNames = [NSStringFromClass(RuleTestLabel.self)]
+        let rules = ViewDetails.maskRules(for: config)
+        #expect(ViewDetails.classRuleMatches(for: RuleTestLabel(), rules: rules).masked)
+        #expect(!ViewDetails.classRuleMatches(for: SubRuleTestLabel(), rules: rules).masked)
+    }
+
+    // A wrapper whose identifier is on the masked list masks everything nested inside it by setting the
+    // mask properties on its hosting view, which nested wrappers inherit like any masked parent property.
+    @Test func `A masked SwiftUI identifier sets the mask properties`() {
+        #expect(ViewDetails.wrapperMaskProperty(nil, maskedByIdentifier: true) == true)
+        #expect(ViewDetails.wrapperMaskProperty(false, maskedByIdentifier: true) == true)
+        #expect(ViewDetails.wrapperMaskProperty(true, maskedByIdentifier: true) == true)
+        // Without a masked identifier the explicit value is untouched.
+        #expect(ViewDetails.wrapperMaskProperty(nil, maskedByIdentifier: false) == nil)
+        #expect(ViewDetails.wrapperMaskProperty(false, maskedByIdentifier: false) == false)
+        #expect(ViewDetails.wrapperMaskProperty(true, maskedByIdentifier: false) == true)
+    }
+
+    @Test func `Only masked-list identifiers count as masked SwiftUI identifiers`() {
+        let config = NRMAMaskingTestConfiguration.install()
+        defer { NRMAMaskingTestConfiguration.uninstall() }
+        config.session_replay_maskedAccessibilityIdentifiers = ["config-masked-id"]
+        config.session_replay_unmaskedAccessibilityIdentifiers = ["config-unmasked-id"]
+        #expect(ViewDetails.isSwiftUIIdentifierMasked("config-masked-id"))
+        #expect(!ViewDetails.isSwiftUIIdentifierMasked("config-unmasked-id"))
+        #expect(!ViewDetails.isSwiftUIIdentifierMasked("other-id"))
+        #expect(!ViewDetails.isSwiftUIIdentifierMasked(nil))
+        #expect(!ViewDetails.isSwiftUIIdentifierMasked(""))
+    }
+
+    // Inheriting those properties, a nested wrapper's unmask identifier or property cannot undo the mask.
+    @Test func `Nested wrappers inside a masked identifier stay masked`() {
+        // The outer wrapper's hosting view has all three properties true; the nested one inherits them.
+        let outer = UIView()
+        outer.maskApplicationText = ViewDetails.wrapperMaskProperty(nil, maskedByIdentifier: true)
+        outer.maskUserInputText = ViewDetails.wrapperMaskProperty(nil, maskedByIdentifier: true)
+        outer.maskAllImages = ViewDetails.wrapperMaskProperty(nil, maskedByIdentifier: true)
+        let nested = UIView()
+        outer.addSubview(nested)
+        // The nested wrapper asks for maskApplicationText false: the masked parent wins.
+        nested.maskApplicationText = false
+        let overrides = ViewDetails.directSetMaskingOverrides(view: nested, isDefaultMode: false)
+        #expect(overrides.maskApplicationText == true)
+        #expect(overrides.maskUserInputText == true)
+        #expect(overrides.maskAllImages == true)
+        // And an unmask identifier on the nested wrapper is dropped.
+        #expect(ViewDetails.resolveIdentifierOverride(
+            inMaskedList: false, inUnmaskedList: true, isDefaultMode: false,
+            maskApplicationText: overrides.maskApplicationText,
+            maskUserInputText: overrides.maskUserInputText,
+            maskAllImages: overrides.maskAllImages) == nil)
+    }
+
     // MARK: - Mask rule sets (cached lookup built from the harvest configuration)
 
     @Test func `Rule sets are built from the configuration lists`() {
@@ -234,7 +312,7 @@ struct MaskingResolutionTests {
         let rules = ViewDetails.maskRules(for: config)
         #expect(rules.identifiersMasked == ["secret", "private"])
         #expect(rules.identifiersUnmasked == ["public"])
-        // Class names are stored sanitized, with and without the module prefix.
+        // Class names are stored as registered, plus the form without the module prefix.
         #expect(rules.classesMasked == ["SecureLabel", "MyApp.Card<Item>", "Card<Item>"])
         #expect(rules.classesUnmasked == ["UnsecureLabel"])
     }

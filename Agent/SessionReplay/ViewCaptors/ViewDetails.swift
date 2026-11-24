@@ -461,6 +461,27 @@ struct ViewDetails {
         return [String(describing: type), NSStringFromClass(type)]
     }
 
+    // Whether a SwiftUI sessionReplayIdentifier is on the masked list (local or from the server config).
+    static func isSwiftUIIdentifierMasked(_ identifier: String?) -> Bool {
+        guard let identifier = identifier, !identifier.isEmpty,
+              let config = NRMAHarvestController.configuration() else { return false }
+        return maskRules(for: config).identifiersMasked.contains(identifier)
+    }
+
+    // The value a wrapper sets on its hosting view for a mask property. A wrapper whose identifier is on
+    // the masked list masks everything inside it, so it behaves as if every mask property were true:
+    // nested wrappers then inherit the mask through the same path as a masked parent property.
+    static func wrapperMaskProperty(_ explicit: Bool?, maskedByIdentifier: Bool) -> Bool? {
+        return maskedByIdentifier ? true : explicit
+    }
+
+    // Whether the view's own class has a mask or unmask class rule.
+    static func classRuleMatches(for view: UIView, rules: MaskRuleSets) -> (masked: Bool, unmasked: Bool) {
+        let names = classNameCandidates(for: view)
+        return (names.contains { rules.classesMasked.contains($0) },
+                names.contains { rules.classesUnmasked.contains($0) })
+    }
+
     static func classNameMatches(_ className: String, in registeredNames: [Any]?) -> Bool {
         return !className.isEmpty && registeredClassNames(registeredNames).contains(className)
     }
@@ -524,14 +545,14 @@ struct ViewDetails {
 
         let accessibilityId = view.accessibilityIdentifier
         let rules = maskRules(for: config)
-        let classNames = classNameCandidates(for: view)
+        let classRules = classRuleMatches(for: view, rules: rules)
         let inputs = MaskInputs(
             isDefaultMode: config.session_replay_mode as SessionReplayMaskingMode == SessionReplayMaskingMode.default,
             tag: maskTag(for: accessibilityId),
             identifierInMaskedList: accessibilityId.map { rules.identifiersMasked.contains($0) } ?? false,
             identifierInUnmaskedList: accessibilityId.map { rules.identifiersUnmasked.contains($0) } ?? false,
-            classInMaskedList: classNames.contains { rules.classesMasked.contains($0) },
-            classInUnmaskedList: classNames.contains { rules.classesUnmasked.contains($0) },
+            classInMaskedList: classRules.masked,
+            classInUnmaskedList: classRules.unmasked,
             kind: maskKind(for: view),
             parentState: view.superview?.sessionReplayMaskState,
             maskApplicationText: view.maskApplicationText,
