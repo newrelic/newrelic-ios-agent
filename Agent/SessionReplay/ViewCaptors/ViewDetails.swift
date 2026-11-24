@@ -264,25 +264,27 @@ struct ViewDetails {
             inheritedState: inheritedMaskState,
             isDefaultMode: isDefaultMaskingMode,
             maskApplicationText: self.maskApplicationText,
-            maskUserInputText: self.maskUserInputText)
+            maskUserInputText: self.maskUserInputText,
+            maskAllImages: self.maskAllImages)
     }
 
     // The mask decision for a SwiftUI view, or nil when nothing explicit applies. A masked
     // identifier masks, and so does a masked UIKit ancestor (inheritedMaskState, the resolved state
     // of the hosting view). An unmask, from the identifier list or from an unmasked ancestor, is
     // ignored under the Default strategy and when a mask property is inherited from an ancestor
-    // (maskApplicationText / maskUserInputText are inherited, so true means a mask applies).
+    // (maskApplicationText / maskUserInputText / maskAllImages are inherited, so true means a mask applies).
     static func resolveIdentifierOverride(inMaskedList: Bool,
                                           inUnmaskedList: Bool,
                                           inheritedState: Bool? = nil,
                                           isDefaultMode: Bool,
                                           maskApplicationText: Bool?,
-                                          maskUserInputText: Bool?) -> Bool? {
+                                          maskUserInputText: Bool?,
+                                          maskAllImages: Bool? = nil) -> Bool? {
         if inMaskedList || inheritedState == true {
             return true
         }
         if (inUnmaskedList || inheritedState == false), !isDefaultMode,
-           maskApplicationText != true, maskUserInputText != true {
+           maskApplicationText != true, maskUserInputText != true, maskAllImages != true {
             return false
         }
         return nil

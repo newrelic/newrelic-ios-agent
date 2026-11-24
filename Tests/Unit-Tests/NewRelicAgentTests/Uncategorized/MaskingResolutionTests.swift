@@ -230,6 +230,22 @@ struct MaskingResolutionTests {
         #expect(resolve(inherited: nil) == nil)
     }
 
+    // A child that adds an image mask keeps it under an unmasked UIKit ancestor or an unmask identifier.
+    @Test func `An image mask under an unmask is not cleared`() {
+        func resolve(inherited: Bool? = nil, unmasked: Bool = false, images: Bool?) -> Bool? {
+            ViewDetails.resolveIdentifierOverride(inMaskedList: false, inUnmaskedList: unmasked,
+                                                  inheritedState: inherited, isDefaultMode: false,
+                                                  maskApplicationText: nil, maskUserInputText: nil,
+                                                  maskAllImages: images)
+        }
+        #expect(resolve(inherited: false, images: true) == nil)
+        #expect(resolve(unmasked: true, images: true) == nil)
+        #expect(resolve(inherited: false, images: false) == false)
+        #expect(resolve(inherited: false, images: nil) == false)
+        // A masked ancestor still masks regardless.
+        #expect(resolve(inherited: true, images: false) == true)
+    }
+
     // MARK: - Hierarchy composition (parent > child > grandchild)
 
     private enum Mechanism: CaseIterable {
