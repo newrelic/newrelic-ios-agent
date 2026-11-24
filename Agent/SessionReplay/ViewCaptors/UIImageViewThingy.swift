@@ -34,7 +34,7 @@ class UIImageViewThingy: SessionReplayViewThingy {
     init(view: UIImageView, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
 
-        self.isMasked = UIImageViewThingy.resolveIsMasked(viewDetails)
+        self.isMasked = ViewDetails.resolveImageIsMasked(viewDetails)
 
         self.isBlocked = viewDetails.blockView ?? false
 
@@ -72,7 +72,7 @@ class UIImageViewThingy: SessionReplayViewThingy {
     init(viewDetails: ViewDetails, cgImage: CGImage?, swiftUIImage: SwiftUIGraphicsImage, contentMode: UIView.ContentMode) {
         self.viewDetails = viewDetails
 
-        self.isMasked = UIImageViewThingy.resolveIsMasked(viewDetails)
+        self.isMasked = ViewDetails.resolveImageIsMasked(viewDetails)
 
         self.isBlocked = viewDetails.blockView ?? false
 

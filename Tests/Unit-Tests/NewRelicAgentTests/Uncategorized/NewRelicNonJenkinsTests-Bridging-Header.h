@@ -19,3 +19,4 @@
 BOOL NRMA__isSwiftClass(NRMAClassDataContainer* classData);
 
 
+#import "NRMAMaskingTestConfiguration.h"
