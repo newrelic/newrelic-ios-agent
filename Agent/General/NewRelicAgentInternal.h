@@ -92,6 +92,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void) sessionReplayStart;
 
+- (void) sessionReplayStartIfMissed;
+
 - (void) sessionReplayDisabled;
 
 - (void) sessionReplayEndSession;

@@ -21,7 +21,7 @@ class SessionReplayCapture {
         // Bound the lifetime of every autoreleased UIKit / CF object touched
         // during the walk to a single frame so we don't drag stale references
         // across view-controller tear-downs. NR-566282.
-        return autoreleasepool {
+        return autoreleasepool { ViewDetails.withAncestorClipCache {
             let effectiveViewController = findRootViewController(rootView: rootView)
             var rootViewControllerID:String?
             if let rootViewController = effectiveViewController {
@@ -42,7 +42,7 @@ class SessionReplayCapture {
             setNextIdRecursively(for: &rootThingy)
 
             return SessionReplayFrame(date: Date(), views: rootThingy, rootViewControllerId: rootViewControllerID, rootSwiftUIViewId: rootSwiftUIViewID, size: rootView.frame.size, layoutContainerViewCount: layoutContainerViewCount, navigationStackDepth: navigationStackDepth)
-        }
+        } }
     }
     
     private func buildViewTree(for currentView: UIView, into parentThingy: inout any SessionReplayViewThingy, rootSwiftUIViewID: inout Int?) {
@@ -52,6 +52,9 @@ class SessionReplayCapture {
             for subview in currentView.subviews {
                 if shouldRecord(view: subview) {
                     var childThingy = findRecorderForView(view: subview)
+                    // The node it's recorded under, which isn't its superview when that was
+                    // skipped. Incremental adds and removes have to name the same parent.
+                    childThingy.viewDetails.parentId = parentThingy.viewDetails.viewId
                     if childThingy.viewDetails.isVisible {
                         buildViewTree(for: subview, into: &childThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
                         parentThingy.subviews.append(childThingy)
@@ -101,7 +104,8 @@ class SessionReplayCapture {
                                                        maskAllImages: currentView.maskAllImages,
                                                        maskAllUserTouches: currentView.maskAllUserTouches,
                                                        blockView: currentView.blockView,
-                                                       sessionReplayIdentifier: currentView.swiftUISessionReplayIdentifier
+                                                       sessionReplayIdentifier: currentView.swiftUISessionReplayIdentifier,
+                                                       inheritedMaskState: currentView.sessionReplayMaskState
             )
             
             let context = SwiftUIContext(frame: parentThingy.viewDetails.frame, clip: parentThingy.viewDetails.clip)
@@ -133,6 +137,7 @@ class SessionReplayCapture {
         // Handle UITextField custom text overlay
         if parentThingy.shouldRecordSubviewsComputed, let textView = currentView as? UITextField {
             let textViewThingy = CustomTextThingy(view: textView, viewDetails: ViewDetails(view: currentView))
+            textViewThingy.viewDetails.parentId = parentThingy.viewDetails.viewId
             parentThingy.subviews.append(textViewThingy)
         }
         // Count UILayoutContainerViews if we're inside a UIPanelControllerContentView
@@ -227,6 +232,8 @@ class SessionReplayCapture {
             } else if let rctTextViewClass = NSClassFromString(RCTTextViewLegacy),
                       originalView.isKind(of: rctTextViewClass) {
                 return UILabelThingy(view: originalView, viewDetails: viewDetails)
+            } else if ReactNativeStyle.isSVGView(originalView) {
+                return UIImageViewThingy(svgView: originalView, viewDetails: viewDetails)
             } else {
                 return UIViewThingy(view: originalView, viewDetails: viewDetails)
             }

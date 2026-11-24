@@ -14,6 +14,11 @@ class SessionReplayFrameProcessor {
 
     var takeFullSnapshotNext = true
 
+    // The last full snapshot's <style> element, and the stylesheet-only CSS (see
+    // stylesheetOnlyCSS) in effect for each view since, so a change is added as a rule once.
+    private var styleNodeId: Int?
+    private var stylesheetOnlyCSS = [Int: String]()
+
     // Private queue for thread-safe tree operations
     private let treeProcessingQueue = DispatchQueue(label: "com.newrelic.sessionreplay.tree.processing", qos: .userInitiated)
     
@@ -64,6 +69,7 @@ class SessionReplayFrameProcessor {
         
         var thingyStack = ContiguousArray<NodePair>()
         var cssString = ""
+        stylesheetOnlyCSS.removeAll()
         
         let rootThingy = frame.views
         let rootRRWebNode = rootThingy.generateRRWebNode()
@@ -84,6 +90,10 @@ class SessionReplayFrameProcessor {
             
             node.childNodes.append(contentsOf: childNodes)
             cssString.append(contentsOf: viewThingy.cssDescription())
+            if let css = viewThingy.stylesheetOnlyCSS {
+                cssString.append(contentsOf: "#\(viewThingy.viewDetails.cssSelector) { \(css) } ")
+                stylesheetOnlyCSS[viewThingy.viewDetails.viewId] = css
+            }
         }
         
         let cssTextNode = TextNodeData(id: IDGenerator.shared.getId(),
@@ -95,6 +105,7 @@ class SessionReplayFrameProcessor {
                                              tagName: .style,
                                              attributes: [:],
                                              childNodes: [.text(cssTextNode)])
+        styleNodeId = cssElementNode.id
         
         let headElementNode = ElementNodeData(id: IDGenerator.shared.getId(),
                                               tagName: .head,
@@ -166,11 +177,13 @@ class SessionReplayFrameProcessor {
             case .Add(let change):
                 let nodes = change.node.generateRRWebAdditionNode(parentNodeId: change.parentId)
                 adds.append(contentsOf: nodes)
+                addStylesheetRuleIfChanged(for: change.node, to: &adds)
             case .Update(let change):
                 processMutationUpdates(oldElement: change.oldElement,
                                      newElement: change.newElement,
                                      texts: &texts,
                                      attributes: &attributes)
+                addStylesheetRuleIfChanged(for: change.newElement, to: &adds)
             }
         }
         
@@ -264,6 +277,19 @@ class SessionReplayFrameProcessor {
 
     }
     
+    /// Appends a rule to the stylesheet when a view's stylesheet-only CSS has changed. It
+    /// follows the view's earlier rules, so it overrides them.
+    private func addStylesheetRuleIfChanged(for thingy: any SessionReplayViewThingy,
+                                            to adds: inout [RRWebMutationData.AddRecord]) {
+        let id = thingy.viewDetails.viewId
+        let css = thingy.stylesheetOnlyCSS
+        guard let styleNodeId, css != stylesheetOnlyCSS[id] else { return }
+        let rule = "#\(thingy.viewDetails.cssSelector) { \(css ?? ReactNativeBorderStyle.noBitmapCSS) } "
+        let ruleNode = TextNodeData(id: IDGenerator.shared.getId(), isStyle: true, textContent: rule, childNodes: [])
+        adds.append(.init(parentId: styleNodeId, nextId: nil, node: .text(ruleNode)))
+        stylesheetOnlyCSS[id] = css
+    }
+
     /// Helper function to process mutation updates with improved type safety
     private func processMutationUpdates(oldElement: any SessionReplayViewThingy,
                                       newElement: any SessionReplayViewThingy,

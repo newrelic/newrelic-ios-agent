@@ -39,7 +39,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
        // NewRelic.replaceDeviceIdentifier("myDeviceId")
         
-        NewRelic.addSessionReplayMaskedAccessibilityIdentifier("my-secret-id")
+        NewRelic.addSessionReplayMaskedAccessibilityIdentifier("GenericMaskedLabel")
         NewRelic.addSessionReplayMaskedAccessibilityIdentifier("masked-1")
         NewRelic.addSessionReplayMaskedAccessibilityIdentifier("masked-2")
         NewRelic.addSessionReplayMaskedAccessibilityIdentifier("my-masked-id")
@@ -50,6 +50,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         NewRelic.addSessionReplayMaskViewClass("SecureLabel")
         NewRelic.addSessionReplayUnmaskViewClass("UnsecureLabel")
+        NewRelic.addSessionReplayMaskViewClass("ModuleMaskedLabel")
+        NewRelic.addSessionReplayUnmaskViewClass("ModuleUnmaskedLabel")
 
         NewRelic.setMaxEventPoolSize(5000)
         NewRelic.setMaxEventBufferTime(60)

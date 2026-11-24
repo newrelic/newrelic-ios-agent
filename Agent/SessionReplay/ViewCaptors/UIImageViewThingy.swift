@@ -21,8 +21,12 @@ class UIImageViewThingy: SessionReplayViewThingy {
     var isTinted: Bool = false
     var tintColor: UIColor?
     
+    // False for views drawn as a whole into the image (react-native-svg), whose node
+    // subviews draw nothing themselves.
+    private let recordsSubviews: Bool
+
     var shouldRecordSubviews: Bool {
-        true
+        recordsSubviews
     }
     
     var subviews: [any SessionReplayViewThingy] = []
@@ -30,15 +34,7 @@ class UIImageViewThingy: SessionReplayViewThingy {
     init(view: UIImageView, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
 
-        if let isMasked = viewDetails.isMasked {
-            self.isMasked = isMasked
-        }
-        else if let maskAllImages = viewDetails.maskAllImages {
-            self.isMasked = maskAllImages
-        }
-        else {
-            self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskAllImages ?? true
-        }
+        self.isMasked = ViewDetails.resolveImageIsMasked(viewDetails)
 
         self.isBlocked = viewDetails.blockView ?? false
 
@@ -55,20 +51,28 @@ class UIImageViewThingy: SessionReplayViewThingy {
         }
 
         self.contentMode = UIImageViewThingy.contentModeToCSS(contentMode: view.contentMode)
+        self.recordsSubviews = true
+    }
+
+    /// A react-native-svg view (icons, logos), recorded as the image it draws and masked
+    /// by the same rules as images. NR-652282.
+    init(svgView view: UIView, viewDetails: ViewDetails) {
+        self.viewDetails = viewDetails
+        self.isMasked = UIImageViewThingy.resolveIsMasked(viewDetails)
+        self.isBlocked = viewDetails.blockView ?? false
+
+        if !self.isMasked {
+            self.image = ReactNativeStyle.renderedImage(of: view)
+        }
+
+        self.contentMode = UIImageViewThingy.contentModeToCSS(contentMode: .scaleToFill)
+        self.recordsSubviews = false
     }
     
     init(viewDetails: ViewDetails, cgImage: CGImage?, swiftUIImage: SwiftUIGraphicsImage, contentMode: UIView.ContentMode) {
         self.viewDetails = viewDetails
 
-        if let isMasked = viewDetails.isMasked {
-            self.isMasked = isMasked
-        }
-        else if let maskAllImages = viewDetails.maskAllImages {
-            self.isMasked = maskAllImages
-        }
-        else {
-            self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskAllImages ?? true
-        }
+        self.isMasked = ViewDetails.resolveImageIsMasked(viewDetails)
 
         self.isBlocked = viewDetails.blockView ?? false
 
@@ -86,6 +90,17 @@ class UIImageViewThingy: SessionReplayViewThingy {
         }
 
         self.contentMode = UIImageViewThingy.contentModeToCSS(contentMode: contentMode)
+        self.recordsSubviews = true
+    }
+
+    static func resolveIsMasked(_ viewDetails: ViewDetails) -> Bool {
+        if let isMasked = viewDetails.isMasked {
+            return isMasked
+        }
+        if let maskAllImages = viewDetails.maskAllImages {
+            return maskAllImages
+        }
+        return NRMAHarvestController.configuration()?.session_replay_maskAllImages ?? true
     }
     
     func cssDescription() -> String {
