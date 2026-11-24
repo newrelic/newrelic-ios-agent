@@ -30,15 +30,7 @@ class SwiftUIShapeThingy: SessionReplayViewThingy {
 
     init(viewDetails: ViewDetails, path: SwiftUI.Path, fillColor: ResolvedColor, fillStyle: SwiftUI.FillStyle, fallbackTintColor: UIColor? = nil) {
         self.viewDetails = viewDetails
-        if let isMasked = viewDetails.isMasked {
-            self.isMasked = isMasked
-        }
-        else if let maskAllImages = viewDetails.maskAllImages {
-            self.isMasked = maskAllImages
-        }
-        else {
-            self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskAllImages ?? true
-        }
+        self.isMasked = ViewDetails.resolveImageIsMasked(viewDetails)
         self.isBlocked = viewDetails.blockView ?? false
         self.path = path
         self.fillColor = fillColor

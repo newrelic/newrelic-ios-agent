@@ -299,7 +299,8 @@ final class UIHostingViewRecordOrchestrator {
                                 maskAllImages: viewAttributes.maskAllImages,
                                 maskAllUserTouches: viewAttributes.maskAllUserTouches,
                                 blockView: viewAttributes.blockView,
-                                sessionReplayIdentifier: viewAttributes.sessionReplayIdentifier)
+                                sessionReplayIdentifier: viewAttributes.sessionReplayIdentifier,
+                                inheritedMaskState: viewAttributes.inheritedMaskState)
         }
         
         switch content.value {
