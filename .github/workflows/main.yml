@@ -6,10 +6,13 @@ on:
       - main
       - develop
   pull_request:
+  # On main, builds and uploads the current version when the push that changed it failed to.
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  # Runs on staging and main upload to S3, and a cancelled upload leaves the release without a zip.
+  cancel-in-progress: ${{ github.ref != 'refs/heads/staging' && github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: read
@@ -141,13 +144,30 @@ jobs:
       - name: Run tests on watchOS (using fastlane)
         run: bundle exec fastlane runWatchOSTests device:"Apple Watch SE 3 (40mm) ($TEST_SIMULATOR_OS)"
 
+  # Decides whether this run uploads to ios-v5/; see scripts/release_build_gate.sh.
+  releaseGate:
+    name: ReleaseGate
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    outputs:
+      deploy: ${{ steps.gate.outputs.deploy }}
+      version: ${{ steps.gate.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - id: gate
+        name: Decide whether to build and upload
+        run: bash scripts/release_build_gate.sh "$GITHUB_REF" "$GITHUB_EVENT_NAME" "$BEFORE" "$GITHUB_SHA"
+        env:
+          BEFORE: ${{ github.event.before }}
+
   deployS3:
     name: DeployS3
     # runs-on: will be set to macos-latest when running on actual GHA.
     # *** runs-on: ubuntu-latest is used when running via act on mac os. ***
     runs-on: xcode-27
-    needs: [testIOS, testTVOS, testWatchOS]
-    if: github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main'
+    needs: [testIOS, testTVOS, testWatchOS, releaseGate]
+    if: needs.releaseGate.outputs.deploy == 'true'
     # OIDC trust on the AWS role is pinned to this environment.
     environment: s3-publish
     permissions:
@@ -212,6 +232,17 @@ jobs:
       - id: setOutput
         name: Print name
         run: echo "version=${{ env.version }}"  >> $GITHUB_OUTPUT
+
+      # The gate checked that ios-v5/ has no zip for this version.
+      - name: Check the build is the version the gate approved
+        if: github.ref == 'refs/heads/main'
+        env:
+          GATE_VERSION: ${{ needs.releaseGate.outputs.version }}
+        run: |
+          if [[ "$version" != "$GATE_VERSION" ]]; then
+            echo "::error::Built $version, but the release gate approved $GATE_VERSION."
+            exit 1
+          fi
 
       - name: Configure AWS credentials via GitHub OIDC
         uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
