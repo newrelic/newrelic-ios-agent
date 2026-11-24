@@ -29,6 +29,7 @@ struct MaskingView: View {
     @State private var threeLevelInput2: String = ""
     @State private var textOnlyMaskedInput: String = "TextField under maskApplicationText only"
     @State private var inputOnlyMaskedInput: String = "TextField under maskUserInputText only"
+    @State private var configTextFieldInput: String = "Plain TextField (maskUserInputText from config)"
     @State private var blockedFieldInput: String = "swiftui-blocked-textfield"
     @State private var blockedEditorInput: String = "swiftui-blocked-texteditor"
 
@@ -420,6 +421,82 @@ struct MaskingView: View {
                             Text("Static Text (expect unmasked)").foregroundColor(.unmaskedColor)
                             Image(systemName: "star.fill").foregroundColor(.maskedColor)
                         }
+                    }
+                }
+
+                sectionTitle("Config-Driven Rules")
+                VStack(alignment: .leading, spacing: 8) {
+                    caption("Set in the session replay config. Group 1 follows the config's booleans (no expected color). Groups 2 and 3 expect these custom rules: accessibilityIdentifier mask [config-masked-id] and unmask [config-unmasked-id]. Class rules only apply to UIKit views.")
+
+                    caption("1. Config booleans (outcome follows the config)")
+                    Text("Plain Text (maskApplicationText from config)").foregroundColor(.gray)
+                    TextField("", text: $configTextFieldInput)
+                        .textFieldStyle(.roundedBorder)
+                        .foregroundColor(.gray)
+                    HStack {
+                        Image(systemName: "star.fill").font(.title).foregroundColor(.gray)
+                        Text("Plain Image (maskAllImages from config)").foregroundColor(.gray)
+                    }
+                    Button("Plain Button (maskAllUserTouches from config)") {}.foregroundColor(.gray)
+
+                    caption("2. Custom rules on their own")
+                    NRConditionalMaskView(sessionReplayIdentifier: "config-masked-id") {
+                        Text("identifier config-masked-id (expect masked)").foregroundColor(.maskedColor)
+                    }
+                    NRConditionalMaskView(sessionReplayIdentifier: "config-unmasked-id") {
+                        Text("identifier config-unmasked-id (expect unmasked)").foregroundColor(.unmaskedColor)
+                    }
+
+                    caption("3. Custom rules in a hierarchy (a mask always wins). Each wrapper surrounds a whole card, and the nested wrapper sits deeper in the card's stacks.")
+
+                    // A masked card with a public-looking field inside it.
+                    NRConditionalMaskView(sessionReplayIdentifier: "config-masked-id") {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Account card: config-masked-id (expect masked)")
+                                .font(.headline).foregroundColor(.maskedColor)
+                            Divider()
+                            HStack(alignment: .top, spacing: 12) {
+                                Image(systemName: "person.crop.circle").font(.largeTitle).foregroundColor(.maskedColor)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Jane Doe, jane@example.com (expect masked)")
+                                        .font(.footnote).foregroundColor(.maskedColor)
+                                    NRConditionalMaskView(sessionReplayIdentifier: "config-unmasked-id") {
+                                        Text("Member since 2019: config-unmasked-id inside the masked card (expect masked)")
+                                            .font(.footnote).foregroundColor(.maskedColor)
+                                    }
+                                    NRConditionalMaskView(maskApplicationText: false) {
+                                        Text("Support line 555-0100: maskApplicationText false inside the masked card (expect masked)")
+                                            .font(.footnote).foregroundColor(.maskedColor)
+                                    }
+                                }
+                            }
+                        }
+                        .padding()
+                        .background(Color.maskedColor.opacity(0.08))
+                        .cornerRadius(8)
+                    }
+
+                    // An unmasked card with a sensitive field inside it.
+                    NRConditionalMaskView(sessionReplayIdentifier: "config-unmasked-id") {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Order card: config-unmasked-id (expect unmasked)")
+                                .font(.headline).foregroundColor(.unmaskedColor)
+                            Divider()
+                            HStack(alignment: .top, spacing: 12) {
+                                Image(systemName: "cart").font(.largeTitle).foregroundColor(.unmaskedColor)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("3 items, shipping to the saved address (expect unmasked)")
+                                        .font(.footnote).foregroundColor(.unmaskedColor)
+                                    NRConditionalMaskView(sessionReplayIdentifier: "config-masked-id") {
+                                        Text("Card ending 4242: config-masked-id inside the unmasked card (expect masked)")
+                                            .font(.footnote).foregroundColor(.maskedColor)
+                                    }
+                                }
+                            }
+                        }
+                        .padding()
+                        .background(Color.unmaskedColor.opacity(0.08))
+                        .cornerRadius(8)
                     }
                 }
 

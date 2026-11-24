@@ -198,7 +198,7 @@ struct ViewDetails {
             view.blockView = blockView
         }
 
-        if let shouldMask = ViewDetails.checkIsMasked(view: view, viewName: viewName) {
+        if let shouldMask = ViewDetails.checkIsMasked(view: view) {
             self.isMasked = shouldMask
             view.sessionReplayMaskState = shouldMask
         }
@@ -254,9 +254,11 @@ struct ViewDetails {
         var inMaskedList = false
         var inUnmaskedList = false
         if let sessionReplayIdentifier = sessionReplayIdentifier,
-           let agent = NewRelicAgentInternal.sharedInstance() {
-            inMaskedList = agent.isAccessibilityIdentifierMasked(sessionReplayIdentifier)
-            inUnmaskedList = agent.isAccessibilityIdentifierUnmasked(sessionReplayIdentifier)
+           NewRelicAgentInternal.sharedInstance() != nil,
+           let config = NRMAHarvestController.configuration() {
+            let rules = ViewDetails.maskRules(for: config)
+            inMaskedList = rules.identifiersMasked.contains(sessionReplayIdentifier)
+            inUnmaskedList = rules.identifiersUnmasked.contains(sessionReplayIdentifier)
         }
         self.isMasked = ViewDetails.resolveIdentifierOverride(
             inMaskedList: inMaskedList,
@@ -439,6 +441,92 @@ struct ViewDetails {
         return nil
     }
 
+    // Class rules are matched against the view's raw runtime class name, not the sanitized name used for CSS id.
+    // Matching is exact on the class itself; subclasses are not matched.
+    static func registeredClassNames(_ registeredNames: [Any]?) -> Set<String> {
+        var names = Set<String>()
+        for case let registered as String in registeredNames ?? [] where !registered.isEmpty {
+            names.insert(registered)
+            let unprefixed = droppingModulePrefix(registered)
+            if !unprefixed.isEmpty {
+                names.insert(unprefixed)
+            }
+        }
+        return names
+    }
+
+    // The raw names a view's class goes by: "CardView" and, for a Swift class, "MyApp.CardView".
+    static func classNameCandidates(for view: UIView) -> [String] {
+        let type = type(of: view)
+        return [String(describing: type), NSStringFromClass(type)]
+    }
+
+    // Whether a SwiftUI sessionReplayIdentifier is on the masked list (local or from the server config).
+    static func isSwiftUIIdentifierMasked(_ identifier: String?) -> Bool {
+        guard let identifier = identifier, !identifier.isEmpty,
+              let config = NRMAHarvestController.configuration() else { return false }
+        return maskRules(for: config).identifiersMasked.contains(identifier)
+    }
+
+    // The value a wrapper sets on its hosting view for a mask property. A wrapper whose identifier is on
+    // the masked list masks everything inside it, so it behaves as if every mask property were true:
+    // nested wrappers then inherit the mask through the same path as a masked parent property.
+    static func wrapperMaskProperty(_ explicit: Bool?, maskedByIdentifier: Bool) -> Bool? {
+        return maskedByIdentifier ? true : explicit
+    }
+
+    // Whether the view's own class has a mask or unmask class rule.
+    static func classRuleMatches(for view: UIView, rules: MaskRuleSets) -> (masked: Bool, unmasked: Bool) {
+        let names = classNameCandidates(for: view)
+        return (names.contains { rules.classesMasked.contains($0) },
+                names.contains { rules.classesUnmasked.contains($0) })
+    }
+
+    static func classNameMatches(_ className: String, in registeredNames: [Any]?) -> Bool {
+        return !className.isEmpty && registeredClassNames(registeredNames).contains(className)
+    }
+
+    // The mask rules are set up before Session Replay starts and don't change while it runs, so the
+    // lookup sets are built once per configuration object instead of on every view capture.
+    struct MaskRuleSets {
+        var identifiersMasked = Set<String>()
+        var identifiersUnmasked = Set<String>()
+        var classesMasked = Set<String>()
+        var classesUnmasked = Set<String>()
+    }
+    private static var ruleCacheConfig: NRMAHarvesterConfiguration?
+    private static var ruleCache = MaskRuleSets()
+    private static let ruleCacheLock = NSLock()
+
+    static func maskRules(for config: NRMAHarvesterConfiguration) -> MaskRuleSets {
+        ruleCacheLock.lock()
+        defer { ruleCacheLock.unlock() }
+        if ruleCacheConfig !== config {
+            ruleCacheConfig = config
+            ruleCache = MaskRuleSets(
+                identifiersMasked: Set(locked(config.session_replay_maskedAccessibilityIdentifiers).compactMap { $0 as? String }),
+                identifiersUnmasked: Set(locked(config.session_replay_unmaskedAccessibilityIdentifiers).compactMap { $0 as? String }),
+                classesMasked: registeredClassNames(locked(config.session_replay_maskedClassNames)),
+                classesUnmasked: registeredClassNames(locked(config.session_replay_unmaskedClassNames)))
+        }
+        return ruleCache
+    }
+
+    private static func locked(_ list: NSMutableArray?) -> [Any] {
+        guard let list = list else { return [] }
+        objc_sync_enter(list)
+        defer { objc_sync_exit(list) }
+        return Array(list)
+    }
+
+    // "MyApp.CardView" -> "CardView". Only the part before any generic argument list is searched,
+    // so "Box<MyApp.Item>" keeps its arguments intact.
+    private static func droppingModulePrefix(_ name: String) -> String {
+        let head = name.firstIndex(of: "<").map { name[..<$0] } ?? Substring(name)
+        guard let dot = head.lastIndex(of: ".") else { return name }
+        return String(name[name.index(after: dot)...])
+    }
+
     // The mask property that governs this kind of view.
     private static func kindProperty(_ inputs: MaskInputs) -> Bool? {
         switch inputs.kind {
@@ -450,19 +538,21 @@ struct ViewDetails {
     }
 
     // This function checks if there are any specfic masking rules assigned to a view. If it returns nils, the masking value will be assigned based on the value of the global based on it's type later.
-    private static func checkIsMasked(view: UIView, viewName: String) -> Bool? {
+    private static func checkIsMasked(view: UIView) -> Bool? {
         // Determine if this view should be masked
-        guard let agent = NewRelicAgentInternal.sharedInstance() else { return true }
+        guard NewRelicAgentInternal.sharedInstance() != nil else { return true }
         guard let config = NRMAHarvestController.configuration() else { return true }
 
         let accessibilityId = view.accessibilityIdentifier
+        let rules = maskRules(for: config)
+        let classRules = classRuleMatches(for: view, rules: rules)
         let inputs = MaskInputs(
             isDefaultMode: config.session_replay_mode as SessionReplayMaskingMode == SessionReplayMaskingMode.default,
             tag: maskTag(for: accessibilityId),
-            identifierInMaskedList: accessibilityId.map { agent.isAccessibilityIdentifierMasked($0) } ?? false,
-            identifierInUnmaskedList: accessibilityId.map { agent.isAccessibilityIdentifierUnmasked($0) } ?? false,
-            classInMaskedList: agent.isClassNameMasked(viewName),
-            classInUnmaskedList: agent.isClassNameUnmasked(viewName),
+            identifierInMaskedList: accessibilityId.map { rules.identifiersMasked.contains($0) } ?? false,
+            identifierInUnmaskedList: accessibilityId.map { rules.identifiersUnmasked.contains($0) } ?? false,
+            classInMaskedList: classRules.masked,
+            classInUnmaskedList: classRules.unmasked,
             kind: maskKind(for: view),
             parentState: view.superview?.sessionReplayMaskState,
             maskApplicationText: view.maskApplicationText,

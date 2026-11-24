@@ -37,15 +37,17 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         let perPropertyStack = createPerPropertySection()
         let multiLevelStack = createMultiLevelSection()
         let blockCombinationsStack = createBlockCombinationsSection()
+        let classRulesStack = createClassRulesSection()
         let swiftUIInUIKitStack = createSwiftUIInUIKitSection()
         let textVsInputStack = createTextVersusInputSection()
         let childRulesStack = createSwiftUIChildRulesSection()
+        let configRulesStack = createConfigRulesSection()
         let textVsOtherStack = createTextVersusImagesSection()
 
         let tableViewStack = createTableViewSection()
 
         let scrollView = UIScrollView()
-        let mainStack = UIStackView(arrangedSubviews: [blockedStack, searchAndCredentialsStack, maskedStack, unmaskedStack, customMaskedStack, customUnmaskedStack, parentChildStack, inheritanceStack, perPropertyStack, multiLevelStack, blockCombinationsStack, swiftUIInUIKitStack, childRulesStack, textVsInputStack, textVsOtherStack, tableViewStack])
+        let mainStack = UIStackView(arrangedSubviews: [blockedStack, searchAndCredentialsStack, maskedStack, unmaskedStack, customMaskedStack, customUnmaskedStack, parentChildStack, inheritanceStack, perPropertyStack, multiLevelStack, blockCombinationsStack, classRulesStack, configRulesStack, swiftUIInUIKitStack, childRulesStack, textVsInputStack, textVsOtherStack, tableViewStack])
 //        let mainStack = UIStackView(arrangedSubviews: [maskedStack, parentChildStack])
 //        let mainStack = UIStackView(arrangedSubviews: [maskedStack])//, parentChildStack])
 
@@ -480,6 +482,37 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         return sectionStack(rows)
     }
 
+    // Class rules registered in AppDelegate. They match the view's class name exactly (a module
+    // prefix is accepted); subclasses are not matched. A masked parent still wins over an unmask rule.
+    private func createClassRulesSection() -> UIStackView {
+        var rows = sectionHeader("Class Name Rules",
+                                 description: "addSessionReplayMaskViewClass / addSessionReplayUnmaskViewClass match the exact class name. Subclasses are not matched.")
+
+        func addRow(_ label: UILabel, text: String, expectMasked: Bool?, parentTag: String? = nil) {
+            label.text = text
+            label.font = .systemFont(ofSize: 13)
+            label.numberOfLines = 0
+            if let expectMasked = expectMasked {
+                label.textColor = expectationColor(masked: expectMasked)
+            }
+            let container = makeContainer(color: expectMasked.map { expectationColor(masked: $0) } ?? .systemGray)
+            container.accessibilityIdentifier = parentTag
+            embed(label, in: container)
+            rows.append(container)
+        }
+
+        addRow(SecureLabel(), text: "SecureLabel, registered \"SecureLabel\" (expect masked)", expectMasked: true)
+        addRow(UnsecureLabel(), text: "UnsecureLabel, registered \"UnsecureLabel\" (expect unmasked)", expectMasked: false)
+        addRow(ModuleMaskedLabel(), text: "ModuleMaskedLabel, registered \"NRTestApp.ModuleMaskedLabel\" (expect masked)", expectMasked: true)
+        addRow(ModuleUnmaskedLabel(), text: "ModuleUnmaskedLabel, registered \"NRTestApp.ModuleUnmaskedLabel\" (expect unmasked)", expectMasked: false)
+        addRow(GenericMaskedLabel<Int>(), text: "GenericMaskedLabel<Int>, registered \"GenericMaskedLabel<Int>\" (expect masked)", expectMasked: true)
+        addRow(GenericMaskedLabel<String>(), text: "GenericMaskedLabel<String>, not registered (follows the default)", expectMasked: nil)
+        addRow(SubSecureLabel(), text: "SubSecureLabel, subclass of SecureLabel, not registered (follows the default, not the SecureLabel rule)", expectMasked: nil)
+        addRow(UnsecureLabel(), text: "UnsecureLabel in an nr-mask parent (expect masked)", expectMasked: true, parentTag: "nr-mask")
+        addRow(SecureLabel(), text: "SecureLabel in an nr-unmask parent (expect masked)", expectMasked: true, parentTag: "nr-unmask")
+        return sectionStack(rows)
+    }
+
     // A UIHostingController's SwiftUI Text next to a UILabel, both inside a UIKit container that is
     // masked or unmasked by tag, by identifier list, or by a direct property.
     private func createSwiftUIInUIKitSection() -> UIStackView {
@@ -548,6 +581,84 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
             embed(host.view, in: container)
             rows.append(container)
         }
+        return sectionStack(rows)
+    }
+
+    // Rules that come from the collector's session replay config, not from the app: the masking mode
+    // and its booleans, and custom masking rules. The app can't set or read them, so the first group has
+    // no expected color (the outcome is whatever the config says), and the other groups assume the rules
+    // listed in the description exist on the server.
+    private func createConfigRulesSection() -> UIStackView {
+        var rows = sectionHeader("Config-Driven Rules",
+                                 description: "Set these in the session replay config. Group 1 follows the config's booleans. Groups 2 and 3 expect these custom rules: accessibilityIdentifier mask [config-masked-id], accessibilityIdentifier unmask [config-unmasked-id], class mask [ConfigMaskedLabel], class unmask [ConfigUnmaskedLabel].")
+
+        func heading(_ text: String) -> UILabel {
+            let label = makeLabel(text)
+            label.font = .boldSystemFont(ofSize: 14)
+            label.maskApplicationText = false
+            return label
+        }
+
+        // Group 1: no local rule, so the config's booleans decide.
+        rows.append(heading("1. Config booleans (outcome follows the config)"))
+        func configRow(_ view: UIView, _ text: String) {
+            let container = makeContainer(color: .systemGray)
+            let stack = UIStackView()
+            stack.axis = .vertical
+            stack.spacing = 6
+            stack.addArrangedSubview(makeLabel(text))
+            stack.addArrangedSubview(view)
+            embed(stack, in: container)
+            rows.append(container)
+        }
+        configRow(makeLabel("Plain label"), "maskApplicationText:")
+        let field = UITextField()
+        field.borderStyle = .roundedRect
+        field.text = "Plain text field"
+        configRow(field, "maskUserInputText:")
+        let textView = UITextView()
+        textView.text = "Plain text view"
+        textView.isScrollEnabled = false
+        textView.backgroundColor = .clear
+        configRow(textView, "maskUserInputText:")
+        let imageView = UIImageView(image: UIImage(systemName: "star.fill"))
+        imageView.contentMode = .scaleAspectFit
+        imageView.heightAnchor.constraint(equalToConstant: 28).isActive = true
+        configRow(imageView, "maskAllImages:")
+        let button = UIButton(type: .system)
+        button.setTitle("Tap me (touches follow maskAllUserTouches)", for: .normal)
+        configRow(button, "maskAllUserTouches:")
+
+        // Groups 2 and 3: custom rules from the config.
+        rows.append(heading("2. Custom rules on their own"))
+        func ruleRow(_ label: UILabel, _ text: String, masked: Bool, parentTag: String? = nil) {
+            label.text = text
+            label.font = .systemFont(ofSize: 13)
+            label.numberOfLines = 0
+            label.textColor = expectationColor(masked: masked)
+            let container = makeContainer(color: expectationColor(masked: masked))
+            container.accessibilityIdentifier = parentTag
+            embed(label, in: container)
+            rows.append(container)
+        }
+        func identified(_ identifier: String) -> UILabel {
+            let label = UILabel()
+            label.accessibilityIdentifier = identifier
+            return label
+        }
+        ruleRow(identified("config-masked-id"), "identifier config-masked-id (expect masked)", masked: true)
+        ruleRow(identified("config-unmasked-id"), "identifier config-unmasked-id (expect unmasked)", masked: false)
+        ruleRow(ConfigMaskedLabel(), "class ConfigMaskedLabel (expect masked)", masked: true)
+        ruleRow(ConfigUnmaskedLabel(), "class ConfigUnmaskedLabel (expect unmasked)", masked: false)
+
+        rows.append(heading("3. Custom rules in a hierarchy (a mask always wins)"))
+        ruleRow(identified("config-unmasked-id"), "config-unmasked-id in a config-masked-id parent (expect masked)", masked: true, parentTag: "config-masked-id")
+        ruleRow(ConfigUnmaskedLabel(), "class ConfigUnmaskedLabel in a config-masked-id parent (expect masked)", masked: true, parentTag: "config-masked-id")
+        ruleRow(identified("config-masked-id"), "config-masked-id in a config-unmasked-id parent (expect masked)", masked: true, parentTag: "config-unmasked-id")
+        ruleRow(ConfigMaskedLabel(), "class ConfigMaskedLabel in a config-unmasked-id parent (expect masked)", masked: true, parentTag: "config-unmasked-id")
+        ruleRow(UILabel(), "plain label in a config-unmasked-id parent (expect unmasked)", masked: false, parentTag: "config-unmasked-id")
+        ruleRow(UILabel(), "plain label in a config-masked-id parent (expect masked)", masked: true, parentTag: "config-masked-id")
+        ruleRow(identified("nr-unmask"), "nr-unmask in a config-masked-id parent (expect masked)", masked: true, parentTag: "config-masked-id")
         return sectionStack(rows)
     }
 

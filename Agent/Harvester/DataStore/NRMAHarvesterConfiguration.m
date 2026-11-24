@@ -358,6 +358,12 @@ static long long _accountId;
                     if (![rule.operatorName isKindOfClass:[NSString class]]) {
                         rule.operatorName = nil;
                     }
+                    // Rules are always matched for equality; the operator is only stored and re-serialized.
+                    // Surface any other operator instead of silently treating it as "equals".
+                    if (rule.operatorName != nil && [rule.operatorName caseInsensitiveCompare:@"equals"] != NSOrderedSame) {
+                        NRLOG_AGENT_WARNING(@"Session replay custom masking rule operator \"%@\" is not supported; the rule is matched with \"equals\": %@",
+                                            rule.operatorName, ruleObject);
+                    }
                     [self.session_replay_customRules addObject:rule];
                 }
             }
