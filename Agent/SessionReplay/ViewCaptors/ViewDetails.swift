@@ -198,7 +198,7 @@ struct ViewDetails {
             view.blockView = blockView
         }
 
-        if let shouldMask = ViewDetails.checkIsMasked(view: view, viewName: viewName) {
+        if let shouldMask = ViewDetails.checkIsMasked(view: view) {
             self.isMasked = shouldMask
             view.sessionReplayMaskState = shouldMask
         }
@@ -441,24 +441,28 @@ struct ViewDetails {
         return nil
     }
 
-    // Class rules are matched against the sanitized view name (see sanitizeViewNameForCSS), so a
-    // registered name is sanitized the same way. A module prefix ("MyApp.CardView") is also accepted:
-    // String(describing:) never includes the module, so the prefix is dropped as a second candidate.
+    // Class rules are matched against the view's raw runtime class name, not the sanitized name used for CSS id.
     // Matching is exact on the class itself; subclasses are not matched.
-    static func sanitizedClassNames(_ registeredNames: [Any]?) -> Set<String> {
+    static func registeredClassNames(_ registeredNames: [Any]?) -> Set<String> {
         var names = Set<String>()
         for case let registered as String in registeredNames ?? [] where !registered.isEmpty {
-            names.insert(sanitizeViewNameForCSS(registered))
+            names.insert(registered)
             let unprefixed = droppingModulePrefix(registered)
             if !unprefixed.isEmpty {
-                names.insert(sanitizeViewNameForCSS(unprefixed))
+                names.insert(unprefixed)
             }
         }
         return names
     }
 
-    static func classNameMatches(_ viewName: String, in registeredNames: [Any]?) -> Bool {
-        return !viewName.isEmpty && sanitizedClassNames(registeredNames).contains(viewName)
+    // The raw names a view's class goes by: "CardView" and, for a Swift class, "MyApp.CardView".
+    static func classNameCandidates(for view: UIView) -> [String] {
+        let type = type(of: view)
+        return [String(describing: type), NSStringFromClass(type)]
+    }
+
+    static func classNameMatches(_ className: String, in registeredNames: [Any]?) -> Bool {
+        return !className.isEmpty && registeredClassNames(registeredNames).contains(className)
     }
 
     // The mask rules are set up before Session Replay starts and don't change while it runs, so the
@@ -481,8 +485,8 @@ struct ViewDetails {
             ruleCache = MaskRuleSets(
                 identifiersMasked: Set(locked(config.session_replay_maskedAccessibilityIdentifiers).compactMap { $0 as? String }),
                 identifiersUnmasked: Set(locked(config.session_replay_unmaskedAccessibilityIdentifiers).compactMap { $0 as? String }),
-                classesMasked: sanitizedClassNames(locked(config.session_replay_maskedClassNames)),
-                classesUnmasked: sanitizedClassNames(locked(config.session_replay_unmaskedClassNames)))
+                classesMasked: registeredClassNames(locked(config.session_replay_maskedClassNames)),
+                classesUnmasked: registeredClassNames(locked(config.session_replay_unmaskedClassNames)))
         }
         return ruleCache
     }
@@ -513,20 +517,21 @@ struct ViewDetails {
     }
 
     // This function checks if there are any specfic masking rules assigned to a view. If it returns nils, the masking value will be assigned based on the value of the global based on it's type later.
-    private static func checkIsMasked(view: UIView, viewName: String) -> Bool? {
+    private static func checkIsMasked(view: UIView) -> Bool? {
         // Determine if this view should be masked
         guard NewRelicAgentInternal.sharedInstance() != nil else { return true }
         guard let config = NRMAHarvestController.configuration() else { return true }
 
         let accessibilityId = view.accessibilityIdentifier
         let rules = maskRules(for: config)
+        let classNames = classNameCandidates(for: view)
         let inputs = MaskInputs(
             isDefaultMode: config.session_replay_mode as SessionReplayMaskingMode == SessionReplayMaskingMode.default,
             tag: maskTag(for: accessibilityId),
             identifierInMaskedList: accessibilityId.map { rules.identifiersMasked.contains($0) } ?? false,
             identifierInUnmaskedList: accessibilityId.map { rules.identifiersUnmasked.contains($0) } ?? false,
-            classInMaskedList: rules.classesMasked.contains(viewName),
-            classInUnmaskedList: rules.classesUnmasked.contains(viewName),
+            classInMaskedList: classNames.contains { rules.classesMasked.contains($0) },
+            classInUnmaskedList: classNames.contains { rules.classesUnmasked.contains($0) },
             kind: maskKind(for: view),
             parentState: view.superview?.sessionReplayMaskState,
             maskApplicationText: view.maskApplicationText,

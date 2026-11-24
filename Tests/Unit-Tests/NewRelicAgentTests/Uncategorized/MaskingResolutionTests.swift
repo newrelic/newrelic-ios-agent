@@ -2,6 +2,9 @@ import Foundation
 import Testing
 import UIKit
 
+// A plain top-level class, so its qualified runtime name is predictable (Module.RuleTestLabel).
+class RuleTestLabel: UILabel {}
+
 // Exhaustive tests for the masking decision (ViewDetails.resolveIsMasked) and for how it
 // composes down a view hierarchy. The decision is a pure function of MaskInputs, so no
 // agent singleton or harvest configuration is needed; "config" here means the Default /
@@ -170,23 +173,22 @@ struct MaskingResolutionTests {
 
     // MARK: - Class-name rule matching
 
-    @Test func `Class rules match plain, module-prefixed and sanitized names`() {
+    @Test func `Class rules match plain and module-prefixed names exactly`() {
         #expect(ViewDetails.classNameMatches("UILabel", in: ["UILabel"]))
         #expect(!ViewDetails.classNameMatches("UILabel", in: ["UITextField"]))
         #expect(!ViewDetails.classNameMatches("", in: [""]))
         #expect(!ViewDetails.classNameMatches("UILabel", in: nil))
-        // Module prefix is accepted because String(describing:) never includes it.
+        // Module prefix is accepted because String(describing:) never includes the module.
         #expect(ViewDetails.classNameMatches("CardView", in: ["MyApp.CardView"]))
-        // Generics are sanitized exactly like the view name: Box<Item> -> Box_Item.
-        #expect(ViewDetails.classNameMatches("Box_Item", in: ["Box<Item>"]))
-        #expect(ViewDetails.classNameMatches("Box_Item", in: ["MyApp.Box<Item>"]))
-        // The module inside a generic argument list is not treated as the class's own prefix.
-        #expect(ViewDetails.classNameMatches("Box_MyApp_Item", in: ["Box<MyApp.Item>"]))
-        // Nested types keep their outer type.
-        #expect(ViewDetails.classNameMatches("Outer_Inner", in: ["Outer.Inner"]))
-        // Prefix rewrites match the sanitizer: NewRelic. -> NR, SwiftUI. removed.
-        #expect(ViewDetails.classNameMatches("NRFoo", in: ["NewRelic.Foo"]))
-        #expect(ViewDetails.classNameMatches("Text", in: ["SwiftUI.Text"]))
+        // A module-qualified view name (NSStringFromClass) matches the registered qualified name.
+        #expect(ViewDetails.classNameMatches("MyApp.CardView", in: ["MyApp.CardView"]))
+        // Generics match as written; the module before the generic list is dropped, not the one inside it.
+        #expect(ViewDetails.classNameMatches("Box<Item>", in: ["Box<Item>"]))
+        #expect(ViewDetails.classNameMatches("Box<Item>", in: ["MyApp.Box<Item>"]))
+        #expect(ViewDetails.classNameMatches("Box<MyApp.Item>", in: ["Box<MyApp.Item>"]))
+        #expect(!ViewDetails.classNameMatches("Box<Item>", in: ["Box<MyApp.Item>"]))
+        // Nested types: String(describing:) gives the innermost name.
+        #expect(ViewDetails.classNameMatches("Inner", in: ["Outer.Inner"]))
     }
 
     @Test func `Class rules do not match subclasses or partial names`() {
@@ -195,10 +197,28 @@ struct MaskingResolutionTests {
         #expect(!ViewDetails.classNameMatches("Label", in: ["UILabel"]))
     }
 
-    @Test func `Class rules longer than the view name cap still match`() {
+    // Sanitizing a name (as done for CSS ids) is lossy; class rules must not inherit that, or an
+    // unmask rule could match a class the app never listed.
+    @Test func `Class rules do not collide the way sanitized names do`() {
         let long = "ThisIsAnExtremelyLongViewClassNameThatGoesWellBeyondFiftyCharacters"
-        let viewName = String(long.prefix(50))
-        #expect(ViewDetails.classNameMatches(viewName, in: [long]))
+        let other = String(long.prefix(50)) + "Different"
+        #expect(ViewDetails.classNameMatches(long, in: [long]))
+        #expect(!ViewDetails.classNameMatches(other, in: [long]))
+        #expect(!ViewDetails.classNameMatches(String(long.prefix(50)), in: [long]))
+        // Punctuation is not merged: Box<A.B> and Box_A_B are different classes.
+        #expect(!ViewDetails.classNameMatches("Box_A_B", in: ["Box<A.B>"]))
+        // Prefixes are not rewritten: UIKit.Foo is not UIFoo, and NewRelic.Foo is not NRFoo.
+        #expect(!ViewDetails.classNameMatches("UIFoo", in: ["UIKit.Foo"]))
+        #expect(!ViewDetails.classNameMatches("NRFoo", in: ["NewRelic.Foo"]))
+    }
+
+    @Test func `A view is matched by its runtime class name`() {
+        let candidates = ViewDetails.classNameCandidates(for: RuleTestLabel())
+        #expect(candidates.contains("RuleTestLabel"))
+        #expect(candidates.contains { $0.hasSuffix(".RuleTestLabel") })
+        #expect(ViewDetails.classNameCandidates(for: UILabel()).contains("UILabel"))
+        // The superclass is not a candidate: subclasses don't inherit their parent's rule.
+        #expect(!candidates.contains("UILabel"))
     }
 
     // MARK: - Mask rule sets (cached lookup built from the harvest configuration)
@@ -215,7 +235,7 @@ struct MaskingResolutionTests {
         #expect(rules.identifiersMasked == ["secret", "private"])
         #expect(rules.identifiersUnmasked == ["public"])
         // Class names are stored sanitized, with and without the module prefix.
-        #expect(rules.classesMasked == ["SecureLabel", "MyApp_Card_Item", "Card_Item"])
+        #expect(rules.classesMasked == ["SecureLabel", "MyApp.Card<Item>", "Card<Item>"])
         #expect(rules.classesUnmasked == ["UnsecureLabel"])
     }
 
