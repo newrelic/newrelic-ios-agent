@@ -27,6 +27,8 @@ struct MaskingView: View {
     @State private var perPropInput2: String = ""
     @State private var threeLevelInput1: String = ""
     @State private var threeLevelInput2: String = ""
+    @State private var textOnlyMaskedInput: String = "TextField under maskApplicationText only"
+    @State private var inputOnlyMaskedInput: String = "TextField under maskUserInputText only"
     @State private var blockedFieldInput: String = "swiftui-blocked-textfield"
     @State private var blockedEditorInput: String = "swiftui-blocked-texteditor"
 
@@ -263,7 +265,7 @@ struct MaskingView: View {
                             Image(systemName: "star.fill").foregroundColor(.maskedColor)
                         }
                         NRConditionalMaskView(maskAllUserTouches: true) {
-                            Button("Child mask touches only") {}.foregroundColor(.maskedColor)
+                            Button("Child mask touches only (text not masked, only touches)") {}.foregroundColor(.purple)
                         }
                         Text("Sibling stays unmasked").foregroundColor(.unmaskedColor)
                     }
@@ -353,6 +355,72 @@ struct MaskingView: View {
                             Text("Unmasked parent, mask id (expect masked)").foregroundColor(.maskedColor)
                         }
                     }
+                    NRConditionalMaskView(maskApplicationText: true) {
+                        NRConditionalMaskView(sessionReplayIdentifier: "unmasked-1") {
+                            Text("SSN 123-45-6789 (masked parent, unmask id, expect masked)").foregroundColor(.maskedColor)
+                        }
+                    }
+                    NRConditionalMaskView(maskUserInputText: true) {
+                        NRConditionalMaskView(sessionReplayIdentifier: "unmasked-1") {
+                            Text("User input masked parent, unmask id (expect masked)").foregroundColor(.maskedColor)
+                        }
+                    }
+                    NRConditionalMaskView(maskApplicationText: true) {
+                        NRConditionalMaskView {
+                            NRConditionalMaskView(sessionReplayIdentifier: "unmasked-1") {
+                                Text("Masked grandparent, unmask id (expect masked)").foregroundColor(.maskedColor)
+                            }
+                        }
+                    }
+                    NRConditionalMaskView(maskApplicationText: false) {
+                        NRConditionalMaskView(sessionReplayIdentifier: "unmasked-1") {
+                            Text("Unmasked parent, unmask id (expect unmasked)").foregroundColor(.unmaskedColor)
+                        }
+                    }
+                    NRConditionalMaskView(sessionReplayIdentifier: "unmasked-1") {
+                        Text("No parent, unmask id (expect unmasked)").foregroundColor(.unmaskedColor)
+                    }
+                }
+
+                sectionTitle("Application Text vs User Input")
+                VStack(alignment: .leading, spacing: 8) {
+                    // The captions sit outside the masked views so they stay readable.
+                    caption("maskApplicationText true, maskUserInputText false: Text masked (blue), TextField unmasked (green)")
+                    NRConditionalMaskView(maskApplicationText: true, maskUserInputText: false) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Static Text (expect masked)").foregroundColor(.maskedColor)
+                            TextField("", text: $textOnlyMaskedInput)
+                                .textFieldStyle(.roundedBorder)
+                                .foregroundColor(.unmaskedColor)
+                        }
+                    }
+                    caption("maskApplicationText false, maskUserInputText true: TextField masked (blue). Static SwiftUI Text is also masked, because it can't be told from an input")
+                    NRConditionalMaskView(maskApplicationText: false, maskUserInputText: true) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Static Text (expect masked, see caption)").foregroundColor(.maskedColor)
+                            TextField("", text: $inputOnlyMaskedInput)
+                                .textFieldStyle(.roundedBorder)
+                                .foregroundColor(.maskedColor)
+                        }
+                    }
+                }
+
+                sectionTitle("Text Mask vs Images")
+                VStack(alignment: .leading, spacing: 8) {
+                    caption("maskApplicationText true, maskAllImages false, maskUserInputText false: Text masked (blue); Image stays visible (green)")
+                    NRConditionalMaskView(maskApplicationText: true, maskUserInputText: false, maskAllImages: false) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Static Text (expect masked)").foregroundColor(.maskedColor)
+                            Image(systemName: "star.fill").foregroundColor(.unmaskedColor)
+                        }
+                    }
+                    caption("maskAllImages true only: Image masked (blue); Text visible (green)")
+                    NRConditionalMaskView(maskApplicationText: false, maskUserInputText: false, maskAllImages: true) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Static Text (expect unmasked)").foregroundColor(.unmaskedColor)
+                            Image(systemName: "star.fill").foregroundColor(.maskedColor)
+                        }
+                    }
                 }
 
                 sectionTitle("blockView Combinations")
@@ -422,6 +490,14 @@ struct MaskingView: View {
         }
         .navigationTitle("Masking Permutations")
         .NRTrackView(name: "MaskingPermutationsView")
+    }
+
+    private func caption(_ text: String) -> some View {
+        NRConditionalMaskView(maskApplicationText: false, maskAllUserTouches: false) {
+            Text(text)
+                .font(.footnote)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 
     private func sectionTitle(_ text: String) -> some View {

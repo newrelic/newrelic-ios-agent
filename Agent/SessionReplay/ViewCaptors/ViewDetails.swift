@@ -212,6 +212,7 @@ struct ViewDetails {
           maskAllUserTouches: Bool?,
           blockView: Bool?,
           sessionReplayIdentifier: String?,
+          inheritedMaskState: Bool? = nil,
           isDefaultMaskingMode: Bool = ViewDetails.currentMaskingModeIsDefault()) {
         
         let visibleFrame = frame.intersection(clip)
@@ -250,19 +251,45 @@ struct ViewDetails {
         self.maskAllUserTouches = ViewDetails.honoringDefaultStrategy(maskAllUserTouches, isDefaultMode: isDefaultMaskingMode)
         self.blockView = blockView
 
-        if let sessionReplayIdentifier = sessionReplayIdentifier {
-            guard NewRelicAgentInternal.sharedInstance() != nil,
-                  let config = NRMAHarvestController.configuration() else { return }
+        var inMaskedList = false
+        var inUnmaskedList = false
+        if let sessionReplayIdentifier = sessionReplayIdentifier,
+           NewRelicAgentInternal.sharedInstance() != nil,
+           let config = NRMAHarvestController.configuration() {
             let rules = ViewDetails.maskRules(for: config)
-            // Identifier-based UNMASK overrides are ignored under the Default strategy.
-            if !isDefaultMaskingMode, rules.identifiersUnmasked.contains(sessionReplayIdentifier) {
-                self.isMasked = false
-            }
-            // Identifier-based MASK overrides are always honored (they only add masking).
-            if rules.identifiersMasked.contains(sessionReplayIdentifier) {
-                self.isMasked = true
-            }
+            inMaskedList = rules.identifiersMasked.contains(sessionReplayIdentifier)
+            inUnmaskedList = rules.identifiersUnmasked.contains(sessionReplayIdentifier)
         }
+        self.isMasked = ViewDetails.resolveIdentifierOverride(
+            inMaskedList: inMaskedList,
+            inUnmaskedList: inUnmaskedList,
+            inheritedState: inheritedMaskState,
+            isDefaultMode: isDefaultMaskingMode,
+            maskApplicationText: self.maskApplicationText,
+            maskUserInputText: self.maskUserInputText,
+            maskAllImages: self.maskAllImages)
+    }
+
+    // The mask decision for a SwiftUI view, or nil when nothing explicit applies. A masked
+    // identifier masks, and so does a masked UIKit ancestor (inheritedMaskState, the resolved state
+    // of the hosting view). An unmask, from the identifier list or from an unmasked ancestor, is
+    // ignored under the Default strategy and when a mask property is inherited from an ancestor
+    // (maskApplicationText / maskUserInputText / maskAllImages are inherited, so true means a mask applies).
+    static func resolveIdentifierOverride(inMaskedList: Bool,
+                                          inUnmaskedList: Bool,
+                                          inheritedState: Bool? = nil,
+                                          isDefaultMode: Bool,
+                                          maskApplicationText: Bool?,
+                                          maskUserInputText: Bool?,
+                                          maskAllImages: Bool? = nil) -> Bool? {
+        if inMaskedList || inheritedState == true {
+            return true
+        }
+        if (inUnmaskedList || inheritedState == false), !isDefaultMode,
+           maskApplicationText != true, maskUserInputText != true, maskAllImages != true {
+            return false
+        }
+        return nil
     }
 
     // True when the active session replay masking strategy is "Default". Under the
@@ -316,6 +343,36 @@ struct ViewDetails {
         case none, mask, unmask
     }
 
+    // What a view renders. Each direct mask property only affects its own kind of view:
+    // maskApplicationText masks text, maskUserInputText masks text inputs and maskAllImages masks
+    // images. Containers and other views are not masked by those properties; their children
+    // read the inherited properties themselves.
+    enum MaskKind: Equatable {
+        case other, text, input, image
+    }
+
+    static func maskKind(for view: UIView) -> MaskKind {
+        if view is UITextField || view is UITextView || view is UISearchBar {
+            return .input
+        }
+        #if os(iOS)
+        if view is UIDatePicker || view is UISwitch {
+            return .input
+        }
+        #endif
+        if view is UIImageView {
+            return .image
+        }
+        if let label = view as? UILabel {
+            // SwiftUI renders a TextField's placeholder and value through UITextFieldLabel.
+            return UILabelThingy.isTextInputLabel(label) ? .input : .text
+        }
+        if view is UIButton {
+            return .text
+        }
+        return .other
+    }
+
     // Everything checkIsMasked needs to decide, gathered from the view and the agent
     // configuration so the decision itself is a pure, unit-testable function.
     struct MaskInputs: Equatable {
@@ -325,6 +382,7 @@ struct ViewDetails {
         var identifierInUnmaskedList = false
         var classInMaskedList = false
         var classInUnmaskedList = false
+        var kind = MaskKind.other
         // The parent's resolved mask state (sessionReplayMaskState).
         var parentState: Bool?
         // The view's direct mask properties, including values inherited from ancestors.
@@ -342,8 +400,8 @@ struct ViewDetails {
 
     // Returns the explicit mask decision for a view, or nil when the global default for
     // its type should decide. Precedence: the view's own mask rules, then a masked parent
-    // (state or direct properties), then the view's own unmask rules, then the inherited
-    // parent state.
+    // (state), then the mask property that applies to this kind of view, then the view's own
+    // unmask rules, then the inherited parent state.
     static func resolveIsMasked(_ inputs: MaskInputs) -> Bool? {
         // If masking is in default mode we want to use the default value which is determined by the global for it's type.
         if inputs.isDefaultMode {
@@ -361,10 +419,11 @@ struct ViewDetails {
             return true
         }
 
-        // The same holds for a parent masked through the direct maskApplicationText /
-        // maskUserInputText properties. Inherited values were already assigned to the
-        // view before this runs, so a true value here means a mask applies.
-        if inputs.maskApplicationText == true || inputs.maskUserInputText == true {
+        // The same holds for a mask property inherited from an ancestor, but only the property
+        // for this kind of view counts: maskApplicationText does not mask a text input and
+        // maskUserInputText does not mask a label. Inherited values were already assigned to
+        // the view before this runs.
+        if kindProperty(inputs) == true {
             return true
         }
 
@@ -375,11 +434,6 @@ struct ViewDetails {
 
         // Check if parent is marked as unmasked (propagate unmasking status to children)
         if let parentMasked = inputs.parentState {
-            // An inherited unmask must not override a mask the view requests directly via
-            // its own properties; leave the decision to the per-property masking rules.
-            if inputs.maskAllImages == true {
-                return nil
-            }
             return parentMasked
         }
 
@@ -448,6 +502,16 @@ struct ViewDetails {
         return String(name[name.index(after: dot)...])
     }
 
+    // The mask property that governs this kind of view.
+    private static func kindProperty(_ inputs: MaskInputs) -> Bool? {
+        switch inputs.kind {
+        case .text: return inputs.maskApplicationText
+        case .input: return inputs.maskUserInputText
+        case .image: return inputs.maskAllImages
+        case .other: return nil
+        }
+    }
+
     // This function checks if there are any specfic masking rules assigned to a view. If it returns nils, the masking value will be assigned based on the value of the global based on it's type later.
     private static func checkIsMasked(view: UIView, viewName: String) -> Bool? {
         // Determine if this view should be masked
@@ -463,6 +527,7 @@ struct ViewDetails {
             identifierInUnmaskedList: accessibilityId.map { rules.identifiersUnmasked.contains($0) } ?? false,
             classInMaskedList: rules.classesMasked.contains(viewName),
             classInUnmaskedList: rules.classesUnmasked.contains(viewName),
+            kind: maskKind(for: view),
             parentState: view.superview?.sessionReplayMaskState,
             maskApplicationText: view.maskApplicationText,
             maskUserInputText: view.maskUserInputText,

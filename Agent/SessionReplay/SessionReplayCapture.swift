@@ -104,7 +104,8 @@ class SessionReplayCapture {
                                                        maskAllImages: currentView.maskAllImages,
                                                        maskAllUserTouches: currentView.maskAllUserTouches,
                                                        blockView: currentView.blockView,
-                                                       sessionReplayIdentifier: currentView.swiftUISessionReplayIdentifier
+                                                       sessionReplayIdentifier: currentView.swiftUISessionReplayIdentifier,
+                                                       inheritedMaskState: currentView.sessionReplayMaskState
             )
             
             let context = SwiftUIContext(frame: parentThingy.viewDetails.frame, clip: parentThingy.viewDetails.clip)

@@ -140,9 +140,20 @@ Masking settings propagate **down** the view hierarchy. A masked parent takes pr
 |---|---|
 | Parent `maskApplicationText: true`, no child override | All descendant `Text` nodes masked |
 | Parent `maskApplicationText: true`, child `maskApplicationText: false` | Child subtree stays masked (parent wins) |
+| Parent `maskApplicationText: true`, `maskUserInputText: false` | `Text` masked; `TextField` / `TextEditor` not masked (each property only affects its own kind of content) |
+| Parent `maskUserInputText: true`, `maskApplicationText: false` | `TextField` / `TextEditor` masked; UIKit labels not masked (SwiftUI `Text` is also masked, see below) |
+| Parent masked, child has an unmasked `sessionReplayIdentifier` | Child stays masked (parent wins) |
+| Masked UIKit ancestor (`nr-mask`, masked identifier or class) above a `UIHostingController` | Hosted SwiftUI content is masked, even where it has an unmask identifier |
+| Unmasked UIKit ancestor (`nr-unmask`, unmasked identifier or class) above a `UIHostingController` | Hosted SwiftUI content is unmasked, unless a mask property is inherited |
 | Child masked inside unmasked parent | Child subtree masked; siblings unmasked |
 | `blockView: true` on parent | Entire subtree replaced with opaque black block |
 | `sessionReplayIdentifier` set | Provides a stable node ID across sessions for that element |
+
+**Each property governs its own kind of content.** `maskApplicationText` masks text, `maskUserInputText` masks text inputs (`TextField`, `TextEditor`, date pickers, switches) and `maskAllImages` masks images. Setting one never masks content of another kind. A container is not masked by these properties itself; its children read the inherited values.
+
+**Limitation.** SwiftUI draws some `TextField` text as plain display-list text, which can't be told from `Text`. For that content, either `maskApplicationText: true` or `maskUserInputText: true` masks it. A `TextField` backed by a `UITextField` follows `maskUserInputText` only.
+
+**UIKit ancestors.** `nr-mask`, `nr-unmask` and the identifier and class lists on a UIKit ancestor of a `UIHostingController` apply to the SwiftUI content inside it, with the same precedence as in UIKit: a mask beats an unmask, and an unmask is ignored under the Default strategy.
 
 ### Masking Test Coverage (MaskingView.swift)
 
@@ -155,6 +166,8 @@ The `MaskingView` test file verifies all permutations:
 5. **Deep nesting (4+ levels)** — mixed masking across hierarchy levels
 6. **Sibling mixing** — sibling views with different masking, each with explicit `sessionReplayIdentifier`
 8. **NavigationLink within masked parent** — destination inherits masking
+9. **Identifier masking** — masked and unmasked `sessionReplayIdentifier` under masked and unmasked parents, including `maskUserInputText` parents and a masked grandparent
+10. **Application text vs user input** — `maskApplicationText` and `maskUserInputText` set to opposite values; each only masks its own kind of content
 
 ---
 
@@ -214,7 +227,7 @@ struct ConfidentialView: View {
 | `SwiftUI/AttributedTextView.swift` | Attributed text with custom formatting runs |
 | `SwiftUI/TintedSymbolsView.swift` | SF Symbol tinting |
 | `SwiftUI/NavigationStackView.swift` | iOS 16+ NavigationStack with typed path, programmatic nav, search |
-| `SwiftUI/MaskingView.swift` | All masking permutations (7 scenarios) |
+| `SwiftUI/MaskingView.swift` | All masking permutations, including identifier masking and application text vs user input |
 | `SwiftUI/UITabBarView/SwiftUITabBar.swift` | Multi-tab layout (Dashboard, Form, Charts, Alerts, Profile, Media, Settings) |
 | `SwiftUI/UITabBarView/FormView.swift` | Complex form (TextField, DatePicker, Picker, Toggle, TextEditor, Stepper) |
 | `SwiftUI/NewRelicSessionReplay/ClaimFormView.swift` | Insurance claim form (iOS 16+) with Picker, Toggle, TextField, ActionSheet |

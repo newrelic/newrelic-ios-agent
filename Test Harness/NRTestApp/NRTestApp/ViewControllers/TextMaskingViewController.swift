@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SwiftUI
 import NewRelic
 
 #if os(iOS)
@@ -37,11 +38,15 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         let multiLevelStack = createMultiLevelSection()
         let blockCombinationsStack = createBlockCombinationsSection()
         let classRulesStack = createClassRulesSection()
+        let swiftUIInUIKitStack = createSwiftUIInUIKitSection()
+        let textVsInputStack = createTextVersusInputSection()
+        let childRulesStack = createSwiftUIChildRulesSection()
+        let textVsOtherStack = createTextVersusImagesSection()
 
         let tableViewStack = createTableViewSection()
 
         let scrollView = UIScrollView()
-        let mainStack = UIStackView(arrangedSubviews: [blockedStack, searchAndCredentialsStack, maskedStack, unmaskedStack, customMaskedStack, customUnmaskedStack, parentChildStack, inheritanceStack, perPropertyStack, multiLevelStack, blockCombinationsStack, classRulesStack, tableViewStack])
+        let mainStack = UIStackView(arrangedSubviews: [blockedStack, searchAndCredentialsStack, maskedStack, unmaskedStack, customMaskedStack, customUnmaskedStack, parentChildStack, inheritanceStack, perPropertyStack, multiLevelStack, blockCombinationsStack, classRulesStack, swiftUIInUIKitStack, childRulesStack, textVsInputStack, textVsOtherStack, tableViewStack])
 //        let mainStack = UIStackView(arrangedSubviews: [maskedStack, parentChildStack])
 //        let mainStack = UIStackView(arrangedSubviews: [maskedStack])//, parentChildStack])
 
@@ -382,7 +387,7 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
             let title = makeLabel(parentMasked ? "Parent masks all four; child flips ONE (expect all masked)"
                                                : "Parent unmasks all four; child masks ONE (expect only that one masked)")
             title.font = .boldSystemFont(ofSize: 13)
-            title.textColor = expectationColor(masked: true)
+            title.textColor = .label // A heading, not part of the test: no expected outcome.
             stack.addArrangedSubview(title)
 
             let childValue = !parentMasked
@@ -407,7 +412,9 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
 
             let button = UIButton(type: .system)
             button.setTitle("Child maskAllUserTouches = \(childValue)", for: .normal)
-            button.setTitleColor(expectationColor(masked: true), for: .normal)
+            // Under a masked parent the title is masked text. Under an unmasked parent only touches
+            // are masked, so the title text stays visible: purple marks touch-only masking.
+            button.setTitleColor(parentMasked ? expectationColor(masked: true) : .systemPurple, for: .normal)
             button.maskAllUserTouches = childValue
             stack.addArrangedSubview(button)
 
@@ -500,6 +507,276 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         addRow(SubSecureLabel(), text: "SubSecureLabel, subclass of SecureLabel, not registered (follows the default, not the SecureLabel rule)", expectMasked: nil)
         addRow(UnsecureLabel(), text: "UnsecureLabel in an nr-mask parent (expect masked)", expectMasked: true, parentTag: "nr-mask")
         addRow(SecureLabel(), text: "SecureLabel in an nr-unmask parent (expect masked)", expectMasked: true, parentTag: "nr-unmask")
+        return sectionStack(rows)
+    }
+
+    // A UIHostingController's SwiftUI Text next to a UILabel, both inside a UIKit container that is
+    // masked or unmasked by tag, by identifier list, or by a direct property.
+    private func createSwiftUIInUIKitSection() -> UIStackView {
+        var rows = sectionHeader("SwiftUI Inside a UIKit Parent",
+                                 description: "The SwiftUI Text should follow the same masked UIKit ancestor as the UILabel beside it.")
+
+        func hostedText(_ text: String, masked: Bool) -> UIView {
+            let host = UIHostingController(rootView: Text(text)
+                .font(.footnote)
+                .foregroundColor(Color(expectationColor(masked: masked))))
+            addChild(host)
+            host.view.backgroundColor = .clear
+            host.didMove(toParent: self)
+            return host.view
+        }
+
+        let cases: [(title: String, masked: Bool, configure: (UIView) -> Void)] = [
+            ("nr-mask container", true, { $0.accessibilityIdentifier = "nr-mask" }),
+            ("masked identifier list container (my-masked-id)", true, { $0.accessibilityIdentifier = "my-masked-id" }),
+            ("maskApplicationText = true container", true, { $0.maskApplicationText = true }),
+            ("nr-unmask container", false, { $0.accessibilityIdentifier = "nr-unmask" }),
+            ("unmasked identifier list container (unmasked-1)", false, { $0.accessibilityIdentifier = "unmasked-1" })
+        ]
+        for testCase in cases {
+            let container = makeContainer(color: expectationColor(masked: testCase.masked))
+            testCase.configure(container)
+            let stack = UIStackView()
+            stack.axis = .vertical
+            stack.spacing = 4
+            stack.addArrangedSubview(makeLabel("UILabel in \(testCase.title) (expect \(testCase.masked ? "masked" : "unmasked"))",
+                                               expectMasked: testCase.masked))
+            let hosted = hostedText("SwiftUI Text in \(testCase.title) (expect \(testCase.masked ? "masked" : "unmasked"))",
+                                    masked: testCase.masked)
+            stack.addArrangedSubview(hosted)
+            embed(stack, in: container)
+            rows.append(container)
+        }
+
+        // A SwiftUI child that adds an image mask keeps it under an unmasked UIKit ancestor.
+        for (title, identifier) in [("nr-unmask container", "nr-unmask"), ("unmasked identifier list container (unmasked-1)", "unmasked-1")] {
+            let container = makeContainer(color: expectationColor(masked: true))
+            container.accessibilityIdentifier = identifier
+            let maskedColor = Color(expectationColor(masked: true))
+            let unmaskedColor = Color(expectationColor(masked: false))
+            let host = UIHostingController(rootView: VStack(alignment: .leading, spacing: 4) {
+                Text("\(title) > NRConditionalMaskView(maskAllImages: true) > Image")
+                    .font(.footnote)
+                NRConditionalMaskView(maskAllImages: true) {
+                    Image(systemName: "star.fill")
+                        .foregroundColor(maskedColor)
+                        .font(.title)
+                }
+                Text("^ star: expect masked (the child adds an image mask)")
+                    .font(.footnote)
+                NRConditionalMaskView(maskAllImages: false) {
+                    Image(systemName: "star.fill")
+                        .foregroundColor(unmaskedColor)
+                        .font(.title)
+                }
+                Text("^ star: expect unmasked (no image mask applies)")
+                    .font(.footnote)
+            })
+            addChild(host)
+            host.view.backgroundColor = .clear
+            host.didMove(toParent: self)
+            embed(host.view, in: container)
+            rows.append(container)
+        }
+        return sectionStack(rows)
+    }
+
+    // How a UIKit parent is configured for a table row.
+    private struct ParentSpec {
+        var name: String
+        var identifier: String?
+        var text: Bool?
+        var input: Bool?
+        var images: Bool?
+    }
+
+    private struct ChildRow {
+        var parent: ParentSpec
+        var content: HostedChildCase.Content
+        var rule: HostedChildCase.Rule
+        var expectMasked: Bool
+    }
+
+    // Table-driven: a UIKit parent, a hosted SwiftUI element, and the rule (if any) the SwiftUI element
+    // adds for itself. Blue is expected masked, green expected visible.
+    private func createSwiftUIChildRulesSection() -> UIStackView {
+        var rows = sectionHeader("SwiftUI Child Rules in a UIKit Parent",
+                                 description: "A UIKit parent above a UIHostingController, with the SwiftUI element adding its own rule.")
+
+        let nrUnmask = ParentSpec(name: "nr-unmask", identifier: "nr-unmask")
+        let unmaskedList = ParentSpec(name: "unmasked identifier list (unmasked-1)", identifier: "unmasked-1")
+        let nrMask = ParentSpec(name: "nr-mask", identifier: "nr-mask")
+        let maskedList = ParentSpec(name: "masked identifier list (my-masked-id)", identifier: "my-masked-id")
+
+        let groups: [(String, [ChildRow])] = [
+            ("1. Child adds a mask under an unmasked parent", [nrUnmask, unmaskedList].flatMap { parent in
+                [ChildRow(parent: parent, content: .text, rule: .propertyMask, expectMasked: true),
+                 ChildRow(parent: parent, content: .input, rule: .propertyMask, expectMasked: true),
+                 ChildRow(parent: parent, content: .text, rule: .identifierMask, expectMasked: true)]
+            }),
+            ("2. Child tries to unmask under a masked parent (parent wins)", [nrMask, maskedList].flatMap { parent in
+                [ChildRow(parent: parent, content: .text, rule: .propertyUnmask, expectMasked: true),
+                 ChildRow(parent: parent, content: .text, rule: .identifierUnmask, expectMasked: true),
+                 ChildRow(parent: parent, content: .image, rule: .propertyUnmask, expectMasked: true)]
+            }),
+            ("3. Parent masks through a property", [
+                ChildRow(parent: ParentSpec(name: "maskAllImages = true", text: nil, input: nil, images: true),
+                         content: .image, rule: .none, expectMasked: true),
+                ChildRow(parent: ParentSpec(name: "maskAllImages = true", text: nil, input: nil, images: true),
+                         content: .image, rule: .propertyUnmask, expectMasked: true),
+                ChildRow(parent: ParentSpec(name: "maskApplicationText = true, maskAllImages = false", text: true, input: nil, images: false),
+                         content: .text, rule: .none, expectMasked: true),
+                ChildRow(parent: ParentSpec(name: "maskApplicationText = true, maskAllImages = false", text: true, input: nil, images: false),
+                         content: .image, rule: .none, expectMasked: false),
+                ChildRow(parent: ParentSpec(name: "maskUserInputText = true, maskApplicationText = false", text: false, input: true, images: nil),
+                         content: .input, rule: .none, expectMasked: true)
+            ]),
+            ("4. Other hosted content under tags", [
+                ChildRow(parent: nrMask, content: .image, rule: .none, expectMasked: true),
+                ChildRow(parent: nrMask, content: .input, rule: .none, expectMasked: true),
+                ChildRow(parent: nrUnmask, content: .image, rule: .none, expectMasked: false),
+                ChildRow(parent: nrUnmask, content: .input, rule: .none, expectMasked: false)
+            ])
+        ]
+
+        for (title, groupRows) in groups {
+            let heading = makeLabel(title)
+            heading.font = .boldSystemFont(ofSize: 14)
+            heading.maskApplicationText = false
+            rows.append(heading)
+
+            for row in groupRows {
+                let color = expectationColor(masked: row.expectMasked)
+                let kind: String
+                switch row.content {
+                case .text: kind = "Text"
+                case .input: kind = "TextField"
+                case .image: kind = "Image"
+                }
+                let rule: String
+                switch row.rule {
+                case .none: rule = "no rule"
+                case .propertyMask: rule = "property mask"
+                case .propertyUnmask: rule = "property unmask"
+                case .identifierMask: rule = "masked identifier"
+                case .identifierUnmask: rule = "unmasked identifier"
+                }
+                let text = "\(row.parent.name) > \(kind), \(rule) (expect \(row.expectMasked ? "masked" : "unmasked"))"
+
+                let container = makeContainer(color: color)
+                container.accessibilityIdentifier = row.parent.identifier
+                container.maskApplicationText = row.parent.text
+                container.maskUserInputText = row.parent.input
+                container.maskAllImages = row.parent.images
+
+                let host = UIHostingController(rootView: HostedChildCase(content: row.content,
+                                                                          rule: row.rule,
+                                                                          label: text,
+                                                                          color: Color(color)))
+                addChild(host)
+                host.view.backgroundColor = .clear
+                host.didMove(toParent: self)
+                embed(host.view, in: container)
+                rows.append(container)
+            }
+        }
+        return sectionStack(rows)
+    }
+
+    // maskApplicationText covers static text and maskUserInputText covers text inputs; each
+    // should only affect its own kind.
+    private func createTextVersusInputSection() -> UIStackView {
+        var rows = sectionHeader("Application Text vs User Input",
+                                 description: "maskApplicationText masks labels, maskUserInputText masks text inputs. Setting one must not mask the other kind.")
+        let cases: [(text: Bool, input: Bool)] = [(true, false), (false, true)]
+        for testCase in cases {
+            let container = makeContainer(color: .systemGray)
+            container.maskApplicationText = testCase.text
+            container.maskUserInputText = testCase.input
+            let stack = UIStackView()
+            stack.axis = .vertical
+            stack.spacing = 6
+            let title = makeLabel("Parent maskApplicationText = \(testCase.text), maskUserInputText = \(testCase.input)")
+            title.font = .boldSystemFont(ofSize: 13)
+            stack.addArrangedSubview(title)
+            stack.addArrangedSubview(makeLabel("UILabel (expect \(testCase.text ? "masked" : "unmasked"))", expectMasked: testCase.text))
+            let field = UITextField()
+            field.borderStyle = .roundedRect
+            field.text = "UITextField (expect \(testCase.input ? "masked" : "unmasked"))"
+            field.textColor = expectationColor(masked: testCase.input)
+            stack.addArrangedSubview(field)
+            let textView = UITextView()
+            textView.text = "UITextView (expect \(testCase.input ? "masked" : "unmasked"))"
+            textView.textColor = expectationColor(masked: testCase.input)
+            textView.isScrollEnabled = false
+            textView.backgroundColor = .clear
+            stack.addArrangedSubview(textView)
+            embed(stack, in: container)
+            rows.append(container)
+        }
+        return sectionStack(rows)
+    }
+
+    // A mask set for one kind of content must not mask the others: a text-only mask leaves images
+    // alone, and an images-only mask leaves text alone.
+    private func createTextVersusImagesSection() -> UIStackView {
+        var rows = sectionHeader("Text Mask vs Images",
+                                 description: "Each parent masks one kind of content. Only that kind should be masked (blue); the rest stays visible (green).")
+
+        struct Case {
+            let title: String
+            let text: Bool?
+            let input: Bool?
+            let images: Bool?
+        }
+        let cases = [
+            Case(title: "maskApplicationText true, maskAllImages false, maskUserInputText false", text: true, input: false, images: false),
+            Case(title: "maskApplicationText true only (images and input unset)", text: true, input: nil, images: nil),
+            Case(title: "maskAllImages true, maskApplicationText false, maskUserInputText false", text: false, input: false, images: true),
+            Case(title: "maskUserInputText true, maskApplicationText false, maskAllImages false", text: false, input: true, images: false)
+        ]
+        for testCase in cases {
+            // An unset property falls to the config default, so only an explicit value has an expectation.
+            let container = makeContainer(color: .systemGray)
+            container.maskApplicationText = testCase.text
+            container.maskUserInputText = testCase.input
+            container.maskAllImages = testCase.images
+
+            let stack = UIStackView()
+            stack.axis = .vertical
+            stack.spacing = 6
+            let title = makeLabel(testCase.title)
+            title.font = .boldSystemFont(ofSize: 13)
+            title.textColor = .label
+            title.maskApplicationText = false // keep the heading readable
+            stack.addArrangedSubview(title)
+
+            func tag(_ kind: String, _ masked: Bool?) -> String {
+                guard let masked = masked else { return "\(kind) (config default)" }
+                return "\(kind) (expect \(masked ? "masked" : "unmasked"))"
+            }
+            stack.addArrangedSubview(makeLabel(tag("UILabel", testCase.text), expectMasked: testCase.text))
+
+            let imageRow = UIStackView()
+            imageRow.spacing = 8
+            let imageView = UIImageView(image: UIImage(systemName: "star.fill"))
+            imageView.contentMode = .scaleAspectFit
+            imageView.tintColor = testCase.images.map { expectationColor(masked: $0) } ?? .systemGray
+            imageView.widthAnchor.constraint(equalToConstant: 28).isActive = true
+            imageView.heightAnchor.constraint(equalToConstant: 28).isActive = true
+            imageRow.addArrangedSubview(imageView)
+            imageRow.addArrangedSubview(makeLabel(tag("UIImageView", testCase.images), expectMasked: nil))
+            stack.addArrangedSubview(imageRow)
+
+            let field = UITextField()
+            field.borderStyle = .roundedRect
+            field.text = tag("UITextField", testCase.input)
+            field.textColor = testCase.input.map { expectationColor(masked: $0) } ?? .label
+            stack.addArrangedSubview(field)
+
+            embed(stack, in: container)
+            rows.append(container)
+        }
         return sectionStack(rows)
     }
 
@@ -611,7 +888,7 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
 
         let textView = UITextView()
         textView.text = "blocked-textview-text"
-        textView.textColor = .systemBlue
+        textView.textColor = .systemRed
         textView.layer.borderWidth = 1
         textView.layer.borderColor = UIColor.systemGray4.cgColor
         textView.accessibilityIdentifier = "nr-block"
@@ -642,6 +919,7 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         fieldsStack.addArrangedSubview(toggleLabel)
 
         let toggleButton = UIButton(type: .system)
+        toggleButton.tintColor = .purple
         toggleButton.setTitle("Toggle block on label above", for: .normal)
         toggleButton.addAction(UIAction { _ in
             let isBlocked = toggleLabel.accessibilityIdentifier != "nr-block"
@@ -705,6 +983,56 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         sectionStack.axis = .vertical
         sectionStack.spacing = 8
         return sectionStack
+    }
+}
+
+// One hosted SwiftUI element, optionally wrapped in an NRConditionalMaskView that adds its own rule.
+private struct HostedChildCase: View {
+    enum Content { case text, input, image }
+    enum Rule {
+        case none
+        case propertyMask, propertyUnmask
+        case identifierMask, identifierUnmask
+    }
+
+    let content: Content
+    let rule: Rule
+    let label: String
+    let color: Color
+
+    var body: some View {
+        switch rule {
+        case .none:
+            element
+        case .propertyMask, .propertyUnmask:
+            let value: Bool = rule == .propertyMask
+            NRConditionalMaskView(maskApplicationText: content == .text ? value : nil,
+                                  maskUserInputText: content == .input ? value : nil,
+                                  maskAllImages: content == .image ? value : nil) {
+                element
+            }
+        case .identifierMask:
+            NRConditionalMaskView(sessionReplayIdentifier: "masked-1") { element }
+        case .identifierUnmask:
+            NRConditionalMaskView(sessionReplayIdentifier: "unmasked-1") { element }
+        }
+    }
+
+    @ViewBuilder private var element: some View {
+        switch content {
+        case .text:
+            Text(label).font(.footnote).foregroundColor(color)
+        case .input:
+            TextField("", text: .constant(label))
+                .textFieldStyle(.roundedBorder)
+                .font(.footnote)
+                .foregroundColor(color)
+        case .image:
+            HStack {
+                Image(systemName: "star.fill").font(.title).foregroundColor(color)
+                Text(label).font(.footnote).foregroundColor(color)
+            }
+        }
     }
 }
 
