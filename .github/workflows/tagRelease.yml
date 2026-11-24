@@ -1,0 +1,42 @@
+name: tagRelease
+
+# The auto-production-release-X.Y.Z PR opened by productionDeploy.yml is the last change to main
+# for a release, so its merge commit gets the X.Y.Z tag. scripts/tag_release.sh decides whether
+# a push is that merge. The draft release it opens is published by hand, which also triggers
+# workflows on `release: published` (a release published with GITHUB_TOKEN does not).
+on:
+  push:
+    branches: [main]
+    paths:
+      - NewRelicAgent.podspec
+      - Package.swift
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Merge commit of the auto-production-release PR on main (blank = head of main)
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tagRelease
+  cancel-in-progress: false
+
+jobs:
+  tagRelease:
+    name: tagRelease
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.sha || github.sha }}
+
+      - name: Tag release and open draft GitHub Release
+        run: bash scripts/tag_release.sh "$SHA"
+        env:
+          SHA: ${{ inputs.sha || github.sha }}
+          GH_TOKEN: ${{ github.token }}

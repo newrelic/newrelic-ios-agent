@@ -124,7 +124,8 @@ jobs:
           git add Package.swift
           git commit -m "Added build ${{ env.version }}"
           git tag ${{ env.version }}
-          git push origin main --tags
+          # Atomic: main and this release's tag land together or not at all.
+          git push --atomic origin main "refs/tags/${{ env.version }}"
 
           cp Package.swift ../main/
 
@@ -139,54 +140,8 @@ jobs:
           branch: "auto-production-release-${{ env.version }}"
           base: main
 
-  # Creates a GitHub Release (and the matching git tag) on this repo using the
-  # release notes accumulated on the docs-website `next` branch as the body.
-  # `gh release create <tag>` creates the tag at the target commit if it does
-  # not already exist, satisfying both the "tag the repo" and "make a Release" asks.
-  # createGithubRelease:
-  #   name: createGithubRelease
-  #   runs-on: ubuntu-latest
-  #   needs: [deployS3Production, deployProductionSpecs]
-  #   if: github.ref == 'refs/heads/main'
-  #   permissions:
-  #     contents: write
-  #   env:
-  #     DOCS_REPO: newrelic/docs-website
-  #     DOCS_HEAD: next
-  #     # Keep in sync with append-docs-release-notes.yml DOCS_FILE.
-  #     DOCS_FILE: src/content/docs/release-notes/mobile-release-notes/ios-release-notes/ios-agent-next.mdx
-  #     VERSION_STRING: ${{ needs.deployS3Production.outputs.version }}
-  #   steps:
-  #     - name: Checkout docs-website (next branch) for release-notes body
-  #       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-  #       with:
-  #         repository: ${{ env.DOCS_REPO }}
-  #         token: ${{ secrets.DOCS_WEBSITE_PAT }}
-  #         ref: ${{ env.DOCS_HEAD }}
-  #         fetch-depth: 1
-  #         path: docs-website
-
-  #     - name: Build release body from release-notes mdx
-  #       run: |
-  #         set -euo pipefail
-  #         SRC="docs-website/${DOCS_FILE}"
-  #         # Strip the YAML frontmatter (everything up to and including the 2nd
-  #         # `---`), leaving the "New in this release" / "Fixed in this release"
-  #         # sections as the GitHub Release body.
-  #         awk 'done==1 {print} /^---[[:space:]]*$/ {c++; if (c==2) done=1}' "$SRC" > release-body.md
-  #         echo "----- release body -----"
-  #         cat release-body.md
-
-  #     - name: Create GitHub Release and tag
-  #       env:
-  #         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       run: |
-  #         set -euo pipefail
-  #         gh release create "$VERSION_STRING" \
-  #           --repo "${{ github.repository }}" \
-  #           --target main \
-  #           --title "iOS Agent $VERSION_STRING" \
-  #           --notes-file release-body.md
+  # This repo's X.Y.Z tag and GitHub Release are created by tagRelease.yml when the
+  # auto-production-release-X.Y.Z PR above is merged.
 
   # Finalizes the accumulated docs-website release notes: fills in the
   # {VERSION-STRING} and {RELEASE-DATE} placeholders (sourced from the production
