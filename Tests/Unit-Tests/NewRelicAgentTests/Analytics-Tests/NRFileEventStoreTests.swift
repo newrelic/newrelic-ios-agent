@@ -79,14 +79,14 @@ final class NRFileEventStoreTests: XCTestCase {
         // Corrupt the on-disk file directly, out from under the store.
         let fileURL = URL(fileURLWithPath: storePath)
             .appendingPathComponent("nr_event_cache")
+            .appendingPathComponent("session-1")
             .appendingPathComponent("\(record.eventUUID).json")
         try? "not valid json".data(using: .utf8)?.write(to: fileURL)
 
         let fetched = sut.fetchAll()
         XCTAssertTrue(fetched.isEmpty, "a corrupt record must be skipped, not crash or be returned")
 
-        // The corrupt entry should also have been pruned from the index so it
-        // isn't retried forever.
+        // The corrupt file should also have been deleted so it isn't retried forever.
         sut.synchronize()
         XCTAssertFalse(sut.hasPersistedRecords())
     }

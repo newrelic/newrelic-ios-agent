@@ -134,7 +134,7 @@ final class NRSessionManifestStoreTests: XCTestCase {
     }
 
     func testDirectoryIsExcludedFromBackup() {
-        let directoryURL = URL(fileURLWithPath: storePath).appendingPathComponent("nr_session_manifest")
+        let directoryURL = URL(fileURLWithPath: storePath).appendingPathComponent("nr_event_cache")
         let values = try? directoryURL.resourceValues(forKeys: [.isExcludedFromBackupKey])
         XCTAssertEqual(values?.isExcludedFromBackup, true)
     }
@@ -143,7 +143,7 @@ final class NRSessionManifestStoreTests: XCTestCase {
         // See NRFileEventStoreTests.testDirectoryHasFileProtection -- the
         // Simulator doesn't reliably report this attribute back even when
         // creation succeeds, so a nil read isn't itself a failure here.
-        let directoryURL = URL(fileURLWithPath: storePath).appendingPathComponent("nr_session_manifest")
+        let directoryURL = URL(fileURLWithPath: storePath).appendingPathComponent("nr_event_cache")
         let attributes = try? FileManager.default.attributesOfItem(atPath: directoryURL.path)
         if let protection = attributes?[.protectionKey] as? FileProtectionType {
             XCTAssertEqual(protection, .completeUntilFirstUserAuthentication)

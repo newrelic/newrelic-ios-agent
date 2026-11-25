@@ -165,11 +165,13 @@ public class NREventPersistenceController: NSObject {
     }
 
     /// Fetches and deletes every persisted event for `sessionId`, for attaching to a crash report.
+    /// The fetch and delete are one atomic step in the store, so concurrent claims never return
+    /// the same event twice.
     @discardableResult
     @objc(claimPersistedEventsForCrashSessionId:)
     public func claimPersistedEvents(forCrashSessionId sessionId: String) -> [[String: Any]] {
         guard NRMAFlags.shouldEnableEventPersistence() else { return [] }
-        let records = eventStore.fetchAll().filter { $0.sessionId == sessionId }
+        let records = eventStore.claim { $0.sessionId == sessionId }
         guard !records.isEmpty else { return [] }
 
         var payloads: [[String: Any]] = []
@@ -183,8 +185,6 @@ public class NREventPersistenceController: NSObject {
             json[kNRMA_RA_sessionId] = record.sessionId
             payloads.append(json)
         }
-
-        eventStore.delete(eventUUIDs: records.map { $0.eventUUID })
         return payloads
     }
 
@@ -204,7 +204,12 @@ public class NREventPersistenceController: NSObject {
     // MARK: - Confirmation
 
     /// Call once the harvest carrying the staged events is confirmed *successful*, not
-    /// merely attempted -- a failed harvest must never call this.
+    /// merely attempted -- a failed or interrupted harvest (including the one at app
+    /// termination) must never call this, so its events stay on disk for the next launch.
+    ///
+    /// Deletes every staged UUID, with no per-harvest identity. That relies on harvests being
+    /// serialized (`NRMAHarvester.execute` holds `@synchronized(self)` from payload build to
+    /// confirm); overlapping harvests would need per-harvest batches.
     public func confirmLastRecoveryHarvestSucceeded() {
         stateLock.lock()
         let uuids = pendingConfirmationUUIDs
@@ -221,7 +226,7 @@ public class NREventPersistenceController: NSObject {
         eventStore.evictRecords(olderThanMs: NREventPersistenceController.defaultRetentionMs,
                                  nowMs: nowMs,
                                  maxCount: NREventPersistenceController.defaultMaxEventCount)
-        let liveSessionIds = Set(eventStore.fetchAll().map { $0.sessionId })
+        let liveSessionIds = eventStore.sessionIdsWithEvents()
         manifestStore.evictManifests(olderThanMs: NREventPersistenceController.defaultRetentionMs,
                                       nowMs: nowMs,
                                       liveSessionIds: liveSessionIds,

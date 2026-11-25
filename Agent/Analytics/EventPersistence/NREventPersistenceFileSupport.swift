@@ -34,4 +34,41 @@ enum NREventPersistenceFileSupport {
             NRLOG_AGENT_WARNING("NREventPersistence: failed to exclude \(url.path) from backup: \(error)")
         }
     }
+
+    // MARK: - Layout
+    //
+    // <storePath>/nr_event_cache/<sessionId>/<eventUUID>.json   one file per event
+    // <storePath>/nr_event_cache/<sessionId>/_manifest.json     that session's manifest
+    //
+    // The files are the only state: there is no index to keep consistent with them, so a crash
+    // can never leave an event the store doesn't know about.
+
+    static let rootDirectoryName = "nr_event_cache"
+    static let manifestFileName = "_manifest.json"
+
+    static func rootURL(storePath: String) -> URL {
+        URL(fileURLWithPath: storePath).appendingPathComponent(rootDirectoryName, isDirectory: true)
+    }
+
+    private static let safeNameCharacters: CharacterSet = {
+        var set = CharacterSet.alphanumerics
+        set.insert(charactersIn: "-_")
+        return set
+    }()
+
+    /// Ids become path components, so percent-encode anything that isn't alphanumeric, `-` or
+    /// `_` (this also neutralizes `/` and `..`).
+    static func encodedName(_ id: String) -> String {
+        id.addingPercentEncoding(withAllowedCharacters: safeNameCharacters) ?? ""
+    }
+
+    static func decodedName(_ name: String) -> String {
+        name.removingPercentEncoding ?? name
+    }
+
+    /// Removes `url` only if it is an empty directory. POSIX `rmdir` fails on a non-empty one,
+    /// so this can never delete a file another store wrote in between.
+    static func removeDirectoryIfEmpty(_ url: URL) {
+        _ = rmdir(url.path)
+    }
 }

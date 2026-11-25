@@ -8,36 +8,48 @@
 import Foundation
 @_implementationOnly import NewRelicPrivate
 
-/// File-per-session persisted store for `NRSessionManifest`s, under
-/// `<storePath>/nr_session_manifest/`. Looked up directly by filename
-/// (`<sessionId>.json`) -- O(1), no index needed since `NREventRecord.sessionId`
-/// is exactly the lookup key.
+/// Persisted `NRSessionManifest`s, one per session, stored beside that session's events as
+/// `<storePath>/nr_event_cache/<sessionId>/_manifest.json` (see `NREventPersistenceFileSupport`).
+/// Looked up directly by path -- O(1), no index needed since `NREventRecord.sessionId` is
+/// exactly the lookup key.
 ///
 /// Shares one serial queue for all reads/writes/deletes so retention eviction
-/// can never race a concurrent write for the same manifest.
+/// can never race a concurrent write for the same manifest. It never touches event files;
+/// a session directory is only removed when empty, so it can't race `NRFileEventStore`.
 final class NRSessionManifestStore {
 
-    private let directoryURL: URL
+    private let rootURL: URL
     private let queue = DispatchQueue(label: "com.newrelic.eventpersistence.manifeststore")
 
     init(storePath: String) {
-        directoryURL = URL(fileURLWithPath: storePath).appendingPathComponent("nr_session_manifest", isDirectory: true)
-        NREventPersistenceFileSupport.prepareProtectedDirectory(at: directoryURL)
+        rootURL = NREventPersistenceFileSupport.rootURL(storePath: storePath)
+        NREventPersistenceFileSupport.prepareProtectedDirectory(at: rootURL)
     }
 
-    private func fileURL(forSessionId sessionId: String) -> URL {
-        directoryURL.appendingPathComponent("\(sessionId).json")
+    private func sessionDirectoryURL(forSessionId sessionId: String) -> URL {
+        rootURL.appendingPathComponent(NREventPersistenceFileSupport.encodedName(sessionId), isDirectory: true)
+    }
+
+    private func manifestURL(inDirectory directory: URL) -> URL {
+        directory.appendingPathComponent(NREventPersistenceFileSupport.manifestFileName)
     }
 
     func store(_ manifest: NRSessionManifest) {
-        queue.async { [directoryURL] in
+        queue.async {
             guard let data = try? NRMAJSON.data(withJSONObject: manifest.dictionaryRepresentation, options: []) else {
                 NRLOG_AGENT_ERROR("NREventPersistence: failed to serialize session manifest \(manifest.sessionId)")
                 return
             }
-            let url = directoryURL.appendingPathComponent("\(manifest.sessionId).json")
+            let directory = self.sessionDirectoryURL(forSessionId: manifest.sessionId)
+            let url = self.manifestURL(inDirectory: directory)
             do {
-                try data.write(to: url, options: .atomic)
+                do {
+                    try data.write(to: url, options: .atomic)
+                } catch {
+                    // First write for the session, or the directory was removed while empty.
+                    NREventPersistenceFileSupport.prepareProtectedDirectory(at: directory)
+                    try data.write(to: url, options: .atomic)
+                }
             } catch {
                 NRLOG_AGENT_ERROR("NREventPersistence: failed to write session manifest \(manifest.sessionId): \(error)")
             }
@@ -46,13 +58,15 @@ final class NRSessionManifestStore {
 
     func manifest(forSessionId sessionId: String) -> NRSessionManifest? {
         queue.sync {
-            NRSessionManifestStore.readManifest(at: fileURL(forSessionId: sessionId))
+            NRSessionManifestStore.readManifest(at: manifestURL(inDirectory: sessionDirectoryURL(forSessionId: sessionId)))
         }
     }
 
     func delete(sessionId: String) {
-        queue.async { [directoryURL] in
-            try? FileManager.default.removeItem(at: directoryURL.appendingPathComponent("\(sessionId).json"))
+        queue.async {
+            let directory = self.sessionDirectoryURL(forSessionId: sessionId)
+            try? FileManager.default.removeItem(at: self.manifestURL(inDirectory: directory))
+            NREventPersistenceFileSupport.removeDirectoryIfEmpty(directory)
         }
     }
 
@@ -65,40 +79,51 @@ final class NRSessionManifestStore {
     /// Evicts a manifest once unreferenced by any live event and older than the
     /// retention cap, then evicts the oldest remaining non-live manifests (by
     /// `lastUpdateMs`) if still over `maxCount`. Live sessions are never evicted.
+    /// Session directories left empty are removed.
     func evictManifests(olderThanMs maxAgeMs: Int64, nowMs: Int64, liveSessionIds: Set<String>, maxCount: Int) {
-        queue.async { [directoryURL] in
+        queue.async {
             let fileManager = FileManager.default
-            guard let contents = try? fileManager.contentsOfDirectory(at: directoryURL, includingPropertiesForKeys: nil) else {
+            guard let directories = try? fileManager.contentsOfDirectory(at: self.rootURL, includingPropertiesForKeys: nil) else {
                 return
             }
 
-            var survivingNonLive: [(url: URL, lastUpdateMs: Int64)] = []
+            var survivingNonLive: [(directory: URL, lastUpdateMs: Int64)] = []
             var liveCount = 0
 
-            for url in contents where url.pathExtension == "json" {
-                let sessionId = url.deletingPathExtension().lastPathComponent
+            for directory in directories {
+                let url = self.manifestURL(inDirectory: directory)
+                guard fileManager.fileExists(atPath: url.path) else {
+                    NREventPersistenceFileSupport.removeDirectoryIfEmpty(directory) // nothing in it
+                    continue
+                }
+                let sessionId = NREventPersistenceFileSupport.decodedName(directory.lastPathComponent)
                 if liveSessionIds.contains(sessionId) {
                     liveCount += 1
                     continue
                 }
                 guard let manifest = NRSessionManifestStore.readManifest(at: url) else {
-                    try? fileManager.removeItem(at: url) // corrupt, unreferenced -- safe to drop
+                    self.removeManifest(in: directory) // corrupt, unreferenced -- safe to drop
                     continue
                 }
                 if nowMs - manifest.lastUpdateMs > maxAgeMs {
-                    try? fileManager.removeItem(at: url)
+                    self.removeManifest(in: directory)
                     continue
                 }
-                survivingNonLive.append((url, manifest.lastUpdateMs))
+                survivingNonLive.append((directory, manifest.lastUpdateMs))
             }
 
             let overflow = (liveCount + survivingNonLive.count) - maxCount
             guard overflow > 0 else { return }
             survivingNonLive.sort { $0.lastUpdateMs < $1.lastUpdateMs }
             for entry in survivingNonLive.prefix(overflow) {
-                try? fileManager.removeItem(at: entry.url)
+                self.removeManifest(in: entry.directory)
             }
         }
+    }
+
+    private func removeManifest(in directory: URL) {
+        try? FileManager.default.removeItem(at: manifestURL(inDirectory: directory))
+        NREventPersistenceFileSupport.removeDirectoryIfEmpty(directory)
     }
 
     private static func readManifest(at url: URL) -> NRSessionManifest? {
