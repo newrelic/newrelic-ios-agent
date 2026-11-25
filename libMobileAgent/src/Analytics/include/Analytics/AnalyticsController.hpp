@@ -12,6 +12,7 @@
 #include <vector>
 #include <memory>
 #include <Analytics/BreadcrumbEvent.hpp>
+#include <Analytics/ViewEvent.hpp>
 #include <Analytics/RequestEvent.hpp>
 
 
@@ -40,6 +41,8 @@ namespace NewRelic {
                 __kNRMA_RET_mobileRequestError,
                 __kNRMA_RET_mobileSession,
                 __kNRMA_RET_mobileBreadcrumb,
+                __kNRMA_RET_mobileView,
+                __kNRMA_RET_mobileViewTiming
         };
 
         const std::vector <std::string> _reserved_keys{
@@ -87,6 +90,9 @@ namespace NewRelic {
 
         static unsigned long long int getCurrentTime_ms(); //throws std::logic_error
 
+        /// Shared body of newMobileViewEvent / newViewTimingEvent.
+        std::shared_ptr <ViewEvent> newViewEventOfType(const char *eventType);
+
     public:
 
         virtual ~AnalyticsController() = default;
@@ -121,6 +127,15 @@ namespace NewRelic {
         std::shared_ptr <CustomEvent> newCustomEvent(const char *name);
 
         std::shared_ptr <BreadcrumbEvent> newBreadcrumbEvent();
+
+        /*
+         * The built-in view events. Like newBreadcrumbEvent these deliberately bypass the
+         * eventType validator, because MobileView and MobileViewTiming are reserved types
+         * and newCustomEvent would (correctly) refuse them.
+         */
+        std::shared_ptr <ViewEvent> newMobileViewEvent();
+
+        std::shared_ptr <ViewEvent> newViewTimingEvent();
 
         bool addSessionEvent();
 

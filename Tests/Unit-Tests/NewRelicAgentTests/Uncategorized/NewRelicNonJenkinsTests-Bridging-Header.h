@@ -15,7 +15,11 @@
 #import "NRMAMeasurements.h"
 #import "NRMAHTTPTransactionMeasurement.h"
 #import "NRMATaskQueue.h"
+#import "NRMAMobileViewTracker.h"
+#import "NRMAWebViewPresence.h"
 
 BOOL NRMA__isSwiftClass(NRMAClassDataContainer* classData);
 
 
+#import "NRMAHarvesterConfiguration.h"
+#import "NRMAMaskingTestConfiguration.h"

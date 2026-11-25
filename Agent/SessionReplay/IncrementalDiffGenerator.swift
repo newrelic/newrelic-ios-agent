@@ -130,33 +130,58 @@ func generateDiff(old:[any SessionReplayViewThingy], new:[any SessionReplayViewT
     var changes = [Operation]()
     
     // Removals
+    // Ids of every node this diff takes out of the replay DOM. The player drops a removed
+    // node's whole subtree, so a surviving view whose old parent is in here is already gone.
+    var detachedIds = Set<Int>()
     var deleteOffsets = Array(repeating: 0, count: oldArrayEntries.count)
     var runningOffset = 0
     for(index, entry) in oldArrayEntries.enumerated() {
         deleteOffsets[index] = runningOffset
         if case .symbol = entry {
             changes.append(.Remove(Operation.RemoveChange(parentId: old[index].viewDetails.parentId ?? 0, id: old[index].viewDetails.viewId)))
+            detachedIds.insert(old[index].viewDetails.viewId)
             runningOffset += 1
         }
     }
-    
+
     runningOffset = 0
-    
+
+    // Re-inserts a surviving view. It is only removed first if it is still attached, i.e.
+    // its old parent wasn't itself taken out by this diff.
+    func reinsert(oldElement: any SessionReplayViewThingy, newElement: any SessionReplayViewThingy) {
+        let id = newElement.viewDetails.viewId
+        if !detachedIds.contains(oldElement.viewDetails.parentId ?? 0) {
+            changes.append(.Remove(Operation.RemoveChange(parentId: oldElement.viewDetails.parentId ?? 0, id: id)))
+        }
+        detachedIds.insert(id)
+        changes.append(.Add(Operation.AddChange(parentId: newElement.viewDetails.parentId ?? 0, id: id, node: newElement)))
+    }
+
     // Additions and Alterations
+    // The flattened trees list every parent before its descendants, so by the time a view is
+    // reached here its ancestors' moves are already recorded in detachedIds.
     for(index, entry) in newArrayEntries.enumerated() {
         switch entry {
         case .symbol:
             changes.append(.Add(Operation.AddChange(parentId: new[index].viewDetails.parentId ?? 0, id: new[index].viewDetails.viewId, node: new[index])))
             runningOffset += 1
-            
+
         case .index(let indexInOld):
             let deleteOffset = deleteOffsets[indexInOld]
             let newElement = new[index]
             let oldElement = old[indexInOld]
-            
+
             if (indexInOld - deleteOffset + runningOffset) != index {
-                changes.append(.Remove(Operation.RemoveChange(parentId: oldElement.viewDetails.parentId ?? 0, id: newElement.viewDetails.viewId)))
-                changes.append(.Add(Operation.AddChange(parentId: newElement.viewDetails.parentId ?? 0, id: newElement.viewDetails.viewId, node: newElement)))
+                reinsert(oldElement: oldElement, newElement: newElement)
+            } else if newElement.viewDetails.parentId != oldElement.viewDetails.parentId
+                        || detachedIds.contains(oldElement.viewDetails.parentId ?? 0) {
+                // Same view under a new parent, or under an old parent this diff removes. UIKit
+                // reparents views without recreating them (a navigation push moves the incoming
+                // screen out of its transition container once the animation ends), and React
+                // Native's Fabric reuses recycled views elsewhere in the tree, so the view keeps
+                // its id. An update can't move a node, and removing the old parent would take
+                // this node and its subtree out of the replay with it.
+                reinsert(oldElement: oldElement, newElement: newElement)
             } else if type(of: newElement) == type(of: oldElement) {
                 if newElement.hashValue != oldElement.hashValue {
                     changes.append(.Update(Operation.UpdateChange(oldElement: oldElement, newElement: newElement)))
@@ -165,8 +190,7 @@ func generateDiff(old:[any SessionReplayViewThingy], new:[any SessionReplayViewT
                 // Same view, different recorder (e.g. a label that just became blocked is now
                 // recorded as a plain view). An update can't cross recorder types, so replace the
                 // node; otherwise the old node, and its content, would stay in the replay.
-                changes.append(.Remove(Operation.RemoveChange(parentId: oldElement.viewDetails.parentId ?? 0, id: newElement.viewDetails.viewId)))
-                changes.append(.Add(Operation.AddChange(parentId: newElement.viewDetails.parentId ?? 0, id: newElement.viewDetails.viewId, node: newElement)))
+                reinsert(oldElement: oldElement, newElement: newElement)
             }
         }
     }

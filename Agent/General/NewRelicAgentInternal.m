@@ -27,6 +27,9 @@
 #import "NRMATaskQueue.h"
 #import "NRMAExceptionHandler.h"
 #import "NRMAMethodProfiler.h"
+#import "NRMAMobileViewTracker.h"
+#import "NRMAViewContext.h"
+#import "NRMAViewTiming.h"
 #import "NRMACPUVitals.h"
 #import "NRMAExceptionHandlerManager.h"
 #import "NRMAExceptionMetaDataStore.h"
@@ -244,6 +247,9 @@ static NewRelicAgentInternal* _sharedInstance;
 
         self->_lifetimeRequestCount = 0;
         self->_lifetimeErrorCount = 0;
+        // Before the harvester starts: its connect makes the session replay and log
+        // sampling decisions. Later sessions reseed in -sessionStartInitialization.
+        [self makeSampleSeeds];
         self.appSessionStartDate = [NSDate date];
 
         self->_isShutdown = false;
@@ -349,6 +355,12 @@ static NewRelicAgentInternal* _sharedInstance;
 
     if ([NRMAFlags shouldEnableInteractionTracing]) {
         [[NRMAMethodProfiler sharedInstance] startMethodReplacement];
+    }
+
+    if ([NRMAFlags shouldEnableAutomaticMobileViews]) {
+#if !TARGET_OS_WATCH
+        [[NRMAMobileViewTracker sharedInstance] start];
+#endif
     }
 
     if ([NRMAFlags shouldEnableCrashReporting]) {
@@ -590,6 +602,8 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     NRMA_setSessionStartTime([NSString stringWithFormat:@"%lld",
                               (long long)NRMAMillisecondTimestamp()].UTF8String);
 
+    [[NRMAViewTiming sharedInstance] resetUnattributedCapForNewSession];
+
     NSString* backupStorePath = [NSString stringWithFormat:@"%@",[NewRelicInternalUtils getStorePath]];
     NSError* error = nil;
 
@@ -718,7 +732,9 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         
         if (m != SessionReplayRecordingModeOff) {
             
-            [_sessionReplay startFromManual:FALSE with:m];
+            // Every caller either stopped replay first or may race another start (the harvester's
+            // and -sessionReplayStartIfMissed at launch); a running replay keeps its mode.
+            [_sessionReplay startIfNotRunningWith:m];
 
             // Only add hasReplay attribute if starting in full mode
             // For error mode, the attribute will be added when an error occurs
@@ -728,6 +744,32 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
                 }
             }
         }
+    }
+#endif
+}
+
+// The harvester starts inside -init, and with a stored configuration it applies the session
+// replay config without a network round trip, often before +startWithApplicationToken: has
+// assigned _sharedInstance. Its -sessionReplayStart then goes to nil and nothing retries it
+// until the next foreground. Called once the agent is reachable; harmless if the harvester's
+// start did land or is still queued, since -sessionReplayStart doesn't restart a running replay.
+- (void) sessionReplayStartIfMissed {
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+    // -init doesn't start the harvester on a background launch (silent push, background fetch),
+    // so there was no start to miss. The harvester starts replay when the app comes to the
+    // foreground; recording now would put a background frame at the start of that replay.
+    if ([UIApplication sharedApplication].applicationState == UIApplicationStateBackground) {
+        return;
+    }
+    NRMAHarvesterConfiguration* configuration = [NRMAHarvestController configuration];
+    // Same check as the harvester's stored-configuration shortcut. Otherwise /connect is
+    // still in flight and the harvester applies the collector's config when it returns.
+    if (!configuration.isValid
+        || ![configuration.application_token isEqualToString:_agentConfiguration.applicationToken.value]) {
+        return;
+    }
+    if (configuration.has_session_replay_config) {
+        [self sessionReplayStart];
     }
 #endif
 }
@@ -824,6 +866,19 @@ static const NSString *kNRMA_APPLICATION_WILL_TERMINATE =
     
     if (_isShutdown) {
         return;
+    }
+
+    // Re-open the visits -applicationDidEnterBackground closed. Done here, before the work below is
+    // dispatched onto a global queue, for two reasons: this runs on the main thread where the view
+    // producers live, and it must not be inside kNRMA_BGFG_MUTEX, which the dispatched block holds
+    // while doing session-start work.
+    //
+    // Runs on every foreground, including ones with nothing on screen to re-open (the first
+    // foreground of a launch), where the on-screen list is empty and this is a no-op.
+    if ([NRMAFlags shouldEnableAutomaticMobileViews]) {
+#if !TARGET_OS_WATCH
+        [[NRMAMobileViewTracker sharedInstance] reopenOpenVisitsOnForeground];
+#endif
     }
 
 #if TARGET_OS_WATCH
@@ -980,6 +1035,19 @@ static UIBackgroundTaskIdentifier background_task;
     // We are leaving the background.
     didFireEnterForeground = NO;
     didFireEnterBackground = YES;
+
+    // Close out every view that is still on screen, so the screen the user left the app on is
+    // reported at all. A MobileView event describes a completed visit and nothing else marks this
+    // moment as one: no view controller callback and no SwiftUI onDisappear fires when an app is
+    // backgrounded. Both producers re-open these visits when the app comes back.
+    if ([NRMAFlags shouldEnableManualMobileViews]) {
+        [[NRMAViewContext sharedInstance] flushCurrentManualViewOnBackground];
+    }
+    if ([NRMAFlags shouldEnableAutomaticMobileViews]) {
+#if !TARGET_OS_WATCH
+        [[NRMAMobileViewTracker sharedInstance] flushOpenVisitsOnBackground];
+#endif
+    }
 
 #if TARGET_OS_WATCH
     _currentApplicationState = WKApplicationStateBackground;
@@ -1428,6 +1496,7 @@ void applicationDidEnterBackgroundCF(void) {
 
         if ([NewRelicAgentInternal sharedInstance].enabled) {
             NRLOG_AGENT_INFO(@"The New Relic Agent started");
+            [_sharedInstance sessionReplayStartIfMissed];
         } else {
             NRLOG_AGENT_INFO(@"The New Relic Agent is disabled");
         }

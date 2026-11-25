@@ -1,0 +1,63 @@
+# Resolve react_native_pods.rb with node to allow for hoisting
+require Pod::Executable.execute_command('node', ['-p',
+  'require.resolve(
+    "react-native/scripts/react_native_pods.rb",
+    {paths: [process.argv[1]]},
+  )', __dir__]).strip
+
+# Levi's runs React Native's old architecture (Paper). react-native-navigation 8.0 is
+# the last release that builds on it, and its New Architecture code doesn't build
+# against RN 0.76, so this app is old architecture only.
+ENV['RCT_NEW_ARCH_ENABLED'] = '0'
+
+platform :ios, min_ios_version_supported
+prepare_react_native_project!
+
+linkage = ENV['USE_FRAMEWORKS']
+if linkage != nil
+  Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
+  use_frameworks! :linkage => linkage.to_sym
+end
+
+target 'RNSessionReplayRepro' do
+  config = use_native_modules!
+
+  # Use the agent built from this repo (scripts/build-local-agent.sh). Set
+  # NR_PUBLISHED_AGENT=1 to fall back to the published 7.7.11 pod instead.
+  unless ENV['NR_PUBLISHED_AGENT'] == '1'
+    pod 'NewRelicAgent', :path => './LocalNewRelicAgent'
+  end
+
+  use_react_native!(
+    :path => config[:reactNativePath],
+    # An absolute path to your application root.
+    :app_path => "#{Pod::Config.instance.installation_root}/.."
+  )
+
+  target 'RNSessionReplayReproTests' do
+    inherit! :complete
+    # Pods for testing
+  end
+
+  post_install do |installer|
+    # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
+    react_native_post_install(
+      installer,
+      config[:reactNativePath],
+      :mac_catalyst_enabled => false,
+      # :ccache_enabled => true
+    )
+    # Xcode 27 no longer builds for iOS < 15, which some pods (RNSVG) still declare.
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        if config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < 15.0
+          config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+        end
+        # fmt 11.0 uses consteval in a way newer clang rejects; C++17 turns it off.
+        if target.name == 'fmt'
+          config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++17'
+        end
+      end
+    end
+  end
+end

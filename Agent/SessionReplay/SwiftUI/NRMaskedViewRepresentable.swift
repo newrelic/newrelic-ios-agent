@@ -48,9 +48,10 @@ struct NRMaskedViewRepresentable<Content: View>: UIViewControllerRepresentable {
                                                          inputContent: content)
         
         // Handle association w/ host `UIView`
-        hostVC.view.maskApplicationText = maskApplicationText
-        hostVC.view.maskUserInputText = maskUserInputText
-        hostVC.view.maskAllImages = maskAllImages
+        let maskedByIdentifier = ViewDetails.isSwiftUIIdentifierMasked(sessionReplayIdentifier)
+        hostVC.view.maskApplicationText = ViewDetails.wrapperMaskProperty(maskApplicationText, maskedByIdentifier: maskedByIdentifier)
+        hostVC.view.maskUserInputText = ViewDetails.wrapperMaskProperty(maskUserInputText, maskedByIdentifier: maskedByIdentifier)
+        hostVC.view.maskAllImages = ViewDetails.wrapperMaskProperty(maskAllImages, maskedByIdentifier: maskedByIdentifier)
         hostVC.view.maskAllUserTouches = maskAllUserTouches
         hostVC.view.blockView = blockView
         hostVC.view.swiftUISessionReplayIdentifier = sessionReplayIdentifier
