@@ -1031,12 +1031,14 @@ extern "C" {
 
 /*!
  * Adds a view class to be masked during session replay.
- * All instances of the specified class and its subclasses will have their text content masked.
+ * All instances of the specified class will have their text content masked. Subclasses are not matched;
+ * register each class you want masked.
  * The values added using this function will be added to the ones returned by the server.
  * <p>
  * Example: addSessionReplayMaskViewClass("UILabel")
  *
- * @param viewClassName The fully qualified class name of the view to mask
+ * @param viewClassName The class name of the view to mask, as returned by String(describing:) for Swift
+ * classes (a module prefix such as "MyApp.CardView" is accepted)
  * @return true if the view class was successfully added to the mask list
  */
 + (BOOL) addSessionReplayMaskViewClass:(NSString*_Nonnull) viewClassName;
@@ -1048,7 +1050,8 @@ extern "C" {
  * <p>
  * Example: addSessionReplayUnmaskViewClass("UIButton")
  *
- * @param viewClassName The fully qualified class name of the view to unmask
+ * @param viewClassName The class name of the view to unmask, as returned by String(describing:) for Swift
+ * classes (a module prefix such as "MyApp.CardView" is accepted)
  * @return true if the view class was successfully added to the unmask list
  */
 + (BOOL) addSessionReplayUnmaskViewClass:(NSString*_Nonnull) viewClassName;

@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C8FE73466C5D36E87195B590 /* RRWebFullSnapshotEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 341E851E2DA0503400968D7D /* RRWebFullSnapshotEvent.swift */; };
+		0A9064BF5A52421997496A81 /* SessionReplayFrameProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 344E494C2D934CF8008174A1 /* SessionReplayFrameProcessor.swift */; };
+		17DD987426A0FF6964FF980A /* SessionReplayFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DF472D4C4BEE00BF5BED /* SessionReplayFrame.swift */; };
+		621D671ADD3ACEBC0B6266AF /* SessionReplayClippingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30A3D63511873CC0DE19997B /* SessionReplayClippingTests.swift */; };
+		5E1E6B26A418EF301EF45177 /* ReactNativeStyleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0507771D00107A52E925DA /* ReactNativeStyleTests.swift */; };
 		72F78B8151FDF7CBB89F35E8 /* IncrementalDiffGeneratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 871C12BAE9249E1084E7A385 /* IncrementalDiffGeneratorTests.swift */; };
 		5DCF5CE8135909A7EC546192 /* IncrementalDiffGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 340A8CE32DAD8EAB00BC2B01 /* IncrementalDiffGenerator.swift */; };
 		00D3C8A763625C06E61485F0 /* NRMobileViewFeatureFlagGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3044C591FF629A6505BEC8CE /* NRMobileViewFeatureFlagGateTests.swift */; };
@@ -957,6 +962,7 @@
 		2B570A592EF0C28B007D9E39 /* SessionReplayFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DF472D4C4BEE00BF5BED /* SessionReplayFrame.swift */; };
 		2B570A5A2EF0C29D007D9E39 /* SessionReplayCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DEFF2D3844C400BF5BED /* SessionReplayCapture.swift */; };
 		2B570A5B2EF0C2AB007D9E39 /* SessionReplayViewThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DF492D4C4E6000BF5BED /* SessionReplayViewThingy.swift */; };
+		9912A35880F798256AB0556C /* ReactNativeStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7843D9099B79EB4F17F2C8B /* ReactNativeStyle.swift */; };
 		2B570A5C2EF0C2BD007D9E39 /* ViewDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80C1D692DA07691007C0F52 /* ViewDetails.swift */; };
 		2B570A5D2EF0C2CC007D9E39 /* SerializedNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 341E85052D9F4B5600968D7D /* SerializedNode.swift */; };
 		2B570A5E2EF0C2DA007D9E39 /* RRWebIncrementalSnapshotEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 341E851C2DA0500E00968D7D /* RRWebIncrementalSnapshotEvent.swift */; };
@@ -1676,6 +1682,7 @@
 		F737248B2761F81BA09717C7 /* NRMAViewTiming.h in Headers */ = {isa = PBXBuildFile; fileRef = 5A93F4E393A973FA48E954AD /* NRMAViewTiming.h */; };
 		F806E4132D9C7D150003B9D6 /* SessionReplayReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F806E4122D9C7D150003B9D6 /* SessionReplayReporter.swift */; };
 		F806E4282D9C7E3F0003B9D6 /* SessionReplayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F806E4272D9C7E3F0003B9D6 /* SessionReplayManager.swift */; };
+		B8F542B3E1456A52060FD802 /* ReactNativeStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7843D9099B79EB4F17F2C8B /* ReactNativeStyle.swift */; };
 		F80C1D6A2DA07691007C0F52 /* ViewDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80C1D692DA07691007C0F52 /* ViewDetails.swift */; };
 		F810620E2E16D02D00B8CC81 /* UIVisualEffectViewThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81061FA2E16D01D00B8CC81 /* UIVisualEffectViewThingy.swift */; };
 		F81C3D223049FD410063C9C0 /* NRMAWebViewSupportability.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BD0738B2EB038AB00E3556B /* NRMAWebViewSupportability.m */; };
@@ -1695,7 +1702,12 @@
 		F858F3602AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F858F35F2AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m */; };
 		F858F3612AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F858F35F2AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m */; };
 		F85ABB492F1557150098A2CF /* UILabelThingyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85ABB482F1557150098A2CF /* UILabelThingyTests.swift */; };
+		F85ABB532F15571500A0B1C1 /* UIDatePickerThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8EACA892F6867ED00385075 /* UIDatePickerThingy.swift */; };
+		F85ABB4F2F15571500A0B1C1 /* UITextFieldThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0B6BAB2DEA349D0080C3D6 /* UITextFieldThingy.swift */; };
+		F85ABB4E2F15571500A0B1C1 /* NRMAMaskingTestConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = F85ABB4C2F15571500A0B1C1 /* NRMAMaskingTestConfiguration.m */; };
+		F85ABB4B2F15571500A0B1C1 /* MaskingResolutionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85ABB4A2F15571500A0B1C1 /* MaskingResolutionTests.swift */; };
 		F85ABB5D2F15575B0098A2CF /* UILabelThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DF4D2D54310900BF5BED /* UILabelThingy.swift */; };
+		15B561FD2900EE0FB36C6CC3 /* ReactNativeStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7843D9099B79EB4F17F2C8B /* ReactNativeStyle.swift */; };
 		F85ABB5E2F1557B40098A2CF /* ViewDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80C1D692DA07691007C0F52 /* ViewDetails.swift */; };
 		F85ABB5F2F1557DD0098A2CF /* SessionReplayViewThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DF492D4C4E6000BF5BED /* SessionReplayViewThingy.swift */; };
 		F85ABB602F1557EA0098A2CF /* SerializedNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 341E85052D9F4B5600968D7D /* SerializedNode.swift */; };
@@ -2043,6 +2055,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		30A3D63511873CC0DE19997B /* SessionReplayClippingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayClippingTests.swift; sourceTree = "<group>"; };
+		4E0507771D00107A52E925DA /* ReactNativeStyleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactNativeStyleTests.swift; sourceTree = "<group>"; };
 		871C12BAE9249E1084E7A385 /* IncrementalDiffGeneratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncrementalDiffGeneratorTests.swift; sourceTree = "<group>"; };
 		0209ABA924E7042B00E45C90 /* NRMeasurementConsumerHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMeasurementConsumerHelper.h; sourceTree = "<group>"; };
 		0209ABAA24E7042B00E45C90 /* libOCMock.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libOCMock.a; sourceTree = "<group>"; };
@@ -2722,6 +2736,7 @@
 		F7B230ED67A6A98DA7DB0F8E /* NRMAEventDuplicationStoreTests.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = NRMAEventDuplicationStoreTests.mm; sourceTree = "<group>"; };
 		F806E4122D9C7D150003B9D6 /* SessionReplayReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayReporter.swift; sourceTree = "<group>"; };
 		F806E4272D9C7E3F0003B9D6 /* SessionReplayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayManager.swift; sourceTree = "<group>"; };
+		D7843D9099B79EB4F17F2C8B /* ReactNativeStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactNativeStyle.swift; sourceTree = "<group>"; };
 		F80C1D692DA07691007C0F52 /* ViewDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewDetails.swift; sourceTree = "<group>"; };
 		F81061FA2E16D01D00B8CC81 /* UIVisualEffectViewThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIVisualEffectViewThingy.swift; sourceTree = "<group>"; };
 		F81E70672EC7A75C00698BF8 /* UIColorHexStringTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIColorHexStringTests.swift; sourceTree = "<group>"; };
@@ -2735,6 +2750,9 @@
 		F85603AA0CBFCFD2072DDE84 /* NRMAViewTiming.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = NRMAViewTiming.m; sourceTree = "<group>"; };
 		F858F35F2AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAURLSessionHeaderTrackingTests.m; sourceTree = "<group>"; };
 		F85ABB482F1557150098A2CF /* UILabelThingyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UILabelThingyTests.swift; sourceTree = "<group>"; };
+		F85ABB4C2F15571500A0B1C1 /* NRMAMaskingTestConfiguration.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAMaskingTestConfiguration.m; sourceTree = "<group>"; };
+		F85ABB4D2F15571500A0B1C1 /* NRMAMaskingTestConfiguration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAMaskingTestConfiguration.h; sourceTree = "<group>"; };
+		F85ABB4A2F15571500A0B1C1 /* MaskingResolutionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaskingResolutionTests.swift; sourceTree = "<group>"; };
 		F8672AB42EB11B2C0055FA51 /* UIFont+CSSConversion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIFont+CSSConversion.swift"; sourceTree = "<group>"; };
 		F8678AAC2CDBC62B008FD2A2 /* NRAutoCollectLogStressTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRAutoCollectLogStressTest.m; sourceTree = "<group>"; };
 		F8728E402ACC9D5A0056F641 /* NRMANetworkMonitor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMANetworkMonitor.m; sourceTree = "<group>"; };
@@ -3157,7 +3175,12 @@
 				2BBC1A532DEDF61A00F5C584 /* SessionReplayTest.m */,
 				0209ACB524E747FA00E45C90 /* NewRelicAgentTests.h */,
 				F85ABB482F1557150098A2CF /* UILabelThingyTests.swift */,
+				F85ABB4C2F15571500A0B1C1 /* NRMAMaskingTestConfiguration.m */,
+				F85ABB4D2F15571500A0B1C1 /* NRMAMaskingTestConfiguration.h */,
+				F85ABB4A2F15571500A0B1C1 /* MaskingResolutionTests.swift */,
 				871C12BAE9249E1084E7A385 /* IncrementalDiffGeneratorTests.swift */,
+				4E0507771D00107A52E925DA /* ReactNativeStyleTests.swift */,
+				30A3D63511873CC0DE19997B /* SessionReplayClippingTests.swift */,
 				F88801D12FC5FB780051DC67 /* SessionReplayReporterOfflineStorageTests.swift */,
 				F88801E62FC734C90051DC67 /* SessionReplayReporterNetworkTests.swift */,
 				C15109B42FC49AA5B0AE1D31 /* SessionReplayHarvestEndToEndTests.swift */,
@@ -4161,6 +4184,7 @@
 				F8EACA892F6867ED00385075 /* UIDatePickerThingy.swift */,
 				2B0B6BAC2DEA349D0080C3D6 /* UITextViewThingy.swift */,
 				F80C1D692DA07691007C0F52 /* ViewDetails.swift */,
+				D7843D9099B79EB4F17F2C8B /* ReactNativeStyle.swift */,
 				3493DF4B2D542D9900BF5BED /* UIViewThingy.swift */,
 				F81061FA2E16D01D00B8CC81 /* UIVisualEffectViewThingy.swift */,
 				3493DF4D2D54310900BF5BED /* UILabelThingy.swift */,
@@ -5583,7 +5607,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				72F78B8151FDF7CBB89F35E8 /* IncrementalDiffGeneratorTests.swift in Sources */,
+				5E1E6B26A418EF301EF45177 /* ReactNativeStyleTests.swift in Sources */,
+				621D671ADD3ACEBC0B6266AF /* SessionReplayClippingTests.swift in Sources */,
 				5DCF5CE8135909A7EC546192 /* IncrementalDiffGenerator.swift in Sources */,
+				C8FE73466C5D36E87195B590 /* RRWebFullSnapshotEvent.swift in Sources */,
+				0A9064BF5A52421997496A81 /* SessionReplayFrameProcessor.swift in Sources */,
+				17DD987426A0FF6964FF980A /* SessionReplayFrame.swift in Sources */,
 				0209AC9224E7393300E45C90 /* NRMAExceptionMetaDataTest.m in Sources */,
 				F8FBFA592A77FA3000CDC8C5 /* TestRequestEvents.m in Sources */,
 				2BFFB1EB28CA683F00392E3B /* NRMASupportMetricHelperTests.m in Sources */,
@@ -5595,6 +5624,8 @@
 				0209AC4424E7078000E45C90 /* NRMAInteractionTraceFeatureFlag.m in Sources */,
 				0209AC0024E7070900E45C90 /* NSURLSessionOverrideTest.m in Sources */,
 				F85ABB5D2F15575B0098A2CF /* UILabelThingy.swift in Sources */,
+				F85ABB532F15571500A0B1C1 /* UIDatePickerThingy.swift in Sources */,
+				F85ABB4F2F15571500A0B1C1 /* UITextFieldThingy.swift in Sources */,
 				0209ABF224E706FA00E45C90 /* NRActivityTracesTest.m in Sources */,
 				F6E79D1B25A78689006277FB /* TestW3CTraceParent.mm in Sources */,
 				0209AC2224E7071F00E45C90 /* NRMeasurementTest.m in Sources */,
@@ -5611,6 +5642,8 @@
 				0209ACA024E7393300E45C90 /* NRMemoryVitalsTest.m in Sources */,
 				0209ABFF24E7070900E45C90 /* NRMASessionExclusivityWithoutDelegateTests.m in Sources */,
 				F85ABB492F1557150098A2CF /* UILabelThingyTests.swift in Sources */,
+				F85ABB4E2F15571500A0B1C1 /* NRMAMaskingTestConfiguration.m in Sources */,
+				F85ABB4B2F15571500A0B1C1 /* MaskingResolutionTests.swift in Sources */,
 				F8BF154D2F3A37FB00EF5628 /* SwiftUIShapeThingyTests.swift in Sources */,
 				D4DCC24030192068008B5C59 /* UIHostingViewRecordOrchestratorWidthOffsetTests.swift in Sources */,
 				0209ACB024E7394500E45C90 /* NRMAUDIDManagerTest.m in Sources */,
@@ -5620,6 +5653,7 @@
 				F8BF15572F3A3A8F00EF5628 /* XRayDecoderError.swift in Sources */,
 				0209ACAF24E7394500E45C90 /* NRMAInstallMetricGeneratorTest.m in Sources */,
 				F85ABB5E2F1557B40098A2CF /* ViewDetails.swift in Sources */,
+				15B561FD2900EE0FB36C6CC3 /* ReactNativeStyle.swift in Sources */,
 				0209AC0124E7070900E45C90 /* NRURLSessionTaskOverrideTests.m in Sources */,
 				0209AC1024E7071500E45C90 /* NRMAAppTokenTest.m in Sources */,
 				C94590EE289AC0EC0062A4DE /* SwiftTestHelper.swift in Sources */,
@@ -5862,6 +5896,7 @@
 				02FF480C24DB573E00115469 /* NRMAUserAction.m in Sources */,
 				02FF489D24DC61D200115469 /* NRMAURLSessionTaskOverride.m in Sources */,
 				F80C1D6A2DA07691007C0F52 /* ViewDetails.swift in Sources */,
+				B8F542B3E1456A52060FD802 /* ReactNativeStyle.swift in Sources */,
 				02FF491C24DC624400115469 /* NRMACrashReport_Library.m in Sources */,
 				2BF42C6628B80B82006E9C27 /* NRMASysctlBinding.c in Sources */,
 				02FF49D924DC636100115469 /* NRMAHarvestable.m in Sources */,
@@ -6322,6 +6357,7 @@
 				2B570A672EF0C348007D9E39 /* IDGenerator.swift in Sources */,
 				02FF4C5F24E3201400115469 /* NRMATimestampContainer.m in Sources */,
 				2B570A5C2EF0C2BD007D9E39 /* ViewDetails.swift in Sources */,
+				9912A35880F798256AB0556C /* ReactNativeStyle.swift in Sources */,
 				F8BF14D22F36770A00EF5628 /* TextHelper.swift in Sources */,
 				02FF4C6024E3201400115469 /* NRMAHarvestableMethodMetric.m in Sources */,
 				02FF4C6124E3201400115469 /* NRMAURLSessionOverride.m in Sources */,
@@ -6824,9 +6860,9 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.7.11;
+				CURRENT_PROJECT_VERSION = 7.8.0;
 				DEVELOPMENT_TEAM = RQZ9D969HD;
-				DYLIB_CURRENT_VERSION = 7.7.11;
+				DYLIB_CURRENT_VERSION = 7.8.0;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
@@ -6880,9 +6916,9 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.7.11;
+				CURRENT_PROJECT_VERSION = 7.8.0;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.7.11;
+				DYLIB_CURRENT_VERSION = 7.8.0;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
@@ -6958,11 +6994,11 @@
 				CODE_SIGN_IDENTITY = "Apple Development: cdillard@newrelic.com (3ZGR4484Y2)";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 7.7.11;
+				CURRENT_PROJECT_VERSION = 7.8.0;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEFINES_MODULE = YES;
 				DISABLE_MANUAL_TARGET_ORDER_BUILD_WARNING = YES;
-				DYLIB_CURRENT_VERSION = 7.7.11;
+				DYLIB_CURRENT_VERSION = 7.8.0;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
@@ -7037,11 +7073,11 @@
 				CODE_SIGN_IDENTITY = "Apple Development: cdillard@newrelic.com (3ZGR4484Y2)";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 7.7.11;
+				CURRENT_PROJECT_VERSION = 7.8.0;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEFINES_MODULE = YES;
 				DISABLE_MANUAL_TARGET_ORDER_BUILD_WARNING = YES;
-				DYLIB_CURRENT_VERSION = 7.7.11;
+				DYLIB_CURRENT_VERSION = 7.8.0;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
@@ -7085,12 +7121,12 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.7.11;
+				CURRENT_PROJECT_VERSION = 7.8.0;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.7.11;
+				DYLIB_CURRENT_VERSION = 7.8.0;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -7115,7 +7151,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.7.11;
+				MARKETING_VERSION = 7.8.0;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = "";
@@ -7148,13 +7184,13 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Distribution: New Relic Inc (SU7SUNGZJP)";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.7.11;
+				CURRENT_PROJECT_VERSION = 7.8.0;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = SU7SUNGZJP;
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.7.11;
+				DYLIB_CURRENT_VERSION = 7.8.0;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -7178,7 +7214,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.7.11;
+				MARKETING_VERSION = 7.8.0;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = "";
@@ -7204,9 +7240,9 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.7.11;
+				CURRENT_PROJECT_VERSION = 7.8.0;
 				DEVELOPMENT_TEAM = RQZ9D969HD;
-				DYLIB_CURRENT_VERSION = 7.7.11;
+				DYLIB_CURRENT_VERSION = 7.8.0;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
@@ -7263,9 +7299,9 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.7.11;
+				CURRENT_PROJECT_VERSION = 7.8.0;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.7.11;
+				DYLIB_CURRENT_VERSION = 7.8.0;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
@@ -7315,9 +7351,9 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.7.11;
+				CURRENT_PROJECT_VERSION = 7.8.0;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.7.11;
+				DYLIB_CURRENT_VERSION = 7.8.0;
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/Frameworks";
 				HEADER_SEARCH_PATHS = (
 					"${PROJECT_DIR}/UnitTests/",
@@ -7357,9 +7393,9 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.7.11;
+				CURRENT_PROJECT_VERSION = 7.8.0;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.7.11;
+				DYLIB_CURRENT_VERSION = 7.8.0;
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/Frameworks";
 				HEADER_SEARCH_PATHS = (
 					"${PROJECT_DIR}/UnitTests/",
@@ -7399,12 +7435,12 @@
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.7.11;
+				CURRENT_PROJECT_VERSION = 7.8.0;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				"DEVELOPMENT_TEAM[sdk=appletvos*]" = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.7.11;
+				DYLIB_CURRENT_VERSION = 7.8.0;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -7427,7 +7463,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.7.11;
+				MARKETING_VERSION = 7.8.0;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
@@ -7453,11 +7489,11 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution: New Relic Inc (SU7SUNGZJP)";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.7.11;
+				CURRENT_PROJECT_VERSION = 7.8.0;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.7.11;
+				DYLIB_CURRENT_VERSION = 7.8.0;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -7480,7 +7516,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.7.11;
+				MARKETING_VERSION = 7.8.0;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
@@ -7507,9 +7543,9 @@
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.7.11;
+				CURRENT_PROJECT_VERSION = 7.8.0;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.7.11;
+				DYLIB_CURRENT_VERSION = 7.8.0;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/Frameworks";
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
@@ -7571,9 +7607,9 @@
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.7.11;
+				CURRENT_PROJECT_VERSION = 7.8.0;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.7.11;
+				DYLIB_CURRENT_VERSION = 7.8.0;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/Frameworks";
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
@@ -7630,12 +7666,12 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.7.11;
+				CURRENT_PROJECT_VERSION = 7.8.0;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=watchos*]" = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.7.11;
+				DYLIB_CURRENT_VERSION = 7.8.0;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_MODULE_VERIFIER = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -7659,7 +7695,7 @@
 					"@loader_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = NO;
-				MARKETING_VERSION = 7.7.11;
+				MARKETING_VERSION = 7.8.0;
 				MODULEMAP_FILE = agent.modulemap;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "";
@@ -7689,12 +7725,12 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution: New Relic Inc (SU7SUNGZJP)";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.7.11;
+				CURRENT_PROJECT_VERSION = 7.8.0;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=watchos*]" = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.7.11;
+				DYLIB_CURRENT_VERSION = 7.8.0;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_MODULE_VERIFIER = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -7718,7 +7754,7 @@
 					"@loader_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = NO;
-				MARKETING_VERSION = 7.7.11;
+				MARKETING_VERSION = 7.8.0;
 				MODULEMAP_FILE = agent.modulemap;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "";

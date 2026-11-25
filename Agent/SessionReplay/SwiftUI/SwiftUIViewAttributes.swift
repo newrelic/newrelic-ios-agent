@@ -36,5 +36,7 @@ public struct SwiftUIViewAttributes: Equatable {
     var blockView: Bool?
 
     var sessionReplayIdentifier: String?
+    // The resolved mask state of the UIKit hosting view, inherited from its UIKit ancestors.
+    var inheritedMaskState: Bool?
 
 }

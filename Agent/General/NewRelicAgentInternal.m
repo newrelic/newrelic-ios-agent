@@ -247,6 +247,9 @@ static NewRelicAgentInternal* _sharedInstance;
 
         self->_lifetimeRequestCount = 0;
         self->_lifetimeErrorCount = 0;
+        // Before the harvester starts: its connect makes the session replay and log
+        // sampling decisions. Later sessions reseed in -sessionStartInitialization.
+        [self makeSampleSeeds];
         self.appSessionStartDate = [NSDate date];
 
         self->_isShutdown = false;
@@ -729,7 +732,9 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         
         if (m != SessionReplayRecordingModeOff) {
             
-            [_sessionReplay startFromManual:FALSE with:m];
+            // Every caller either stopped replay first or may race another start (the harvester's
+            // and -sessionReplayStartIfMissed at launch); a running replay keeps its mode.
+            [_sessionReplay startIfNotRunningWith:m];
 
             // Only add hasReplay attribute if starting in full mode
             // For error mode, the attribute will be added when an error occurs
@@ -739,6 +744,32 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
                 }
             }
         }
+    }
+#endif
+}
+
+// The harvester starts inside -init, and with a stored configuration it applies the session
+// replay config without a network round trip, often before +startWithApplicationToken: has
+// assigned _sharedInstance. Its -sessionReplayStart then goes to nil and nothing retries it
+// until the next foreground. Called once the agent is reachable; harmless if the harvester's
+// start did land or is still queued, since -sessionReplayStart doesn't restart a running replay.
+- (void) sessionReplayStartIfMissed {
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+    // -init doesn't start the harvester on a background launch (silent push, background fetch),
+    // so there was no start to miss. The harvester starts replay when the app comes to the
+    // foreground; recording now would put a background frame at the start of that replay.
+    if ([UIApplication sharedApplication].applicationState == UIApplicationStateBackground) {
+        return;
+    }
+    NRMAHarvesterConfiguration* configuration = [NRMAHarvestController configuration];
+    // Same check as the harvester's stored-configuration shortcut. Otherwise /connect is
+    // still in flight and the harvester applies the collector's config when it returns.
+    if (!configuration.isValid
+        || ![configuration.application_token isEqualToString:_agentConfiguration.applicationToken.value]) {
+        return;
+    }
+    if (configuration.has_session_replay_config) {
+        [self sessionReplayStart];
     }
 #endif
 }
@@ -1465,6 +1496,7 @@ void applicationDidEnterBackgroundCF(void) {
 
         if ([NewRelicAgentInternal sharedInstance].enabled) {
             NRLOG_AGENT_INFO(@"The New Relic Agent started");
+            [_sharedInstance sessionReplayStartIfMissed];
         } else {
             NRLOG_AGENT_INFO(@"The New Relic Agent is disabled");
         }

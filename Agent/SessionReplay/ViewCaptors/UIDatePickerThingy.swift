@@ -27,13 +27,7 @@ class UIDatePickerThingy: SessionReplayViewThingy {
         self.isBlocked = viewDetails.blockView ?? false
 
         // Date picker values are user input - respect maskUserInputText
-        if let isMasked = viewDetails.isMasked {
-            self.isMasked = isMasked
-        } else if let maskUserInputText = viewDetails.maskUserInputText {
-            self.isMasked = maskUserInputText
-        } else {
-            self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskUserInputText ?? true
-        }
+        self.isMasked = ViewDetails.resolveTextInputIsMasked(viewDetails, isSecureTextEntry: false)
 
         // Mark this view and all descendants to skip aggressive clipping
         self.markViewHierarchyToSkipClipping(view)

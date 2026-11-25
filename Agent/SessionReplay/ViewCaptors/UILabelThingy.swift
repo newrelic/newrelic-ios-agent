@@ -37,6 +37,10 @@ class UILabelThingy: SessionReplayViewThingy {
     let fontWeight: UIFont.Weight
     let isItalic: Bool
     let letterSpacing: CGFloat?
+    let textDecoration: String?
+    /// Inset of the text from the box, top, right, bottom, left: React Native draws a Text's
+    /// text inside its padding and border.
+    private(set) var textPadding: [CGFloat]? = nil
 
     let widthOffset = 1.0
 
@@ -58,27 +62,32 @@ class UILabelThingy: SessionReplayViewThingy {
     /// and applying it would force-mask every ordinary label and defeat the
     /// "show application text" configuration. Only an explicit `true` adds masking,
     /// so this can never expose text that was masked before. NR-566XXX.
+    /// - Parameter userInputRequestMasks: whether an explicit user-input mask request also masks this
+    ///   element. True for SwiftUI text, where an input can't be told from static text. False for a
+    ///   real `UILabel`, which is known to be static text, so maskUserInputText doesn't mask it.
     /// - Parameter isInputControlLabel: true when this label belongs to a text
     ///   input control (e.g. a `UITextFieldLabel` rendering a `TextField`'s
     ///   placeholder or unfocused value). For such labels an UNMASK override is
     ///   only honored in Custom masking mode — under the Default strategy the
     ///   override is dropped so the placeholder/value stays masked, matching how
     ///   the control's text content is treated. NR-566XXX.
-    static func resolveIsMasked(_ viewDetails: ViewDetails, isInputControlLabel: Bool = false) -> Bool {
+    static func resolveIsMasked(_ viewDetails: ViewDetails,
+                                isInputControlLabel: Bool = false,
+                                userInputRequestMasks: Bool = true) -> Bool {
         if let isMasked = viewDetails.isMasked {
             return isMasked
         }
 
-        var applicationTextOverride = viewDetails.maskApplicationText
+        // A TextField's own label is a text input: the user-input rule governs it, not
+        // maskApplicationText.
         if isInputControlLabel {
-            applicationTextOverride = ViewDetails.honoringDefaultStrategy(applicationTextOverride,
-                                                                          isDefaultMode: ViewDetails.currentMaskingModeIsDefault())
+            return ViewDetails.resolveTextInputIsMasked(viewDetails, isSecureTextEntry: false)
         }
 
-        let applicationTextMasked = applicationTextOverride
+        let applicationTextMasked = viewDetails.maskApplicationText
             ?? (NRMAHarvestController.configuration()?.session_replay_maskApplicationText ?? true)
 
-        let userInputMaskRequested = (viewDetails.maskUserInputText == true)
+        let userInputMaskRequested = userInputRequestMasks && (viewDetails.maskUserInputText == true)
 
         return applicationTextMasked || userInputMaskRequested
     }
@@ -98,7 +107,8 @@ class UILabelThingy: SessionReplayViewThingy {
         self.viewDetails.frame = frame
 
         self.isMasked = UILabelThingy.resolveIsMasked(viewDetails,
-                                                       isInputControlLabel: UILabelThingy.isTextInputLabel(view))
+                                                       isInputControlLabel: UILabelThingy.isTextInputLabel(view),
+                                                       userInputRequestMasks: false)
 
         self.isBlocked = viewDetails.blockView ?? false
 
@@ -117,10 +127,12 @@ class UILabelThingy: SessionReplayViewThingy {
         let textAlignment: String
         let lineBreakMode: NSLineBreakMode
         let letterSpacing: CGFloat?
+        var textDecoration: String? = nil
 
         if let attributedText = view.attributedText, attributedText.length > 0 {
             // Extract from attributed text
             let extracted = TextHelper.extractLabelAttributes(from: attributedText)
+            textDecoration = TextHelper.textDecorationLine(from: attributedText)
             font = extracted.font
             textColor = extracted.textColor
             textAlignment = extracted.textAlignment
@@ -154,15 +166,26 @@ class UILabelThingy: SessionReplayViewThingy {
         self.fontWeight = fontTraits.weight
         self.isItalic = fontTraits.isItalic
         self.letterSpacing = letterSpacing
+        self.textDecoration = textDecoration
     }
 
     init(view: UIView, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
         var frame = self.viewDetails.frame
+        // Without this the text lands at the padded box's corner. Only the text moves: the
+        // box keeps its frame for its background and border. NR-652282.
+        if let contentFrame = ReactNativeStyle.textContentFrame(of: view), let window = view.window {
+            let textFrame = view.convert(contentFrame, to: window).intersection(frame)
+            if !textFrame.isNull {
+                self.textPadding = [textFrame.minY - frame.minY, frame.maxX - textFrame.maxX,
+                                    frame.maxY - textFrame.maxY, textFrame.minX - frame.minX]
+            }
+        }
         frame.size.width = frame.size.width + widthOffset
         self.viewDetails.frame = frame
         
         var text: String?
+        var textDecoration: String? = nil
         var textAlignment = "left"
         var font: UIFont = UIFont.systemFont(ofSize: 17.0)
         var textColor: UIColor = .black
@@ -174,6 +197,7 @@ class UILabelThingy: SessionReplayViewThingy {
             if view.responds(to: Selector(("attributedText"))) {
                 if let attributedText = view.value(forKey: "attributedText") as? NSAttributedString {
                     let extracted = TextHelper.extractLabelAttributes(from: attributedText)
+                    textDecoration = TextHelper.textDecorationLine(from: attributedText)
                     text = extracted.text
                     font = extracted.font
                     textColor = extracted.textColor
@@ -186,6 +210,7 @@ class UILabelThingy: SessionReplayViewThingy {
                   view.isKind(of: rctTextViewClass) {
             if let textStorage = view.value(forKey: "textStorage") as? NSAttributedString {
                 let extracted = TextHelper.extractLabelAttributes(from: textStorage)
+                textDecoration = TextHelper.textDecorationLine(from: textStorage)
                 text = extracted.text
                 font = extracted.font
                 textColor = extracted.textColor
@@ -231,7 +256,7 @@ class UILabelThingy: SessionReplayViewThingy {
         self.isItalic = fontTraits.isItalic
 
         self.letterSpacing = kern
-
+        self.textDecoration = textDecoration
     }
 
     init(viewDetails: ViewDetails, attributedText: NSAttributedString, iOS15Override: Bool = false) {
@@ -248,6 +273,7 @@ class UILabelThingy: SessionReplayViewThingy {
         let textAlignment = extracted.textAlignment
         let lineBreakMode = extracted.lineBreakMode
         let kern = extracted.kern
+        self.textDecoration = TextHelper.textDecorationLine(from: attributedText)
         
         self.isMasked = UILabelThingy.resolveIsMasked(viewDetails)
 
@@ -304,6 +330,17 @@ class UILabelThingy: SessionReplayViewThingy {
         if let letterSpacing = self.letterSpacing {
             letterSpacingCSS = " letter-spacing: \(String(format: "%.2f", letterSpacing))px;"
         }
+        var textDecorationCSS = ""
+        if let textDecoration = self.textDecoration {
+            textDecorationCSS = " text-decoration-line: \(textDecoration);"
+        }
+        var textPaddingCSS = ""
+        if let textPadding = self.textPadding {
+            // React Native's insets include the border, which the border box draws inside the
+            // padding here.
+            let padding = zip(textPadding, viewDetails.cssBorderWidths).map { String(format: "%.2fpx", max(0, $0 - $1)) }
+            textPaddingCSS = " box-sizing: border-box; padding: \(padding.joined(separator: " "));"
+        }
 
         return """
                 \(generateBaseCSSStyle())\
@@ -312,7 +349,7 @@ class UILabelThingy: SessionReplayViewThingy {
                 font: \(fontStyleCSS) \(fontWeightCSS) \(String(format: "%.2f", self.fontSize))px \(self.fontFamily); \
                 color: \(textColor.toHexString(includingAlpha: true));\
                 text-align: \(textAlignment); \
-                overflow: hidden; \(letterSpacingCSS)
+                overflow: hidden; \(letterSpacingCSS)\(textDecorationCSS)\(textPaddingCSS)
                 """
     }
 
@@ -382,7 +419,9 @@ extension UILabelThingy: Equatable {
             lhs.lineBreakMode == rhs.lineBreakMode &&
             lhs.fontWeight == rhs.fontWeight &&
             lhs.isItalic == rhs.isItalic &&
-            lhs.letterSpacing == rhs.letterSpacing
+            lhs.letterSpacing == rhs.letterSpacing &&
+            lhs.textDecoration == rhs.textDecoration &&
+            lhs.textPadding == rhs.textPadding
     }
 }
 
@@ -399,6 +438,8 @@ extension UILabelThingy: Hashable {
         hasher.combine(fontWeight.rawValue)
         hasher.combine(isItalic)
         hasher.combine(letterSpacing)
+        hasher.combine(textDecoration)
+        hasher.combine(textPadding)
     }
 }
 
