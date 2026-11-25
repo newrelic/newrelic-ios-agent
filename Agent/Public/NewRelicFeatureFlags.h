@@ -79,6 +79,11 @@
  
  - NRFeatureFlag_OfflineStorage
     Enabled by default. Enable (default) or disable flag to enable the storage of offline payloads.
+
+ - NRFeatureFlag_EventPersistence
+    Enabled by default. Enable (default) or disable flag to persist analytics events (and a
+    per-session attribute manifest) to disk as they're recorded, so events buffered but not yet
+    harvested survive a force-quit/crash and are recovered and uploaded on the next launch.
 */
 
 
@@ -106,5 +111,6 @@ typedef NS_OPTIONS(unsigned long long, NRMAFeatureFlags){
     NRFeatureFlag_OfflineStorage                        = 1 << 21, // Disabled by default
     NRFeatureFlag_BackgroundReporting                   = 1 << 22, // Disabled by default
     NRFeatureFlag_AutoCollectLogs                       = 1 << 23, // Disabled by default
-    NRFeatureFlag_JSErrorEvents                         = 1 << 24  // Enabled by default
+    NRFeatureFlag_JSErrorEvents                         = 1 << 24, // Enabled by default
+    NRFeatureFlag_EventPersistence                      = 1 << 25  // Enabled by default
 };

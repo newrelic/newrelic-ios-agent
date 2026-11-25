@@ -71,8 +71,17 @@ static NewRelicAgentInternal* _sharedInstance;
     NSURL* documentDirURL = paths[0];
     NSString *fileName = [documentDirURL.path stringByAppendingPathComponent:@"newrelic"];
     NSFileManager *fileManager = [NSFileManager defaultManager];
-    if([fileManager fileExistsAtPath:fileName]) {
-        [fileManager removeItemAtPath:fileName error:nil];
+    // Clear only the legacy attribute files directly inside this directory, not the
+    // directory itself -- NREventPersistenceController's stores create their own
+    // subdirectories (e.g. nr_event_cache) once per process, and removing the whole
+    // directory here would leave those subdirectories permanently missing for every
+    // other test that runs later in the same process.
+    for (NSString *item in [fileManager contentsOfDirectoryAtPath:fileName error:nil]) {
+        NSString *itemPath = [fileName stringByAppendingPathComponent:item];
+        BOOL isDirectory = NO;
+        if ([fileManager fileExistsAtPath:itemPath isDirectory:&isDirectory] && !isDirectory) {
+            [fileManager removeItemAtPath:itemPath error:nil];
+        }
     }
     
     self.mockNewRelicInternals = [OCMockObject mockForClass:[NewRelicAgentInternal class]];

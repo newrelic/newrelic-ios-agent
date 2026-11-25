@@ -15,6 +15,9 @@
 #import "NRMAMeasurements.h"
 #import "NRMAHTTPTransactionMeasurement.h"
 #import "NRMATaskQueue.h"
+#import "NewRelicFeatureFlags.h"
+#import "NRMAFlags.h"
+#import "Constants.h"
 
 BOOL NRMA__isSwiftClass(NRMAClassDataContainer* classData);
 

@@ -110,7 +110,27 @@ struct CaptureViewerView: View {
     }
 
     private var captureList: some View {
-        List(listedCaptures) { capture in
+        List {
+            ForEach(launchGroups, id: \.launch) { group in
+                Section(header: Text(launchTitle(group.launch))) {
+                    ForEach(group.captures) { capture in captureRow(capture) }
+                }
+            }
+        }
+    }
+
+    /// Newest launch first; within a launch, newest upload first (listedCaptures is newest-first).
+    private var launchGroups: [(launch: Int, captures: [CapturedRequest])] {
+        Dictionary(grouping: listedCaptures, by: \.launch)
+            .map { (launch: $0.key, captures: $0.value) }
+            .sorted { $0.launch > $1.launch }
+    }
+
+    private func launchTitle(_ launch: Int) -> String {
+        launch == store.currentLaunch ? "Current launch" : "Previous launch"
+    }
+
+    private func captureRow(_ capture: CapturedRequest) -> some View {
             NavigationLink(destination: CaptureDetailView(capture: capture)
                 .onAppear  { detailVisible = true }
                 .onDisappear {
@@ -142,7 +162,6 @@ struct CaptureViewerView: View {
                 }
                 .padding(.vertical, 2)
             }
-        }
     }
 }
 

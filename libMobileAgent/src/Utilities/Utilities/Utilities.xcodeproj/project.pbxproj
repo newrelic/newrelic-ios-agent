@@ -19,7 +19,7 @@
 		34BF4E1B2910907C00E4D170 /* ApplicationContext.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4E0F2910907C00E4D170 /* ApplicationContext.cxx */; };
 		34BF4E1C2910907C00E4D170 /* Number.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4E102910907C00E4D170 /* Number.cxx */; };
 		34BF4E1D2910907C00E4D170 /* Application.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4E112910907C00E4D170 /* Application.cxx */; };
-		34BF4E2A2910908900E4D170 /* UUID.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4E1E2910908800E4D170 /* UUID.hpp */; };
+		34BF4E2A2910908900E4D170 /* UUID.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4E1E2910908800E4D170 /* UUID.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
 		34BF4E2B2910908900E4D170 /* BaseValue.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4E1F2910908800E4D170 /* BaseValue.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
 		34BF4E2C2910908900E4D170 /* ApplicationContext.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4E202910908800E4D170 /* ApplicationContext.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
 		34BF4E2D2910908900E4D170 /* Number.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4E212910908800E4D170 /* Number.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -36,7 +36,7 @@
 /* Begin PBXContainerItemProxy section */
 		34A928F32912D4B8001449B6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 34A928EF2912D4B8001449B6 /* JSON.xcodeproj */;
+			containerPortal = 34A928EF2912D4B8001449B6 /* json.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 34BF4DDD29108DE200E4D170;
 			remoteInfo = JSON;

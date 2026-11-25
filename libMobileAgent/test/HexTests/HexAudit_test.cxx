@@ -15,7 +15,6 @@ using namespace NewRelic;
 
 class HexAuditTest : public ::testing::Test {
 public:
-    PersistentStore<std::string, AnalyticEvent> eventStore;
     PersistentStore<std::string, BaseValue> attributeStore;
     Hex::HexPublisher* publisher;
     std::shared_ptr<Hex::HexStore> store;
@@ -32,16 +31,13 @@ public:
 };
 
 HexAuditTest::HexAuditTest() :
-        eventStore(AnalyticsController::getEventDupStoreName(),
-                   "",
-                   &EventManager::newEvent),
         attributeStore{AnalyticsController::getAttributeDupStoreName(),
                        "",
                        &Value::createValue},
         publisher(new Hex::HexPublisher("")),
         store(std::make_shared<Hex::HexStore>("")),
         applicationLicense("AAABBB123"),
-        analyticsController{std::make_shared<AnalyticsController>(0, "", eventStore, attributeStore)},
+        analyticsController{std::make_shared<AnalyticsController>(0, "", attributeStore)},
         hexController(std::shared_ptr<AnalyticsController>{analyticsController},
                       std::make_shared<Hex::Report::AppInfo>(&applicationLicense, fbs::Platform_iOS),
                       publisher, store, "1") {}

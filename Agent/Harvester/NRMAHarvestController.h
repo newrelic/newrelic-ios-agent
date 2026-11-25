@@ -77,6 +77,11 @@
 + (void) addHarvestableActivity:(NRMAHarvestableActivity* _Nonnull)activity;
 
 + (void) addHarvestableAnalytics:(NRMAHarvestableAnalytics* _Nonnull)analytics;
+
+// Stages already-resolved recovered events as plain JSON dictionaries. Unlike
+// +addHarvestableAnalytics:, never touches harvestData.analyticsAttributes, so a
+// recovered session's attributes can't clobber the current session's.
++ (void) addRecoveredAnalyticsEvents:(NSArray* _Nonnull)events;
 @end
 
 #ifdef __cplusplus

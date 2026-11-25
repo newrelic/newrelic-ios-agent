@@ -89,7 +89,14 @@ final class NRCaptureServer: ObservableObject {
     static let shared = NRCaptureServer()
     static let port: UInt16 = 8080
 
-    @Published var captures: [CapturedRequest] = []
+    /// Newest-first. Persisted to disk so uploads from previous app launches stay visible (and
+    /// comparable, e.g. for duplicate recovered events) after a relaunch. Only the current and the
+    /// one previous launch are kept. "Clear" empties the file too.
+    @Published var captures: [CapturedRequest] = [] {
+        didSet { schedulePersist() }
+    }
+    /// 1-based count of app launches that have run the capture server; stamps each capture.
+    let currentLaunch: Int
     @Published var injection: StatusInjection? = nil
     /// True when the connect response config differs from the default.
     @Published var connectConfigMutated: Bool = false
@@ -137,7 +144,50 @@ final class NRCaptureServer: ObservableObject {
     private let server = HttpServer()
     @Published private(set) var connectConfig: ConnectConfig = .default
 
-    private init() {}
+    private init() {
+        let key = "NRCaptureServer.launchCount"
+        let launch = UserDefaults.standard.integer(forKey: key) + 1
+        UserDefaults.standard.set(launch, forKey: key)
+        currentLaunch = launch
+        // Keep only the previous launch's uploads; anything older is dropped.
+        captures = NRCaptureServer.loadPersisted().filter { $0.launch >= launch - 1 }
+    }
+
+    // MARK: Persistence
+
+    private static let maxPersistedCaptures = 500
+    private let persistQueue = DispatchQueue(label: "NRCaptureServer.persist", qos: .utility)
+    private var persistPending = false
+
+    private static var persistURL: URL {
+        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir.appendingPathComponent("NRCaptureServer-captures.json")
+    }
+
+    private static func loadPersisted() -> [CapturedRequest] {
+        guard let data = try? Data(contentsOf: persistURL),
+              let stored = try? JSONDecoder().decode([PersistedCapture].self, from: data) else { return [] }
+        return stored.map(\.capture)
+    }
+
+    /// Coalesces bursts of changes into one write of the latest `captures`.
+    private func schedulePersist() {
+        guard !persistPending else { return }
+        persistPending = true
+        persistQueue.asyncAfter(deadline: .now() + 1) { [weak self] in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.persistPending = false
+                let stored = self.captures.filter { $0.launch >= self.currentLaunch - 1 }.prefix(NRCaptureServer.maxPersistedCaptures).map(PersistedCapture.init)
+                self.persistQueue.async {
+                    if let data = try? JSONEncoder().encode(stored) {
+                        try? data.write(to: NRCaptureServer.persistURL, options: .atomic)
+                    }
+                }
+            }
+        }
+    }
 
     func start() {
         // connectConfig is a typed ConnectConfig stored property.
@@ -235,6 +285,23 @@ final class NRCaptureServer: ObservableObject {
                 }
             }
 
+            // Event ledger: events tagged by the app's persistence scenario (nrTestRun + nrTestSeq)
+            // are identifiable across uploads, which the payload alone isn't (eventUUID is never
+            // sent). Flag any tagged event that shows up in more than one place.
+            var ledgerSeen: Set<String> = []
+            var ledgerDuplicates: [UUID: [String]] = [:]
+            var ledgerTagged: Set<UUID> = []
+            for capture in snapshot.reversed() where capture.endpoint.hasSuffix("/data") {
+                let keys = NRCaptureServer.taggedEventKeys(in: capture.decodedBody)
+                guard !keys.isEmpty else { continue }
+                ledgerTagged.insert(capture.id)
+                let repeats = keys.filter { !ledgerSeen.insert($0).inserted }
+                if !repeats.isEmpty { ledgerDuplicates[capture.id] = repeats }
+            }
+
+            // Events recovered from a previous session, and whether any was already delivered earlier.
+            let recoveredChecks = NRCaptureServer.recoveredEventChecks(for: snapshot)
+
             // Compute the effective ConnectConfig at each capture's moment (chronological walk).
             // Used to verify the agent respects configuration settings (e.g. session_replay.enabled).
             var configAtCapture: [UUID: ConnectConfig] = [:]
@@ -267,7 +334,17 @@ final class NRCaptureServer: ObservableObject {
                     passed: isDuplicate[capture.id] == false,
                     detail: detail
                 )
-                c.verification = VerificationResult(checks: payloadChecks + configChecks + [dupCheck])
+                var ledgerChecks: [VerificationCheck] = []
+                if ledgerTagged.contains(capture.id) {
+                    let repeats = ledgerDuplicates[capture.id]
+                    ledgerChecks.append(VerificationCheck(
+                        name: "Event ledger: no tagged event delivered twice",
+                        passed: repeats == nil,
+                        detail: repeats.map { "Already delivered earlier: \($0.joined(separator: ", "))" }
+                    ))
+                }
+                let recoveredCheck = recoveredChecks[capture.id].map { [$0] } ?? []
+                c.verification = VerificationResult(checks: payloadChecks + configChecks + ledgerChecks + recoveredCheck + [dupCheck])
                 return c
             }
 
@@ -285,6 +362,76 @@ final class NRCaptureServer: ObservableObject {
                 self.captures = updated
                 completion?(summary)
             }
+        }
+    }
+
+    static let recoveredEventsCheckName = "Recovered events: from a previous session, none delivered before"
+
+    /// For each /data upload carrying events whose `sessionId` differs from the upload's own session
+    /// (`[8].sessionId`) -- i.e. events recovered from an earlier launch -- reports where they came
+    /// from and fails if any was already delivered in an earlier upload (live, or recovered before).
+    /// Live events don't carry session attributes inline, so a match is: same eventType and timestamp,
+    /// and one event's attributes are a subset of the other's. `captures` is newest-first.
+    static func recoveredEventChecks(for captures: [CapturedRequest]) -> [UUID: VerificationCheck] {
+        var delivered: [String: [[String: Any]]] = [:]   // "eventType|timestamp" → events from earlier uploads
+        var results: [UUID: VerificationCheck] = [:]
+
+        func bucketKey(_ event: [String: Any]) -> String {
+            "\(event["eventType"] ?? "")|\(event["timestamp"] ?? "")"
+        }
+        func isSubset(_ small: [String: Any], of big: [String: Any]) -> Bool {
+            small.allSatisfy { key, value in
+                guard let other = big[key] else { return false }
+                return (value as AnyObject).isEqual(other)
+            }
+        }
+
+        for capture in captures.reversed() where capture.endpoint.hasSuffix("/data") {
+            guard let root = try? JSONSerialization.jsonObject(with: capture.decodedBody) as? [Any],
+                  root.indices.contains(9),
+                  let events = root[9] as? [[String: Any]] else { continue }
+            let uploadSession = (root.indices.contains(8) ? (root[8] as? [String: Any])?["sessionId"] as? String : nil)
+
+            var recovered: [[String: Any]] = []
+            var alreadyDelivered: [String] = []
+            for event in events {
+                if let uploadSession, let eventSession = event["sessionId"] as? String, eventSession != uploadSession {
+                    recovered.append(event)
+                    let seenBefore = delivered[bucketKey(event), default: []].contains {
+                        isSubset($0, of: event) || isSubset(event, of: $0)
+                    }
+                    if seenBefore {
+                        alreadyDelivered.append("\(event["eventType"] ?? "?") @\(event["timestamp"] ?? "?") (session \(eventSession))")
+                    }
+                }
+            }
+            // Record after checking, so events within one upload don't flag each other.
+            for event in events { delivered[bucketKey(event), default: []].append(event) }
+
+            guard !recovered.isEmpty else { continue }
+            let sessions = Set(recovered.compactMap { $0["sessionId"] as? String }).sorted()
+            let types = Dictionary(grouping: recovered, by: { $0["eventType"] as? String ?? "?" })
+                .map { "\($0.key)×\($0.value.count)" }.sorted().joined(separator: ", ")
+            let comparedAgainst = delivered.values.reduce(0) { $0 + $1.count } - events.count
+            let origin = "\(recovered.count) recovered from session\(sessions.count == 1 ? "" : "s") \(sessions.joined(separator: ", ")): \(types)"
+            results[capture.id] = VerificationCheck(
+                name: recoveredEventsCheckName,
+                passed: alreadyDelivered.isEmpty,
+                detail: alreadyDelivered.isEmpty
+                    ? origin + (comparedAgainst > 0 ? "" : " (no earlier uploads captured to compare against)")
+                    : "\(origin). Already delivered in an earlier upload: \(alreadyDelivered.joined(separator: "; "))")
+        }
+        return results
+    }
+
+    /// "<nrTestRun>/<nrTestSeq>" for every tagged analytics event in a /data body ([9] of the root array).
+    static func taggedEventKeys(in body: Data) -> [String] {
+        guard let root = try? JSONSerialization.jsonObject(with: body) as? [Any],
+              root.indices.contains(9),
+              let events = root[9] as? [[String: Any]] else { return [] }
+        return events.compactMap { event in
+            guard let run = event["nrTestRun"] as? String, let seq = event["nrTestSeq"] as? String else { return nil }
+            return "\(run)/\(seq)"
         }
     }
 
@@ -338,6 +485,7 @@ final class NRCaptureServer: ObservableObject {
             prettyJSON: prettyJSON
         )
         captured.serverConnectResponse = serverResponse
+        captured.launch = currentLaunch
 
         DispatchQueue.main.async { [weak self] in
             self?.captures.insert(captured, at: 0)

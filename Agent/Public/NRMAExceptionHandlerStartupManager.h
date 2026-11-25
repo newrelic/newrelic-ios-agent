@@ -22,7 +22,6 @@
 
 @interface NRMAExceptionHandlerStartupManager : NSObject
 
-@property(strong) NSString* eventJson;
 @property(strong) NSString* attributeJson;
 
 - (void) fetchLastSessionsAnalytics;

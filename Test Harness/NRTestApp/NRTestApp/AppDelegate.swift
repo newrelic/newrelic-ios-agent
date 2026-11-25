@@ -66,6 +66,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             if ProcessInfo.processInfo.environment["DeleteConnect"] != nil {
                 clearConnectUserDefaults()
             }
+            // Lets the event-persistence UITest run consecutive launches "as" different app versions.
+            if let version = ProcessInfo.processInfo.environment["EPAppVersion"] {
+                NewRelic.setApplicationVersion(version)
+            }
             NewRelic.start(withApplicationToken: "APP-TOKEN-UITEST",
                            andCollectorAddress: "localhost:\(NRCaptureServer.port)",
                            andCrashCollectorAddress: "localhost:\(NRCaptureServer.port)")
@@ -102,6 +106,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         runCoreDataCrashReproIfRequested()
         runHexOOMReproIfRequested()
+        runEventPersistenceScenarioIfRequested()
 
         return true
     }
